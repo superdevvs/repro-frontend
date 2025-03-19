@@ -1,4 +1,4 @@
-
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const { pathname } = useLocation();
   const isMobile = useIsMobile();
-  const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, role, logout } = useAuth();
   
   return (
