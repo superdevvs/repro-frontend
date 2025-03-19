@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { motion } from 'framer-motion';
 import {
@@ -30,9 +30,10 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const { pathname } = useLocation();
-  const { isMobile, isCollapsed, setIsCollapsed } = useMobile();
+  const isMobile = useIsMobile();
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
   const { user, role, logout } = useAuth();
-
+  
   return (
     <motion.div
       initial={false}
@@ -78,7 +79,6 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
         <ScrollArea
           className="flex-1 overflow-auto"
-          classNameViewport="flex flex-col h-full"
         >
           <div className={cn('flex flex-1 flex-col gap-2 p-2')}>
             <NavLink

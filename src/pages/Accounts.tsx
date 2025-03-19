@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -231,7 +230,7 @@ const Accounts = () => {
   const handleBrandingFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setBrandingFormData({
-      ...setBrandingFormData,
+      ...brandingFormData,
       [name]: value,
     });
   };
@@ -1060,3 +1059,4 @@ const Accounts = () => {
 };
 
 export default Accounts;
+
