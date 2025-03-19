@@ -3,14 +3,15 @@ import React from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-type PageTransitionProps = HTMLMotionProps<"div"> & {
+interface PageTransitionProps extends HTMLMotionProps<"div"> {
   children: React.ReactNode;
-};
+  className?: string;
+}
 
 export function PageTransition({ 
   children, 
-  className, 
-  ...props 
+  className = "",
+  ...props
 }: PageTransitionProps) {
   return (
     <motion.div
