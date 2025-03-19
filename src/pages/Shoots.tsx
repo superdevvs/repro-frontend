@@ -153,7 +153,7 @@ const Shoots = () => {
                   
                   <div className="ml-auto flex border rounded-md overflow-hidden">
                     <Button 
-                      variant={viewMode === 'grid' ? 'subtle' : 'ghost'} 
+                      variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
                       size="sm" 
                       className="rounded-none"
                       onClick={() => setViewMode('grid')}
@@ -161,7 +161,7 @@ const Shoots = () => {
                       <LayoutGrid className="h-4 w-4" />
                     </Button>
                     <Button 
-                      variant={viewMode === 'list' ? 'subtle' : 'ghost'} 
+                      variant={viewMode === 'list' ? 'secondary' : 'ghost'} 
                       size="sm" 
                       className="rounded-none"
                       onClick={() => setViewMode('list')}

@@ -76,11 +76,11 @@ const photographerData = [
 
 // Service type data
 const serviceData = [
-  { name: "HDR Photos", value: 45 },
-  { name: "Floor Plans", value: 20 },
-  { name: "Video Tours", value: 15 },
-  { name: "Drone Photography", value: 12 },
-  { name: "Virtual Staging", value: 8 },
+  { name: "HDR Photos", value: 45, revenue: 4500 },
+  { name: "Floor Plans", value: 20, revenue: 2000 },
+  { name: "Video Tours", value: 15, revenue: 1500 },
+  { name: "Drone Photography", value: 12, revenue: 1200 },
+  { name: "Virtual Staging", value: 8, revenue: 800 },
 ];
 
 // Colors for pie chart
@@ -323,10 +323,10 @@ export default function Reports() {
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
-                      <YAxis tickFormatter={(value) => `$${value * 100}`} />
-                      <Tooltip formatter={(value) => `$${value * 100}`} />
+                      <YAxis tickFormatter={(value) => `$${value}`} />
+                      <Tooltip formatter={(value) => `$${value}`} />
                       <Legend />
-                      <Bar dataKey="value" fill="#10b981" name="Revenue ($)" />
+                      <Bar dataKey="revenue" fill="#10b981" name="Revenue ($)" />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
