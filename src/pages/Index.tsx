@@ -1,12 +1,89 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from 'react';
+import { LoginForm } from '@/components/auth/LoginForm';
+import { motion } from 'framer-motion';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen w-full flex flex-col md:flex-row overflow-hidden bg-gradient-to-br from-background to-secondary">
+      {/* Left side with branding */}
+      <motion.div 
+        className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 md:p-16"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="max-w-md w-full">
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
+              <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 22V12h6v10" />
+              </svg>
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight mb-2">Real Estate Media</h1>
+            <p className="text-muted-foreground">Streamline your real estate media workflow with our comprehensive management dashboard.</p>
+          </motion.div>
+          
+          <motion.div
+            className="space-y-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-medium">Streamlined Booking</h3>
+                <p className="text-sm text-muted-foreground">Schedule shoots with ease</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-medium">Efficient Media Management</h3>
+                <p className="text-sm text-muted-foreground">Upload, organize, and share with clients</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-medium">Seamless Invoicing</h3>
+                <p className="text-sm text-muted-foreground">Track payments and manage finances</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+      
+      {/* Right side with login form */}
+      <motion.div 
+        className="w-full md:w-1/2 flex items-center justify-center p-8 bg-background/50 backdrop-blur-sm border-l border-border"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <LoginForm />
+      </motion.div>
     </div>
   );
 };
