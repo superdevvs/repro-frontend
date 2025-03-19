@@ -9,6 +9,11 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Shoots from "./pages/Shoots";
 import BookShoot from "./pages/BookShoot";
+import Photographers from "./pages/Photographers";
+import Clients from "./pages/Clients";
+import Media from "./pages/Media";
+import Invoices from "./pages/Invoices";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +30,11 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/shoots" element={<Shoots />} />
             <Route path="/book-shoot" element={<BookShoot />} />
+            <Route path="/photographers" element={<Photographers />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/media" element={<Media />} />
+            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
