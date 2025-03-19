@@ -1,129 +1,213 @@
 
-import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import {
-  CalendarIcon,
-  CameraIcon,
-  HomeIcon,
-  ImageIcon,
-  LayoutDashboardIcon,
-  LogOutIcon,
-  MenuIcon,
-  SunIcon,
-  UsersIcon,
-  XIcon,
-  MoonIcon,
-  SettingsIcon,
-  CreditCardIcon,
-} from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { useMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { motion } from 'framer-motion';
+import {
+  BarChart3Icon,
+  CameraIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ClipboardIcon,
+  HomeIcon,
+  ImageIcon,
+  LogOutIcon,
+  SettingsIcon,
+  UsersIcon,
+  FileTextIcon,
+  CalendarIcon,
+  UserIcon,
+  BuildingIcon
+} from 'lucide-react';
 
 interface SidebarProps {
   className?: string;
 }
 
 export function Sidebar({ className }: SidebarProps) {
-  const [collapsed, setCollapsed] = useState(false);
   const { pathname } = useLocation();
-  const { user, role } = useAuth();
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-  };
-
-  const toggleSidebar = () => {
-    setCollapsed(!collapsed);
-  };
-
-  const navItems = [
-    { path: '/dashboard', icon: <LayoutDashboardIcon size={20} />, label: 'Dashboard', roles: ['admin', 'superadmin', 'photographer', 'client', 'editor'] },
-    { path: '/shoots', icon: <CameraIcon size={20} />, label: 'Shoots', roles: ['admin', 'superadmin', 'photographer', 'client', 'editor'] },
-    { path: '/book-shoot', icon: <CalendarIcon size={20} />, label: 'Book a Shoot', roles: ['admin', 'superadmin'] },
-    { path: '/photographers', icon: <UsersIcon size={20} />, label: 'Photographers', roles: ['admin', 'superadmin'] },
-    { path: '/clients', icon: <UsersIcon size={20} />, label: 'Clients', roles: ['admin', 'superadmin'] },
-    { path: '/media', icon: <ImageIcon size={20} />, label: 'Media', roles: ['admin', 'superadmin', 'photographer', 'client', 'editor'] },
-    { path: '/invoices', icon: <CreditCardIcon size={20} />, label: 'Invoices', roles: ['admin', 'superadmin', 'client'] },
-    { path: '/settings', icon: <SettingsIcon size={20} />, label: 'Settings', roles: ['admin', 'superadmin', 'photographer', 'client', 'editor'] },
-  ];
-
-  const filteredNavItems = navItems.filter(item => item.roles.includes(role));
+  const { isMobile, isCollapsed, setIsCollapsed } = useMobile();
+  const { user, role, logout } = useAuth();
 
   return (
     <motion.div
+      initial={false}
+      animate={{
+        width: isCollapsed ? 80 : 240,
+      }}
+      transition={{ duration: 0.2, ease: 'easeInOut' }}
       className={cn(
-        "h-screen flex flex-col bg-sidebar border-r border-border relative transition-all",
-        collapsed ? "w-[72px]" : "w-[240px]",
+        'group border-r bg-background p-3 py-4 relative',
+        isCollapsed && 'items-center',
         className
       )}
-      animate={{ width: collapsed ? 72 : 240 }}
-      transition={{ duration: 0.2, ease: 'easeInOut' }}
     >
-      <div className="flex items-center justify-between p-4">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <HomeIcon className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-lg">RealEstate</span>
-          </div>
-        )}
-        <Button variant="ghost" size="icon" onClick={toggleSidebar} className="ml-auto">
-          {collapsed ? <MenuIcon size={18} /> : <XIcon size={18} />}
-        </Button>
-      </div>
-      
-      <ScrollArea className="flex-1 py-4">
-        <nav className="grid gap-1 px-2">
-          {filteredNavItems.map((item) => (
+      <div className="flex h-full flex-col">
+        <div className="flex h-14 items-center border-b px-2">
+          <Link
+            to="/"
+            className={cn(
+              'flex items-center gap-2 font-semibold',
+              isCollapsed && 'justify-center w-full'
+            )}
+          >
+            {isCollapsed ? (
+              <CameraIcon className="h-6 w-6 text-primary" />
+            ) : (
+              <>
+                <CameraIcon className="h-6 w-6 text-primary" />
+                <span>REPro Dashboard</span>
+              </>
+            )}
+          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              'ml-auto h-8 w-8',
+              isCollapsed && 'absolute -right-4 top-12 z-50 bg-background border shadow-sm'
+            )}
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            {isCollapsed ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronLeftIcon className="h-4 w-4" />}
+          </Button>
+        </div>
+        <ScrollArea
+          className="flex-1 overflow-auto"
+          classNameViewport="flex flex-col h-full"
+        >
+          <div className={cn('flex flex-1 flex-col gap-2 p-2')}>
             <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all",
-                  isActive 
-                    ? "bg-primary/10 text-primary font-medium" 
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                  collapsed && "justify-center px-0"
-                )
-              }
-            >
-              {item.icon}
-              {!collapsed && <span>{item.label}</span>}
-            </NavLink>
-          ))}
-        </nav>
-      </ScrollArea>
-
-      <Separator />
-      
-      <div className="p-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.avatar} alt={user?.name} />
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">{user?.name?.slice(0, 2)}</AvatarFallback>
-          </Avatar>
-          
-          {!collapsed && (
-            <div className="flex-1 truncate">
-              <p className="text-sm font-medium">{user?.name}</p>
-              <p className="text-xs text-muted-foreground capitalize">{role}</p>
-            </div>
-          )}
-          
-          <Button variant="ghost" size="icon" onClick={toggleTheme} className="ml-auto">
-            {theme === 'light' ? <MoonIcon size={16} /> : <SunIcon size={16} />}
+              to="/dashboard"
+              icon={<HomeIcon className="h-4 w-4" />}
+              label="Dashboard"
+              isCollapsed={isCollapsed}
+              isActive={pathname === '/dashboard'}
+            />
+            <NavLink
+              to="/shoots"
+              icon={<CameraIcon className="h-4 w-4" />}
+              label="Shoots"
+              isCollapsed={isCollapsed}
+              isActive={pathname === '/shoots'}
+            />
+            {['admin', 'superadmin'].includes(role) && (
+              <NavLink
+                to="/book-shoot"
+                icon={<ClipboardIcon className="h-4 w-4" />}
+                label="Book Shoot"
+                isCollapsed={isCollapsed}
+                isActive={pathname === '/book-shoot'}
+              />
+            )}
+            <NavLink
+              to="/photographers"
+              icon={<UsersIcon className="h-4 w-4" />}
+              label="Photographers"
+              isCollapsed={isCollapsed}
+              isActive={pathname === '/photographers'}
+            />
+            <NavLink
+              to="/clients"
+              icon={<UserIcon className="h-4 w-4" />}
+              label="Clients"
+              isCollapsed={isCollapsed}
+              isActive={pathname === '/clients'}
+            />
+            {['admin', 'superadmin'].includes(role) && (
+              <NavLink
+                to="/accounts"
+                icon={<BuildingIcon className="h-4 w-4" />}
+                label="Accounts"
+                isCollapsed={isCollapsed}
+                isActive={pathname === '/accounts'}
+              />
+            )}
+            <NavLink
+              to="/media"
+              icon={<ImageIcon className="h-4 w-4" />}
+              label="Media"
+              isCollapsed={isCollapsed}
+              isActive={pathname === '/media'}
+            />
+            <NavLink
+              to="/invoices"
+              icon={<FileTextIcon className="h-4 w-4" />}
+              label="Invoices"
+              isCollapsed={isCollapsed}
+              isActive={pathname === '/invoices'}
+            />
+            {role === 'superadmin' && (
+              <NavLink
+                to="/reports"
+                icon={<BarChart3Icon className="h-4 w-4" />}
+                label="Reports"
+                isCollapsed={isCollapsed}
+                isActive={pathname === '/reports'}
+              />
+            )}
+            {role === 'admin' && (
+              <NavLink
+                to="/availability"
+                icon={<CalendarIcon className="h-4 w-4" />}
+                label="Availability"
+                isCollapsed={isCollapsed}
+                isActive={pathname === '/availability'}
+              />
+            )}
+          </div>
+        </ScrollArea>
+        <div className="mt-auto">
+          <Separator className="my-2" />
+          <NavLink
+            to="/settings"
+            icon={<SettingsIcon className="h-4 w-4" />}
+            label="Settings"
+            isCollapsed={isCollapsed}
+            isActive={pathname === '/settings'}
+          />
+          <Button
+            variant="ghost"
+            size={isCollapsed ? 'icon' : 'default'}
+            className={cn(
+              'w-full justify-start mt-2',
+              isCollapsed && 'h-10 w-10 p-0'
+            )}
+            onClick={logout}
+          >
+            <LogOutIcon className="h-4 w-4 mr-2" />
+            {!isCollapsed && <span>Logout</span>}
           </Button>
         </div>
       </div>
     </motion.div>
+  );
+}
+
+interface NavLinkProps {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  isCollapsed: boolean;
+  isActive: boolean;
+}
+
+function NavLink({ to, icon, label, isCollapsed, isActive }: NavLinkProps) {
+  return (
+    <Link
+      to={to}
+      className={cn(
+        'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/50',
+        isActive ? 'bg-secondary/80 font-medium' : 'text-muted-foreground',
+        isCollapsed && 'justify-center p-2'
+      )}
+    >
+      {icon}
+      {!isCollapsed && <span>{label}</span>}
+    </Link>
   );
 }
