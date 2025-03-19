@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,14 +18,15 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { TimeSelect } from '@/components/ui/time-select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CalendarIcon, CameraIcon, CheckCircleIcon, ClockIcon, HeartIcon, HomeIcon, UserIcon } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data
 const clients = [
   { id: '1', name: 'ABC Properties' },
   { id: '2', name: 'XYZ Realty' },
@@ -49,7 +49,6 @@ const packages = [
 ];
 
 const BookShoot = () => {
-  // Form state
   const [client, setClient] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
@@ -62,54 +61,99 @@ const BookShoot = () => {
   const [notes, setNotes] = useState('');
   const [bypassPayment, setBypassPayment] = useState(false);
   const [sendNotification, setSendNotification] = useState(true);
-  
-  // Current step
   const [step, setStep] = useState(1);
   const [isComplete, setIsComplete] = useState(false);
-  
-  // Calculate total price
+  const { toast } = useToast();
+
   const getPackagePrice = () => {
     const pkg = packages.find(p => p.id === selectedPackage);
     return pkg ? pkg.price : 0;
   };
-  
+
   const getPhotographerRate = () => {
     const photog = photographers.find(p => p.id === photographer);
     return photog ? photog.rate : 0;
   };
-  
+
   const getTax = () => {
     const subtotal = getPackagePrice() + getPhotographerRate();
-    return Math.round(subtotal * 0.06); // 6% tax rate
+    return Math.round(subtotal * 0.06);
   };
-  
+
   const getTotal = () => {
     return getPackagePrice() + getPhotographerRate() + getTax();
   };
-  
-  // Handle form submission
-  const handleSubmit = () => {
-    setIsComplete(true);
-    
-    // In a real app, you would send the data to the server here
-    console.log({
-      client,
-      address,
-      city,
-      state,
-      zip,
-      date,
-      time,
-      photographer,
-      selectedPackage,
-      notes,
-      bypassPayment,
-      sendNotification,
-      total: getTotal(),
-    });
+
+  const getAvailableTimes = () => {
+    if (!photographer || !date) return [];
+
+    const photog = photographers.find(p => p.id === photographer);
+
+    if (!photog || !photog.availability) {
+      return [];
+    }
+
+    return [
+      "9:00 AM", 
+      "10:00 AM", 
+      "11:00 AM", 
+      "1:00 PM", 
+      "2:00 PM", 
+      "3:00 PM"
+    ];
   };
-  
-  // Reset form
+
+  const handleSubmit = () => {
+    if (step === 3) {
+      if (!client || !address || !city || !state || !zip || !date || !time || !photographer || !selectedPackage) {
+        toast({
+          title: "Missing information",
+          description: "Please fill in all required fields before confirming the booking.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsComplete(true);
+
+      console.log({
+        client,
+        address,
+        city,
+        state,
+        zip,
+        date,
+        time,
+        photographer,
+        selectedPackage,
+        notes,
+        bypassPayment,
+        sendNotification,
+        total: getTotal(),
+      });
+    } else {
+      if (step === 1 && (!client || !address || !city || !state || !zip)) {
+        toast({
+          title: "Missing information",
+          description: "Please fill in all client and property details before proceeding.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (step === 2 && (!date || !time || !photographer || !selectedPackage)) {
+        toast({
+          title: "Missing information",
+          description: "Please select a date, time, photographer, and package before proceeding.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setStep(step + 1);
+    }
+  };
+
   const resetForm = () => {
     setClient('');
     setAddress('');
@@ -126,11 +170,10 @@ const BookShoot = () => {
     setStep(1);
     setIsComplete(false);
   };
-  
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Page header */}
         <div>
           <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
             New Booking
@@ -140,8 +183,7 @@ const BookShoot = () => {
             Schedule a new photography session for a property.
           </p>
         </div>
-        
-        {/* Booking form */}
+
         <AnimatePresence mode="wait">
           {isComplete ? (
             <motion.div
@@ -198,7 +240,7 @@ const BookShoot = () => {
                     {step === 3 && 'Review booking details and confirm'}
                   </CardDescription>
                 </CardHeader>
-                
+
                 <CardContent>
                   <AnimatePresence mode="wait">
                     {step === 1 && (
@@ -297,12 +339,18 @@ const BookShoot = () => {
                                   {date ? format(date, 'PPP') : <span>Pick a date</span>}
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0">
+                              <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar
                                   mode="single"
                                   selected={date}
                                   onSelect={setDate}
                                   initialFocus
+                                  disabled={(date) => {
+                                    return date < new Date(new Date().setHours(0, 0, 0, 0));
+                                  }}
+                                  modifiers={{
+                                    available: date ? [date] : [],
+                                  }}
                                 />
                               </PopoverContent>
                             </Popover>
@@ -310,21 +358,19 @@ const BookShoot = () => {
                           
                           <div>
                             <Label htmlFor="time">Select Time</Label>
-                            <Select value={time} onValueChange={setTime}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a time" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="9:00 AM">9:00 AM</SelectItem>
-                                <SelectItem value="10:00 AM">10:00 AM</SelectItem>
-                                <SelectItem value="11:00 AM">11:00 AM</SelectItem>
-                                <SelectItem value="12:00 PM">12:00 PM</SelectItem>
-                                <SelectItem value="1:00 PM">1:00 PM</SelectItem>
-                                <SelectItem value="2:00 PM">2:00 PM</SelectItem>
-                                <SelectItem value="3:00 PM">3:00 PM</SelectItem>
-                                <SelectItem value="4:00 PM">4:00 PM</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <TimeSelect 
+                              value={time}
+                              onChange={setTime}
+                              availableTimes={getAvailableTimes()}
+                              disabled={!date || !photographer}
+                              placeholder={
+                                !date 
+                                  ? "Select a date first" 
+                                  : !photographer 
+                                  ? "Select a photographer first"
+                                  : "Select a time"
+                              }
+                            />
                           </div>
                         </div>
                         
@@ -558,13 +604,7 @@ const BookShoot = () => {
                   </Button>
                   
                   <Button
-                    onClick={() => {
-                      if (step < 3) {
-                        setStep(step + 1);
-                      } else {
-                        handleSubmit();
-                      }
-                    }}
+                    onClick={handleSubmit}
                   >
                     {step === 3 ? 'Confirm Booking' : 'Next'}
                   </Button>
