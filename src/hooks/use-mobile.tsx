@@ -5,25 +5,39 @@ const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean>(() => {
-    // Default to true on server (SSR) to prevent layout shifts
+    // Default to false on server (SSR) to prevent layout shifts
     if (typeof window === 'undefined') return false
     return window.innerWidth < MOBILE_BREAKPOINT
   })
 
   React.useEffect(() => {
     // Handler to call on window resize
-    function handleResize() {
+    const handleResize = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
     
-    // Set up event listener
-    window.addEventListener('resize', handleResize)
+    // Create a debounced version of the resize handler
+    let timeoutId: number | null = null
+    const debouncedHandleResize = () => {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId)
+      }
+      timeoutId = window.setTimeout(handleResize, 150)
+    }
+    
+    // Set up event listener with debounced handler
+    window.addEventListener('resize', debouncedHandleResize)
     
     // Call handler right away to set initial state
     handleResize()
     
     // Remove event listener on cleanup
-    return () => window.removeEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', debouncedHandleResize)
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId)
+      }
+    }
   }, [])
 
   return isMobile

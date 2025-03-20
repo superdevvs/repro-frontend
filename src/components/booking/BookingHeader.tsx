@@ -16,8 +16,8 @@ export function BookingHeader({ title, description }: BookingHeaderProps) {
       <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
         New Booking
       </Badge>
-      <h1 className={`text-2xl md:text-3xl font-bold ${isMobile ? "mt-2" : ""}`}>{title}</h1>
-      <p className="text-muted-foreground max-w-lg mt-1">
+      <h1 className={`text-2xl md:text-3xl font-bold tracking-tight ${isMobile ? "mt-2" : ""}`}>{title}</h1>
+      <p className="text-muted-foreground max-w-xl mt-2">
         {description}
       </p>
     </div>

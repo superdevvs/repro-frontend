@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
@@ -180,11 +179,11 @@
   }
 
   .timeline-hour {
-    @apply text-xs text-muted-foreground text-right pr-2;
+    @apply text-xs text-muted-foreground text-right pr-2 min-w-[60px];
   }
 
   .timeline-slot {
-    @apply rounded border border-border bg-card/50 hover:bg-primary/10 hover:border-primary/30 transition-all cursor-pointer;
+    @apply rounded border border-border bg-card/50 hover:bg-primary/10 hover:border-primary/30 transition-all cursor-pointer min-w-[100px];
   }
 
   .timeline-slot-booked {

@@ -12,9 +12,8 @@ import {
   isToday,
   startOfDay,
   addHours,
-  parseISO,
   isSameMonth,
-  isWithinInterval,
+  parseISO,
 } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,6 +33,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { ShootData } from '@/types/shoots';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CalendarProps {
   className?: string;
@@ -78,6 +78,7 @@ export function Calendar({ className, events = [] }: CalendarProps) {
   const [viewType, setViewType] = useState<ViewType>('week');
   const { role } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   // Use provided events or fallback to mock data if empty
   const shootEvents = events.length > 0 
@@ -184,12 +185,12 @@ export function Calendar({ className, events = [] }: CalendarProps) {
       className={cn("w-full", className)}
     >
       <Card className="glass-card overflow-hidden">
-        <CardHeader className="flex flex-row items-center border-b border-border pb-4">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center border-b border-border pb-4 gap-2">
           <div className="flex items-center gap-2">
             <CalendarIcon className="h-5 w-5 text-primary" />
             <CardTitle>Calendar</CardTitle>
           </div>
-          <div className="flex items-center ml-auto gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto">
             <Button
               variant="outline"
               size="sm"
@@ -236,120 +237,122 @@ export function Calendar({ className, events = [] }: CalendarProps) {
             </div>
             
             {['admin', 'superadmin'].includes(role) && (
-              <Button size="sm" onClick={handleAddShoot} className="ml-2">
+              <Button size="sm" onClick={handleAddShoot} className="ml-auto sm:ml-2">
                 <PlusCircleIcon className="h-4 w-4 mr-1" />
-                New Shoot
+                <span className={isMobile ? "hidden" : ""}>New Shoot</span>
               </Button>
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="grid grid-cols-8 gap-1">
-            {/* Empty cell for time column */}
-            <div className="h-10 p-2 border-b border-r border-border bg-muted/30" />
-            
-            {/* Day headers */}
-            {daysToDisplay.map((day, i) => (
-              <div 
-                key={i}
-                className={cn(
-                  "flex flex-col items-center justify-center h-10 p-2 border-b border-r border-border",
-                  isToday(day) ? "bg-primary/5" : "bg-muted/30",
-                  viewType === "month" && "col-span-1"
-                )}
-              >
-                <div className="flex flex-col items-center">
-                  <span className="text-xs text-muted-foreground">
-                    {format(day, 'EEE')}
-                  </span>
-                  <span className={cn(
-                    "text-sm w-6 h-6 flex items-center justify-center rounded-full",
-                    isToday(day) && "bg-primary text-primary-foreground"
-                  )}>
-                    {format(day, 'd')}
-                  </span>
+        <CardContent className="p-0 overflow-x-auto">
+          <div className="min-w-[700px]">
+            <div className="grid grid-cols-8 gap-px">
+              {/* Empty cell for time column */}
+              <div className="h-10 p-2 border-b border-r border-border bg-muted/30" />
+              
+              {/* Day headers */}
+              {daysToDisplay.map((day, i) => (
+                <div 
+                  key={i}
+                  className={cn(
+                    "flex flex-col items-center justify-center h-10 p-2 border-b border-r border-border",
+                    isToday(day) ? "bg-primary/5" : "bg-muted/30",
+                    viewType === "month" && "col-span-1"
+                  )}
+                >
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs text-muted-foreground">
+                      {format(day, 'EEE')}
+                    </span>
+                    <span className={cn(
+                      "text-sm w-6 h-6 flex items-center justify-center rounded-full",
+                      isToday(day) && "bg-primary text-primary-foreground"
+                    )}>
+                      {format(day, 'd')}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
-            
-            {/* Time slots */}
-            {hours.map((hour) => (
-              <React.Fragment key={hour}>
-                {/* Time label */}
-                <div className="timeline-hour h-20 flex items-center justify-end pr-2 border-r border-border text-xs text-muted-foreground">
-                  {format(addHours(startOfDay(new Date()), hour), 'h a')}
-                </div>
-                
-                {/* Slots for each day */}
-                {daysToDisplay.map((day, dayIndex) => {
-                  const eventsForSlot = getEventsForDateAndHour(day, hour);
-                  const hasEvents = eventsForSlot.length > 0;
+              ))}
+              
+              {/* Time slots */}
+              {hours.map((hour) => (
+                <React.Fragment key={hour}>
+                  {/* Time label */}
+                  <div className="timeline-hour h-20 flex items-center justify-end pr-2 border-r border-b border-border text-xs text-muted-foreground sticky left-0 bg-background z-10">
+                    {format(addHours(startOfDay(new Date()), hour), 'h a')}
+                  </div>
                   
-                  return (
-                    <div 
-                      key={`${hour}-${dayIndex}`}
-                      className={cn(
-                        "timeline-slot h-20 relative border-b border-r border-border p-1",
-                        hasEvents ? "bg-primary/5" : "bg-background",
-                        isToday(day) && "bg-primary/5"
-                      )}
-                    >
-                      {hasEvents ? (
-                        eventsForSlot.map((event) => (
-                          <TooltipProvider key={event.id}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="absolute inset-1 rounded-md bg-primary/20 border border-primary/30 p-2 hover:bg-primary/30 transition-colors cursor-pointer">
-                                  <div className="flex flex-col h-full">
-                                    <span className="text-xs font-medium truncate">{event.title}</span>
-                                    <div className="flex items-center text-xs text-muted-foreground mt-1">
-                                      <ClockIcon className="h-3 w-3 mr-1" />
-                                      <span>
-                                        {format(event.startTime, 'h:mm a')} - {format(event.endTime, 'h:mm a')}
-                                      </span>
-                                    </div>
-                                    <div className="mt-auto flex items-center text-xs">
-                                      <UserIcon className="h-3 w-3 mr-1 text-muted-foreground" />
-                                      <span className="truncate">{event.photographer}</span>
+                  {/* Slots for each day */}
+                  {daysToDisplay.map((day, dayIndex) => {
+                    const eventsForSlot = getEventsForDateAndHour(day, hour);
+                    const hasEvents = eventsForSlot.length > 0;
+                    
+                    return (
+                      <div 
+                        key={`${hour}-${dayIndex}`}
+                        className={cn(
+                          "timeline-slot h-20 relative border-b border-r border-border p-1",
+                          hasEvents ? "bg-primary/5" : "bg-background",
+                          isToday(day) && "bg-primary/5"
+                        )}
+                      >
+                        {hasEvents ? (
+                          eventsForSlot.map((event) => (
+                            <TooltipProvider key={event.id}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="absolute inset-1 rounded-md bg-primary/20 border border-primary/30 p-2 hover:bg-primary/30 transition-colors cursor-pointer overflow-hidden">
+                                    <div className="flex flex-col h-full">
+                                      <span className="text-xs font-medium truncate">{event.title}</span>
+                                      <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                        <ClockIcon className="h-3 w-3 mr-1 flex-shrink-0" />
+                                        <span className="truncate">
+                                          {format(event.startTime, 'h:mm a')} - {format(event.endTime, 'h:mm a')}
+                                        </span>
+                                      </div>
+                                      <div className="mt-auto flex items-center text-xs">
+                                        <UserIcon className="h-3 w-3 mr-1 text-muted-foreground flex-shrink-0" />
+                                        <span className="truncate">{event.photographer}</span>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <div className="space-y-1">
-                                  <p className="font-medium">{event.title}</p>
-                                  <p className="text-xs flex items-center">
-                                    <ClockIcon className="h-3 w-3 mr-1" />
-                                    {format(event.startTime, 'h:mm a')} - {format(event.endTime, 'h:mm a')}
-                                  </p>
-                                  <p className="text-xs flex items-center">
-                                    <UserIcon className="h-3 w-3 mr-1" />
-                                    Photographer: {event.photographer}
-                                  </p>
-                                  <p className="text-xs">Client: {event.client}</p>
-                                  <Badge 
-                                    variant={
-                                      event.status === 'completed' ? 'default' : 
-                                      event.status === 'scheduled' ? 'secondary' : 
-                                      event.status === 'pending' ? 'outline' : 'secondary'
-                                    }
-                                    className="mt-1 text-xs"
-                                  >
-                                    {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                                  </Badge>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ))
-                      ) : (
-                        <div className="w-full h-full"></div>
-                      )}
-                    </div>
-                  );
-                })}
-              </React.Fragment>
-            ))}
+                                </TooltipTrigger>
+                                <TooltipContent side="right" align="start">
+                                  <div className="space-y-1">
+                                    <p className="font-medium">{event.title}</p>
+                                    <p className="text-xs flex items-center">
+                                      <ClockIcon className="h-3 w-3 mr-1" />
+                                      {format(event.startTime, 'h:mm a')} - {format(event.endTime, 'h:mm a')}
+                                    </p>
+                                    <p className="text-xs flex items-center">
+                                      <UserIcon className="h-3 w-3 mr-1" />
+                                      Photographer: {event.photographer}
+                                    </p>
+                                    <p className="text-xs">Client: {event.client}</p>
+                                    <Badge 
+                                      variant={
+                                        event.status === 'completed' ? 'default' : 
+                                        event.status === 'scheduled' ? 'secondary' : 
+                                        event.status === 'pending' ? 'outline' : 'secondary'
+                                      }
+                                      className="mt-1 text-xs"
+                                    >
+                                      {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                                    </Badge>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ))
+                        ) : (
+                          <div className="w-full h-full"></div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
