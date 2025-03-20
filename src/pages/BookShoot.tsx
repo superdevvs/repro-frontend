@@ -13,6 +13,7 @@ import { BookingComplete } from '@/components/booking/BookingComplete';
 import { useShoots } from '@/context/ShootsContext';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
+import { ShootData } from '@/types/shoots';
 
 const clients = [
   { id: '1', name: 'ABC Properties' },
@@ -107,7 +108,7 @@ const BookShoot = () => {
       const selectedPhotographerData = photographers.find(p => p.id === photographer);
       const selectedPackageData = packages.find(p => p.id === selectedPackage);
       
-      const newShoot = {
+      const newShoot: ShootData = {
         id: uuidv4(),
         scheduledDate: date.toISOString().split('T')[0],
         client: {
@@ -134,7 +135,7 @@ const BookShoot = () => {
           totalQuote: getTotal(),
           ...(bypassPayment ? {} : { totalPaid: getTotal(), lastPaymentDate: new Date().toISOString().split('T')[0], lastPaymentType: 'Credit Card' })
         },
-        status: 'scheduled',
+        status: 'scheduled' as const,
         notes: notes ? { shootNotes: notes } : undefined,
         createdBy: "Current User"
       };

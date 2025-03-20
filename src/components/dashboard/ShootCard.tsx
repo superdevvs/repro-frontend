@@ -21,7 +21,7 @@ interface ShootCardProps {
   client: {
     name: string;
   };
-  status: 'scheduled' | 'completed' | 'pending' | 'cancelled';
+  status: 'scheduled' | 'completed' | 'pending' | 'hold';
   price?: number;
   delay?: number;
   onClick?: () => void;
@@ -45,14 +45,14 @@ export function ShootCard({
     scheduled: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
     completed: 'bg-green-500/10 text-green-500 border-green-500/20',
     pending: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-    cancelled: 'bg-red-500/10 text-red-500 border-red-500/20',
+    hold: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
   };
 
   const statusText = {
     scheduled: 'Scheduled',
     completed: 'Completed',
     pending: 'Pending',
-    cancelled: 'Cancelled',
+    hold: 'Hold',
   };
 
   return (
