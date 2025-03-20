@@ -27,11 +27,14 @@ import {
   MoreHorizontal, 
   SendIcon, 
   Upload, 
-  FileText 
+  FileText,
+  ChevronRight
 } from "lucide-react";
 import { ShootData } from '@/types/shoots';
 import { format } from 'date-fns';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ShootsListProps {
   shoots: ShootData[];
@@ -40,6 +43,7 @@ interface ShootsListProps {
 
 export function ShootsList({ shoots, onViewDetails }: ShootsListProps) {
   const { role } = useAuth();
+  const isMobile = useIsMobile();
   const isAdmin = ['admin', 'superadmin'].includes(role);
   const isPhotographer = role === 'photographer';
   
@@ -70,6 +74,50 @@ export function ShootsList({ shoots, onViewDetails }: ShootsListProps) {
     }
     return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Paid</Badge>;
   };
+  
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        {shoots.length > 0 ? (
+          shoots.map((shoot) => (
+            <Card key={shoot.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-semibold">{shoot.client.name}</div>
+                      <div className="text-xs text-muted-foreground">{formatDate(shoot.scheduledDate)}</div>
+                    </div>
+                    <div>{getStatusBadge(shoot.status)}</div>
+                  </div>
+                  
+                  <div className="text-sm truncate">{shoot.location.fullAddress}</div>
+                  
+                  <div className="flex justify-between items-center border-t pt-3 mt-3">
+                    <div className="text-xs text-muted-foreground">
+                      {shoot.photographer.name}
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0" 
+                      onClick={() => onViewDetails(shoot)}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No shoots found.
+          </div>
+        )}
+      </div>
+    );
+  }
   
   return (
     <div className="rounded-md border">
