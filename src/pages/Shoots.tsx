@@ -7,7 +7,7 @@ import { ShootsHeader } from '@/components/dashboard/ShootsHeader';
 import { ShootsFilter } from '@/components/dashboard/ShootsFilter';
 import { ShootsContent } from '@/components/dashboard/ShootsContent';
 import { ShootData } from '@/types/shoots';
-import { shootsData } from '@/data/shootsData';
+import { useShoots } from '@/context/ShootsContext';
 
 const Shoots = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,8 +16,11 @@ const Shoots = () => {
   const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   
+  // Use the shoots from context instead of importing directly from data file
+  const { shoots } = useShoots();
+  
   // Filter shoots based on search term and selected tab
-  const filteredShoots = shootsData.filter(shoot => {
+  const filteredShoots = shoots.filter(shoot => {
     const matchesSearch = 
       shoot.location.fullAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
       shoot.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

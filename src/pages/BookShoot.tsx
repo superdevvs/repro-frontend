@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,9 @@ import { ClientPropertyForm } from '@/components/booking/ClientPropertyForm';
 import { SchedulingForm } from '@/components/booking/SchedulingForm';
 import { ReviewForm } from '@/components/booking/ReviewForm';
 import { BookingComplete } from '@/components/booking/BookingComplete';
+import { useShoots } from '@/context/ShootsContext';
+import { useNavigate } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
 
 const clients = [
   { id: '1', name: 'ABC Properties' },
@@ -49,6 +51,8 @@ const BookShoot = () => {
   const [step, setStep] = useState(1);
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
+  const { addShoot } = useShoots();
+  const navigate = useNavigate();
 
   const getPackagePrice = () => {
     const pkg = packages.find(p => p.id === selectedPackage);
@@ -99,23 +103,46 @@ const BookShoot = () => {
         return;
       }
 
+      const selectedClientData = clients.find(c => c.id === client);
+      const selectedPhotographerData = photographers.find(p => p.id === photographer);
+      const selectedPackageData = packages.find(p => p.id === selectedPackage);
+      
+      const newShoot = {
+        id: uuidv4(),
+        scheduledDate: date.toISOString().split('T')[0],
+        client: {
+          name: selectedClientData?.name || 'Unknown Client',
+          email: `client${client}@example.com`,
+          totalShoots: 1
+        },
+        location: {
+          address: address,
+          city: city,
+          state: state,
+          zip: zip,
+          fullAddress: `${address}, ${city}, ${state} ${zip}`
+        },
+        photographer: {
+          name: selectedPhotographerData?.name || 'Unknown Photographer',
+          avatar: selectedPhotographerData?.avatar
+        },
+        services: selectedPackageData ? [selectedPackageData.name] : [],
+        payment: {
+          baseQuote: getPackagePrice(),
+          taxRate: 6.00,
+          taxAmount: getTax(),
+          totalQuote: getTotal(),
+          ...(bypassPayment ? {} : { totalPaid: getTotal(), lastPaymentDate: new Date().toISOString().split('T')[0], lastPaymentType: 'Credit Card' })
+        },
+        status: 'scheduled',
+        notes: notes ? { shootNotes: notes } : undefined,
+        createdBy: "Current User"
+      };
+
+      addShoot(newShoot);
       setIsComplete(true);
 
-      console.log({
-        client,
-        address,
-        city,
-        state,
-        zip,
-        date,
-        time,
-        photographer,
-        selectedPackage,
-        notes,
-        bypassPayment,
-        sendNotification,
-        total: getTotal(),
-      });
+      console.log("New shoot created:", newShoot);
     } else {
       if (step === 1 && (!client || !address || !city || !state || !zip)) {
         toast({
@@ -154,6 +181,7 @@ const BookShoot = () => {
     setSendNotification(true);
     setStep(1);
     setIsComplete(false);
+    navigate('/shoots');
   };
 
   return (
