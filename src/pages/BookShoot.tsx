@@ -42,7 +42,7 @@ const BookShoot = () => {
   const clientIdFromUrl = queryParams.get('clientId');
   const clientNameFromUrl = queryParams.get('clientName');
   
-  const [client, setClient] = useState('');
+  const [client, setClient] = useState(clientIdFromUrl || '');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -61,16 +61,14 @@ const BookShoot = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (clientIdFromUrl) {
+    if (clientIdFromUrl && clientNameFromUrl) {
       setClient(clientIdFromUrl);
       
-      if (clientNameFromUrl) {
-        toast({
-          title: "Client Selected",
-          description: `${decodeURIComponent(clientNameFromUrl)} has been selected for this shoot.`,
-          variant: "default",
-        });
-      }
+      toast({
+        title: "Client Selected",
+        description: `${decodeURIComponent(clientNameFromUrl)} has been selected for this shoot.`,
+        variant: "default",
+      });
     }
   }, [clientIdFromUrl, clientNameFromUrl, toast]);
 

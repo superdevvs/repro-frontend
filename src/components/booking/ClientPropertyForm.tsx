@@ -40,6 +40,10 @@ export function ClientPropertyForm({
   setSelectedPackage,
   packages
 }: ClientPropertyFormProps) {
+  // Find the selected client's name for display
+  const selectedClient = clients.find(c => c.id === client);
+  const clientFromUrl = client !== '';
+
   return (
     <motion.div
       key="step1"
@@ -52,18 +56,24 @@ export function ClientPropertyForm({
       <div className="space-y-4">
         <div>
           <Label htmlFor="client">Select Client</Label>
-          <Select value={client} onValueChange={setClient}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a client" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {clientFromUrl ? (
+            <div className="flex items-center mt-2 p-2 bg-primary/5 border border-primary/20 rounded-md">
+              <span className="text-primary font-medium">{selectedClient?.name || 'Selected Client'}</span>
+            </div>
+          ) : (
+            <Select value={client} onValueChange={setClient}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a client" />
+              </SelectTrigger>
+              <SelectContent>
+                {clients.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         
         <div>
