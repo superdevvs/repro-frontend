@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -24,4 +25,5 @@ const initializeTheme = () => {
 // Run theme initialization
 initializeTheme();
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Create root with proper import from ReactDOM
+ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
