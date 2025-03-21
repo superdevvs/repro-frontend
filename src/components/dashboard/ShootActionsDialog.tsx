@@ -36,24 +36,6 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
     onClose();
   };
 
-  const handleCompleted = () => {
-    updateShoot(shoot.id, { status: 'completed' });
-    toast({
-      title: "Shoot completed",
-      description: `Shoot #${shoot.id} has been marked as completed.`,
-    });
-    onClose();
-  };
-
-  const handlePending = () => {
-    updateShoot(shoot.id, { status: 'pending' });
-    toast({
-      title: "Shoot pending",
-      description: `Shoot #${shoot.id} has been marked as pending.`,
-    });
-    onClose();
-  };
-
   const handleReschedule = () => {
     setShowRescheduleDialog(true);
   };
@@ -88,42 +70,17 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
           </div>
           
           <DialogFooter className="flex flex-wrap justify-end gap-2">
-            {/* Always show Cancel button except for completed shoots */}
-            {shoot.status !== 'completed' && (
-              <Button variant="outline" onClick={handleCancel}>
-                Cancel Shoot
-              </Button>
-            )}
+            {/* Show only the three required options */}
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel Shoot
+            </Button>
             
-            {/* Show different actions based on status */}
-            {shoot.status === 'hold' && (
-              <Button variant="outline" onClick={handleAccept}>
-                Confirm & Schedule
-              </Button>
-            )}
+            <Button variant="outline" onClick={handleReschedule}>
+              Reschedule
+            </Button>
             
-            {shoot.status === 'scheduled' && (
-              <Button variant="outline" onClick={handlePending}>
-                Mark as Pending
-              </Button>
-            )}
-            
-            {shoot.status === 'pending' && (
-              <Button variant="outline" onClick={handleCompleted}>
-                Mark as Completed
-              </Button>
-            )}
-            
-            {/* Show Reschedule option for everything except completed shoots */}
-            {shoot.status !== 'completed' && (
-              <Button variant="outline" onClick={handleReschedule}>
-                Reschedule
-              </Button>
-            )}
-            
-            {/* Primary action button */}
             <Button onClick={handleAccept}>
-              {shoot.status === 'hold' ? 'Confirm & Schedule' : 'Accept & Confirm'}
+              Confirm & Schedule
             </Button>
           </DialogFooter>
         </DialogContent>
