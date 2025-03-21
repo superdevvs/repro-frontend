@@ -26,4 +26,5 @@ export function PageTransition({
   );
 }
 
+// Add default export to support both named and default imports
 export default PageTransition;
