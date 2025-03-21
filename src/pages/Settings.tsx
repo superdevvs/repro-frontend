@@ -95,6 +95,8 @@ const SettingsPage = () => {
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
   const [profilePicture, setProfilePicture] = useState<string | null>(user?.avatar || null);
 
+  const defaultUsername = user?.name?.toLowerCase().replace(/\s+/g, '.') || '';
+
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -106,7 +108,7 @@ const SettingsPage = () => {
   const accountForm = useForm<z.infer<typeof accountFormSchema>>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: {
-      username: user?.username || "",
+      username: defaultUsername,
     },
   });
 
@@ -118,16 +120,13 @@ const SettingsPage = () => {
     },
   });
 
-  // Apply theme on component mount and when theme changes
   useEffect(() => {
-    // Apply the theme from localStorage on mount
     const storedTheme = localStorage.getItem('theme');
     if (storedTheme) {
       applyTheme(storedTheme);
     }
   }, []);
 
-  // Function to apply theme
   const applyTheme = (selectedTheme: string) => {
     document.documentElement.classList.remove('dark', 'light');
     
@@ -141,7 +140,6 @@ const SettingsPage = () => {
   
   const handleProfileSubmit = async (values: z.infer<typeof profileFormSchema>) => {
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
       toast({
         title: "Profile Updated",
@@ -159,7 +157,6 @@ const SettingsPage = () => {
 
   const handleAccountSubmit = async (values: z.infer<typeof accountFormSchema>) => {
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
       toast({
         title: "Account Updated",
@@ -177,7 +174,6 @@ const SettingsPage = () => {
 
   const handleSecuritySubmit = async (values: z.infer<typeof securityFormSchema>) => {
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
       toast({
         title: "Security Updated",
@@ -194,15 +190,12 @@ const SettingsPage = () => {
   };
   
   const handleAppearanceSubmit = () => {
-    // Save settings to localStorage
     localStorage.setItem('theme', theme);
     localStorage.setItem('sidebarCollapse', sidebarCollapse.toString());
     localStorage.setItem('animations', animations.toString());
     
-    // Apply theme changes
     applyTheme(theme);
     
-    // Apply animation settings
     document.documentElement.classList.toggle('reduce-motion', !animations);
     
     toast({
@@ -232,13 +225,31 @@ const SettingsPage = () => {
   const handleDownloadData = async () => {
     setIsDownloadingData(true);
     try {
-      // Simulate data fetching and download
       await new Promise((resolve) => setTimeout(resolve, 2000));
+      
+      const userData = JSON.stringify({
+        name: user?.name,
+        email: user?.email,
+        role: role,
+        avatar: profilePicture,
+      }, null, 2);
+      
+      const blob = new Blob([userData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'user-data.json';
+      document.body.appendChild(link);
+      link.click();
+      
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
       toast({
-        title: "Download Started",
-        description: "Your data is being downloaded.",
+        title: "Download Complete",
+        description: "Your data has been downloaded.",
       });
-      console.log('Data download initiated');
+      console.log('Data download completed');
     } catch (error) {
       toast({
         variant: "destructive",
@@ -252,13 +263,14 @@ const SettingsPage = () => {
 
   const handleDeleteAccount = async () => {
     try {
-      // Simulate account deletion
       await new Promise((resolve) => setTimeout(resolve, 2000));
       toast({
         title: "Account Deleted",
         description: "Your account has been successfully deleted.",
       });
-      console.log('Account deletion initiated');
+      console.log('Account deletion completed');
+      
+      window.location.href = '/';
     } catch (error) {
       toast({
         variant: "destructive",
@@ -270,7 +282,6 @@ const SettingsPage = () => {
     }
   };
 
-  // Function to watch for system theme changes
   useEffect(() => {
     if (theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
