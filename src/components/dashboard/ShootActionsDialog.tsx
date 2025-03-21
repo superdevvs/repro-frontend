@@ -45,6 +45,86 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
     onClose();
   };
 
+  const handleMarkPending = () => {
+    updateShoot(shoot.id, { status: 'pending' });
+    toast({
+      title: "Shoot status updated",
+      description: `Shoot #${shoot.id} has been marked as pending.`,
+    });
+    onClose();
+  };
+
+  const handleMarkCompleted = () => {
+    updateShoot(shoot.id, { 
+      status: 'completed',
+      completedDate: new Date().toISOString().split('T')[0]
+    });
+    toast({
+      title: "Shoot completed",
+      description: `Shoot #${shoot.id} has been marked as completed.`,
+    });
+    onClose();
+  };
+
+  // Render different actions based on shoot status
+  const renderActionButtons = () => {
+    switch (shoot.status) {
+      case 'scheduled':
+        return (
+          <>
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel Shoot
+            </Button>
+            <Button variant="outline" onClick={handleReschedule}>
+              Reschedule
+            </Button>
+            <Button variant="outline" onClick={handleMarkPending}>
+              Mark as Pending
+            </Button>
+          </>
+        );
+      
+      case 'pending':
+        return (
+          <>
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel Shoot
+            </Button>
+            <Button variant="outline" onClick={handleReschedule}>
+              Reschedule
+            </Button>
+            <Button onClick={handleMarkCompleted}>
+              Mark as Completed
+            </Button>
+          </>
+        );
+      
+      case 'hold':
+        return (
+          <>
+            <Button variant="outline" onClick={handleReschedule}>
+              Reschedule
+            </Button>
+            <Button onClick={handleAccept}>
+              Confirm & Schedule
+            </Button>
+          </>
+        );
+      
+      default:
+        return (
+          <>
+            <Button variant="outline" onClick={handleReschedule}>
+              Reschedule
+            </Button>
+            <Button onClick={handleAccept}>
+              Confirm & Schedule
+            </Button>
+          </>
+        );
+    }
+  };
+
   return (
     <>
       <Dialog open={isOpen && !showRescheduleDialog} onOpenChange={onClose}>
@@ -67,21 +147,13 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
               Date: {new Date(shoot.scheduledDate).toLocaleDateString()}
               {shoot.time ? ` at ${shoot.time}` : ''}
             </p>
+            <p className="text-sm font-medium">
+              Current Status: <span className="capitalize">{shoot.status}</span>
+            </p>
           </div>
           
           <DialogFooter className="flex flex-wrap justify-end gap-2">
-            {/* Show only the three required options */}
-            <Button variant="outline" onClick={handleCancel}>
-              Cancel Shoot
-            </Button>
-            
-            <Button variant="outline" onClick={handleReschedule}>
-              Reschedule
-            </Button>
-            
-            <Button onClick={handleAccept}>
-              Confirm & Schedule
-            </Button>
+            {renderActionButtons()}
           </DialogFooter>
         </DialogContent>
       </Dialog>
