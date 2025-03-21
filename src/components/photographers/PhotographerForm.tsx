@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -64,6 +64,7 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [showUploadOptions, setShowUploadOptions] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<PhotographerFormValues>({
     resolver: zodResolver(photographerFormSchema),
@@ -80,11 +81,31 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // In a real app, you would upload to a storage service
-      // For now, we'll create a local URL
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please upload an image file (JPEG, PNG, etc.)',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: 'File too large',
+          description: 'Please upload an image smaller than 5MB',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Create URL for preview
       const url = URL.createObjectURL(file);
       setAvatarUrl(url);
       form.setValue('avatar', url);
+      form.trigger('avatar');
       setShowUploadOptions(false);
       
       toast({
@@ -96,17 +117,32 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
 
   const handleExternalUpload = (source: 'google-drive' | 'dropbox') => {
     // In a real app, this would launch the respective picker
-    // For demo purposes, we'll just show a toast
+    // For demo purposes, we'll just show a toast and use a placeholder
+    let serviceName = source === 'google-drive' ? 'Google Drive' : 'Dropbox';
+    
+    // Simulate loading state
     toast({
-      title: 'External upload',
-      description: `${source === 'google-drive' ? 'Google Drive' : 'Dropbox'} integration would launch here.`,
+      title: `Connecting to ${serviceName}`,
+      description: `Opening ${serviceName} file picker...`,
     });
     
-    // Mock a successful upload with a placeholder avatar
-    const placeholderUrl = 'https://ui.shadcn.com/avatars/01.png';
-    setAvatarUrl(placeholderUrl);
-    form.setValue('avatar', placeholderUrl);
-    setShowUploadOptions(false);
+    // Mock successful upload with a placeholder avatar after a short delay
+    setTimeout(() => {
+      // In a real implementation, you would get the URL from the API response
+      const placeholderUrl = source === 'google-drive'
+        ? 'https://ui.shadcn.com/avatars/02.png'  // Different image for each source
+        : 'https://ui.shadcn.com/avatars/03.png';
+      
+      setAvatarUrl(placeholderUrl);
+      form.setValue('avatar', placeholderUrl);
+      form.trigger('avatar');
+      setShowUploadOptions(false);
+      
+      toast({
+        title: 'File uploaded',
+        description: `Image from ${serviceName} has been uploaded successfully.`,
+      });
+    }, 1500);
   };
 
   const handleSpecialtyChange = (specialty: string) => {
@@ -121,14 +157,44 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
 
   React.useEffect(() => {
     form.setValue('specialties', selectedSpecialties);
+    if (selectedSpecialties.length > 0) {
+      form.clearErrors('specialties');
+    }
   }, [selectedSpecialties, form]);
 
   const handleSubmitForm = (data: PhotographerFormValues) => {
+    if (selectedSpecialties.length === 0) {
+      form.setError('specialties', {
+        type: 'manual',
+        message: 'Select at least one specialty',
+      });
+      return;
+    }
+    
+    // Make sure we have the avatar URL in the form data
+    if (avatarUrl) {
+      data.avatar = avatarUrl;
+    }
+    
     onSubmit(data);
     form.reset();
     setAvatarUrl('');
     setSelectedSpecialties([]);
   };
+
+  const resetForm = () => {
+    form.reset();
+    setAvatarUrl('');
+    setSelectedSpecialties([]);
+    setShowUploadOptions(false);
+    onOpenChange(false);
+  };
+
+  React.useEffect(() => {
+    if (!open) {
+      resetForm();
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -182,6 +248,7 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
                       </Button>
                       <input 
                         type="file" 
+                        ref={fileInputRef}
                         className="hidden" 
                         accept="image/*" 
                         onChange={handleFileUpload} 
@@ -309,7 +376,7 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
             />
             
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={resetForm}>
                 Cancel
               </Button>
               <Button type="submit">Add Photographer</Button>

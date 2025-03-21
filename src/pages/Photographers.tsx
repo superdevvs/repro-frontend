@@ -78,8 +78,11 @@ const Photographers = () => {
   });
 
   const handleAddPhotographer = (data: any) => {
+    // Create unique ID for new photographer
+    const newId = `${Date.now()}`;
+    
     const newPhotographer = {
-      id: `${photographersList.length + 1}`,
+      id: newId,
       name: data.name,
       email: data.email,
       avatar: data.avatar || 'https://ui.shadcn.com/avatars/01.png',
@@ -93,10 +96,14 @@ const Photographers = () => {
     setPhotographersList(prev => [...prev, newPhotographer]);
     setFormOpen(false);
     
+    // Display success message
     toast({
       title: 'Photographer Added',
       description: `${data.name} has been added to the directory.`,
     });
+    
+    // Log the new photographer for debugging
+    console.log('New photographer added:', newPhotographer);
   };
 
   return (
