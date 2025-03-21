@@ -13,8 +13,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { 
+  AlertTriangleIcon,
   BellIcon, 
   CreditCardIcon, 
+  Download,
   GlobeIcon, 
   KeyIcon, 
   MailIcon, 
@@ -22,6 +24,7 @@ import {
   SaveIcon, 
   SettingsIcon, 
   SmartphoneIcon, 
+  Trash2,
   UserIcon 
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -32,6 +35,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Define form validation schemas
 const profileFormSchema = z.object({
@@ -70,6 +74,8 @@ const SettingsPage = () => {
   const [theme, setTheme] = useState('light');
   const [sidebarCollapse, setSidebarCollapse] = useState(true);
   const [animations, setAnimations] = useState(true);
+  const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] = useState(false);
+  const [isDownloadingData, setIsDownloadingData] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState({
     emailShoots: true,
     emailInvoices: true,
@@ -153,6 +159,126 @@ const SettingsPage = () => {
       currentPassword: '',
       newPassword: '',
       confirmPassword: '',
+    });
+  };
+  
+  const handleAppearanceSubmit = () => {
+    // In a real app, this would save to localStorage or to the user's settings in the database
+    toast({
+      title: "Appearance Updated",
+      description: "Your appearance preferences have been saved.",
+    });
+    console.log('Appearance settings saved:', { theme, sidebarCollapse, animations });
+    
+    // Apply theme changes
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle('light', theme === 'light');
+    
+    // Apply animation settings
+    document.documentElement.classList.toggle('reduce-motion', !animations);
+  };
+  
+  const handleNotificationsSubmit = () => {
+    toast({
+      title: "Notifications Updated",
+      description: "Your notification preferences have been saved.",
+    });
+    console.log('Notification settings saved:', notificationSettings);
+  };
+  
+  const handleAvatarChange = (url: string) => {
+    profileForm.setValue('avatar', url);
+  };
+  
+  const handleDownloadData = () => {
+    // In a real app, this would generate a JSON file with the user's data
+    setIsDownloadingData(true);
+    
+    setTimeout(() => {
+      // Mock user data to download
+      const userData = {
+        profile: {
+          name: user?.name,
+          email: user?.email,
+          avatar: user?.avatar,
+          role: role
+        },
+        settings: {
+          appearance: { theme, sidebarCollapse, animations },
+          notifications: notificationSettings,
+          account: accountForm.getValues()
+        }
+      };
+      
+      // Create and download the file
+      const dataStr = JSON.stringify(userData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `user_data_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setIsDownloadingData(false);
+      
+      toast({
+        title: "Data Downloaded",
+        description: "Your data has been downloaded successfully.",
+      });
+    }, 1000);
+  };
+  
+  const handleDeleteAccount = () => {
+    // Close the dialog
+    setDeleteAccountDialogOpen(false);
+    
+    // In a real app, this would delete the user's account after confirmation
+    toast({
+      title: "Account Deleted",
+      description: "Your account has been permanently deleted.",
+      variant: "destructive",
+    });
+    
+    // Mock logging out after account deletion
+    setTimeout(() => {
+      // Redirect to homepage or login page
+      window.location.href = '/';
+    }, 2000);
+  };
+  
+  // Function to sign out of all devices
+  const handleSignOutAllDevices = () => {
+    // In a real app, this would invalidate all the user's sessions
+    toast({
+      title: "Signed Out",
+      description: "You have been signed out of all devices.",
+      variant: "destructive",
+    });
+  };
+  
+  // Function to toggle 2FA
+  const handle2FAToggle = (checked: boolean) => {
+    if (checked) {
+      toast({
+        title: "2FA Enabled",
+        description: "Two-factor authentication has been enabled.",
+      });
+    } else {
+      toast({
+        title: "2FA Disabled",
+        description: "Two-factor authentication has been disabled.",
+      });
+    }
+  };
+  
+  // Function to revoke a session
+  const handleRevokeSession = (deviceName: string) => {
+    toast({
+      title: "Session Revoked",
+      description: `The session on ${deviceName} has been revoked.`,
     });
   };
   
@@ -433,10 +559,23 @@ const SettingsPage = () => {
                           <div>
                             <h3 className="font-medium mb-4">Account Management</h3>
                             <div className="space-y-4">
-                              <Button variant="outline" className="w-full justify-start text-left text-muted-foreground" type="button">
-                                Download Your Data
+                              <Button 
+                                variant="outline" 
+                                className="w-full justify-start text-left text-muted-foreground gap-2" 
+                                type="button"
+                                onClick={handleDownloadData}
+                                disabled={isDownloadingData}
+                              >
+                                <Download className="h-4 w-4" />
+                                {isDownloadingData ? 'Preparing Download...' : 'Download Your Data'}
                               </Button>
-                              <Button variant="outline" className="w-full justify-start text-left text-destructive border-destructive/20" type="button">
+                              <Button 
+                                variant="outline" 
+                                className="w-full justify-start text-left text-destructive border-destructive/20 gap-2" 
+                                type="button"
+                                onClick={() => setDeleteAccountDialogOpen(true)}
+                              >
+                                <Trash2 className="h-4 w-4" />
                                 Delete Account
                               </Button>
                             </div>
@@ -785,19 +924,7 @@ const SettingsPage = () => {
                             <Label htmlFor="two-factor">Enable 2FA</Label>
                             <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
                           </div>
-                          <Switch id="two-factor" onCheckedChange={(checked) => {
-                            if (checked) {
-                              toast({
-                                title: "2FA Enabled",
-                                description: "Two-factor authentication has been enabled.",
-                              });
-                            } else {
-                              toast({
-                                title: "2FA Disabled",
-                                description: "Two-factor authentication has been disabled.",
-                              });
-                            }
-                          }} />
+                          <Switch id="two-factor" onCheckedChange={handle2FAToggle} />
                         </div>
                         
                         <Separator />
@@ -833,12 +960,7 @@ const SettingsPage = () => {
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              onClick={() => {
-                                toast({
-                                  title: "Session Revoked",
-                                  description: "The session has been revoked successfully.",
-                                });
-                              }}
+                              onClick={() => handleRevokeSession('Safari on iPhone')}
                             >
                               Revoke
                             </Button>
@@ -851,15 +973,10 @@ const SettingsPage = () => {
                       <div>
                         <Button 
                           variant="outline" 
-                          className="w-full justify-start text-left text-destructive border-destructive/20"
-                          onClick={() => {
-                            toast({
-                              title: "All Devices Signed Out",
-                              description: "You have been signed out of all devices.",
-                              variant: "destructive",
-                            });
-                          }}
+                          className="w-full justify-start text-left text-destructive border-destructive/20 gap-2"
+                          onClick={handleSignOutAllDevices}
                         >
+                          <AlertTriangleIcon className="h-4 w-4" />
                           Sign Out All Devices
                         </Button>
                       </div>
@@ -871,6 +988,36 @@ const SettingsPage = () => {
           </Tabs>
         </div>
       </PageTransition>
+      
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={deleteAccountDialogOpen} onOpenChange={setDeleteAccountDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete Account</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-4 border border-destructive/20 bg-destructive/5 rounded-md">
+            <p className="text-sm text-destructive font-medium">This will:</p>
+            <ul className="text-sm text-destructive/90 mt-2 space-y-1 list-disc pl-5">
+              <li>Delete all your profile information</li>
+              <li>Delete all your shoots and media</li>
+              <li>Delete all your invoices and payment history</li>
+              <li>Cancel any active subscriptions</li>
+            </ul>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteAccountDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteAccount}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };

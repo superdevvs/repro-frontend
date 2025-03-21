@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ImageUploadProps {
   onChange: (url: string) => void;
@@ -14,11 +15,12 @@ interface ImageUploadProps {
 export function ImageUpload({ onChange, initialImage }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(initialImage || null);
   const [isHovering, setIsHovering] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -42,18 +44,31 @@ export function ImageUpload({ onChange, initialImage }: ImageUploadProps) {
       return;
     }
 
-    // Create object URL for preview
-    const objectUrl = URL.createObjectURL(file);
-    setPreview(objectUrl);
-    
-    // In a real app, this would upload to a server or Supabase storage
-    // For now, we'll just use the object URL as if it were a server URL
-    onChange(objectUrl);
-    
-    toast({
-      title: "Image uploaded",
-      description: "Your profile photo has been updated",
-    });
+    try {
+      setUploading(true);
+      
+      // Create object URL for immediate preview
+      const objectUrl = URL.createObjectURL(file);
+      setPreview(objectUrl);
+      
+      // In a real app with Supabase, we'd upload to storage
+      // For now, we'll use the object URL
+      onChange(objectUrl);
+      
+      toast({
+        title: "Image uploaded",
+        description: "Your profile photo has been updated",
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was a problem uploading your image",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleButtonClick = () => {
@@ -67,6 +82,10 @@ export function ImageUpload({ onChange, initialImage }: ImageUploadProps) {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    toast({
+      title: "Image removed",
+      description: "Your profile photo has been removed",
+    });
   };
 
   return (
@@ -118,9 +137,10 @@ export function ImageUpload({ onChange, initialImage }: ImageUploadProps) {
         size="sm" 
         className="mt-3 text-xs"
         onClick={handleButtonClick}
+        disabled={uploading}
       >
         <Upload className="h-3 w-3 mr-1" />
-        Change Photo
+        {uploading ? 'Uploading...' : 'Change Photo'}
       </Button>
     </div>
   );
