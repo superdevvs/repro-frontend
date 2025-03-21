@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -74,23 +75,11 @@ const BookShoot = () => {
     return getPackagePrice() + getPhotographerRate() + getTax();
   };
 
-  const getAvailableTimes = () => {
-    if (!photographer || !date) return [];
+  const getAvailablePhotographers = () => {
+    if (!date || !time || !selectedPackage) return [];
 
-    const photog = photographers.find(p => p.id === photographer);
-
-    if (!photog || !photog.availability) {
-      return [];
-    }
-
-    return [
-      "9:00 AM", 
-      "10:00 AM", 
-      "11:00 AM", 
-      "1:00 PM", 
-      "2:00 PM", 
-      "3:00 PM"
-    ];
+    // In a real app, this would filter photographers based on time and package compatibility
+    return photographers.filter(p => p.availability);
   };
 
   const handleSubmit = () => {
@@ -145,19 +134,20 @@ const BookShoot = () => {
 
       console.log("New shoot created:", newShoot);
     } else {
-      if (step === 1 && (!client || !address || !city || !state || !zip)) {
+      // Validation for each step
+      if (step === 1 && (!client || !address || !city || !state || !zip || !selectedPackage)) {
         toast({
           title: "Missing information",
-          description: "Please fill in all client and property details before proceeding.",
+          description: "Please fill in all client, property details and select a package before proceeding.",
           variant: "destructive",
         });
         return;
       }
 
-      if (step === 2 && (!date || !time || !photographer || !selectedPackage)) {
+      if (step === 2 && (!date || !time)) {
         toast({
           title: "Missing information",
-          description: "Please select a date, time, photographer, and package before proceeding.",
+          description: "Please select a date and time before proceeding.",
           variant: "destructive",
         });
         return;
@@ -201,14 +191,14 @@ const BookShoot = () => {
               <CardHeader>
                 <BookingStepIndicator currentStep={step} totalSteps={3} />
                 <CardTitle>
-                  {step === 1 && 'Client & Property Details'}
-                  {step === 2 && 'Scheduling & Services'}
-                  {step === 3 && 'Review & Confirm'}
+                  {step === 1 && 'Client, Property & Package'}
+                  {step === 2 && 'Date & Time Selection'}
+                  {step === 3 && 'Photographer & Review'}
                 </CardTitle>
                 <CardDescription>
-                  {step === 1 && 'Enter the client and property information'}
-                  {step === 2 && 'Choose date, time, photographer, and services'}
-                  {step === 3 && 'Review booking details and confirm'}
+                  {step === 1 && 'Enter the client and property information, and select a package'}
+                  {step === 2 && 'Choose a convenient date and time'}
+                  {step === 3 && 'Select a photographer and review booking details'}
                 </CardDescription>
               </CardHeader>
 
@@ -227,6 +217,9 @@ const BookShoot = () => {
                       zip={zip}
                       setZip={setZip}
                       clients={clients}
+                      selectedPackage={selectedPackage}
+                      setSelectedPackage={setSelectedPackage}
+                      packages={packages}
                     />
                   )}
                   
@@ -236,15 +229,10 @@ const BookShoot = () => {
                       setDate={setDate}
                       time={time}
                       setTime={setTime}
-                      photographer={photographer}
-                      setPhotographer={setPhotographer}
                       selectedPackage={selectedPackage}
-                      setSelectedPackage={setSelectedPackage}
                       notes={notes}
                       setNotes={setNotes}
-                      photographers={photographers}
                       packages={packages}
-                      getAvailableTimes={getAvailableTimes}
                     />
                   )}
                   
@@ -258,6 +246,7 @@ const BookShoot = () => {
                       date={date}
                       time={time}
                       photographer={photographer}
+                      setPhotographer={setPhotographer}
                       selectedPackage={selectedPackage}
                       notes={notes}
                       bypassPayment={bypassPayment}
@@ -269,7 +258,7 @@ const BookShoot = () => {
                       getTax={getTax}
                       getTotal={getTotal}
                       clients={clients}
-                      photographers={photographers}
+                      photographers={getAvailablePhotographers()}
                       packages={packages}
                     />
                   )}
@@ -302,4 +291,3 @@ const BookShoot = () => {
 };
 
 export default BookShoot;
-

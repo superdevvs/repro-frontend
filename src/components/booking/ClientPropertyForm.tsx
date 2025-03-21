@@ -4,6 +4,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion } from 'framer-motion';
+import { Card } from '@/components/ui/card';
+import { CheckCircleIcon } from 'lucide-react';
 
 interface ClientPropertyFormProps {
   client: string;
@@ -17,6 +19,9 @@ interface ClientPropertyFormProps {
   zip: string;
   setZip: (value: string) => void;
   clients: Array<{ id: string; name: string }>;
+  selectedPackage: string;
+  setSelectedPackage: (id: string) => void;
+  packages: Array<{ id: string; name: string; description: string; price: number }>;
 }
 
 export function ClientPropertyForm({
@@ -30,7 +35,10 @@ export function ClientPropertyForm({
   setState,
   zip,
   setZip,
-  clients
+  clients,
+  selectedPackage,
+  setSelectedPackage,
+  packages
 }: ClientPropertyFormProps) {
   return (
     <motion.div
@@ -101,6 +109,40 @@ export function ClientPropertyForm({
             value={zip}
             onChange={(e) => setZip(e.target.value)}
           />
+        </div>
+      </div>
+
+      <div>
+        <Label>Select Package</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+          {packages.map((pkg) => (
+            <Card
+              key={pkg.id}
+              className={`cursor-pointer transition-all ${
+                selectedPackage === pkg.id 
+                  ? 'border-primary/50 bg-primary/5' 
+                  : 'hover:border-primary/30 hover:bg-primary/5'
+              }`}
+              onClick={() => setSelectedPackage(pkg.id)}
+            >
+              <div className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium">{pkg.name}</p>
+                    <p className="text-sm text-muted-foreground">{pkg.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold">${pkg.price}</p>
+                    {selectedPackage === pkg.id && (
+                      <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center ml-auto">
+                        <CheckCircleIcon className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       </div>
     </motion.div>

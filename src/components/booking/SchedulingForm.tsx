@@ -1,23 +1,14 @@
 
 import React from 'react';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { TimeSelect } from '@/components/ui/time-select';
-import { CalendarIcon, CheckCircleIcon } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-
-interface PhotographerType {
-  id: string;
-  name: string;
-  avatar: string;
-  rate: number;
-  availability: boolean;
-}
+import { Button } from '@/components/ui/button';
 
 interface PackageType {
   id: string;
@@ -31,15 +22,10 @@ interface SchedulingFormProps {
   setDate: (date: Date | undefined) => void;
   time: string;
   setTime: (time: string) => void;
-  photographer: string;
-  setPhotographer: (id: string) => void;
   selectedPackage: string;
-  setSelectedPackage: (id: string) => void;
   notes: string;
   setNotes: (notes: string) => void;
-  photographers: PhotographerType[];
   packages: PackageType[];
-  getAvailableTimes: () => string[];
 }
 
 export function SchedulingForm({
@@ -47,16 +33,28 @@ export function SchedulingForm({
   setDate,
   time,
   setTime,
-  photographer,
-  setPhotographer,
   selectedPackage,
-  setSelectedPackage,
   notes,
   setNotes,
-  photographers,
-  packages,
-  getAvailableTimes
+  packages
 }: SchedulingFormProps) {
+  // Generate available times based on selected date
+  const getAvailableTimes = () => {
+    if (!date) return [];
+    
+    // In a real app, this would be based on actual availability data
+    return [
+      "9:00 AM", 
+      "10:00 AM", 
+      "11:00 AM", 
+      "1:00 PM", 
+      "2:00 PM", 
+      "3:00 PM"
+    ];
+  };
+
+  const selectedPackageDetails = packages.find(p => p.id === selectedPackage);
+
   return (
     <motion.div
       key="step2"
@@ -66,6 +64,21 @@ export function SchedulingForm({
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
+      <div className="mb-4 p-4 bg-muted/30 rounded-lg">
+        <h3 className="font-medium mb-2">Selected Package:</h3>
+        {selectedPackageDetails ? (
+          <div className="flex justify-between">
+            <div>
+              <p className="font-medium">{selectedPackageDetails.name}</p>
+              <p className="text-sm text-muted-foreground">{selectedPackageDetails.description}</p>
+            </div>
+            <p className="font-bold">${selectedPackageDetails.price}</p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No package selected</p>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label>Select Date</Label>
@@ -102,90 +115,9 @@ export function SchedulingForm({
             value={time}
             onChange={setTime}
             availableTimes={getAvailableTimes()}
-            disabled={!date || !photographer}
-            placeholder={
-              !date 
-                ? "Select a date first" 
-                : !photographer 
-                ? "Select a photographer first"
-                : "Select a time"
-            }
+            disabled={!date}
+            placeholder={!date ? "Select a date first" : "Select a time"}
           />
-        </div>
-      </div>
-      
-      <div>
-        <Label>Select Photographer</Label>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
-          {photographers.map((p) => (
-            <Card
-              key={p.id}
-              className={`cursor-pointer transition-all ${
-                photographer === p.id 
-                  ? 'border-primary/50 bg-primary/5' 
-                  : p.availability 
-                    ? 'hover:border-primary/30 hover:bg-primary/5' 
-                    : 'opacity-60 cursor-not-allowed'
-              }`}
-              onClick={() => p.availability && setPhotographer(p.id)}
-            >
-              <div className="p-4 flex items-center gap-3">
-                <div className="relative">
-                  <img
-                    src={p.avatar}
-                    alt={p.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  {photographer === p.id && (
-                    <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                      <CheckCircleIcon className="h-4 w-4 text-white" />
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="font-medium text-sm">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">${p.rate}/shoot</p>
-                  {!p.availability && (
-                    <span className="text-[10px] text-muted-foreground">Unavailable</span>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-      
-      <div>
-        <Label>Select Package</Label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-          {packages.map((pkg) => (
-            <Card
-              key={pkg.id}
-              className={`cursor-pointer transition-all ${
-                selectedPackage === pkg.id 
-                  ? 'border-primary/50 bg-primary/5' 
-                  : 'hover:border-primary/30 hover:bg-primary/5'
-              }`}
-              onClick={() => setSelectedPackage(pkg.id)}
-            >
-              <div className="p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium">{pkg.name}</p>
-                    <p className="text-sm text-muted-foreground">{pkg.description}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">${pkg.price}</p>
-                    {selectedPackage === pkg.id && (
-                      <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center ml-auto">
-                        <CheckCircleIcon className="h-4 w-4 text-white" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
         </div>
       </div>
       

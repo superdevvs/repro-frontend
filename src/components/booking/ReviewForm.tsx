@@ -1,18 +1,12 @@
 
 import React from 'react';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { 
-  CalendarIcon, 
-  CameraIcon, 
-  ClockIcon, 
-  HeartIcon, 
-  HomeIcon, 
-  UserIcon 
-} from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
+import { Separator } from '@/components/ui/separator';
+import { CheckCircleIcon } from 'lucide-react';
 
 interface ReviewFormProps {
   client: string;
@@ -23,6 +17,7 @@ interface ReviewFormProps {
   date: Date | undefined;
   time: string;
   photographer: string;
+  setPhotographer: (id: string) => void;
   selectedPackage: string;
   notes: string;
   bypassPayment: boolean;
@@ -47,6 +42,7 @@ export function ReviewForm({
   date,
   time,
   photographer,
+  setPhotographer,
   selectedPackage,
   notes,
   bypassPayment,
@@ -61,6 +57,10 @@ export function ReviewForm({
   photographers,
   packages
 }: ReviewFormProps) {
+  const selectedClient = clients.find(c => c.id === client);
+  const selectedPhotographer = photographers.find(p => p.id === photographer);
+  const selectedPackageDetails = packages.find(p => p.id === selectedPackage);
+  
   return (
     <motion.div
       key="step3"
@@ -70,120 +70,147 @@ export function ReviewForm({
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <UserIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <h3 className="font-medium">Client</h3>
-                <p className="text-muted-foreground">
-                  {clients.find(c => c.id === client)?.name || 'Not selected'}
-                </p>
-              </div>
+      <div>
+        <Label>Select Photographer</Label>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
+          {photographers.length > 0 ? (
+            photographers.map((p) => (
+              <Card
+                key={p.id}
+                className={`cursor-pointer transition-all ${
+                  photographer === p.id 
+                    ? 'border-primary/50 bg-primary/5' 
+                    : p.availability 
+                      ? 'hover:border-primary/30 hover:bg-primary/5' 
+                      : 'opacity-60 cursor-not-allowed'
+                }`}
+                onClick={() => p.availability && setPhotographer(p.id)}
+              >
+                <div className="p-4 flex items-center gap-3">
+                  <div className="relative">
+                    <img
+                      src={p.avatar}
+                      alt={p.name}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                    {photographer === p.id && (
+                      <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                        <CheckCircleIcon className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">${p.rate}/shoot</p>
+                    {!p.availability && (
+                      <span className="text-[10px] text-muted-foreground">Unavailable</span>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))
+          ) : (
+            <div className="col-span-3 text-center p-6 bg-muted/30 rounded-lg">
+              <p className="text-muted-foreground">No photographers available for the selected date and time.</p>
+              <p className="text-sm mt-1">Consider selecting a different date or time.</p>
             </div>
-            
-            <div className="flex items-start gap-3">
-              <HomeIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <h3 className="font-medium">Property</h3>
-                <p className="text-muted-foreground">
-                  {address ? `${address}, ${city}, ${state} ${zip}` : 'Not provided'}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <CalendarIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <h3 className="font-medium">Date & Time</h3>
-                <p className="text-muted-foreground">
-                  {date ? format(date, 'MMMM d, yyyy') : 'Not selected'} {time ? `at ${time}` : ''}
-                </p>
-              </div>
-            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className="p-4 bg-muted/30 rounded-lg space-y-4">
+        <h3 className="font-medium">Booking Summary</h3>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Client:</span>
+            <span className="text-sm font-medium">{selectedClient?.name || "No client selected"}</span>
           </div>
           
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <CameraIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <h3 className="font-medium">Photographer</h3>
-                <p className="text-muted-foreground">
-                  {photographers.find(p => p.id === photographer)?.name || 'Not selected'}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <HeartIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <h3 className="font-medium">Package</h3>
-                <p className="text-muted-foreground">
-                  {packages.find(p => p.id === selectedPackage)?.name || 'Not selected'} - 
-                  {packages.find(p => p.id === selectedPackage)?.description || ''}
-                </p>
-              </div>
-            </div>
-            
-            {notes && (
-              <div className="flex items-start gap-3">
-                <ClockIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <h3 className="font-medium">Notes</h3>
-                  <p className="text-muted-foreground">{notes}</p>
-                </div>
-              </div>
-            )}
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Property:</span>
+            <span className="text-sm font-medium">{address ? `${address}, ${city}, ${state} ${zip}` : "No address provided"}</span>
           </div>
+          
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Date & Time:</span>
+            <span className="text-sm font-medium">
+              {date ? `${format(date, 'PPP')} at ${time || "No time selected"}` : "No date selected"}
+            </span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Package:</span>
+            <span className="text-sm font-medium">{selectedPackageDetails?.name || "No package selected"}</span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Photographer:</span>
+            <span className="text-sm font-medium">{selectedPhotographer?.name || "No photographer selected"}</span>
+          </div>
+          
+          {notes && (
+            <div className="pt-2">
+              <span className="text-sm text-muted-foreground">Notes:</span>
+              <p className="text-sm mt-1 bg-background p-2 rounded">{notes}</p>
+            </div>
+          )}
         </div>
         
         <Separator />
         
-        <div className="space-y-2">
+        <div className="space-y-1">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Package</span>
-            <span>${getPackagePrice()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Photographer Fee</span>
-            <span>${getPhotographerRate()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Tax ({state === 'MD' ? '6%' : state === 'VA' ? '5.3%' : '6%'})</span>
-            <span>${getTax()}</span>
-          </div>
-          <Separator />
-          <div className="flex justify-between">
-            <span className="font-medium">Total</span>
-            <span className="font-bold">${getTotal()}</span>
-          </div>
-        </div>
-        
-        <div className="space-y-4 pt-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="bypass-payment">Bypass Payment</Label>
-              <p className="text-xs text-muted-foreground">Allow access before payment is received</p>
-            </div>
-            <Switch
-              id="bypass-payment"
-              checked={bypassPayment}
-              onCheckedChange={setBypassPayment}
-            />
+            <span className="text-sm">Package:</span>
+            <span className="text-sm">${getPackagePrice()}</span>
           </div>
           
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="send-notification">Send Notifications</Label>
-              <p className="text-xs text-muted-foreground">Notify photographer and client via email/SMS</p>
-            </div>
-            <Switch
-              id="send-notification"
-              checked={sendNotification}
-              onCheckedChange={setSendNotification}
-            />
+          <div className="flex justify-between">
+            <span className="text-sm">Photographer Fee:</span>
+            <span className="text-sm">${getPhotographerRate()}</span>
           </div>
+          
+          <div className="flex justify-between">
+            <span className="text-sm">Tax (6%):</span>
+            <span className="text-sm">${getTax()}</span>
+          </div>
+          
+          <Separator className="my-2" />
+          
+          <div className="flex justify-between font-bold">
+            <span>Total:</span>
+            <span>${getTotal()}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="bypass-payment">Bypass Payment</Label>
+            <div className="text-sm text-muted-foreground">
+              Client will be invoiced later
+            </div>
+          </div>
+          <Switch
+            id="bypass-payment"
+            checked={bypassPayment}
+            onCheckedChange={setBypassPayment}
+          />
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="send-notification">Send Notification</Label>
+            <div className="text-sm text-muted-foreground">
+              Notify client and photographer
+            </div>
+          </div>
+          <Switch
+            id="send-notification"
+            checked={sendNotification}
+            onCheckedChange={setSendNotification}
+          />
         </div>
       </div>
     </motion.div>
