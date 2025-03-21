@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,17 +12,17 @@ import {
   SearchIcon, 
   PlusIcon, 
   FilterIcon, 
-  ArrowDownIcon, 
-  ArrowUpIcon,
-  CalendarIcon,
   CheckIcon,
   CreditCardIcon,
   DollarSignIcon,
-  DownloadIcon
+  DownloadIcon,
+  EyeIcon
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { generateInvoicePDF } from '@/utils/invoiceUtils';
+import { generateInvoicePDF, InvoiceData } from '@/utils/invoiceUtils';
+import { InvoiceViewDialog } from '@/components/invoices/InvoiceViewDialog';
+import { PaymentDialog } from '@/components/invoices/PaymentDialog';
 
 // Mock data for invoices
 const invoices = [
@@ -85,6 +85,9 @@ const invoices = [
 
 const InvoicesPage = () => {
   const { toast } = useToast();
+  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
 
   const handleDownloadInvoice = (invoice: typeof invoices[0]) => {
     try {
@@ -102,6 +105,24 @@ const InvoicesPage = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleViewInvoice = (invoice: typeof invoices[0]) => {
+    setSelectedInvoice(invoice);
+    setViewDialogOpen(true);
+  };
+
+  const handlePayInvoice = (invoice: typeof invoices[0]) => {
+    setSelectedInvoice(invoice);
+    setPaymentDialogOpen(true);
+  };
+
+  const closeViewDialog = () => {
+    setViewDialogOpen(false);
+  };
+
+  const closePaymentDialog = () => {
+    setPaymentDialogOpen(false);
   };
 
   return (
@@ -266,13 +287,27 @@ const InvoicesPage = () => {
                                   variant="ghost" 
                                   size="sm" 
                                   className="h-8 w-8 p-0"
+                                  onClick={() => handleViewInvoice(invoice)}
+                                  title="View Invoice"
+                                >
+                                  <EyeIcon className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0"
                                   onClick={() => handleDownloadInvoice(invoice)}
                                   title="Download Invoice"
                                 >
                                   <DownloadIcon className="h-4 w-4" />
                                 </Button>
                                 {invoice.status !== 'paid' && (
-                                  <Button variant="outline" size="sm" className="h-8">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8"
+                                    onClick={() => handlePayInvoice(invoice)}
+                                  >
                                     <CreditCardIcon className="h-4 w-4 mr-1" />
                                     Pay
                                   </Button>
@@ -323,12 +358,26 @@ const InvoicesPage = () => {
                                   variant="ghost" 
                                   size="sm" 
                                   className="h-8 w-8 p-0"
+                                  onClick={() => handleViewInvoice(invoice)}
+                                  title="View Invoice"
+                                >
+                                  <EyeIcon className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0"
                                   onClick={() => handleDownloadInvoice(invoice)}
                                   title="Download Invoice"
                                 >
                                   <DownloadIcon className="h-4 w-4" />
                                 </Button>
-                                <Button variant="outline" size="sm" className="h-8">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-8"
+                                  onClick={() => handlePayInvoice(invoice)}
+                                >
                                   <CreditCardIcon className="h-4 w-4 mr-1" />
                                   Pay
                                 </Button>
@@ -374,6 +423,15 @@ const InvoicesPage = () => {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => handleViewInvoice(invoice)}
+                                  title="View Invoice"
+                                >
+                                  <EyeIcon className="h-4 w-4" />
+                                </Button>
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 
@@ -429,12 +487,26 @@ const InvoicesPage = () => {
                                   variant="ghost" 
                                   size="sm" 
                                   className="h-8 w-8 p-0"
+                                  onClick={() => handleViewInvoice(invoice)}
+                                  title="View Invoice"
+                                >
+                                  <EyeIcon className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0"
                                   onClick={() => handleDownloadInvoice(invoice)}
                                   title="Download Invoice"
                                 >
                                   <DownloadIcon className="h-4 w-4" />
                                 </Button>
-                                <Button variant="outline" size="sm" className="h-8">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="h-8"
+                                  onClick={() => handlePayInvoice(invoice)}
+                                >
                                   <CreditCardIcon className="h-4 w-4 mr-1" />
                                   Pay
                                 </Button>
@@ -451,6 +523,20 @@ const InvoicesPage = () => {
           </Card>
         </div>
       </PageTransition>
+
+      {/* Invoice View Dialog */}
+      <InvoiceViewDialog 
+        invoice={selectedInvoice} 
+        isOpen={viewDialogOpen} 
+        onClose={closeViewDialog} 
+      />
+
+      {/* Payment Dialog */}
+      <PaymentDialog 
+        invoice={selectedInvoice} 
+        isOpen={paymentDialogOpen} 
+        onClose={closePaymentDialog} 
+      />
     </DashboardLayout>
   );
 };
