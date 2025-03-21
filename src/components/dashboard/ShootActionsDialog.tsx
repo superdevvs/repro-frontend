@@ -1,12 +1,11 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, Check, X } from "lucide-react";
 import { ShootData } from '@/types/shoots';
-import { useShoots } from '@/context/ShootsContext';
-import { useToast } from "@/hooks/use-toast";
 import { RescheduleDialog } from './RescheduleDialog';
+import { useShoots } from '@/context/ShootsContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface ShootActionsDialogProps {
   shoot: ShootData;
@@ -15,48 +14,50 @@ interface ShootActionsDialogProps {
 }
 
 export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialogProps) {
-  const [showReschedule, setShowReschedule] = useState(false);
+  const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
   const { updateShoot } = useShoots();
   const { toast } = useToast();
-  
-  const handleAccept = () => {
-    updateShoot(shoot.id, {
-      status: 'scheduled' as const,
-    });
-    
-    toast({
-      title: "Shoot accepted",
-      description: "The shoot has been accepted and scheduled.",
-    });
-    
-    onClose();
-  };
-  
+
   const handleCancel = () => {
-    updateShoot(shoot.id, {
-      status: 'hold' as const, // Using 'hold' as it's in the allowed status types
-    });
-    
+    updateShoot(shoot.id, { status: 'hold' });
     toast({
-      title: "Shoot on hold",
-      description: "The shoot has been put on hold.",
+      title: "Shoot cancelled",
+      description: `Shoot #${shoot.id} has been marked as on hold.`,
     });
-    
     onClose();
   };
-  
-  const handleReschedule = () => {
-    setShowReschedule(true);
+
+  const handleAccept = () => {
+    updateShoot(shoot.id, { status: 'scheduled' });
+    toast({
+      title: "Shoot confirmed",
+      description: `Shoot #${shoot.id} has been confirmed and scheduled.`,
+    });
+    onClose();
   };
-  
-  const closeRescheduleDialog = () => {
-    setShowReschedule(false);
+
+  const handlePending = () => {
+    updateShoot(shoot.id, { status: 'pending' });
+    toast({
+      title: "Shoot pending",
+      description: `Shoot #${shoot.id} has been marked as pending.`,
+    });
+    onClose();
+  };
+
+  const handleReschedule = () => {
+    setShowRescheduleDialog(true);
+  };
+
+  const handleRescheduleClose = () => {
+    setShowRescheduleDialog(false);
+    onClose();
   };
 
   return (
     <>
-      <Dialog open={isOpen && !showReschedule} onOpenChange={onClose}>
-        <DialogContent className="max-w-md">
+      <Dialog open={isOpen && !showRescheduleDialog} onOpenChange={onClose}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Shoot Actions</DialogTitle>
             <DialogDescription>
@@ -65,47 +66,40 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            <Button 
-              onClick={handleAccept} 
-              className="flex items-center justify-start"
-              variant="subtle"
-            >
-              <Check className="mr-2 h-4 w-4 text-green-500" />
-              Accept Shoot
-            </Button>
-            
-            <Button 
-              onClick={handleReschedule} 
-              className="flex items-center justify-start"
-              variant="subtle"
-            >
-              <CalendarClock className="mr-2 h-4 w-4 text-blue-500" />
-              Reschedule Shoot
-            </Button>
-            
-            <Button 
-              onClick={handleCancel} 
-              className="flex items-center justify-start"
-              variant="subtle"
-            >
-              <X className="mr-2 h-4 w-4 text-red-500" />
-              Put On Hold
-            </Button>
+            <p className="text-sm">
+              Property: {shoot.location.fullAddress}
+            </p>
+            <p className="text-sm">
+              Client: {shoot.client.name}
+            </p>
+            <p className="text-sm">
+              Date: {new Date(shoot.scheduledDate).toLocaleDateString()}
+              {shoot.time ? ` at ${shoot.time}` : ''}
+            </p>
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose}>
-              Close
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel Shoot
+            </Button>
+            <Button variant="outline" onClick={handlePending}>
+              Mark as Pending
+            </Button>
+            <Button variant="outline" onClick={handleReschedule}>
+              Reschedule
+            </Button>
+            <Button onClick={handleAccept}>
+              Accept & Confirm
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {showReschedule && (
-        <RescheduleDialog
-          shoot={shoot}
-          isOpen={showReschedule}
-          onClose={closeRescheduleDialog}
+      {showRescheduleDialog && (
+        <RescheduleDialog 
+          shoot={shoot} 
+          isOpen={showRescheduleDialog} 
+          onClose={handleRescheduleClose} 
         />
       )}
     </>
