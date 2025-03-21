@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
@@ -565,5 +566,31 @@ const InvoicesPage = () => {
         </div>
       </PageTransition>
 
-      <
+      {/* Add dialogs for invoice view, payment, and creation */}
+      {selectedInvoice && (
+        <InvoiceViewDialog
+          isOpen={viewDialogOpen}
+          onClose={closeViewDialog}
+          invoice={selectedInvoice}
+        />
+      )}
 
+      {selectedInvoice && (
+        <PaymentDialog
+          isOpen={paymentDialogOpen}
+          onClose={closePaymentDialog}
+          invoice={selectedInvoice}
+          onPaymentComplete={handlePaymentComplete}
+        />
+      )}
+
+      <CreateInvoiceDialog
+        isOpen={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        onInvoiceCreate={handleCreateInvoice}
+      />
+    </DashboardLayout>
+  );
+};
+
+export default InvoicesPage;
