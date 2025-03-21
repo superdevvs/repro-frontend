@@ -47,13 +47,28 @@ export function ImageUpload({ onChange, initialImage }: ImageUploadProps) {
     try {
       setUploading(true);
       
-      // Create object URL for immediate preview
-      const objectUrl = URL.createObjectURL(file);
-      setPreview(objectUrl);
+      // Create a unique file name
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user?.id || 'user'}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
       
-      // In a real app with Supabase, we'd upload to storage
-      // For now, we'll use the object URL
-      onChange(objectUrl);
+      // Upload file to Supabase Storage
+      const { error: uploadError, data } = await supabase.storage
+        .from('user-files')
+        .upload(filePath, file);
+      
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-files')
+        .getPublicUrl(filePath);
+      
+      // Update preview and callback
+      setPreview(publicUrl);
+      onChange(publicUrl);
       
       toast({
         title: "Image uploaded",
@@ -61,9 +76,15 @@ export function ImageUpload({ onChange, initialImage }: ImageUploadProps) {
       });
     } catch (error) {
       console.error('Error uploading image:', error);
+      
+      // Fallback to object URL if Supabase upload fails
+      const objectUrl = URL.createObjectURL(file);
+      setPreview(objectUrl);
+      onChange(objectUrl);
+      
       toast({
-        title: "Upload failed",
-        description: "There was a problem uploading your image",
+        title: "Cloud upload failed",
+        description: "Image saved locally only",
         variant: "destructive",
       });
     } finally {
@@ -75,13 +96,31 @@ export function ImageUpload({ onChange, initialImage }: ImageUploadProps) {
     fileInputRef.current?.click();
   };
 
-  const handleClearImage = (e: React.MouseEvent) => {
+  const handleClearImage = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // If the preview URL is from Supabase, try to delete the file
+    if (preview && preview.includes('supabase')) {
+      try {
+        // Extract path from URL
+        const url = new URL(preview);
+        const path = url.pathname.split('/').slice(-2).join('/');
+        
+        // Delete from storage
+        await supabase.storage
+          .from('user-files')
+          .remove([path]);
+      } catch (error) {
+        console.error('Error removing image from storage:', error);
+      }
+    }
+    
     setPreview(null);
     onChange('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    
     toast({
       title: "Image removed",
       description: "Your profile photo has been removed",

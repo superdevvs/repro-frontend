@@ -35,6 +35,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -74,6 +75,7 @@ const SettingsPage = () => {
   const [animations, setAnimations] = useState(true);
   const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] = useState(false);
   const [isDownloadingData, setIsDownloadingData] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState({
     emailShoots: true,
     emailInvoices: true,
@@ -180,11 +182,11 @@ const SettingsPage = () => {
     profileForm.setValue('avatar', url);
   };
   
-  const handleDownloadData = () => {
+  const handleDownloadData = async () => {
     setIsDownloadingData(true);
     
-    setTimeout(() => {
-      const userData = {
+    try {
+      let userData: any = {
         profile: {
           name: user?.name,
           email: user?.email,
@@ -198,6 +200,15 @@ const SettingsPage = () => {
         }
       };
       
+      if (user?.id) {
+        // Get any custom tables data - in a real app, these would be actual table names
+        // const { data: shoots } = await supabase.from('shoots').select('*').eq('user_id', user.id);
+        // const { data: invoices } = await supabase.from('invoices').select('*').eq('user_id', user.id);
+        
+        // userData.shoots = shoots || [];
+        // userData.invoices = invoices || [];
+      }
+      
       const dataStr = JSON.stringify(userData, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
@@ -209,35 +220,92 @@ const SettingsPage = () => {
       link.click();
       document.body.removeChild(link);
       
-      setIsDownloadingData(false);
-      
       toast({
         title: "Data Downloaded",
         description: "Your data has been downloaded successfully.",
       });
-    }, 1000);
+    } catch (error) {
+      console.error("Error downloading user data:", error);
+      toast({
+        title: "Download Failed",
+        description: "There was a problem downloading your data. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDownloadingData(false);
+    }
   };
   
-  const handleDeleteAccount = () => {
-    setDeleteAccountDialogOpen(false);
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
     
-    toast({
-      title: "Account Deleted",
-      description: "Your account has been permanently deleted.",
-      variant: "destructive",
-    });
-    
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 2000);
+    try {
+      if (supabase.auth && user?.id) {
+        // Delete user-related data first
+        // await supabase.from('profiles').delete().eq('id', user.id);
+        
+        // Delete user account
+        const { error } = await supabase.auth.admin.deleteUser(user.id);
+        
+        if (error) throw error;
+      }
+      
+      setDeleteAccountDialogOpen(false);
+      
+      toast({
+        title: "Account Deleted",
+        description: "Your account has been permanently deleted.",
+        variant: "destructive",
+      });
+      
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        console.error("Error signing out:", error);
+      }
+      
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      
+      toast({
+        title: "Deletion Failed",
+        description: "There was an error deleting your account. Please try again or contact support.",
+        variant: "destructive",
+      });
+      
+      setDeleteAccountDialogOpen(false);
+    } finally {
+      setIsDeletingAccount(false);
+    }
   };
   
-  const handleSignOutAllDevices = () => {
-    toast({
-      title: "Signed Out",
-      description: "You have been signed out of all devices.",
-      variant: "destructive",
-    });
+  const handleSignOutAllDevices = async () => {
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Signed Out",
+        description: "You have been signed out of all devices.",
+        variant: "destructive",
+      });
+      
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    } catch (error) {
+      console.error("Error signing out from all devices:", error);
+      
+      toast({
+        title: "Sign Out Failed",
+        description: "There was an error signing out from all devices. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   const handle2FAToggle = (checked: boolean) => {
@@ -965,9 +1033,13 @@ const SettingsPage = () => {
             <Button variant="outline" onClick={() => setDeleteAccountDialogOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteAccount}>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteAccount}
+              disabled={isDeletingAccount}
+            >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete Account
+              {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
             </Button>
           </DialogFooter>
         </DialogContent>
