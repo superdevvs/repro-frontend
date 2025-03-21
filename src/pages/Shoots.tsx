@@ -11,7 +11,8 @@ import { useShoots } from '@/context/ShootsContext';
 
 const Shoots = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTab, setSelectedTab] = useState('scheduled');
+  // Set the default tab to 'hold' instead of 'scheduled'
+  const [selectedTab, setSelectedTab] = useState('hold');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);

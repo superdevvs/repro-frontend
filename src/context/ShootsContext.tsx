@@ -35,7 +35,13 @@ export function ShootsProvider({ children }: { children: React.ReactNode }) {
   }, [shoots]);
 
   const addShoot = (shoot: ShootData) => {
-    setShoots(prevShoots => [...prevShoots, shoot]);
+    // Ensure new shoots are set to 'hold' status by default
+    const shootWithDefaultStatus = {
+      ...shoot,
+      status: shoot.status || 'hold' as const
+    };
+    
+    setShoots(prevShoots => [...prevShoots, shootWithDefaultStatus]);
     toast({
       title: "Shoot created",
       description: "New shoot has been successfully added.",
