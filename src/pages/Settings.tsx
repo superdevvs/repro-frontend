@@ -25,6 +25,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, {
@@ -289,7 +290,7 @@ const SettingsPage = () => {
             <CardContent>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <FormLabel>Theme</FormLabel>
+                  <Label htmlFor="theme">Theme</Label>
                   <div className="flex space-x-2">
                     <Button
                       variant={theme === 'light' ? 'default' : 'outline'}
@@ -314,10 +315,11 @@ const SettingsPage = () => {
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <FormLabel>Animations</FormLabel>
+                    <Label htmlFor="animations">Animations</Label>
                     <p className="text-sm text-muted-foreground">Enable animations and transitions</p>
                   </div>
                   <Switch
+                    id="animations"
                     checked={animations}
                     onCheckedChange={setAnimations}
                   />
