@@ -1,4 +1,3 @@
-
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 
@@ -10,7 +9,7 @@ export interface InvoiceData {
   date: string;
   dueDate: string;
   amount: number;
-  status: string;
+  status: 'paid' | 'pending' | 'overdue';
   services: string[];
   paymentMethod: string;
 }

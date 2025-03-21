@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { generateInvoicePDF, InvoiceData } from '@/utils/invoiceUtils';
 import { InvoiceViewDialog } from '@/components/invoices/InvoiceViewDialog';
 import { PaymentDialog } from '@/components/invoices/PaymentDialog';
+import { CreateInvoiceDialog } from '@/components/invoices/CreateInvoiceDialog';
 
 // Mock data for invoices
 const initialInvoices = [
@@ -89,6 +89,7 @@ const InvoicesPage = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const handleDownloadInvoice = (invoice: typeof invoices[0]) => {
     try {
@@ -146,7 +147,10 @@ const InvoicesPage = () => {
     });
   };
 
-  // Calculate stats based on current invoices
+  const handleCreateInvoice = (newInvoice: InvoiceData) => {
+    setInvoices(prevInvoices => [newInvoice, ...prevInvoices]);
+  };
+
   const totalPending = invoices
     .filter(invoice => invoice.status === 'pending')
     .reduce((sum, invoice) => sum + invoice.amount, 0);
@@ -169,7 +173,6 @@ const InvoicesPage = () => {
     <DashboardLayout>
       <PageTransition>
         <div className="space-y-6">
-          {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
@@ -181,13 +184,12 @@ const InvoicesPage = () => {
               </p>
             </div>
             
-            <Button className="gap-2">
+            <Button className="gap-2" onClick={() => setCreateDialogOpen(true)}>
               <PlusIcon className="h-4 w-4" />
               Create Invoice
             </Button>
           </div>
           
-          {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="glass-card">
               <CardContent className="pt-6">
@@ -250,7 +252,6 @@ const InvoicesPage = () => {
             </Card>
           </div>
           
-          {/* Invoice List */}
           <Card className="glass-card">
             <CardHeader className="pb-2">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -564,22 +565,5 @@ const InvoicesPage = () => {
         </div>
       </PageTransition>
 
-      {/* Invoice View Dialog */}
-      <InvoiceViewDialog 
-        invoice={selectedInvoice} 
-        isOpen={viewDialogOpen} 
-        onClose={closeViewDialog} 
-      />
+      <
 
-      {/* Payment Dialog */}
-      <PaymentDialog 
-        invoice={selectedInvoice} 
-        isOpen={paymentDialogOpen} 
-        onClose={closePaymentDialog}
-        onPaymentComplete={handlePaymentComplete}
-      />
-    </DashboardLayout>
-  );
-};
-
-export default InvoicesPage;
