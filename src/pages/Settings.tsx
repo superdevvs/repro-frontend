@@ -83,6 +83,17 @@ const SettingsPage = () => {
     smsPayments: false
   });
   
+  // Set theme based on state
+  useEffect(() => {
+    document.documentElement.classList.remove('light', 'dark');
+    if (theme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.classList.add(systemTheme);
+    } else {
+      document.documentElement.classList.add(theme);
+    }
+  }, [theme]);
+  
   // Initialize forms
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -154,7 +165,7 @@ const SettingsPage = () => {
     });
   };
   
-  const handleAvatarChange = (url: string) => {
+  const handleAvatarUpload = (url: string) => {
     profileForm.setValue('avatar', url);
   };
   
@@ -362,7 +373,7 @@ const SettingsPage = () => {
                                 <AvatarImage src={profileForm.getValues().avatar} alt="Profile" />
                                 <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
                               </Avatar>
-                              <ImageUpload onUpload={handleAvatarChange} />
+                              <ImageUpload onImageUploaded={handleAvatarUpload} />
                             </div>
                             <div className="flex-1 space-y-4 w-full">
                               <FormField
@@ -603,14 +614,14 @@ const SettingsPage = () => {
                               onClick={() => handleThemeChange('dark')}
                             >
                               <div className="h-10 w-10 rounded-full bg-slate-900 border border-slate-700"></div>
-                              <Label htmlFor="theme-dark">Dark</Label>
+                              <Label>Dark</Label>
                             </div>
                             <div 
                               className={`cursor-pointer rounded-md border-2 p-3 flex flex-col items-center gap-2 ${theme === 'system' ? 'border-primary bg-primary/10' : 'border-border'}`}
                               onClick={() => handleThemeChange('system')}
                             >
                               <div className="h-10 w-10 rounded-full bg-gradient-to-r from-white to-slate-900 border"></div>
-                              <Label htmlFor="theme-system">System</Label>
+                              <Label>System</Label>
                             </div>
                           </div>
                         </div>
