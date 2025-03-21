@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, ImageIcon } from "lucide-react";
 import { ShootData } from '@/types/shoots';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { FileUploader } from '@/components/media/FileUploader';
 import { useToast } from '@/hooks/use-toast';
 
@@ -77,6 +77,9 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
         <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>Upload Media for Shoot #{shoot.id}</DialogTitle>
+            <DialogDescription>
+              Upload photos, videos, or documents related to this property shoot.
+            </DialogDescription>
           </DialogHeader>
           <FileUploader 
             shootId={shoot.id.toString()}

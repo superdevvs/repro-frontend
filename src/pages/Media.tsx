@@ -104,6 +104,8 @@ const MediaPage = () => {
       title: 'Upload Complete',
       description: `Successfully uploaded ${files.length} files`,
     });
+    
+    console.log(`Uploaded ${files.length} files successfully`);
   };
 
   const handleCreateFolder = () => {
@@ -120,6 +122,8 @@ const MediaPage = () => {
       title: 'Folder Created',
       description: `Created folder: ${newFolderName}`,
     });
+    
+    console.log(`Created new folder: ${newFolderName}`);
 
     setNewFolderName('');
     setNewFolderDialogOpen(false);
@@ -489,9 +493,9 @@ const MediaPage = () => {
                 </div>
               </div>
               <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
-                </DialogClose>
+                <Button variant="outline" onClick={() => setNewFolderDialogOpen(false)}>
+                  Cancel
+                </Button>
                 <Button onClick={handleCreateFolder}>Create Folder</Button>
               </DialogFooter>
             </DialogContent>
@@ -503,3 +507,4 @@ const MediaPage = () => {
 };
 
 export default MediaPage;
+
