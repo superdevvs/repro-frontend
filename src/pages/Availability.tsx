@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { 
   Dialog,
   DialogContent,
@@ -53,6 +53,27 @@ const mockPhotographers = [
   { id: "3", name: "Michael Brown" },
   { id: "4", name: "Jessica Davis" },
 ];
+
+// Define types for working hours structure
+interface WorkingHourSettings {
+  isWorking: boolean;
+  start: string;
+  end: string;
+}
+
+interface PhotographerWorkingHours {
+  monday: WorkingHourSettings;
+  tuesday: WorkingHourSettings;
+  wednesday: WorkingHourSettings;
+  thursday: WorkingHourSettings;
+  friday: WorkingHourSettings;
+  saturday: WorkingHourSettings;
+  sunday: WorkingHourSettings;
+}
+
+interface WorkingHoursData {
+  [key: string]: PhotographerWorkingHours;
+}
 
 const mockTimeSlots: PhotographerAvailability[] = [
   {
@@ -98,7 +119,7 @@ const mockTimeSlots: PhotographerAvailability[] = [
 ];
 
 // Default working hours for photographers
-const defaultWorkingHours = {
+const defaultWorkingHours: WorkingHoursData = {
   "1": { // John Smith
     monday: { isWorking: true, start: "09:00", end: "17:00" },
     tuesday: { isWorking: true, start: "09:00", end: "17:00" },
@@ -151,7 +172,7 @@ export default function Availability() {
   const [isAddRangeOpen, setIsAddRangeOpen] = useState<boolean>(false);
   const [isEditWorkingHoursOpen, setIsEditWorkingHoursOpen] = useState<boolean>(false);
   const [timeSlots, setTimeSlots] = useState<PhotographerAvailability[]>(mockTimeSlots);
-  const [workingHours, setWorkingHours] = useState(defaultWorkingHours);
+  const [workingHours, setWorkingHours] = useState<WorkingHoursData>(defaultWorkingHours);
   const [newTimeSlot, setNewTimeSlot] = useState<Omit<PhotographerAvailability, 'id' | 'date' | 'photographerName'>>({
     photographerId: "",
     startTime: "09:00",
@@ -263,10 +284,10 @@ export default function Availability() {
     const day = days[dayOfWeek];
     
     // Check if photographer works on this day
-    const photographerHours = workingHours[photographerId as keyof typeof workingHours];
+    const photographerHours = workingHours[photographerId];
     if (!photographerHours) return "unknown";
     
-    const dayHours = photographerHours[day as keyof typeof photographerHours];
+    const dayHours = photographerHours[day as keyof PhotographerWorkingHours];
     if (!dayHours || !dayHours.isWorking) return "unavailable";
     
     // Check if there are any existing appointments
@@ -448,8 +469,8 @@ export default function Availability() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {workingHours[selectedPhotographer as keyof typeof workingHours] ? (
-                              Object.entries(workingHours[selectedPhotographer as keyof typeof workingHours]).map(([day, hours]) => (
+                            {workingHours[selectedPhotographer] ? (
+                              Object.entries(workingHours[selectedPhotographer]).map(([day, hours]) => (
                                 <TableRow key={day}>
                                   <TableCell className="capitalize">{day}</TableCell>
                                   <TableCell>
@@ -641,51 +662,61 @@ export default function Availability() {
                           Set the working hours for {mockPhotographers.find(p => p.id === selectedPhotographer)?.name}
                         </p>
                         <div className="space-y-4">
-                          {Object.entries(workingHours[selectedPhotographer as keyof typeof workingHours] || {}).map(([day, hours]) => (
-                            <div key={day} className="grid grid-cols-[120px_1fr] gap-4 items-center">
-                              <div className="capitalize font-medium">{day}</div>
-                              <div className="flex items-center gap-2">
-                                <Switch 
-                                  checked={hours.isWorking}
-                                  onCheckedChange={(checked) => {
-                                    const updatedHours = {...workingHours};
-                                    updatedHours[selectedPhotographer as keyof typeof workingHours][day as keyof typeof updatedHours[typeof selectedPhotographer]].isWorking = checked;
-                                    if (checked && !hours.start) {
-                                      updatedHours[selectedPhotographer as keyof typeof workingHours][day as keyof typeof updatedHours[typeof selectedPhotographer]].start = "09:00";
-                                      updatedHours[selectedPhotographer as keyof typeof workingHours][day as keyof typeof updatedHours[typeof selectedPhotographer]].end = "17:00";
-                                    }
-                                    setWorkingHours(updatedHours);
-                                  }}
-                                />
-                                {hours.isWorking && (
-                                  <div className="grid grid-cols-2 gap-2 flex-1">
-                                    <TimeSelect
-                                      value={hours.start}
-                                      onChange={(time) => {
-                                        const updatedHours = {...workingHours};
-                                        updatedHours[selectedPhotographer as keyof typeof workingHours][day as keyof typeof updatedHours[typeof selectedPhotographer]].start = time;
+                          {workingHours[selectedPhotographer] && 
+                            Object.entries(workingHours[selectedPhotographer]).map(([day, hours]) => (
+                              <div key={day} className="grid grid-cols-[120px_1fr] gap-4 items-center">
+                                <div className="capitalize font-medium">{day}</div>
+                                <div className="flex items-center gap-2">
+                                  <Switch 
+                                    checked={hours.isWorking}
+                                    onCheckedChange={(checked) => {
+                                      const updatedHours = {...workingHours};
+                                      if (updatedHours[selectedPhotographer]) {
+                                        const dayKey = day as keyof PhotographerWorkingHours;
+                                        updatedHours[selectedPhotographer][dayKey].isWorking = checked;
+                                        if (checked && !hours.start) {
+                                          updatedHours[selectedPhotographer][dayKey].start = "09:00";
+                                          updatedHours[selectedPhotographer][dayKey].end = "17:00";
+                                        }
                                         setWorkingHours(updatedHours);
-                                      }}
-                                      startHour={7}
-                                      endHour={20}
-                                      interval={30}
-                                    />
-                                    <TimeSelect
-                                      value={hours.end}
-                                      onChange={(time) => {
-                                        const updatedHours = {...workingHours};
-                                        updatedHours[selectedPhotographer as keyof typeof workingHours][day as keyof typeof updatedHours[typeof selectedPhotographer]].end = time;
-                                        setWorkingHours(updatedHours);
-                                      }}
-                                      startHour={7}
-                                      endHour={21}
-                                      interval={30}
-                                    />
-                                  </div>
-                                )}
+                                      }
+                                    }}
+                                  />
+                                  {hours.isWorking && (
+                                    <div className="grid grid-cols-2 gap-2 flex-1">
+                                      <TimeSelect
+                                        value={hours.start}
+                                        onChange={(time) => {
+                                          const updatedHours = {...workingHours};
+                                          if (updatedHours[selectedPhotographer]) {
+                                            const dayKey = day as keyof PhotographerWorkingHours;
+                                            updatedHours[selectedPhotographer][dayKey].start = time;
+                                            setWorkingHours(updatedHours);
+                                          }
+                                        }}
+                                        startHour={7}
+                                        endHour={20}
+                                        interval={30}
+                                      />
+                                      <TimeSelect
+                                        value={hours.end}
+                                        onChange={(time) => {
+                                          const updatedHours = {...workingHours};
+                                          if (updatedHours[selectedPhotographer]) {
+                                            const dayKey = day as keyof PhotographerWorkingHours;
+                                            updatedHours[selectedPhotographer][dayKey].end = time;
+                                            setWorkingHours(updatedHours);
+                                          }
+                                        }}
+                                        startHour={7}
+                                        endHour={21}
+                                        interval={30}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
                         </div>
                       </div>
                     )}
