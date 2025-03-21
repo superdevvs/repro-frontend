@@ -13,9 +13,10 @@ interface PaymentDialogProps {
   invoice: InvoiceData | null;
   isOpen: boolean;
   onClose: () => void;
+  onPaymentComplete?: (invoiceId: string) => void;
 }
 
-export function PaymentDialog({ invoice, isOpen, onClose }: PaymentDialogProps) {
+export function PaymentDialog({ invoice, isOpen, onClose, onPaymentComplete }: PaymentDialogProps) {
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<string>("credit-card");
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,12 @@ export function PaymentDialog({ invoice, isOpen, onClose }: PaymentDialogProps) 
     // Simulate payment processing
     setTimeout(() => {
       setLoading(false);
+      
+      // Call the onPaymentComplete callback to update the invoice status
+      if (onPaymentComplete) {
+        onPaymentComplete(invoice.id);
+      }
+      
       toast({
         title: "Payment Successful",
         description: `Payment for invoice ${invoice.id} has been processed.`,

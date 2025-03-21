@@ -25,7 +25,7 @@ import { InvoiceViewDialog } from '@/components/invoices/InvoiceViewDialog';
 import { PaymentDialog } from '@/components/invoices/PaymentDialog';
 
 // Mock data for invoices
-const invoices = [
+const initialInvoices = [
   {
     id: 'INV-001',
     client: 'ABC Properties',
@@ -85,6 +85,7 @@ const invoices = [
 
 const InvoicesPage = () => {
   const { toast } = useToast();
+  const [invoices, setInvoices] = useState(initialInvoices);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -125,6 +126,45 @@ const InvoicesPage = () => {
     setPaymentDialogOpen(false);
   };
 
+  const handlePaymentComplete = (invoiceId: string) => {
+    setInvoices(currentInvoices => 
+      currentInvoices.map(invoice => 
+        invoice.id === invoiceId 
+          ? { 
+              ...invoice, 
+              status: 'paid', 
+              paymentMethod: selectedInvoice?.paymentMethod || 'Credit Card' 
+            } 
+          : invoice
+      )
+    );
+    
+    toast({
+      title: "Status Updated",
+      description: `Invoice ${invoiceId} has been marked as paid.`,
+      variant: "default",
+    });
+  };
+
+  // Calculate stats based on current invoices
+  const totalPending = invoices
+    .filter(invoice => invoice.status === 'pending')
+    .reduce((sum, invoice) => sum + invoice.amount, 0);
+
+  const totalOverdue = invoices
+    .filter(invoice => invoice.status === 'overdue')
+    .reduce((sum, invoice) => sum + invoice.amount, 0);
+
+  const totalPaid = invoices
+    .filter(invoice => invoice.status === 'paid')
+    .reduce((sum, invoice) => sum + invoice.amount, 0);
+
+  const totalAmount = invoices.reduce((sum, invoice) => sum + invoice.amount, 0);
+
+  const pendingCount = invoices.filter(invoice => invoice.status === 'pending').length;
+  const overdueCount = invoices.filter(invoice => invoice.status === 'overdue').length;
+  const paidCount = invoices.filter(invoice => invoice.status === 'paid').length;
+
   return (
     <DashboardLayout>
       <PageTransition>
@@ -154,13 +194,13 @@ const InvoicesPage = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-sm text-muted-foreground">Outstanding</p>
-                    <h3 className="text-2xl font-bold mt-1">$725.00</h3>
+                    <h3 className="text-2xl font-bold mt-1">${totalPending.toFixed(2)}</h3>
                   </div>
                   <div className="h-8 w-8 rounded-md bg-yellow-500/10 flex items-center justify-center text-yellow-500">
                     <FileTextIcon className="h-4 w-4" />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">2 invoices pending</p>
+                <p className="text-xs text-muted-foreground mt-2">{pendingCount} invoices pending</p>
               </CardContent>
             </Card>
             
@@ -169,13 +209,13 @@ const InvoicesPage = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-sm text-muted-foreground">Overdue</p>
-                    <h3 className="text-2xl font-bold mt-1">$425.00</h3>
+                    <h3 className="text-2xl font-bold mt-1">${totalOverdue.toFixed(2)}</h3>
                   </div>
                   <div className="h-8 w-8 rounded-md bg-red-500/10 flex items-center justify-center text-red-500">
                     <FileTextIcon className="h-4 w-4" />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">1 invoice overdue</p>
+                <p className="text-xs text-muted-foreground mt-2">{overdueCount} invoice overdue</p>
               </CardContent>
             </Card>
             
@@ -184,13 +224,13 @@ const InvoicesPage = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-sm text-muted-foreground">Paid (This Month)</p>
-                    <h3 className="text-2xl font-bold mt-1">$600.00</h3>
+                    <h3 className="text-2xl font-bold mt-1">${totalPaid.toFixed(2)}</h3>
                   </div>
                   <div className="h-8 w-8 rounded-md bg-green-500/10 flex items-center justify-center text-green-500">
                     <CheckIcon className="h-4 w-4" />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">2 invoices paid</p>
+                <p className="text-xs text-muted-foreground mt-2">{paidCount} invoices paid</p>
               </CardContent>
             </Card>
             
@@ -199,13 +239,13 @@ const InvoicesPage = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-sm text-muted-foreground">Total (This Month)</p>
-                    <h3 className="text-2xl font-bold mt-1">$1,750.00</h3>
+                    <h3 className="text-2xl font-bold mt-1">${totalAmount.toFixed(2)}</h3>
                   </div>
                   <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center text-primary">
                     <DollarSignIcon className="h-4 w-4" />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">5 total invoices</p>
+                <p className="text-xs text-muted-foreground mt-2">{invoices.length} total invoices</p>
               </CardContent>
             </Card>
           </div>
@@ -535,7 +575,8 @@ const InvoicesPage = () => {
       <PaymentDialog 
         invoice={selectedInvoice} 
         isOpen={paymentDialogOpen} 
-        onClose={closePaymentDialog} 
+        onClose={closePaymentDialog}
+        onPaymentComplete={handlePaymentComplete}
       />
     </DashboardLayout>
   );
