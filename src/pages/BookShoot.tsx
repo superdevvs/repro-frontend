@@ -40,6 +40,7 @@ const BookShoot = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const clientIdFromUrl = queryParams.get('clientId');
+  const clientNameFromUrl = queryParams.get('clientName');
   
   const [client, setClient] = useState('');
   const [address, setAddress] = useState('');
@@ -62,8 +63,16 @@ const BookShoot = () => {
   useEffect(() => {
     if (clientIdFromUrl) {
       setClient(clientIdFromUrl);
+      
+      if (clientNameFromUrl) {
+        toast({
+          title: "Client Selected",
+          description: `${decodeURIComponent(clientNameFromUrl)} has been selected for this shoot.`,
+          variant: "default",
+        });
+      }
     }
-  }, [clientIdFromUrl]);
+  }, [clientIdFromUrl, clientNameFromUrl, toast]);
 
   const getPackagePrice = () => {
     const pkg = packages.find(p => p.id === selectedPackage);
@@ -87,7 +96,6 @@ const BookShoot = () => {
   const getAvailablePhotographers = () => {
     if (!date || !time || !selectedPackage) return [];
 
-    // In a real app, this would filter photographers based on time and package compatibility
     return photographers.filter(p => p.availability);
   };
 
@@ -143,7 +151,6 @@ const BookShoot = () => {
 
       console.log("New shoot created:", newShoot);
     } else {
-      // Validation for each step
       if (step === 1 && (!client || !address || !city || !state || !zip || !selectedPackage)) {
         toast({
           title: "Missing information",
