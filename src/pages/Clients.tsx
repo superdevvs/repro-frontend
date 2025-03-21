@@ -116,8 +116,9 @@ const Clients = () => {
   
   const [clientFormOpen, setClientFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  // Fix the type of status to match the Client interface
-  const [clientFormData, setClientFormData] = useState<{
+  
+  // Define the type for clientFormData with the correct union type for status
+  type ClientFormData = {
     name: string;
     company: string;
     email: string;
@@ -125,7 +126,10 @@ const Clients = () => {
     address: string;
     status: 'active' | 'inactive';
     avatar: string;
-  }>({
+  };
+  
+  // Initialize clientFormData with the correct type
+  const [clientFormData, setClientFormData] = useState<ClientFormData>({
     name: '',
     company: '',
     email: '',
@@ -186,6 +190,14 @@ const Clients = () => {
     setClientFormData({
       ...clientFormData,
       [name]: value,
+    });
+  };
+
+  // Add a specific handler for radio inputs to handle status changes
+  const handleStatusChange = (value: 'active' | 'inactive') => {
+    setClientFormData({
+      ...clientFormData,
+      status: value
     });
   };
 
@@ -758,6 +770,34 @@ const Clients = () => {
                 onChange={handleClientFormChange}
                 placeholder="Enter address"
               />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Status</label>
+              <div className="flex gap-4 mt-1">
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="status-active"
+                    name="status"
+                    className="mr-2"
+                    checked={clientFormData.status === 'active'}
+                    onChange={() => handleStatusChange('active')}
+                  />
+                  <label htmlFor="status-active">Active</label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="status-inactive"
+                    name="status"
+                    className="mr-2"
+                    checked={clientFormData.status === 'inactive'}
+                    onChange={() => handleStatusChange('inactive')}
+                  />
+                  <label htmlFor="status-inactive">Inactive</label>
+                </div>
+              </div>
             </div>
           </div>
           
