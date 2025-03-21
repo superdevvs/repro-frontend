@@ -48,7 +48,7 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
   return (
     <>
       <Dialog open={isOpen && !showRescheduleDialog} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md outline-none focus:outline-none focus:ring-0">
           <DialogHeader>
             <DialogTitle>Shoot Actions</DialogTitle>
             <DialogDescription>
