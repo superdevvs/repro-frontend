@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -39,8 +40,24 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { TaskManager } from '@/components/dashboard/TaskManager';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/integrations/supabase/client';
 
-const clientsData = [
+// Define a proper client type for better type safety
+interface Client {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  address: string;
+  status: 'active' | 'inactive';
+  shootsCount: number;
+  lastActivity: string;
+  avatar?: string;
+}
+
+// Initial clients data
+const initialClientsData: Client[] = [
   {
     id: '1',
     name: 'Jane Smith',
@@ -93,7 +110,7 @@ const Clients = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [clientDetailsOpen, setClientDetailsOpen] = useState(false);
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   
@@ -105,9 +122,12 @@ const Clients = () => {
     email: '',
     phone: '',
     address: '',
-    status: 'active',
+    status: 'active' as const,
     avatar: '',
   });
+  
+  // State to manage the clients list
+  const [clientsData, setClientsData] = useState<Client[]>(initialClientsData);
   
   const filteredClients = clientsData.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -115,7 +135,7 @@ const Clients = () => {
     client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const handleClientSelect = (client: any) => {
+  const handleClientSelect = (client: Client) => {
     setSelectedClient(client);
     setClientDetailsOpen(true);
   };
@@ -135,7 +155,7 @@ const Clients = () => {
     setClientFormOpen(true);
   };
 
-  const handleEditClient = (client: any, e?: React.MouseEvent) => {
+  const handleEditClient = (client: Client, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setIsEditing(true);
     setClientFormData({
@@ -228,21 +248,87 @@ const Clients = () => {
   };
 
   const handleClientFormSubmit = () => {
-    toast({
-      title: isEditing ? "Client Updated" : "Client Added",
-      description: `${clientFormData.name}'s information has been ${isEditing ? 'updated' : 'added'} successfully.`,
-    });
-    
     if (isEditing && selectedClient) {
+      // Update existing client
+      const updatedClients = clientsData.map(client => 
+        client.id === selectedClient.id 
+          ? { 
+              ...client, 
+              name: clientFormData.name,
+              company: clientFormData.company,
+              email: clientFormData.email,
+              phone: clientFormData.phone,
+              address: clientFormData.address,
+              status: clientFormData.status,
+              avatar: clientFormData.avatar
+            } 
+          : client
+      );
+      
+      setClientsData(updatedClients);
+      setSelectedClient({
+        ...selectedClient,
+        name: clientFormData.name,
+        company: clientFormData.company,
+        email: clientFormData.email,
+        phone: clientFormData.phone,
+        address: clientFormData.address,
+        status: clientFormData.status,
+        avatar: clientFormData.avatar
+      });
+      
       console.log("Updated client data:", clientFormData);
+      
+      toast({
+        title: "Client Updated",
+        description: `${clientFormData.name}'s information has been updated successfully.`,
+      });
     } else {
-      console.log("New client data:", clientFormData);
+      // Add new client
+      const newClient: Client = {
+        id: `${Date.now()}`, // Generate a unique ID
+        name: clientFormData.name,
+        company: clientFormData.company,
+        email: clientFormData.email,
+        phone: clientFormData.phone,
+        address: clientFormData.address,
+        status: clientFormData.status,
+        shootsCount: 0,
+        lastActivity: new Date().toISOString().split('T')[0],
+        avatar: clientFormData.avatar
+      };
+      
+      setClientsData(prevClients => [newClient, ...prevClients]);
+      console.log("New client data:", newClient);
+      
+      toast({
+        title: "Client Added",
+        description: `${clientFormData.name} has been added successfully.`,
+      });
     }
     
     setClientFormOpen(false);
   };
 
-  const handleBookShoot = (client: any, e: React.MouseEvent) => {
+  const handleDeleteClient = (client: Client, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Filter out the client to delete
+    const updatedClients = clientsData.filter(c => c.id !== client.id);
+    setClientsData(updatedClients);
+    
+    // If the client being deleted is currently selected, close the details dialog
+    if (selectedClient && selectedClient.id === client.id) {
+      setClientDetailsOpen(false);
+    }
+    
+    toast({
+      title: "Client Removed",
+      description: `${client.name} has been removed from your client list.`,
+    });
+  };
+
+  const handleBookShoot = (client: Client, e: React.MouseEvent) => {
     e.stopPropagation();
     toast({
       title: "Book Shoot",
@@ -250,7 +336,7 @@ const Clients = () => {
     });
   };
 
-  const handleClientPortal = (client: any, e: React.MouseEvent) => {
+  const handleClientPortal = (client: Client, e: React.MouseEvent) => {
     e.stopPropagation();
     toast({
       title: "Client Portal",
@@ -359,6 +445,13 @@ const Clients = () => {
                                 <DropdownMenuItem onClick={(e) => handleClientPortal(client, e)}>
                                   <ExternalLinkIcon className="h-4 w-4 mr-2" />
                                   Client Portal
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className="text-red-500 focus:text-red-500 focus:bg-red-500/10"
+                                  onClick={(e) => handleDeleteClient(client, e)}
+                                >
+                                  <Trash2Icon className="h-4 w-4 mr-2" />
+                                  Delete Client
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
