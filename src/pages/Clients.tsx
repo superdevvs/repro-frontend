@@ -116,13 +116,22 @@ const Clients = () => {
   
   const [clientFormOpen, setClientFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [clientFormData, setClientFormData] = useState({
+  // Fix the type of status to match the Client interface
+  const [clientFormData, setClientFormData] = useState<{
+    name: string;
+    company: string;
+    email: string;
+    phone: string;
+    address: string;
+    status: 'active' | 'inactive';
+    avatar: string;
+  }>({
     name: '',
     company: '',
     email: '',
     phone: '',
     address: '',
-    status: 'active' as const,
+    status: 'active',
     avatar: '',
   });
   
@@ -299,7 +308,7 @@ const Clients = () => {
       };
       
       setClientsData(prevClients => [newClient, ...prevClients]);
-      console.log("New client data:", newClient);
+      console.log("New client added:", newClient);
       
       toast({
         title: "Client Added",
