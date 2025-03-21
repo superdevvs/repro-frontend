@@ -14,3 +14,18 @@ export interface Client {
   lastActivity: string;
   avatar?: string;
 }
+
+/**
+ * Account type definition
+ */
+export interface Account {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  type: 'admin' | 'photographer' | 'client' | 'editor' | 'superadmin';
+  shootsCount: number;
+  status: 'active' | 'inactive';
+  avatar?: string;
+}
