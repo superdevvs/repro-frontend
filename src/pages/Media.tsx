@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { PageTransition } from '@/components/layout/PageTransition';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { FileUploader } from '@/components/media/FileUploader';
 import { 
   FolderIcon, 
@@ -96,6 +96,10 @@ const MediaPage = () => {
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [currentFolder, setCurrentFolder] = useState('root');
+  const [folders, setFolders] = useState<{ id: string; name: string; parent: string }[]>([
+    { id: '1', name: 'Properties', parent: 'root' },
+    { id: '2', name: 'Documents', parent: 'root' }
+  ]);
 
   const handleUploadComplete = (files: File[]) => {
     setUploadDialogOpen(false);
@@ -118,6 +122,14 @@ const MediaPage = () => {
       return;
     }
 
+    const newFolder = {
+      id: `folder-${Date.now()}`,
+      name: newFolderName,
+      parent: currentFolder
+    };
+
+    setFolders([...folders, newFolder]);
+
     toast({
       title: 'Folder Created',
       description: `Created folder: ${newFolderName}`,
@@ -128,6 +140,8 @@ const MediaPage = () => {
     setNewFolderName('');
     setNewFolderDialogOpen(false);
   };
+
+  const currentFolders = folders.filter(folder => folder.parent === currentFolder);
 
   return (
     <DashboardLayout>
@@ -163,6 +177,16 @@ const MediaPage = () => {
             </div>
           </div>
           
+          {currentFolder !== 'root' && (
+            <Button 
+              variant="ghost" 
+              className="mb-4"
+              onClick={() => setCurrentFolder('root')}
+            >
+              Back to root
+            </Button>
+          )}
+          
           <div className="flex flex-col space-y-4">
             <Tabs defaultValue="all" className="w-full">
               <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
@@ -188,6 +212,31 @@ const MediaPage = () => {
               </div>
               
               <TabsContent value="all" className="mt-0">
+                {currentFolders.length > 0 && (
+                  <>
+                    <h3 className="font-medium mb-3">Folders</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+                      {currentFolders.map((folder) => (
+                        <Card 
+                          key={folder.id} 
+                          className="glass-card overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => setCurrentFolder(folder.id)}
+                        >
+                          <CardContent className="p-0">
+                            <div className="aspect-video bg-muted/30 flex items-center justify-center">
+                              <FolderIcon className="h-16 w-16 text-primary/60" />
+                            </div>
+                            <div className="p-3">
+                              <h3 className="font-medium truncate">{folder.name}</h3>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    <h3 className="font-medium mb-3">Files</h3>
+                  </>
+                )}
+                
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {mediaItems.map((item) => (
                     <Card key={item.id} className="glass-card overflow-hidden hover:shadow-md transition-shadow">
@@ -507,4 +556,3 @@ const MediaPage = () => {
 };
 
 export default MediaPage;
-
