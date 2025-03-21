@@ -119,12 +119,6 @@
     @apply text-lg md:text-xl;
   }
 
-  /* When reduce-motion is enabled, disable all animations */
-  .reduce-motion * {
-    animation: none !important;
-    transition: none !important;
-  }
-
   /* Custom utility classes */
   .text-balance {
     text-wrap: balance;
