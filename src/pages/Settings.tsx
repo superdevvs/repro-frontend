@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
@@ -952,3 +953,154 @@ const SettingsPage = () => {
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>Confirm New Password</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} type="password" />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+                          
+                          <Separator />
+                          
+                          <div className="flex justify-end">
+                            <Button type="submit" className="gap-2">
+                              <SaveIcon className="h-4 w-4" />
+                              Save Changes
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
+                      
+                      <Separator />
+                      
+                      <div className="space-y-4">
+                        <h3 className="font-medium">Two-Factor Authentication (2FA)</h3>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">Enable 2FA</p>
+                            <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
+                          </div>
+                          <Switch onCheckedChange={handle2FAToggle} />
+                        </div>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="space-y-4">
+                        <h3 className="font-medium">Sessions</h3>
+                        <div className="space-y-4">
+                          <div className="p-4 border border-border rounded-md">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                  <SmartphoneIcon className="h-4 w-4 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">Current Device</p>
+                                  <p className="text-xs text-muted-foreground">Last active: Just now</p>
+                                </div>
+                              </div>
+                              <Badge variant="outline">Current</Badge>
+                            </div>
+                          </div>
+                          
+                          <div className="p-4 border border-border rounded-md">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                  <GlobeIcon className="h-4 w-4 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">Web Browser (Windows)</p>
+                                  <p className="text-xs text-muted-foreground">Last active: 2 days ago</p>
+                                </div>
+                              </div>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 text-xs text-destructive hover:text-destructive"
+                                onClick={() => handleRevokeSession('Web Browser (Windows)')}
+                              >
+                                Revoke
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="p-4 border border-border rounded-md">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                  <SmartphoneIcon className="h-4 w-4 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">Mobile App (iOS)</p>
+                                  <p className="text-xs text-muted-foreground">Last active: 1 week ago</p>
+                                </div>
+                              </div>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 text-xs text-destructive hover:text-destructive"
+                                onClick={() => handleRevokeSession('Mobile App (iOS)')}
+                              >
+                                Revoke
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-center text-destructive gap-2 border-destructive/20" 
+                          onClick={handleSignOutAllDevices}
+                        >
+                          <AlertTriangleIcon className="h-4 w-4" />
+                          Sign Out on All Devices
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </TabsContent>
+                </Card>
+              </div>
+            </div>
+          </Tabs>
+        </div>
+      </PageTransition>
+      
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={deleteAccountDialogOpen} onOpenChange={setDeleteAccountDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Account</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. It will permanently delete your account and remove your data from our servers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center p-3 rounded-md bg-destructive/10 text-destructive">
+              <AlertTriangleIcon className="h-5 w-5 mr-2" />
+              <p className="text-sm">All your data including shoots, clients, and invoices will be deleted.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteAccountDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteAccount}
+              disabled={isDeletingAccount}
+            >
+              {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </DashboardLayout>
+  );
+};
+
+export default SettingsPage;
