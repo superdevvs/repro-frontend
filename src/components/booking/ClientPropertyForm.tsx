@@ -1,11 +1,13 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { CheckCircleIcon } from 'lucide-react';
+import { getClientsData } from '@/data/clientsData';
+import { Client } from '@/types/clients';
 
 interface ClientPropertyFormProps {
   client: string;
@@ -35,13 +37,23 @@ export function ClientPropertyForm({
   setState,
   zip,
   setZip,
-  clients,
+  clients: propClients,
   selectedPackage,
   setSelectedPackage,
   packages
 }: ClientPropertyFormProps) {
+  // Use local state to manage clients list from localStorage
+  const [localClients, setLocalClients] = useState<Client[]>([]);
+  
+  // Get latest clients data from localStorage on mount and when prop clients change
+  useEffect(() => {
+    const updatedClients = getClientsData();
+    setLocalClients(updatedClients);
+  }, [propClients]);
+  
   // Find the selected client's name for display
-  const selectedClient = clients.find(c => c.id === client);
+  const selectedClient = localClients.find(c => c.id === client) || 
+                         propClients.find(c => c.id === client);
   const clientFromUrl = client !== '';
 
   return (
@@ -69,7 +81,7 @@ export function ClientPropertyForm({
                 <SelectValue placeholder="Select a client" />
               </SelectTrigger>
               <SelectContent>
-                {clients.map((c) => (
+                {localClients.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name} {c.company && `(${c.company})`}
                   </SelectItem>

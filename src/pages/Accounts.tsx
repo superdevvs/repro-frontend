@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,8 +51,8 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-// Mock data for accounts
-const accountsData = [
+// Initial mock data for accounts
+const initialAccountsData = [
   {
     id: '1',
     name: 'John Doe',
@@ -175,6 +176,17 @@ const Accounts = () => {
     avatar: '',
   });
   
+  // State for accounts data with localStorage persistence
+  const [accountsData, setAccountsData] = useState(() => {
+    const savedAccounts = localStorage.getItem('accountsData');
+    return savedAccounts ? JSON.parse(savedAccounts) : initialAccountsData;
+  });
+
+  // Save accounts data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('accountsData', JSON.stringify(accountsData));
+  }, [accountsData]);
+  
   // State for branding info tab
   const [brandingSearchTerm, setBrandingSearchTerm] = useState('');
   const [brandingFormOpen, setBrandingFormOpen] = useState(false);
@@ -200,7 +212,7 @@ const Accounts = () => {
     const matchesSearch = 
       account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       account.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      account.company.toLowerCase().includes(searchTerm.toLowerCase());
+      (account.company && account.company.toLowerCase().includes(searchTerm.toLowerCase()));
     
     if (activeTab === 'all') return matchesSearch;
     if (activeTab === 'photographers') return matchesSearch && account.type === 'photographer';
@@ -255,11 +267,49 @@ const Accounts = () => {
       return;
     }
     
-    // In a real application, this would send data to the server
-    toast({
-      title: selectedAccount ? 'Account Updated' : 'Account Created',
-      description: `${accountFormData.name}'s account has been ${selectedAccount ? 'updated' : 'created'} successfully.`,
-    });
+    if (selectedAccount) {
+      // Update existing account
+      const updatedAccountsData = accountsData.map(account => 
+        account.id === selectedAccount.id 
+          ? { 
+              ...account, 
+              name: accountFormData.name,
+              email: accountFormData.email,
+              phone: accountFormData.phone,
+              company: accountFormData.company,
+              type: accountFormData.type,
+              avatar: accountFormData.avatar,
+            } 
+          : account
+      );
+      
+      setAccountsData(updatedAccountsData);
+      
+      toast({
+        title: 'Account Updated',
+        description: `${accountFormData.name}'s account has been updated successfully.`,
+      });
+    } else {
+      // Create new account
+      const newAccount = {
+        id: `${Date.now()}`,
+        name: accountFormData.name,
+        email: accountFormData.email,
+        phone: accountFormData.phone,
+        company: accountFormData.company,
+        type: accountFormData.type,
+        shootsCount: 0,
+        status: 'active',
+        avatar: accountFormData.avatar,
+      };
+      
+      setAccountsData([newAccount, ...accountsData]);
+      
+      toast({
+        title: 'Account Created',
+        description: `${accountFormData.name}'s account has been created successfully.`,
+      });
+    }
     
     resetAccountForm();
     setAccountFormOpen(false);
@@ -368,7 +418,10 @@ const Accounts = () => {
   
   // Delete account
   const handleDeleteAccount = (id: string) => {
-    // In a real application, this would send a delete request to the server
+    // Filter out the account with the specified id
+    const updatedAccountsData = accountsData.filter(account => account.id !== id);
+    setAccountsData(updatedAccountsData);
+    
     toast({
       title: 'Account Deleted',
       description: 'The account has been deleted successfully.',

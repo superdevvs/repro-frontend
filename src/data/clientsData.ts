@@ -48,3 +48,9 @@ export const initialClientsData: Client[] = [
     lastActivity: '2023-05-12',
   },
 ];
+
+// Helper function to get clients data from localStorage or initial data
+export const getClientsData = (): Client[] => {
+  const storedClients = localStorage.getItem('clientsData');
+  return storedClients ? JSON.parse(storedClients) : initialClientsData;
+};
