@@ -20,6 +20,9 @@ import {
   DollarSignIcon,
   DownloadIcon
 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import { generateInvoicePDF } from '@/utils/invoiceUtils';
 
 // Mock data for invoices
 const invoices = [
@@ -81,6 +84,26 @@ const invoices = [
 ];
 
 const InvoicesPage = () => {
+  const { toast } = useToast();
+
+  const handleDownloadInvoice = (invoice: typeof invoices[0]) => {
+    try {
+      generateInvoicePDF(invoice);
+      toast({
+        title: "Invoice Generated",
+        description: `Invoice ${invoice.id} has been downloaded successfully.`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error generating invoice:", error);
+      toast({
+        title: "Error Generating Invoice",
+        description: "There was a problem generating the invoice. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <DashboardLayout>
       <PageTransition>
@@ -200,29 +223,29 @@ const InvoicesPage = () => {
                 
                 <TabsContent value="all" className="mt-0">
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="border-b border-border text-sm text-muted-foreground">
-                          <th className="text-left py-3 px-4">Invoice #</th>
-                          <th className="text-left py-3 px-4">Client</th>
-                          <th className="text-left py-3 px-4">Property</th>
-                          <th className="text-left py-3 px-4">Date</th>
-                          <th className="text-left py-3 px-4">Due Date</th>
-                          <th className="text-right py-3 px-4">Amount</th>
-                          <th className="text-center py-3 px-4">Status</th>
-                          <th className="text-right py-3 px-4">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Invoice #</TableHead>
+                          <TableHead>Client</TableHead>
+                          <TableHead>Property</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Due Date</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {invoices.map((invoice) => (
-                          <tr key={invoice.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                            <td className="py-3 px-4 font-medium">{invoice.id}</td>
-                            <td className="py-3 px-4">{invoice.client}</td>
-                            <td className="py-3 px-4 max-w-[180px] truncate">{invoice.property}</td>
-                            <td className="py-3 px-4">{invoice.date}</td>
-                            <td className="py-3 px-4">{invoice.dueDate}</td>
-                            <td className="py-3 px-4 text-right">${invoice.amount.toFixed(2)}</td>
-                            <td className="py-3 px-4">
+                          <TableRow key={invoice.id}>
+                            <TableCell className="font-medium">{invoice.id}</TableCell>
+                            <TableCell>{invoice.client}</TableCell>
+                            <TableCell className="max-w-[180px] truncate">{invoice.property}</TableCell>
+                            <TableCell>{invoice.date}</TableCell>
+                            <TableCell>{invoice.dueDate}</TableCell>
+                            <TableCell className="text-right">${invoice.amount.toFixed(2)}</TableCell>
+                            <TableCell>
                               <div className="flex justify-center">
                                 <Badge 
                                   className={
@@ -236,10 +259,16 @@ const InvoicesPage = () => {
                                   {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
                                 </Badge>
                               </div>
-                            </td>
-                            <td className="py-3 px-4">
+                            </TableCell>
+                            <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => handleDownloadInvoice(invoice)}
+                                  title="Download Invoice"
+                                >
                                   <DownloadIcon className="h-4 w-4" />
                                 </Button>
                                 {invoice.status !== 'paid' && (
@@ -249,48 +278,54 @@ const InvoicesPage = () => {
                                   </Button>
                                 )}
                               </div>
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                 </TabsContent>
                 
                 <TabsContent value="pending" className="mt-0">
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="border-b border-border text-sm text-muted-foreground">
-                          <th className="text-left py-3 px-4">Invoice #</th>
-                          <th className="text-left py-3 px-4">Client</th>
-                          <th className="text-left py-3 px-4">Property</th>
-                          <th className="text-left py-3 px-4">Date</th>
-                          <th className="text-left py-3 px-4">Due Date</th>
-                          <th className="text-right py-3 px-4">Amount</th>
-                          <th className="text-center py-3 px-4">Status</th>
-                          <th className="text-right py-3 px-4">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Invoice #</TableHead>
+                          <TableHead>Client</TableHead>
+                          <TableHead>Property</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Due Date</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {invoices.filter(invoice => invoice.status === 'pending').map((invoice) => (
-                          <tr key={invoice.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                            <td className="py-3 px-4 font-medium">{invoice.id}</td>
-                            <td className="py-3 px-4">{invoice.client}</td>
-                            <td className="py-3 px-4 max-w-[180px] truncate">{invoice.property}</td>
-                            <td className="py-3 px-4">{invoice.date}</td>
-                            <td className="py-3 px-4">{invoice.dueDate}</td>
-                            <td className="py-3 px-4 text-right">${invoice.amount.toFixed(2)}</td>
-                            <td className="py-3 px-4">
+                          <TableRow key={invoice.id}>
+                            <TableCell className="font-medium">{invoice.id}</TableCell>
+                            <TableCell>{invoice.client}</TableCell>
+                            <TableCell className="max-w-[180px] truncate">{invoice.property}</TableCell>
+                            <TableCell>{invoice.date}</TableCell>
+                            <TableCell>{invoice.dueDate}</TableCell>
+                            <TableCell className="text-right">${invoice.amount.toFixed(2)}</TableCell>
+                            <TableCell>
                               <div className="flex justify-center">
                                 <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
                                   Pending
                                 </Badge>
                               </div>
-                            </td>
-                            <td className="py-3 px-4">
+                            </TableCell>
+                            <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => handleDownloadInvoice(invoice)}
+                                  title="Download Invoice"
+                                >
                                   <DownloadIcon className="h-4 w-4" />
                                 </Button>
                                 <Button variant="outline" size="sm" className="h-8">
@@ -298,93 +333,105 @@ const InvoicesPage = () => {
                                   Pay
                                 </Button>
                               </div>
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                 </TabsContent>
                 
                 <TabsContent value="paid" className="mt-0">
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="border-b border-border text-sm text-muted-foreground">
-                          <th className="text-left py-3 px-4">Invoice #</th>
-                          <th className="text-left py-3 px-4">Client</th>
-                          <th className="text-left py-3 px-4">Property</th>
-                          <th className="text-left py-3 px-4">Date</th>
-                          <th className="text-left py-3 px-4">Due Date</th>
-                          <th className="text-right py-3 px-4">Amount</th>
-                          <th className="text-center py-3 px-4">Status</th>
-                          <th className="text-right py-3 px-4">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Invoice #</TableHead>
+                          <TableHead>Client</TableHead>
+                          <TableHead>Property</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Due Date</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {invoices.filter(invoice => invoice.status === 'paid').map((invoice) => (
-                          <tr key={invoice.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                            <td className="py-3 px-4 font-medium">{invoice.id}</td>
-                            <td className="py-3 px-4">{invoice.client}</td>
-                            <td className="py-3 px-4 max-w-[180px] truncate">{invoice.property}</td>
-                            <td className="py-3 px-4">{invoice.date}</td>
-                            <td className="py-3 px-4">{invoice.dueDate}</td>
-                            <td className="py-3 px-4 text-right">${invoice.amount.toFixed(2)}</td>
-                            <td className="py-3 px-4">
+                          <TableRow key={invoice.id}>
+                            <TableCell className="font-medium">{invoice.id}</TableCell>
+                            <TableCell>{invoice.client}</TableCell>
+                            <TableCell className="max-w-[180px] truncate">{invoice.property}</TableCell>
+                            <TableCell>{invoice.date}</TableCell>
+                            <TableCell>{invoice.dueDate}</TableCell>
+                            <TableCell className="text-right">${invoice.amount.toFixed(2)}</TableCell>
+                            <TableCell>
                               <div className="flex justify-center">
                                 <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
                                   Paid
                                 </Badge>
                               </div>
-                            </td>
-                            <td className="py-3 px-4">
+                            </TableCell>
+                            <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => handleDownloadInvoice(invoice)}
+                                  title="Download Invoice"
+                                >
                                   <DownloadIcon className="h-4 w-4" />
                                 </Button>
                               </div>
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                 </TabsContent>
                 
                 <TabsContent value="overdue" className="mt-0">
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="border-b border-border text-sm text-muted-foreground">
-                          <th className="text-left py-3 px-4">Invoice #</th>
-                          <th className="text-left py-3 px-4">Client</th>
-                          <th className="text-left py-3 px-4">Property</th>
-                          <th className="text-left py-3 px-4">Date</th>
-                          <th className="text-left py-3 px-4">Due Date</th>
-                          <th className="text-right py-3 px-4">Amount</th>
-                          <th className="text-center py-3 px-4">Status</th>
-                          <th className="text-right py-3 px-4">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Invoice #</TableHead>
+                          <TableHead>Client</TableHead>
+                          <TableHead>Property</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Due Date</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {invoices.filter(invoice => invoice.status === 'overdue').map((invoice) => (
-                          <tr key={invoice.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                            <td className="py-3 px-4 font-medium">{invoice.id}</td>
-                            <td className="py-3 px-4">{invoice.client}</td>
-                            <td className="py-3 px-4 max-w-[180px] truncate">{invoice.property}</td>
-                            <td className="py-3 px-4">{invoice.date}</td>
-                            <td className="py-3 px-4">{invoice.dueDate}</td>
-                            <td className="py-3 px-4 text-right">${invoice.amount.toFixed(2)}</td>
-                            <td className="py-3 px-4">
+                          <TableRow key={invoice.id}>
+                            <TableCell className="font-medium">{invoice.id}</TableCell>
+                            <TableCell>{invoice.client}</TableCell>
+                            <TableCell className="max-w-[180px] truncate">{invoice.property}</TableCell>
+                            <TableCell>{invoice.date}</TableCell>
+                            <TableCell>{invoice.dueDate}</TableCell>
+                            <TableCell className="text-right">${invoice.amount.toFixed(2)}</TableCell>
+                            <TableCell>
                               <div className="flex justify-center">
                                 <Badge className="bg-red-500/10 text-red-500 border-red-500/20">
                                   Overdue
                                 </Badge>
                               </div>
-                            </td>
-                            <td className="py-3 px-4">
+                            </TableCell>
+                            <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => handleDownloadInvoice(invoice)}
+                                  title="Download Invoice"
+                                >
                                   <DownloadIcon className="h-4 w-4" />
                                 </Button>
                                 <Button variant="outline" size="sm" className="h-8">
@@ -392,11 +439,11 @@ const InvoicesPage = () => {
                                   Pay
                                 </Button>
                               </div>
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                 </TabsContent>
               </Tabs>
