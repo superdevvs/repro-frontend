@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -34,7 +36,22 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ImageUpload } from "@/components/profile/ImageUpload"
-import { CameraIcon, DownloadIcon, SaveIcon, TrashIcon } from 'lucide-react';
+import { 
+  CameraIcon, 
+  DownloadIcon, 
+  SaveIcon, 
+  TrashIcon, 
+  MoonIcon, 
+  SunIcon, 
+  MonitorIcon,
+  LayoutIcon,
+  SlidersHorizontal,
+  BellIcon,
+  UserCircleIcon,
+  KeyIcon,
+  UserIcon,
+  PanelLeftIcon
+} from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,7 +89,7 @@ const securityFormSchema = z.object({
   }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
-  path: ["confirmPassword"], // path of error
+  path: ["confirmPassword"],
 });
 
 const SettingsPage = () => {
@@ -296,54 +313,191 @@ const SettingsPage = () => {
     }
   }, [theme]);
   
+  const getThemeIcon = () => {
+    switch (theme) {
+      case 'light':
+        return <SunIcon className="h-5 w-5 text-amber-500" />;
+      case 'dark':
+        return <MoonIcon className="h-5 w-5 text-indigo-400" />;
+      case 'system':
+        return <MonitorIcon className="h-5 w-5 text-gray-500" />;
+      default:
+        return <SunIcon className="h-5 w-5" />;
+    }
+  };
+  
   return (
     <div className="container relative pb-10">
-      <div className="mx-auto w-full max-w-2xl lg:max-w-none">
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          </TabsList>
-          <TabsContent value="profile" className="space-y-6">
-            <div className="grid gap-10">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Public profile</CardTitle>
-                  <CardDescription>
-                    Share a bit about yourself on your profile.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4">
-                  <div className="flex items-center justify-center">
-                    <ImageUpload onChange={handleAvatarChange} initialImage={profilePicture || user?.avatar} />
+      <div className="mx-auto w-full max-w-5xl">
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Sidebar Navigation */}
+          <div className="w-full md:w-64 space-y-4">
+            <Card className="glass-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl">Settings</CardTitle>
+                <CardDescription>Manage your account preferences</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Tabs defaultValue="profile" orientation="vertical" className="w-full">
+                  <TabsList className="flex flex-col items-stretch h-auto bg-transparent space-y-1 p-2">
+                    <TabsTrigger value="profile" className="justify-start gap-2 py-2">
+                      <UserCircleIcon className="h-4 w-4" />
+                      <span>Profile</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="account" className="justify-start gap-2 py-2">
+                      <UserIcon className="h-4 w-4" />
+                      <span>Account</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="security" className="justify-start gap-2 py-2">
+                      <KeyIcon className="h-4 w-4" />
+                      <span>Security</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="appearance" className="justify-start gap-2 py-2">
+                      <LayoutIcon className="h-4 w-4" />
+                      <span>Appearance</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="notifications" className="justify-start gap-2 py-2">
+                      <BellIcon className="h-4 w-4" />
+                      <span>Notifications</span>
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </CardContent>
+              <CardFooter className="p-3 border-t flex flex-col items-start gap-3">
+                <div className="flex items-center text-sm text-muted-foreground w-full">
+                  <div className="flex items-center gap-2">
+                    {getThemeIcon()}
+                    <span className="capitalize">{theme} mode</span>
                   </div>
-                  <div className="grid gap-2">
-                    <Form {...profileForm}>
-                      <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4">
-                        <FormField
-                          control={profileForm.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Your Name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                </div>
+                <div className="flex justify-between w-full gap-2">
+                  <Button 
+                    variant="outline" 
+                    disabled={isDownloadingData} 
+                    onClick={handleDownloadData}
+                    size="sm"
+                    className="w-full"
+                  >
+                    <DownloadIcon className="h-3.5 w-3.5 mr-2" />
+                    Export Data
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="w-full">
+                        <TrashIcon className="h-3.5 w-3.5 mr-2" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your account
+                          and remove your data from our servers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteAccount}>Continue</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardFooter>
+            </Card>
+          </div>
+          
+          {/* Main Content Area */}
+          <div className="flex-1">
+            <Tabs defaultValue="profile" className="w-full h-full">
+              {/* Profile Tab */}
+              <TabsContent value="profile" className="mt-0 h-full">
+                <Card className="glass-card h-full">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserCircleIcon className="h-5 w-5 text-primary" />
+                      Profile Information
+                    </CardTitle>
+                    <CardDescription>
+                      Update your personal information and public profile.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
+                      <div className="flex flex-col items-center space-y-2">
+                        <ImageUpload 
+                          onChange={handleAvatarChange} 
+                          initialImage={profilePicture || user?.avatar} 
                         />
+                        <span className="text-sm text-muted-foreground">Profile Photo</span>
+                      </div>
+                      <div className="flex-1 w-full">
+                        <Form {...profileForm}>
+                          <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4">
+                            <FormField
+                              control={profileForm.control}
+                              name="name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Full Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Your Name" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={profileForm.control}
+                              name="email"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Email Address</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="your-email@example.com" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <Button type="submit" className="gap-2">
+                              <SaveIcon className="h-4 w-4" />
+                              Save Changes
+                            </Button>
+                          </form>
+                        </Form>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Account Tab */}
+              <TabsContent value="account" className="mt-0 h-full">
+                <Card className="glass-card h-full">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserIcon className="h-5 w-5 text-primary" />
+                      Account Settings
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your account preferences and identity.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Form {...accountForm}>
+                      <form onSubmit={accountForm.handleSubmit(handleAccountSubmit)} className="space-y-4">
                         <FormField
-                          control={profileForm.control}
-                          name="email"
+                          control={accountForm.control}
+                          name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Email</FormLabel>
+                              <FormLabel>Username</FormLabel>
                               <FormControl>
-                                <Input placeholder="your-email@example.com" {...field} />
+                                <div className="flex items-center">
+                                  <span className="text-muted-foreground mr-1">@</span>
+                                  <Input placeholder="username" {...field} />
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -351,227 +505,203 @@ const SettingsPage = () => {
                         />
                         <Button type="submit" className="gap-2">
                           <SaveIcon className="h-4 w-4" />
-                          Save changes
+                          Save Changes
                         </Button>
                       </form>
                     </Form>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          <TabsContent value="account" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account settings</CardTitle>
-                <CardDescription>
-                  Manage your account settings. Set your preferred username.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Form {...accountForm}>
-                  <form onSubmit={accountForm.handleSubmit(handleAccountSubmit)} className="space-y-4">
-                    <FormField
-                      control={accountForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Username" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" className="gap-2">
-                      <SaveIcon className="h-4 w-4" />
-                      Save changes
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="security" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security</CardTitle>
-                <CardDescription>Update your password</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Form {...securityForm}>
-                  <form onSubmit={securityForm.handleSubmit(handleSecuritySubmit)} className="space-y-4">
-                    <FormField
-                      control={securityForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={securityForm.control}
-                      name="confirmPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Confirm Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Confirm Password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" className="gap-2">
-                      <SaveIcon className="h-4 w-4" />
-                      Save changes
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="appearance" className="m-0">
-            <CardHeader>
-              <CardTitle>Appearance</CardTitle>
-              <CardDescription>
-                Customize the look and feel of the dashboard
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="theme">Theme</Label>
-                    <p className="text-sm text-muted-foreground">Select light or dark theme</p>
-                  </div>
-                  <Select value={theme} onValueChange={(value) => {
-                    setTheme(value);
-                    applyTheme(value);
-                  }}>
-                    <SelectTrigger id="theme" className="w-[180px]">
-                      <SelectValue placeholder="Select theme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="light">Light</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="system">System</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <Separator />
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="sidebar">Sidebar</Label>
-                    <p className="text-sm text-muted-foreground">Automatically collapse sidebar on small screens</p>
-                  </div>
-                  <Switch 
-                    id="sidebar" 
-                    checked={sidebarCollapse} 
-                    onCheckedChange={(checked) => {
-                      setSidebarCollapse(checked);
-                      localStorage.setItem('sidebarCollapse', checked.toString());
-                    }} 
-                  />
-                </div>
-                
-                <Separator />
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="animations">Animations</Label>
-                    <p className="text-sm text-muted-foreground">Enable animations and transitions</p>
-                  </div>
-                  <Switch 
-                    id="animations" 
-                    checked={animations} 
-                    onCheckedChange={(checked) => {
-                      setAnimations(checked);
-                      document.documentElement.classList.toggle('reduce-motion', !checked);
-                      localStorage.setItem('animations', checked.toString());
-                    }} 
-                  />
-                </div>
-              </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
               
-              <Separator />
+              {/* Security Tab */}
+              <TabsContent value="security" className="mt-0 h-full">
+                <Card className="glass-card h-full">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <KeyIcon className="h-5 w-5 text-primary" />
+                      Security
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your password and security settings.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Form {...securityForm}>
+                      <form onSubmit={securityForm.handleSubmit(handleSecuritySubmit)} className="space-y-4">
+                        <FormField
+                          control={securityForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>New Password</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="••••••••" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={securityForm.control}
+                          name="confirmPassword"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Confirm Password</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="••••••••" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" className="gap-2">
+                          <SaveIcon className="h-4 w-4" />
+                          Update Password
+                        </Button>
+                      </form>
+                    </Form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
               
-              <div className="flex justify-end">
-                <Button className="gap-2" onClick={handleAppearanceSubmit}>
-                  <SaveIcon className="h-4 w-4" />
-                  Save Changes
-                </Button>
-              </div>
-            </CardContent>
-          </TabsContent>
-          <TabsContent value="notifications" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>
-                  Customize your notification settings.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between rounded-md border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-medium leading-none">
-                      Enable Notifications
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Allow us to send you notifications.
-                    </p>
-                  </div>
-                  <Switch id="notifications" checked={isNotificationEnabled} onCheckedChange={setIsNotificationEnabled} />
-                </div>
-                <Button onClick={handleNotificationSubmit}>Save Preferences</Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-        <Separator className="my-4" />
-        <div className="flex justify-between">
-          <Button variant="outline" disabled={isDownloadingData} onClick={handleDownloadData} className="gap-2">
-            {isDownloadingData ? (
-              <>
-                Downloading...
-              </>
-            ) : (
-              <>
-                <DownloadIcon className="h-4 w-4" />
-                Download Data
-              </>
-            )}
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="gap-2">
-                <TrashIcon className="h-4 w-4" />
-                Delete Account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your account
-                  and remove your data from our servers.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteAccount}>Continue</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+              {/* Appearance Tab */}
+              <TabsContent value="appearance" className="mt-0 h-full">
+                <Card className="glass-card h-full">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <LayoutIcon className="h-5 w-5 text-primary" />
+                      Appearance
+                    </CardTitle>
+                    <CardDescription>
+                      Customize the look and feel of the dashboard.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="theme" className="text-base">Theme</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div
+                            className={`flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer hover:bg-accent ${theme === 'light' ? 'border-primary' : 'border-accent'}`}
+                            onClick={() => setTheme('light')}
+                          >
+                            <SunIcon className="h-6 w-6 mb-2 text-amber-500" />
+                            <span className="text-sm font-medium">Light</span>
+                          </div>
+                          
+                          <div
+                            className={`flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer hover:bg-accent ${theme === 'dark' ? 'border-primary' : 'border-accent'}`}
+                            onClick={() => setTheme('dark')}
+                          >
+                            <MoonIcon className="h-6 w-6 mb-2 text-indigo-400" />
+                            <span className="text-sm font-medium">Dark</span>
+                          </div>
+                          
+                          <div
+                            className={`flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer hover:bg-accent ${theme === 'system' ? 'border-primary' : 'border-accent'}`}
+                            onClick={() => setTheme('system')}
+                          >
+                            <MonitorIcon className="h-6 w-6 mb-2 text-gray-500" />
+                            <span className="text-sm font-medium">System</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex flex-col space-y-2">
+                        <Label className="text-base">Sidebar</Label>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="sidebar" className="text-sm font-normal">Auto Collapse</Label>
+                            <p className="text-xs text-muted-foreground">
+                              Automatically collapse sidebar on small screens
+                            </p>
+                          </div>
+                          <Switch 
+                            id="sidebar" 
+                            checked={sidebarCollapse} 
+                            onCheckedChange={(checked) => {
+                              setSidebarCollapse(checked);
+                            }} 
+                          />
+                        </div>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex flex-col space-y-2">
+                        <Label className="text-base">Animations</Label>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="animations" className="text-sm font-normal">Enable Animations</Label>
+                            <p className="text-xs text-muted-foreground">
+                              Toggle animations and transitions
+                            </p>
+                          </div>
+                          <Switch 
+                            id="animations" 
+                            checked={animations} 
+                            onCheckedChange={(checked) => {
+                              setAnimations(checked);
+                            }} 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end">
+                      <Button onClick={handleAppearanceSubmit} className="gap-2">
+                        <SaveIcon className="h-4 w-4" />
+                        Save Changes
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Notifications Tab */}
+              <TabsContent value="notifications" className="mt-0 h-full">
+                <Card className="glass-card h-full">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BellIcon className="h-5 w-5 text-primary" />
+                      Notifications
+                    </CardTitle>
+                    <CardDescription>
+                      Manage how you receive notifications.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="rounded-lg border p-4 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-base">
+                              Push Notifications
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              Receive notifications about important updates and events.
+                            </p>
+                          </div>
+                          <Switch 
+                            id="notifications" 
+                            checked={isNotificationEnabled} 
+                            onCheckedChange={setIsNotificationEnabled} 
+                          />
+                        </div>
+                      </div>
+                      
+                      <Button onClick={handleNotificationSubmit} className="gap-2">
+                        <SaveIcon className="h-4 w-4" />
+                        Save Preferences
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </div>
     </div>
