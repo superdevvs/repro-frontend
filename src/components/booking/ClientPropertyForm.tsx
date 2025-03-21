@@ -18,7 +18,7 @@ interface ClientPropertyFormProps {
   setState: (value: string) => void;
   zip: string;
   setZip: (value: string) => void;
-  clients: Array<{ id: string; name: string }>;
+  clients: Array<{ id: string; name: string; company?: string }>;
   selectedPackage: string;
   setSelectedPackage: (id: string) => void;
   packages: Array<{ id: string; name: string; description: string; price: number }>;
@@ -59,6 +59,9 @@ export function ClientPropertyForm({
           {clientFromUrl ? (
             <div className="flex items-center mt-2 p-2 bg-primary/5 border border-primary/20 rounded-md">
               <span className="text-primary font-medium">{selectedClient?.name || 'Selected Client'}</span>
+              {selectedClient?.company && (
+                <span className="ml-2 text-sm text-muted-foreground">({selectedClient.company})</span>
+              )}
             </div>
           ) : (
             <Select value={client} onValueChange={setClient}>
@@ -68,7 +71,7 @@ export function ClientPropertyForm({
               <SelectContent>
                 {clients.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.name}
+                    {c.name} {c.company && `(${c.company})`}
                   </SelectItem>
                 ))}
               </SelectContent>

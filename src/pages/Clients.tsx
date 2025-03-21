@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,68 +41,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-
-// Define a proper client type for better type safety
-interface Client {
-  id: string;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  address: string;
-  status: 'active' | 'inactive';
-  shootsCount: number;
-  lastActivity: string;
-  avatar?: string;
-}
-
-// Initial clients data
-const initialClientsData: Client[] = [
-  {
-    id: '1',
-    name: 'Jane Smith',
-    company: 'XYZ Realty',
-    email: 'jane.smith@example.com',
-    phone: '(555) 987-6543',
-    address: '456 Park Avenue, Somewhere, VA 23456',
-    status: 'active',
-    shootsCount: 45,
-    lastActivity: '2023-05-16',
-  },
-  {
-    id: '2',
-    name: 'Robert Wilson',
-    company: 'Wilson Realty',
-    email: 'robert.wilson@example.com',
-    phone: '(555) 234-5678',
-    address: '789 Ocean Drive, Beachtown, DC 34567',
-    status: 'active',
-    shootsCount: 12,
-    lastActivity: '2023-05-14',
-  },
-  {
-    id: '3',
-    name: 'Emily Davis',
-    company: 'Davis Properties',
-    email: 'emily.davis@example.com',
-    phone: '(555) 345-6789',
-    address: '101 River Road, Riverside, MD 45678',
-    status: 'inactive',
-    shootsCount: 23,
-    lastActivity: '2023-05-05',
-  },
-  {
-    id: '4',
-    name: 'Michael Johnson',
-    company: 'Johnson & Associates',
-    email: 'michael.johnson@example.com',
-    phone: '(555) 456-7890',
-    address: '202 Mountain View, Heights, VA 56789',
-    status: 'active',
-    shootsCount: 18,
-    lastActivity: '2023-05-12',
-  },
-];
+import { Client } from '@/types/clients';
+import { initialClientsData } from '@/data/clientsData';
 
 const Clients = () => {
   const { role } = useAuth();
@@ -118,7 +58,6 @@ const Clients = () => {
   const [clientFormOpen, setClientFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
-  // Define the type for clientFormData with the correct union type for status
   type ClientFormData = {
     name: string;
     company: string;
@@ -129,7 +68,6 @@ const Clients = () => {
     avatar: string;
   };
   
-  // Initialize clientFormData with the correct type
   const [clientFormData, setClientFormData] = useState<ClientFormData>({
     name: '',
     company: '',
@@ -140,12 +78,18 @@ const Clients = () => {
     avatar: '',
   });
   
-  // State to manage the clients list
-  const [clientsData, setClientsData] = useState<Client[]>(initialClientsData);
+  const [clientsData, setClientsData] = useState<Client[]>(() => {
+    const storedClients = localStorage.getItem('clientsData');
+    return storedClients ? JSON.parse(storedClients) : initialClientsData;
+  });
+  
+  useEffect(() => {
+    localStorage.setItem('clientsData', JSON.stringify(clientsData));
+  }, [clientsData]);
   
   const filteredClients = clientsData.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
@@ -174,10 +118,10 @@ const Clients = () => {
     setIsEditing(true);
     setClientFormData({
       name: client.name,
-      company: client.company,
+      company: client.company || '',
       email: client.email,
-      phone: client.phone,
-      address: client.address,
+      phone: client.phone || '',
+      address: client.address || '',
       status: client.status,
       avatar: client.avatar || '',
     });
@@ -194,7 +138,6 @@ const Clients = () => {
     });
   };
 
-  // Add a specific handler for radio inputs to handle status changes
   const handleStatusChange = (value: 'active' | 'inactive') => {
     setClientFormData({
       ...clientFormData,
@@ -271,7 +214,6 @@ const Clients = () => {
 
   const handleClientFormSubmit = () => {
     if (isEditing && selectedClient) {
-      // Update existing client
       const updatedClients = clientsData.map(client => 
         client.id === selectedClient.id 
           ? { 
@@ -306,9 +248,8 @@ const Clients = () => {
         description: `${clientFormData.name}'s information has been updated successfully.`,
       });
     } else {
-      // Add new client
       const newClient: Client = {
-        id: `${Date.now()}`, // Generate a unique ID
+        id: `${Date.now()}`,
         name: clientFormData.name,
         company: clientFormData.company,
         email: clientFormData.email,
@@ -335,11 +276,9 @@ const Clients = () => {
   const handleDeleteClient = (client: Client, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Filter out the client to delete
     const updatedClients = clientsData.filter(c => c.id !== client.id);
     setClientsData(updatedClients);
     
-    // If the client being deleted is currently selected, close the details dialog
     if (selectedClient && selectedClient.id === client.id) {
       setClientDetailsOpen(false);
     }
@@ -353,13 +292,18 @@ const Clients = () => {
   const handleBookShoot = (client: Client, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Close client details dialog if open
     if (clientDetailsOpen) {
       setClientDetailsOpen(false);
     }
     
-    // Navigate to the book shoot page and pass client id
-    navigate(`/book-shoot?clientId=${client.id}&clientName=${encodeURIComponent(client.name)}`);
+    const params = new URLSearchParams();
+    params.append('clientId', client.id);
+    params.append('clientName', encodeURIComponent(client.name));
+    if (client.company) {
+      params.append('clientCompany', encodeURIComponent(client.company));
+    }
+    
+    navigate(`/book-shoot?${params.toString()}`);
     
     toast({
       title: "Book Shoot",

@@ -14,14 +14,8 @@ import { useShoots } from '@/context/ShootsContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { ShootData } from '@/types/shoots';
-
-const clients = [
-  { id: '1', name: 'ABC Properties' },
-  { id: '2', name: 'XYZ Realty' },
-  { id: '3', name: 'Coastal Properties' },
-  { id: '4', name: 'Mountain Homes' },
-  { id: '5', name: 'Lakefront Properties' },
-];
+import { Client } from '@/types/clients';
+import { initialClientsData } from '@/data/clientsData';
 
 const photographers = [
   { id: '1', name: 'John Doe', avatar: 'https://ui.shadcn.com/avatars/01.png', rate: 150, availability: true },
@@ -41,6 +35,12 @@ const BookShoot = () => {
   const queryParams = new URLSearchParams(location.search);
   const clientIdFromUrl = queryParams.get('clientId');
   const clientNameFromUrl = queryParams.get('clientName');
+  const clientCompanyFromUrl = queryParams.get('clientCompany');
+  
+  const [clients, setClients] = useState<Client[]>(() => {
+    const storedClients = localStorage.getItem('clientsData');
+    return storedClients ? JSON.parse(storedClients) : initialClientsData;
+  });
   
   const [client, setClient] = useState(clientIdFromUrl || '');
   const [address, setAddress] = useState('');
@@ -61,16 +61,23 @@ const BookShoot = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const storedClients = localStorage.getItem('clientsData');
+    if (storedClients) {
+      setClients(JSON.parse(storedClients));
+    }
+  }, []);
+
+  useEffect(() => {
     if (clientIdFromUrl && clientNameFromUrl) {
       setClient(clientIdFromUrl);
       
       toast({
         title: "Client Selected",
-        description: `${decodeURIComponent(clientNameFromUrl)} has been selected for this shoot.`,
+        description: `${decodeURIComponent(clientNameFromUrl)}${clientCompanyFromUrl ? ` (${decodeURIComponent(clientCompanyFromUrl)})` : ''} has been selected for this shoot.`,
         variant: "default",
       });
     }
-  }, [clientIdFromUrl, clientNameFromUrl, toast]);
+  }, [clientIdFromUrl, clientNameFromUrl, clientCompanyFromUrl, toast]);
 
   const getPackagePrice = () => {
     const pkg = packages.find(p => p.id === selectedPackage);
@@ -117,7 +124,8 @@ const BookShoot = () => {
         scheduledDate: date.toISOString().split('T')[0],
         client: {
           name: selectedClientData?.name || 'Unknown Client',
-          email: `client${client}@example.com`,
+          email: selectedClientData?.email || `client${client}@example.com`,
+          company: selectedClientData?.company,
           totalShoots: 1
         },
         location: {
