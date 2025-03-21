@@ -74,7 +74,7 @@ export function CreateInvoiceDialog({ isOpen, onClose, onInvoiceCreate }: Create
       date: formattedDate,
       dueDate: formattedDueDate,
       amount: parseFloat(amount),
-      status: 'pending',
+      status: 'pending' as const,
       services: services.filter(service => service !== ''),
       paymentMethod: 'Pending',
     };

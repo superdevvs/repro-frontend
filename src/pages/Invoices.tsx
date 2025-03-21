@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +25,7 @@ import { PaymentDialog } from '@/components/invoices/PaymentDialog';
 import { CreateInvoiceDialog } from '@/components/invoices/CreateInvoiceDialog';
 
 // Mock data for invoices
-const initialInvoices = [
+const initialInvoices: InvoiceData[] = [
   {
     id: 'INV-001',
     client: 'ABC Properties',
@@ -86,13 +85,13 @@ const initialInvoices = [
 
 const InvoicesPage = () => {
   const { toast } = useToast();
-  const [invoices, setInvoices] = useState(initialInvoices);
+  const [invoices, setInvoices] = useState<InvoiceData[]>(initialInvoices);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  const handleDownloadInvoice = (invoice: typeof invoices[0]) => {
+  const handleDownloadInvoice = (invoice: InvoiceData) => {
     try {
       generateInvoicePDF(invoice);
       toast({
@@ -110,12 +109,12 @@ const InvoicesPage = () => {
     }
   };
 
-  const handleViewInvoice = (invoice: typeof invoices[0]) => {
+  const handleViewInvoice = (invoice: InvoiceData) => {
     setSelectedInvoice(invoice);
     setViewDialogOpen(true);
   };
 
-  const handlePayInvoice = (invoice: typeof invoices[0]) => {
+  const handlePayInvoice = (invoice: InvoiceData) => {
     setSelectedInvoice(invoice);
     setPaymentDialogOpen(true);
   };
@@ -566,7 +565,6 @@ const InvoicesPage = () => {
         </div>
       </PageTransition>
 
-      {/* Add dialogs for invoice view, payment, and creation */}
       {selectedInvoice && (
         <InvoiceViewDialog
           isOpen={viewDialogOpen}
