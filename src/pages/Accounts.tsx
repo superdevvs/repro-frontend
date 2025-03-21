@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -446,25 +445,163 @@ const Accounts = () => {
     });
   };
   
-  // Export data
-  const handleExport = (format: 'print' | 'csv' | 'copy') => {
+  // Export data - updated with actual functionality
+  const handleExport = (format: 'print' | 'csv' | 'copy', dataType: 'accounts' | 'branding' | 'links' = 'accounts') => {
+    let dataToExport: any[] = [];
+    let fileName = '';
+    
+    // Determine which data to export based on the tab
+    switch (dataType) {
+      case 'accounts':
+        dataToExport = filteredAccounts;
+        fileName = 'accounts';
+        break;
+      case 'branding':
+        dataToExport = filteredBrandingInfo;
+        fileName = 'branding-info';
+        break;
+      case 'links':
+        dataToExport = clientBrandingLinks;
+        fileName = 'client-branding-links';
+        break;
+    }
+    
     switch (format) {
       case 'print':
+        // Open a new window with formatted data for printing
+        const printWindow = window.open('', '_blank');
+        
+        if (printWindow) {
+          // Create a table for printing
+          let tableHTML = '<html><head><title>Print</title>';
+          tableHTML += '<style>body { font-family: Arial, sans-serif; } table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #ddd; padding: 8px; text-align: left; } th { background-color: #f2f2f2; }</style>';
+          tableHTML += '</head><body>';
+          
+          if (dataType === 'accounts') {
+            tableHTML += '<h1>Accounts</h1><table><tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Type</th><th>Status</th></tr>';
+            dataToExport.forEach(account => {
+              tableHTML += `<tr><td>${account.name}</td><td>${account.email}</td><td>${account.phone || ''}</td><td>${account.company || ''}</td><td>${account.type}</td><td>${account.status}</td></tr>`;
+            });
+          } else if (dataType === 'branding') {
+            tableHTML += '<h1>Tour Branding Info</h1><table><tr><th>Name</th><th>Company Name</th><th>Phone</th><th>Website</th></tr>';
+            dataToExport.forEach(branding => {
+              tableHTML += `<tr><td>${branding.name}</td><td>${branding.companyName}</td><td>${branding.phone}</td><td>${branding.website}</td></tr>`;
+            });
+          } else {
+            tableHTML += '<h1>Client Branding Links</h1><table><tr><th>Client</th><th>Client Company</th><th>Branding</th></tr>';
+            dataToExport.forEach(link => {
+              tableHTML += `<tr><td>${link.clientName}</td><td>${link.companyName}</td><td>${link.brandingName}</td></tr>`;
+            });
+          }
+          
+          tableHTML += '</table></body></html>';
+          
+          printWindow.document.open();
+          printWindow.document.write(tableHTML);
+          printWindow.document.close();
+          
+          // Print after the content is loaded
+          printWindow.onload = function() {
+            printWindow.print();
+          };
+        }
+        
         toast({
           title: 'Print',
           description: 'Preparing document for printing...',
         });
         break;
+        
       case 'csv':
+        // Convert data to CSV format
+        let csvContent = '';
+        
+        if (dataType === 'accounts') {
+          csvContent = 'Name,Email,Phone,Company,Type,Status,Shoots\r\n';
+          dataToExport.forEach(account => {
+            const row = [
+              `"${account.name}"`,
+              `"${account.email}"`,
+              `"${account.phone || ''}"`,
+              `"${account.company || ''}"`,
+              `"${account.type}"`,
+              `"${account.status}"`,
+              `"${account.shootsCount}"`
+            ].join(',');
+            csvContent += row + '\r\n';
+          });
+        } else if (dataType === 'branding') {
+          csvContent = 'Name,Company Name,Phone,Website\r\n';
+          dataToExport.forEach(branding => {
+            const row = [
+              `"${branding.name}"`,
+              `"${branding.companyName}"`,
+              `"${branding.phone}"`,
+              `"${branding.website}"`
+            ].join(',');
+            csvContent += row + '\r\n';
+          });
+        } else {
+          csvContent = 'Client,Client Company,Branding\r\n';
+          dataToExport.forEach(link => {
+            const row = [
+              `"${link.clientName}"`,
+              `"${link.companyName}"`,
+              `"${link.brandingName}"`
+            ].join(',');
+            csvContent += row + '\r\n';
+          });
+        }
+        
+        // Create a download link
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `${fileName}-${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
         toast({
           title: 'CSV Export',
-          description: 'Exporting data to CSV...',
+          description: `Exporting data to ${fileName}.csv...`,
         });
         break;
+        
       case 'copy':
-        toast({
-          title: 'Copied',
-          description: 'Data copied to clipboard.',
+        // Copy formatted data to clipboard
+        let textToCopy = '';
+        
+        if (dataType === 'accounts') {
+          textToCopy = 'Name\tEmail\tPhone\tCompany\tType\tStatus\tShoots\n';
+          dataToExport.forEach(account => {
+            textToCopy += `${account.name}\t${account.email}\t${account.phone || ''}\t${account.company || ''}\t${account.type}\t${account.status}\t${account.shootsCount}\n`;
+          });
+        } else if (dataType === 'branding') {
+          textToCopy = 'Name\tCompany Name\tPhone\tWebsite\n';
+          dataToExport.forEach(branding => {
+            textToCopy += `${branding.name}\t${branding.companyName}\t${branding.phone}\t${branding.website}\n`;
+          });
+        } else {
+          textToCopy = 'Client\tClient Company\tBranding\n';
+          dataToExport.forEach(link => {
+            textToCopy += `${link.clientName}\t${link.companyName}\t${link.brandingName}\n`;
+          });
+        }
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          toast({
+            title: 'Copied',
+            description: 'Data copied to clipboard.',
+          });
+        }, (err) => {
+          console.error('Could not copy text: ', err);
+          toast({
+            title: 'Error',
+            description: 'Failed to copy data to clipboard.',
+            variant: 'destructive',
+          });
         });
         break;
     }
@@ -633,15 +770,15 @@ const Accounts = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => handleExport('print')}>
+                            <DropdownMenuItem onClick={() => handleExport('print', 'accounts')}>
                               <Printer className="h-4 w-4 mr-2" />
                               Print
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('csv')}>
+                            <DropdownMenuItem onClick={() => handleExport('csv', 'accounts')}>
                               <Download className="h-4 w-4 mr-2" />
                               Export CSV
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('copy')}>
+                            <DropdownMenuItem onClick={() => handleExport('copy', 'accounts')}>
                               <CopyIcon className="h-4 w-4 mr-2" />
                               Copy to Clipboard
                             </DropdownMenuItem>
@@ -762,13 +899,38 @@ const Accounts = () => {
                       />
                     </div>
                     
-                    <Button onClick={() => {
-                      resetBrandingForm();
-                      setBrandingFormOpen(true);
-                    }}>
-                      <PlusIcon className="h-4 w-4 mr-2" />
-                      Create Branding Info
-                    </Button>
+                    <div className="flex gap-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <FileIcon className="h-4 w-4 mr-2" />
+                            Export
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => handleExport('print', 'branding')}>
+                            <Printer className="h-4 w-4 mr-2" />
+                            Print
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport('csv', 'branding')}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Export CSV
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport('copy', 'branding')}>
+                            <CopyIcon className="h-4 w-4 mr-2" />
+                            Copy to Clipboard
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    
+                      <Button onClick={() => {
+                        resetBrandingForm();
+                        setBrandingFormOpen(true);
+                      }}>
+                        <PlusIcon className="h-4 w-4 mr-2" />
+                        Create Branding Info
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="rounded-md border">
@@ -779,515 +941,4 @@ const Accounts = () => {
                           <TableHead>Name</TableHead>
                           <TableHead>Company Name</TableHead>
                           <TableHead>Phone</TableHead>
-                          <TableHead>Website</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredBrandingInfo.length > 0 ? (
-                          filteredBrandingInfo.map((branding) => (
-                            <TableRow key={branding.id}>
-                              <TableCell>
-                                <div className="h-10 w-10 rounded-md overflow-hidden">
-                                  <img 
-                                    src={branding.logo} 
-                                    alt={branding.name} 
-                                    className="h-full w-full object-cover"
-                                  />
-                                </div>
-                              </TableCell>
-                              <TableCell className="font-medium">{branding.name}</TableCell>
-                              <TableCell>{branding.companyName}</TableCell>
-                              <TableCell>{branding.phone}</TableCell>
-                              <TableCell>{branding.website}</TableCell>
-                              <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      Actions
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditBranding(branding)}>
-                                      <EditIcon className="h-4 w-4 mr-2" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDeleteBranding(branding.id)} className="text-destructive">
-                                      <Trash2Icon className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center h-24">
-                              <div className="flex flex-col items-center justify-center text-muted-foreground">
-                                <UsersIcon className="h-8 w-8 mb-2 opacity-20" />
-                                <p>No branding info found</p>
-                                <p className="text-sm">Try adjusting your search or add new branding</p>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            {/* Link Client/Branding Tab */}
-            <TabsContent value="links" className="space-y-4 pt-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex justify-end mb-4">
-                    <Button onClick={() => {
-                      resetLinkForm();
-                      setLinkFormOpen(true);
-                    }}>
-                      <PlusIcon className="h-4 w-4 mr-2" />
-                      Link Client to Branding
-                    </Button>
-                  </div>
-                  
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Client</TableHead>
-                          <TableHead>Client Company</TableHead>
-                          <TableHead>Branding</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {clientBrandingLinks.length > 0 ? (
-                          clientBrandingLinks.map((link) => (
-                            <TableRow key={link.clientId}>
-                              <TableCell className="font-medium">{link.clientName}</TableCell>
-                              <TableCell>{link.companyName}</TableCell>
-                              <TableCell>{link.brandingName}</TableCell>
-                              <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      Actions
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditLink(link)}>
-                                      <EditIcon className="h-4 w-4 mr-2" />
-                                      Change Branding
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDeleteLink(link.clientId)} className="text-destructive">
-                                      <Trash2Icon className="h-4 w-4 mr-2" />
-                                      Remove Link
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={4} className="text-center h-24">
-                              <div className="flex flex-col items-center justify-center text-muted-foreground">
-                                <UsersIcon className="h-8 w-8 mb-2 opacity-20" />
-                                <p>No client/branding links found</p>
-                                <p className="text-sm">Create a new link to connect clients with branding</p>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </PageTransition>
-      
-      {/* Account Form Dialog */}
-      <Dialog open={accountFormOpen} onOpenChange={setAccountFormOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{selectedAccount ? 'Edit Account' : 'Create Account'}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {/* Avatar Upload */}
-            <div className="flex justify-center mb-4">
-              <div className="relative">
-                <Avatar 
-                  className="h-24 w-24 cursor-pointer border-2 border-border" 
-                  onClick={() => setShowUploadOptions(true)}
-                >
-                  {accountFormData.avatar ? (
-                    <AvatarImage src={accountFormData.avatar} alt="Profile" />
-                  ) : (
-                    <AvatarFallback className="bg-secondary">
-                      <CameraIcon className="h-8 w-8 text-muted-foreground" />
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                <Button 
-                  type="button"
-                  size="sm" 
-                  variant="outline" 
-                  className="absolute bottom-0 right-0 h-8 w-8 p-0 rounded-full"
-                  onClick={() => setShowUploadOptions(true)}
-                >
-                  <UploadIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            {showUploadOptions && (
-              <div className="bg-card border rounded-md p-3 relative">
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="sm"
-                  className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
-                  onClick={() => setShowUploadOptions(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-                <div className="space-y-2 mt-2">
-                  <div className="flex items-center">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="w-full justify-start"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <UploadIcon className="mr-2 h-4 w-4" />
-                      Upload from device
-                    </Button>
-                    <input 
-                      type="file" 
-                      ref={fileInputRef}
-                      className="hidden" 
-                      accept="image/*" 
-                      onChange={handleFileUpload} 
-                    />
-                  </div>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => handleExternalUpload('google-drive')}
-                  >
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/2295px-Google_Drive_icon_%282020%29.svg.png" 
-                      alt="Google Drive" 
-                      className="mr-2 h-4 w-4" 
-                    />
-                    Upload from Google Drive
-                  </Button>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => handleExternalUpload('dropbox')}
-                  >
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Dropbox_Icon.svg/2202px-Dropbox_Icon.svg.png" 
-                      alt="Dropbox" 
-                      className="mr-2 h-4 w-4" 
-                    />
-                    Upload from Dropbox
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Full Name
-              </label>
-              <Input
-                id="name"
-                name="name"
-                value={accountFormData.name}
-                onChange={handleAccountFormChange}
-                placeholder="Enter full name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email Address
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={accountFormData.email}
-                onChange={handleAccountFormChange}
-                placeholder="Enter email address"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="phone" className="text-sm font-medium">
-                Phone Number
-              </label>
-              <Input
-                id="phone"
-                name="phone"
-                value={accountFormData.phone}
-                onChange={handleAccountFormChange}
-                placeholder="Enter phone number"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="company" className="text-sm font-medium">
-                Company
-              </label>
-              <Input
-                id="company"
-                name="company"
-                value={accountFormData.company}
-                onChange={handleAccountFormChange}
-                placeholder="Enter company name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="type" className="text-sm font-medium">
-                Account Type
-              </label>
-              <Select 
-                value={accountFormData.type} 
-                onValueChange={handleAccountTypeChange}
-              >
-                <SelectTrigger id="type">
-                  <SelectValue placeholder="Select account type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="photographer">Photographer</SelectItem>
-                  <SelectItem value="client">Client</SelectItem>
-                  <SelectItem value="editor">Editor</SelectItem>
-                  {role === 'superadmin' && (
-                    <SelectItem value="superadmin">Super Admin</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                {selectedAccount ? 'New Password (leave blank to keep current)' : 'Password'}
-              </label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={accountFormData.password}
-                onChange={handleAccountFormChange}
-                placeholder={selectedAccount ? 'Enter new password' : 'Enter password'}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium">
-                Confirm Password
-              </label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={accountFormData.confirmPassword}
-                onChange={handleAccountFormChange}
-                placeholder="Confirm password"
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              resetAccountForm();
-              setAccountFormOpen(false);
-            }}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmitAccount}>
-              {selectedAccount ? 'Update Account' : 'Create Account'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Branding Form Dialog */}
-      <Dialog open={brandingFormOpen} onOpenChange={setBrandingFormOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{selectedBranding ? 'Edit Branding Info' : 'Create Branding Info'}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="flex justify-center mb-4">
-              <div className="relative">
-                <div className="h-20 w-20 rounded-md overflow-hidden border border-border">
-                  <img 
-                    src={brandingFormData.logo} 
-                    alt="Branding Logo" 
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="absolute bottom-0 right-0 h-8 w-8 p-0 rounded-full"
-                >
-                  <UploadIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Branding Name
-              </label>
-              <Input
-                id="name"
-                name="name"
-                value={brandingFormData.name}
-                onChange={handleBrandingFormChange}
-                placeholder="Enter branding name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="companyName" className="text-sm font-medium">
-                Company Name
-              </label>
-              <Input
-                id="companyName"
-                name="companyName"
-                value={brandingFormData.companyName}
-                onChange={handleBrandingFormChange}
-                placeholder="Enter company name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="phone" className="text-sm font-medium">
-                Phone Number
-              </label>
-              <Input
-                id="phone"
-                name="phone"
-                value={brandingFormData.phone}
-                onChange={handleBrandingFormChange}
-                placeholder="Enter phone number"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="website" className="text-sm font-medium">
-                Website URL
-              </label>
-              <Input
-                id="website"
-                name="website"
-                value={brandingFormData.website}
-                onChange={handleBrandingFormChange}
-                placeholder="Enter website URL"
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              resetBrandingForm();
-              setBrandingFormOpen(false);
-            }}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmitBranding}>
-              {selectedBranding ? 'Update Branding' : 'Create Branding'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Link Form Dialog */}
-      <Dialog open={linkFormOpen} onOpenChange={setLinkFormOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{selectedLink ? 'Edit Client Branding Link' : 'Link Client to Branding'}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="clientId" className="text-sm font-medium">
-                Select Client
-              </label>
-              <Select 
-                value={linkFormData.clientId} 
-                onValueChange={(value) => setLinkFormData({...linkFormData, clientId: value})}
-                disabled={!!selectedLink}
-              >
-                <SelectTrigger id="clientId">
-                  <SelectValue placeholder="Select client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accountsData
-                    .filter(account => account.type === 'client')
-                    .map(client => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name} ({client.company})
-                      </SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="brandingId" className="text-sm font-medium">
-                Select Branding
-              </label>
-              <Select 
-                value={linkFormData.brandingId} 
-                onValueChange={(value) => setLinkFormData({...linkFormData, brandingId: value})}
-              >
-                <SelectTrigger id="brandingId">
-                  <SelectValue placeholder="Select branding" />
-                </SelectTrigger>
-                <SelectContent>
-                  {brandingInfoData.map(branding => (
-                    <SelectItem key={branding.id} value={branding.id}>
-                      {branding.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              resetLinkForm();
-              setLinkFormOpen(false);
-            }}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmitLink}>
-              {selectedLink ? 'Update Link' : 'Create Link'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardLayout>
-  );
-};
-
-export default Accounts;
+                          <
