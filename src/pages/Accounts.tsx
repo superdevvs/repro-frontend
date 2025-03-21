@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -915,6 +916,16 @@ const Accounts = () => {
                     </div>
                     
                     <div className="flex gap-2">
+                      {['admin', 'superadmin'].includes(role) && (
+                        <Button className="gap-2" onClick={() => {
+                          resetAccountForm();
+                          setAccountFormOpen(true);
+                        }}>
+                          <UserPlusIcon className="h-4 w-4" />
+                          Add Account
+                        </Button>
+                      )}
+                      
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="outline" size="sm">
@@ -937,16 +948,6 @@ const Accounts = () => {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      
-                      {['admin', 'superadmin'].includes(role) && (
-                        <Button className="gap-2" onClick={() => {
-                          resetAccountForm();
-                          setAccountFormOpen(true);
-                        }}>
-                          <UserPlusIcon className="h-4 w-4" />
-                          Add Account
-                        </Button>
-                      )}
                     </div>
                   </div>
                   
@@ -1010,4 +1011,559 @@ const Accounts = () => {
                             <TableRow key={account.id}>
                               <TableCell className="font-medium">
                                 <div className="flex items-center gap-2">
-                                  <Avatar className="h-8
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarImage src={account.avatar} alt={account.name} />
+                                    <AvatarFallback>{account.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                  {account.name}
+                                </div>
+                              </TableCell>
+                              <TableCell>{account.email}</TableCell>
+                              <TableCell>
+                                <Badge variant={account.type === 'admin' ? 'default' : 'outline'}>
+                                  {account.type}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={account.status === 'active' ? 'default' : 'secondary'} className={account.status === 'active' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}>
+                                  {account.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button variant="ghost" size="icon" onClick={() => handleEditAccount(account)}>
+                                    <EditIcon className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleResetPassword(account)}>
+                                    <KeyIcon className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleDeleteAccount(account.id)}>
+                                    <Trash2Icon className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-4">
+                              No accounts found
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Branding Info Tab */}
+            <TabsContent value="branding" className="space-y-4 pt-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+                    <div className="relative flex-1">
+                      <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Search branding info..." 
+                        className="pl-9"
+                        value={brandingSearchTerm}
+                        onChange={(e) => setBrandingSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button className="gap-2" onClick={() => {
+                        resetBrandingForm();
+                        setBrandingFormOpen(true);
+                      }}>
+                        <PlusIcon className="h-4 w-4" />
+                        Add Branding
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <FileIcon className="h-4 w-4 mr-2" />
+                            Export
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => handleExport('print', 'branding')}>
+                            <Printer className="h-4 w-4 mr-2" />
+                            Print
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport('csv', 'branding')}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Export CSV
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport('copy', 'branding')}>
+                            <CopyIcon className="h-4 w-4 mr-2" />
+                            Copy to Clipboard
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                  
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Logo</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Company</TableHead>
+                          <TableHead>Phone</TableHead>
+                          <TableHead>Website</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredBrandingInfo.length > 0 ? (
+                          filteredBrandingInfo.map((branding) => (
+                            <TableRow key={branding.id}>
+                              <TableCell>
+                                <div className="h-10 w-10 overflow-hidden rounded-md">
+                                  <img 
+                                    src={branding.logo} 
+                                    alt={branding.name} 
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium">{branding.name}</TableCell>
+                              <TableCell>{branding.companyName}</TableCell>
+                              <TableCell>{branding.phone}</TableCell>
+                              <TableCell>
+                                <a 
+                                  href={branding.website} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline"
+                                >
+                                  {branding.website}
+                                </a>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button variant="ghost" size="icon" onClick={() => handleEditBranding(branding)}>
+                                    <EditIcon className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleDeleteBranding(branding.id)}>
+                                    <Trash2Icon className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-4">
+                              No branding information found
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Client/Branding Links Tab */}
+            <TabsContent value="links" className="space-y-4 pt-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+                    <div className="relative flex-1">
+                      <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Search client/branding links..." 
+                        className="pl-9"
+                        value={linkSearchTerm}
+                        onChange={(e) => setLinkSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button className="gap-2" onClick={() => {
+                        resetLinkForm();
+                        setLinkFormOpen(true);
+                      }}>
+                        <PlusIcon className="h-4 w-4" />
+                        Add Link
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <FileIcon className="h-4 w-4 mr-2" />
+                            Export
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => handleExport('print', 'links')}>
+                            <Printer className="h-4 w-4 mr-2" />
+                            Print
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport('csv', 'links')}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Export CSV
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport('copy', 'links')}>
+                            <CopyIcon className="h-4 w-4 mr-2" />
+                            Copy to Clipboard
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                  
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Client</TableHead>
+                          <TableHead>Branding</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredLinks.length > 0 ? (
+                          filteredLinks.map((link) => (
+                            <TableRow key={link.id}>
+                              <TableCell className="font-medium">{link.clientName}</TableCell>
+                              <TableCell>{link.brandingName}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button variant="ghost" size="icon" onClick={() => handleEditLink(link)}>
+                                    <EditIcon className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleDeleteLink(link.id)}>
+                                    <Trash2Icon className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center py-4">
+                              No client/branding links found
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+          
+          {/* Account Form Dialog */}
+          <Dialog open={accountFormOpen} onOpenChange={setAccountFormOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>{selectedAccount ? 'Edit Account' : 'Add New Account'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-3">
+                <div className="mx-auto flex flex-col items-center gap-2">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20">
+                      <AvatarImage src={accountFormData.avatar} alt={accountFormData.name} />
+                      <AvatarFallback>{accountFormData.name ? accountFormData.name.substring(0, 2).toUpperCase() : 'U'}</AvatarFallback>
+                    </Avatar>
+                    <Button 
+                      variant="secondary" 
+                      size="icon" 
+                      className="absolute bottom-0 right-0 rounded-full"
+                      onClick={() => setShowUploadOptions(!showUploadOptions)}
+                    >
+                      <UploadIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {showUploadOptions && (
+                    <div className="bg-muted rounded-lg p-3 space-y-2 w-full">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Upload Avatar</span>
+                        <Button variant="ghost" size="icon" onClick={() => setShowUploadOptions(false)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                          <UploadIcon className="h-4 w-4 mr-2" />
+                          From Device
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleExternalUpload('google-drive')}>
+                          <FileIcon className="h-4 w-4 mr-2" />
+                          Google Drive
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleExternalUpload('dropbox')}>
+                          <FileIcon className="h-4 w-4 mr-2" />
+                          Dropbox
+                        </Button>
+                      </div>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        onChange={handleFileUpload}
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium">Name</label>
+                  <Input 
+                    id="name" 
+                    name="name"
+                    value={accountFormData.name}
+                    onChange={handleAccountFormChange}
+                    placeholder="Enter name"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium">Email</label>
+                  <Input 
+                    id="email" 
+                    name="email"
+                    type="email"
+                    value={accountFormData.email}
+                    onChange={handleAccountFormChange}
+                    placeholder="Enter email"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="type" className="text-sm font-medium">Account Type</label>
+                  <Select value={accountFormData.type} onValueChange={handleAccountTypeChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select account type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="photographer">Photographer</SelectItem>
+                      <SelectItem value="client">Client</SelectItem>
+                      <SelectItem value="editor">Editor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="status" className="text-sm font-medium">Status</label>
+                  <Select 
+                    value={accountFormData.status} 
+                    onValueChange={(value) => setAccountFormData({...accountFormData, status: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  resetAccountForm();
+                  setAccountFormOpen(false);
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmitAccount} disabled={!accountFormData.name || !accountFormData.email}>
+                  {selectedAccount ? 'Update' : 'Create'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Branding Form Dialog */}
+          <Dialog open={brandingFormOpen} onOpenChange={setBrandingFormOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>{selectedBranding ? 'Edit Branding' : 'Add New Branding'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-3">
+                <div className="mx-auto flex flex-col items-center gap-2">
+                  <div className="relative h-32 w-32 border rounded-md overflow-hidden">
+                    <img 
+                      src={brandingFormData.logo} 
+                      alt="Company Logo" 
+                      className="h-full w-full object-contain"
+                    />
+                    <Button 
+                      variant="secondary" 
+                      size="icon" 
+                      className="absolute bottom-2 right-2 rounded-full"
+                      onClick={() => setShowBrandingUploadOptions(!showBrandingUploadOptions)}
+                    >
+                      <UploadIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {showBrandingUploadOptions && (
+                    <div className="bg-muted rounded-lg p-3 space-y-2 w-full">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Upload Logo</span>
+                        <Button variant="ghost" size="icon" onClick={() => setShowBrandingUploadOptions(false)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm" onClick={() => brandingFileInputRef.current?.click()}>
+                          <UploadIcon className="h-4 w-4 mr-2" />
+                          From Device
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleBrandingExternalUpload('google-drive')}>
+                          <FileIcon className="h-4 w-4 mr-2" />
+                          Google Drive
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleBrandingExternalUpload('dropbox')}>
+                          <FileIcon className="h-4 w-4 mr-2" />
+                          Dropbox
+                        </Button>
+                      </div>
+                      <input 
+                        type="file" 
+                        ref={brandingFileInputRef} 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        onChange={handleBrandingFileUpload}
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="brandingName" className="text-sm font-medium">Name</label>
+                  <Input 
+                    id="brandingName" 
+                    name="name"
+                    value={brandingFormData.name}
+                    onChange={handleBrandingFormChange}
+                    placeholder="Enter branding name"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="companyName" className="text-sm font-medium">Company Name</label>
+                  <Input 
+                    id="companyName" 
+                    name="companyName"
+                    value={brandingFormData.companyName}
+                    onChange={handleBrandingFormChange}
+                    placeholder="Enter company name"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="phone" className="text-sm font-medium">Phone</label>
+                  <Input 
+                    id="phone" 
+                    name="phone"
+                    value={brandingFormData.phone}
+                    onChange={handleBrandingFormChange}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="website" className="text-sm font-medium">Website</label>
+                  <Input 
+                    id="website" 
+                    name="website"
+                    value={brandingFormData.website}
+                    onChange={handleBrandingFormChange}
+                    placeholder="Enter website URL"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  resetBrandingForm();
+                  setBrandingFormOpen(false);
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmitBranding} disabled={!brandingFormData.name || !brandingFormData.companyName}>
+                  {selectedBranding ? 'Update' : 'Create'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Link Form Dialog */}
+          <Dialog open={linkFormOpen} onOpenChange={setLinkFormOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>{selectedLink ? 'Edit Client/Branding Link' : 'Add New Client/Branding Link'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-3">
+                <div className="space-y-2">
+                  <label htmlFor="clientId" className="text-sm font-medium">Client</label>
+                  <Select 
+                    value={linkFormData.clientId} 
+                    onValueChange={(value) => setLinkFormData({...linkFormData, clientId: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accountsData
+                        .filter(account => account.type === 'client')
+                        .map(client => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name}
+                          </SelectItem>
+                        ))
+                      }
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="brandingId" className="text-sm font-medium">Branding</label>
+                  <Select 
+                    value={linkFormData.brandingId} 
+                    onValueChange={(value) => setLinkFormData({...linkFormData, brandingId: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select branding" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {brandingInfoData.map(branding => (
+                        <SelectItem key={branding.id} value={branding.id}>
+                          {branding.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  resetLinkForm();
+                  setLinkFormOpen(false);
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmitLink} disabled={!linkFormData.clientId || !linkFormData.brandingId}>
+                  {selectedLink ? 'Update' : 'Create'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </PageTransition>
+    </DashboardLayout>
+  );
+};
+
+export default Accounts;
