@@ -540,43 +540,179 @@ const Accounts = () => {
     
     switch (dataType) {
       case 'accounts':
-        data = accountsData;
+        data = filteredAccounts;
         filename = 'accounts';
         break;
       case 'branding':
-        data = brandingInfoData;
+        data = filteredBrandingInfo;
         filename = 'branding_info';
         break;
       case 'links':
-        data = linksData;
+        data = linksData.filter(link => 
+          link.clientName.toLowerCase().includes(linkSearchTerm.toLowerCase()) ||
+          link.brandingName.toLowerCase().includes(linkSearchTerm.toLowerCase())
+        );
         filename = 'client_branding_links';
         break;
     }
     
     switch (type) {
       case 'print':
+        // Create printable version
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          let html = `
+            <html>
+              <head>
+                <title>${filename}</title>
+                <style>
+                  body { font-family: sans-serif; margin: 20px; }
+                  table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+                  th, td { border: 1px solid #ddd; padding: 8px; }
+                  th { background-color: #f2f2f2; text-align: left; }
+                  h1 { color: #333; }
+                </style>
+              </head>
+              <body>
+                <h1>${dataType.charAt(0).toUpperCase() + dataType.slice(1)} Export</h1>
+                <table>
+          `;
+          
+          // Create table headers based on data type
+          if (dataType === 'accounts') {
+            html += `
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Company</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Shoots</th>
+              </tr>
+            `;
+            
+            // Add rows for accounts
+            data.forEach(account => {
+              html += `
+                <tr>
+                  <td>${account.name}</td>
+                  <td>${account.email}</td>
+                  <td>${account.phone || ''}</td>
+                  <td>${account.company || ''}</td>
+                  <td>${account.type}</td>
+                  <td>${account.status}</td>
+                  <td>${account.shootsCount}</td>
+                </tr>
+              `;
+            });
+          } else if (dataType === 'branding') {
+            html += `
+              <tr>
+                <th>Name</th>
+                <th>Company Name</th>
+                <th>Phone</th>
+                <th>Website</th>
+              </tr>
+            `;
+            
+            // Add rows for branding info
+            data.forEach(branding => {
+              html += `
+                <tr>
+                  <td>${branding.name}</td>
+                  <td>${branding.companyName}</td>
+                  <td>${branding.phone}</td>
+                  <td>${branding.website}</td>
+                </tr>
+              `;
+            });
+          } else {
+            html += `
+              <tr>
+                <th>Client</th>
+                <th>Branding</th>
+              </tr>
+            `;
+            
+            // Add rows for links
+            data.forEach(link => {
+              html += `
+                <tr>
+                  <td>${link.clientName}</td>
+                  <td>${link.brandingName}</td>
+                </tr>
+              `;
+            });
+          }
+          
+          html += `
+                </table>
+              </body>
+            </html>
+          `;
+          
+          printWindow.document.open();
+          printWindow.document.write(html);
+          printWindow.document.close();
+          
+          // Trigger print after content is loaded
+          printWindow.onload = () => {
+            printWindow.print();
+          };
+        }
+        
         toast({
           title: 'Print Initiated',
           description: `Preparing ${dataType} data for printing...`,
         });
-        // In a real app, this would open a print dialog
-        console.log('Print data:', data);
         break;
         
       case 'csv':
+        // Generate CSV content
+        let csvContent = '';
+        
+        if (dataType === 'accounts') {
+          csvContent = 'Name,Email,Phone,Company,Type,Status,Shoots\n';
+          
+          data.forEach(account => {
+            csvContent += `"${account.name}","${account.email}","${account.phone || ''}","${account.company || ''}","${account.type}","${account.status}","${account.shootsCount}"\n`;
+          });
+        } else if (dataType === 'branding') {
+          csvContent = 'Name,Company Name,Phone,Website\n';
+          
+          data.forEach(branding => {
+            csvContent += `"${branding.name}","${branding.companyName}","${branding.phone}","${branding.website}"\n`;
+          });
+        } else {
+          csvContent = 'Client,Branding\n';
+          
+          data.forEach(link => {
+            csvContent += `"${link.clientName}","${link.brandingName}"\n`;
+          });
+        }
+        
+        // Create and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
         toast({
           title: 'Export Initiated',
           description: `Exporting ${dataType} data as CSV...`,
         });
-        // In a real app, this would generate and download a CSV file
-        console.log('Export data as CSV:', data);
         break;
         
       case 'copy':
-        // Convert data to JSON string
+        // Copy data to clipboard as JSON
         const jsonStr = JSON.stringify(data, null, 2);
         
-        // Copy to clipboard
         navigator.clipboard.writeText(jsonStr).then(() => {
           toast({
             title: 'Copied to Clipboard',
@@ -874,703 +1010,4 @@ const Accounts = () => {
                         {filteredAccounts.length > 0 ? (
                           filteredAccounts.map((account) => (
                             <TableRow key={account.id}>
-                              <TableCell className="font-medium">
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarImage src={account.avatar} alt={account.name} />
-                                    <AvatarFallback>{account.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                  </Avatar>
-                                  {account.name}
-                                </div>
-                              </TableCell>
-                              <TableCell>{account.email}</TableCell>
-                              <TableCell>
-                                <Badge 
-                                  className={
-                                    account.type === 'admin' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                                    account.type === 'photographer' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
-                                    account.type === 'client' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
-                                    'bg-orange-500/10 text-orange-500 border-orange-500/20'
-                                  }
-                                >
-                                  {account.type}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Badge 
-                                  className={account.status === 'active' 
-                                    ? 'bg-green-500/10 text-green-500 border-green-500/20' 
-                                    : 'bg-gray-500/10 text-gray-500 border-gray-500/20'}
-                                >
-                                  {account.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      Actions
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditAccount(account)}>
-                                      <EditIcon className="h-4 w-4 mr-2" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleResetPassword(account)}>
-                                      <KeyIcon className="h-4 w-4 mr-2" />
-                                      Reset Password
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDeleteAccount(account.id)} className="text-destructive">
-                                      <Trash2Icon className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center h-24">
-                              <div className="flex flex-col items-center justify-center text-muted-foreground">
-                                <UsersIcon className="h-8 w-8 mb-2 opacity-20" />
-                                <p>No accounts found</p>
-                                <p className="text-sm">Try adjusting your search or filters</p>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            {/* Tour Branding Tab */}
-            <TabsContent value="branding" className="space-y-4 pt-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
-                    <div className="relative flex-1">
-                      <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        placeholder="Search branding info..." 
-                        className="pl-9"
-                        value={brandingSearchTerm}
-                        onChange={(e) => setBrandingSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <FileIcon className="h-4 w-4 mr-2" />
-                            Export
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem onClick={() => handleExport('print', 'branding')}>
-                            <Printer className="h-4 w-4 mr-2" />
-                            Print
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleExport('csv', 'branding')}>
-                            <Download className="h-4 w-4 mr-2" />
-                            Export CSV
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleExport('copy', 'branding')}>
-                            <CopyIcon className="h-4 w-4 mr-2" />
-                            Copy to Clipboard
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    
-                      <Button onClick={() => {
-                        resetBrandingForm();
-                        setBrandingFormOpen(true);
-                      }}>
-                        <PlusIcon className="h-4 w-4 mr-2" />
-                        Create Branding Info
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Logo</TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Company Name</TableHead>
-                          <TableHead>Phone</TableHead>
-                          <TableHead>Website</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredBrandingInfo.length > 0 ? (
-                          filteredBrandingInfo.map((branding) => (
-                            <TableRow key={branding.id}>
-                              <TableCell>
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage src={branding.logo} alt={branding.name} />
-                                  <AvatarFallback>{branding.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                              </TableCell>
-                              <TableCell className="font-medium">{branding.name}</TableCell>
-                              <TableCell>{branding.companyName}</TableCell>
-                              <TableCell>{branding.phone}</TableCell>
-                              <TableCell>
-                                <a href={branding.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                                  {branding.website}
-                                </a>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      Actions
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditBranding(branding)}>
-                                      <EditIcon className="h-4 w-4 mr-2" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDeleteBranding(branding.id)} className="text-destructive">
-                                      <Trash2Icon className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center h-24">
-                              <div className="flex flex-col items-center justify-center text-muted-foreground">
-                                <FileIcon className="h-8 w-8 mb-2 opacity-20" />
-                                <p>No branding information found</p>
-                                <p className="text-sm">Try adjusting your search</p>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            {/* Client Branding Links Tab */}
-            <TabsContent value="links" className="space-y-4 pt-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
-                    <div className="relative flex-1">
-                      <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        placeholder="Search links..." 
-                        className="pl-9"
-                        value={linkSearchTerm}
-                        onChange={(e) => setLinkSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <FileIcon className="h-4 w-4 mr-2" />
-                            Export
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem onClick={() => handleExport('print', 'links')}>
-                            <Printer className="h-4 w-4 mr-2" />
-                            Print
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleExport('csv', 'links')}>
-                            <Download className="h-4 w-4 mr-2" />
-                            Export CSV
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleExport('copy', 'links')}>
-                            <CopyIcon className="h-4 w-4 mr-2" />
-                            Copy to Clipboard
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    
-                      <Button onClick={() => {
-                        resetLinkForm();
-                        setLinkFormOpen(true);
-                      }}>
-                        <PlusIcon className="h-4 w-4 mr-2" />
-                        Create Link
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Client</TableHead>
-                          <TableHead>Branding</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {linksData.length > 0 ? (
-                          linksData
-                            .filter(link => 
-                              link.clientName.toLowerCase().includes(linkSearchTerm.toLowerCase()) ||
-                              link.brandingName.toLowerCase().includes(linkSearchTerm.toLowerCase())
-                            )
-                            .map((link) => (
-                              <TableRow key={link.id}>
-                                <TableCell className="font-medium">{link.clientName}</TableCell>
-                                <TableCell>{link.brandingName}</TableCell>
-                                <TableCell className="text-right">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm">
-                                        Actions
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem onClick={() => handleEditLink(link)}>
-                                        <EditIcon className="h-4 w-4 mr-2" />
-                                        Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleDeleteLink(link.id)} className="text-destructive">
-                                        <Trash2Icon className="h-4 w-4 mr-2" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={3} className="text-center h-24">
-                              <div className="flex flex-col items-center justify-center text-muted-foreground">
-                                <FileIcon className="h-8 w-8 mb-2 opacity-20" />
-                                <p>No client-branding links found</p>
-                                <p className="text-sm">Create a new link to get started</p>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </PageTransition>
-      
-      {/* Account Form Dialog */}
-      <Dialog open={accountFormOpen} onOpenChange={setAccountFormOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{selectedAccount ? 'Edit Account' : 'Create Account'}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="flex justify-center mb-4">
-              <div className="relative">
-                <Avatar className="h-24 w-24 cursor-pointer border-2 border-border" onClick={() => setShowUploadOptions(true)}>
-                  {accountFormData.avatar ? (
-                    <AvatarImage src={accountFormData.avatar} alt="Profile" />
-                  ) : (
-                    <AvatarFallback className="bg-secondary">
-                      <CameraIcon className="h-8 w-8 text-muted-foreground" />
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                <Button 
-                  type="button"
-                  size="sm" 
-                  variant="outline" 
-                  className="absolute bottom-0 right-0 h-8 w-8 p-0 rounded-full"
-                  onClick={() => setShowUploadOptions(true)}
-                >
-                  <UploadIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            {showUploadOptions && (
-              <div className="bg-card border rounded-md p-3 relative">
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="sm"
-                  className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
-                  onClick={() => setShowUploadOptions(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-                <div className="space-y-2 mt-2">
-                  <div className="flex items-center">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="w-full justify-start"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <UploadIcon className="mr-2 h-4 w-4" />
-                      Upload from device
-                    </Button>
-                    <input 
-                      type="file" 
-                      ref={fileInputRef}
-                      className="hidden" 
-                      accept="image/*" 
-                      onChange={handleFileUpload} 
-                    />
-                  </div>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => handleExternalUpload('google-drive')}
-                  >
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/2295px-Google_Drive_icon_%282020%29.svg.png" 
-                      alt="Google Drive" 
-                      className="mr-2 h-4 w-4" 
-                    />
-                    Upload from Google Drive
-                  </Button>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => handleExternalUpload('dropbox')}
-                  >
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Dropbox_Icon.svg/2202px-Dropbox_Icon.svg.png" 
-                      alt="Dropbox" 
-                      className="mr-2 h-4 w-4" 
-                    />
-                    Upload from Dropbox
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Full Name
-              </label>
-              <Input
-                id="name"
-                name="name"
-                value={accountFormData.name}
-                onChange={handleAccountFormChange}
-                placeholder="Enter full name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email Address
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={accountFormData.email}
-                onChange={handleAccountFormChange}
-                placeholder="Enter email address"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="type" className="text-sm font-medium">
-                Account Type
-              </label>
-              <Select
-                value={accountFormData.type}
-                onValueChange={handleAccountTypeChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select account type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="photographer">Photographer</SelectItem>
-                  <SelectItem value="client">Client</SelectItem>
-                  <SelectItem value="editor">Editor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
-              <div className="flex gap-4 mt-1">
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="status-active"
-                    name="status"
-                    className="mr-2"
-                    checked={accountFormData.status === 'active'}
-                    onChange={() => setAccountFormData({...accountFormData, status: 'active'})}
-                  />
-                  <label htmlFor="status-active">Active</label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="status-inactive"
-                    name="status"
-                    className="mr-2"
-                    checked={accountFormData.status === 'inactive'}
-                    onChange={() => setAccountFormData({...accountFormData, status: 'inactive'})}
-                  />
-                  <label htmlFor="status-inactive">Inactive</label>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAccountFormOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmitAccount}>
-              {selectedAccount ? 'Update Account' : 'Create Account'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Branding Form Dialog */}
-      <Dialog open={brandingFormOpen} onOpenChange={setBrandingFormOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{selectedBranding ? 'Edit Branding' : 'Create Branding Info'}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="flex justify-center mb-4">
-              <div className="relative">
-                <Avatar className="h-24 w-24 cursor-pointer border-2 border-border" onClick={() => setShowBrandingUploadOptions(true)}>
-                  {brandingFormData.logo ? (
-                    <AvatarImage src={brandingFormData.logo} alt="Logo" />
-                  ) : (
-                    <AvatarFallback className="bg-secondary">
-                      <CameraIcon className="h-8 w-8 text-muted-foreground" />
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                <Button 
-                  type="button"
-                  size="sm" 
-                  variant="outline" 
-                  className="absolute bottom-0 right-0 h-8 w-8 p-0 rounded-full"
-                  onClick={() => setShowBrandingUploadOptions(true)}
-                >
-                  <UploadIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            {showBrandingUploadOptions && (
-              <div className="bg-card border rounded-md p-3 relative">
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="sm"
-                  className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
-                  onClick={() => setShowBrandingUploadOptions(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-                <div className="space-y-2 mt-2">
-                  <div className="flex items-center">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="w-full justify-start"
-                      onClick={() => brandingFileInputRef.current?.click()}
-                    >
-                      <UploadIcon className="mr-2 h-4 w-4" />
-                      Upload from device
-                    </Button>
-                    <input 
-                      type="file" 
-                      ref={brandingFileInputRef}
-                      className="hidden" 
-                      accept="image/*" 
-                      onChange={handleBrandingFileUpload} 
-                    />
-                  </div>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => handleBrandingExternalUpload('google-drive')}
-                  >
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/2295px-Google_Drive_icon_%282020%29.svg.png" 
-                      alt="Google Drive" 
-                      className="mr-2 h-4 w-4" 
-                    />
-                    Upload from Google Drive
-                  </Button>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={() => handleBrandingExternalUpload('dropbox')}
-                  >
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Dropbox_Icon.svg/2202px-Dropbox_Icon.svg.png" 
-                      alt="Dropbox" 
-                      className="mr-2 h-4 w-4" 
-                    />
-                    Upload from Dropbox
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Name
-              </label>
-              <Input
-                id="name"
-                name="name"
-                value={brandingFormData.name}
-                onChange={handleBrandingFormChange}
-                placeholder="Enter branding name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="companyName" className="text-sm font-medium">
-                Company Name
-              </label>
-              <Input
-                id="companyName"
-                name="companyName"
-                value={brandingFormData.companyName}
-                onChange={handleBrandingFormChange}
-                placeholder="Enter company name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="phone" className="text-sm font-medium">
-                Phone
-              </label>
-              <Input
-                id="phone"
-                name="phone"
-                value={brandingFormData.phone}
-                onChange={handleBrandingFormChange}
-                placeholder="Enter phone number"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="website" className="text-sm font-medium">
-                Website
-              </label>
-              <Input
-                id="website"
-                name="website"
-                value={brandingFormData.website}
-                onChange={handleBrandingFormChange}
-                placeholder="Enter website URL"
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBrandingFormOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmitBranding}>
-              {selectedBranding ? 'Update Branding' : 'Create Branding'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Link Form Dialog */}
-      <Dialog open={linkFormOpen} onOpenChange={setLinkFormOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{selectedLink ? 'Edit Link' : 'Create Client-Branding Link'}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="clientId" className="text-sm font-medium">
-                Client
-              </label>
-              <Select
-                value={linkFormData.clientId}
-                onValueChange={(value) => setLinkFormData({...linkFormData, clientId: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accountsData
-                    .filter(account => account.type === 'client')
-                    .map(client => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="brandingId" className="text-sm font-medium">
-                Branding
-              </label>
-              <Select
-                value={linkFormData.brandingId}
-                onValueChange={(value) => setLinkFormData({...linkFormData, brandingId: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select branding" />
-                </SelectTrigger>
-                <SelectContent>
-                  {brandingInfoData.map(branding => (
-                    <SelectItem key={branding.id} value={branding.id}>
-                      {branding.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLinkFormOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmitLink}>
-              {selectedLink ? 'Update Link' : 'Create Link'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardLayout>
-  );
-};
-
-export default Accounts;
+                              <
