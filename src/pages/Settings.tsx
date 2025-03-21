@@ -373,7 +373,7 @@ const SettingsPage = () => {
                                 <AvatarImage src={profileForm.getValues().avatar} alt="Profile" />
                                 <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
                               </Avatar>
-                              <ImageUpload onImageUploaded={handleAvatarUpload} />
+                              <ImageUpload onChange={handleAvatarUpload} initialImage={profileForm.getValues().avatar} />
                             </div>
                             <div className="flex-1 space-y-4 w-full">
                               <FormField
@@ -892,3 +892,4 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
+
