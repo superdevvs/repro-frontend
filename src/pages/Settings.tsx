@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +36,6 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-// Define form validation schemas
 const profileFormSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
@@ -84,7 +82,6 @@ const SettingsPage = () => {
     smsPayments: false
   });
   
-  // Profile form
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -97,7 +94,6 @@ const SettingsPage = () => {
     },
   });
   
-  // Account form
   const accountForm = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: {
@@ -107,7 +103,6 @@ const SettingsPage = () => {
     },
   });
   
-  // Security form
   const securityForm = useForm<SecurityFormValues>({
     resolver: zodResolver(securityFormSchema),
     defaultValues: {
@@ -117,7 +112,6 @@ const SettingsPage = () => {
     },
   });
   
-  // Update form defaults when user data is available
   useEffect(() => {
     if (user) {
       const nameParts = user.name.split(' ');
@@ -133,7 +127,6 @@ const SettingsPage = () => {
   }, [user]);
   
   const handleProfileSubmit = (data: ProfileFormValues) => {
-    // In a real app, this would update the user profile in the database
     toast({
       title: "Profile Updated",
       description: "Your profile information has been saved successfully.",
@@ -163,18 +156,15 @@ const SettingsPage = () => {
   };
   
   const handleAppearanceSubmit = () => {
-    // In a real app, this would save to localStorage or to the user's settings in the database
     toast({
       title: "Appearance Updated",
       description: "Your appearance preferences have been saved.",
     });
     console.log('Appearance settings saved:', { theme, sidebarCollapse, animations });
     
-    // Apply theme changes
     document.documentElement.classList.toggle('dark', theme === 'dark');
     document.documentElement.classList.toggle('light', theme === 'light');
     
-    // Apply animation settings
     document.documentElement.classList.toggle('reduce-motion', !animations);
   };
   
@@ -191,11 +181,9 @@ const SettingsPage = () => {
   };
   
   const handleDownloadData = () => {
-    // In a real app, this would generate a JSON file with the user's data
     setIsDownloadingData(true);
     
     setTimeout(() => {
-      // Mock user data to download
       const userData = {
         profile: {
           name: user?.name,
@@ -210,7 +198,6 @@ const SettingsPage = () => {
         }
       };
       
-      // Create and download the file
       const dataStr = JSON.stringify(userData, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
@@ -232,26 +219,20 @@ const SettingsPage = () => {
   };
   
   const handleDeleteAccount = () => {
-    // Close the dialog
     setDeleteAccountDialogOpen(false);
     
-    // In a real app, this would delete the user's account after confirmation
     toast({
       title: "Account Deleted",
       description: "Your account has been permanently deleted.",
       variant: "destructive",
     });
     
-    // Mock logging out after account deletion
     setTimeout(() => {
-      // Redirect to homepage or login page
       window.location.href = '/';
     }, 2000);
   };
   
-  // Function to sign out of all devices
   const handleSignOutAllDevices = () => {
-    // In a real app, this would invalidate all the user's sessions
     toast({
       title: "Signed Out",
       description: "You have been signed out of all devices.",
@@ -259,7 +240,6 @@ const SettingsPage = () => {
     });
   };
   
-  // Function to toggle 2FA
   const handle2FAToggle = (checked: boolean) => {
     if (checked) {
       toast({
@@ -274,7 +254,6 @@ const SettingsPage = () => {
     }
   };
   
-  // Function to revoke a session
   const handleRevokeSession = (deviceName: string) => {
     toast({
       title: "Session Revoked",
@@ -282,31 +261,10 @@ const SettingsPage = () => {
     });
   };
   
-  const handleAppearanceSubmit = () => {
-    toast({
-      title: "Appearance Updated",
-      description: "Your appearance preferences have been saved.",
-    });
-    console.log('Appearance settings saved:', { theme, sidebarCollapse, animations });
-  };
-  
-  const handleNotificationsSubmit = () => {
-    toast({
-      title: "Notifications Updated",
-      description: "Your notification preferences have been saved.",
-    });
-    console.log('Notification settings saved:', notificationSettings);
-  };
-  
-  const handleAvatarChange = (url: string) => {
-    profileForm.setValue('avatar', url);
-  };
-  
   return (
     <DashboardLayout>
       <PageTransition>
         <div className="space-y-6">
-          {/* Header */}
           <div>
             <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
               Settings
@@ -317,10 +275,8 @@ const SettingsPage = () => {
             </p>
           </div>
           
-          {/* Settings Content */}
           <Tabs defaultValue="profile" className="w-full">
             <div className="flex flex-col sm:flex-row gap-6">
-              {/* Sidebar */}
               <div className="sm:w-[240px] flex-shrink-0">
                 <Card className="glass-card sticky top-6">
                   <TabsList className="flex flex-col h-auto bg-transparent p-0">
@@ -367,7 +323,6 @@ const SettingsPage = () => {
                 </Card>
               </div>
               
-              {/* Main Content */}
               <div className="flex-1">
                 <Card className="glass-card">
                   <TabsContent value="profile" className="m-0">
@@ -934,7 +889,7 @@ const SettingsPage = () => {
                         <div className="space-y-3">
                           <div className="p-3 border rounded-md border-border flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded bg-green-500/10 flex items-center justify-center text-green-500">
+                              <div className="h-10 w-10 rounded bg-green-500/10 flex items-center justify-center">
                                 <GlobeIcon className="h-5 w-5" />
                               </div>
                               <div>
@@ -989,7 +944,6 @@ const SettingsPage = () => {
         </div>
       </PageTransition>
       
-      {/* Delete Account Confirmation Dialog */}
       <Dialog open={deleteAccountDialogOpen} onOpenChange={setDeleteAccountDialogOpen}>
         <DialogContent>
           <DialogHeader>
