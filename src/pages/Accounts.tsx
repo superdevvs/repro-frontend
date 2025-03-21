@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -941,4 +942,448 @@ const Accounts = () => {
                           <TableHead>Name</TableHead>
                           <TableHead>Company Name</TableHead>
                           <TableHead>Phone</TableHead>
-                          <
+                          <TableHead>Website</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredBrandingInfo.length > 0 ? (
+                          filteredBrandingInfo.map((branding) => (
+                            <TableRow key={branding.id}>
+                              <TableCell>
+                                <img src={branding.logo} alt={branding.name} className="h-10 w-10 object-contain" />
+                              </TableCell>
+                              <TableCell className="font-medium">{branding.name}</TableCell>
+                              <TableCell>{branding.companyName}</TableCell>
+                              <TableCell>{branding.phone}</TableCell>
+                              <TableCell>{branding.website}</TableCell>
+                              <TableCell className="text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      Actions
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleEditBranding(branding)}>
+                                      <EditIcon className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDeleteBranding(branding.id)} className="text-destructive">
+                                      <Trash2Icon className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center h-24">
+                              <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                <FileIcon className="h-8 w-8 mb-2 opacity-20" />
+                                <p>No branding information found</p>
+                                <p className="text-sm">Try adjusting your search</p>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Client Branding Links Tab */}
+            <TabsContent value="links" className="space-y-4 pt-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+                    <div className="flex-1">
+                      <h2 className="text-lg font-semibold mb-1">Client Branding Links</h2>
+                      <p className="text-sm text-muted-foreground">Link clients to branding information</p>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <FileIcon className="h-4 w-4 mr-2" />
+                            Export
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => handleExport('print', 'links')}>
+                            <Printer className="h-4 w-4 mr-2" />
+                            Print
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport('csv', 'links')}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Export CSV
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport('copy', 'links')}>
+                            <CopyIcon className="h-4 w-4 mr-2" />
+                            Copy to Clipboard
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    
+                      <Button onClick={() => {
+                        resetLinkForm();
+                        setLinkFormOpen(true);
+                      }}>
+                        <PlusIcon className="h-4 w-4 mr-2" />
+                        Create Link
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Client</TableHead>
+                          <TableHead>Client Company</TableHead>
+                          <TableHead>Branding</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {clientBrandingLinks.length > 0 ? (
+                          clientBrandingLinks.map((link) => (
+                            <TableRow key={`${link.clientId}-${link.brandingId}`}>
+                              <TableCell className="font-medium">{link.clientName}</TableCell>
+                              <TableCell>{link.companyName}</TableCell>
+                              <TableCell>{link.brandingName}</TableCell>
+                              <TableCell className="text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      Actions
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleEditLink(link)}>
+                                      <EditIcon className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDeleteLink(link.clientId)} className="text-destructive">
+                                      <Trash2Icon className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center h-24">
+                              <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                <UsersIcon className="h-8 w-8 mb-2 opacity-20" />
+                                <p>No client branding links found</p>
+                                <p className="text-sm">Create a new link to connect clients and branding</p>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+          
+          {/* Account Dialog */}
+          <Dialog open={accountFormOpen} onOpenChange={setAccountFormOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>{selectedAccount ? 'Edit Account' : 'Create Account'}</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="flex flex-col items-center mb-4">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20 mb-2">
+                      {accountFormData.avatar ? (
+                        <AvatarImage src={accountFormData.avatar} alt="Profile" />
+                      ) : (
+                        <AvatarFallback>
+                          <UserIcon className="h-10 w-10" />
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <Button 
+                      size="sm" 
+                      variant="secondary" 
+                      className="absolute -bottom-2 -right-2 rounded-full h-8 w-8 p-0"
+                      onClick={() => setShowUploadOptions(!showUploadOptions)}
+                    >
+                      {showUploadOptions ? <X className="h-4 w-4" /> : <CameraIcon className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  {showUploadOptions && (
+                    <div className="flex gap-2 mt-3">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <UploadIcon className="h-4 w-4 mr-2" />
+                        Device
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExternalUpload('google-drive')}
+                      >
+                        Google Drive
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExternalUpload('dropbox')}
+                      >
+                        Dropbox
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <label htmlFor="name" className="block text-sm font-medium mb-1">Full Name</label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={accountFormData.name}
+                      onChange={handleAccountFormChange}
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={accountFormData.email}
+                      onChange={handleAccountFormChange}
+                      placeholder="john.doe@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium mb-1">Phone</label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={accountFormData.phone}
+                      onChange={handleAccountFormChange}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="company" className="block text-sm font-medium mb-1">Company</label>
+                    <Input
+                      id="company"
+                      name="company"
+                      value={accountFormData.company}
+                      onChange={handleAccountFormChange}
+                      placeholder="Company Name"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label htmlFor="type" className="block text-sm font-medium mb-1">Account Type</label>
+                    <Select 
+                      value={accountFormData.type} 
+                      onValueChange={handleAccountTypeChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select account type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="client">Client</SelectItem>
+                        <SelectItem value="photographer">Photographer</SelectItem>
+                        <SelectItem value="editor">Editor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {!selectedAccount && (
+                    <>
+                      <div>
+                        <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
+                        <Input
+                          id="password"
+                          name="password"
+                          type="password"
+                          value={accountFormData.password}
+                          onChange={handleAccountFormChange}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">Confirm Password</label>
+                        <Input
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          type="password"
+                          value={accountFormData.confirmPassword}
+                          onChange={handleAccountFormChange}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  resetAccountForm();
+                  setAccountFormOpen(false);
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmitAccount}>
+                  {selectedAccount ? 'Update' : 'Create'} Account
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Branding Dialog */}
+          <Dialog open={brandingFormOpen} onOpenChange={setBrandingFormOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>{selectedBranding ? 'Edit Branding Info' : 'Create Branding Info'}</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <label htmlFor="branding-name" className="block text-sm font-medium mb-1">Branding Name</label>
+                    <Input
+                      id="branding-name"
+                      name="name"
+                      value={brandingFormData.name}
+                      onChange={handleBrandingFormChange}
+                      placeholder="Branding Name"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label htmlFor="company-name" className="block text-sm font-medium mb-1">Company Name</label>
+                    <Input
+                      id="company-name"
+                      name="companyName"
+                      value={brandingFormData.companyName}
+                      onChange={handleBrandingFormChange}
+                      placeholder="Company Name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="branding-phone" className="block text-sm font-medium mb-1">Phone</label>
+                    <Input
+                      id="branding-phone"
+                      name="phone"
+                      value={brandingFormData.phone}
+                      onChange={handleBrandingFormChange}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="website" className="block text-sm font-medium mb-1">Website</label>
+                    <Input
+                      id="website"
+                      name="website"
+                      value={brandingFormData.website}
+                      onChange={handleBrandingFormChange}
+                      placeholder="https://example.com"
+                    />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  resetBrandingForm();
+                  setBrandingFormOpen(false);
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmitBranding}>
+                  {selectedBranding ? 'Update' : 'Create'} Branding
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Link Dialog */}
+          <Dialog open={linkFormOpen} onOpenChange={setLinkFormOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>{selectedLink ? 'Edit Client/Branding Link' : 'Create Client/Branding Link'}</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div>
+                  <label htmlFor="client-id" className="block text-sm font-medium mb-1">Client</label>
+                  <Select 
+                    value={linkFormData.clientId} 
+                    onValueChange={(value) => setLinkFormData({...linkFormData, clientId: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accountsData
+                        .filter(account => account.type === 'client')
+                        .map(client => (
+                          <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                        ))
+                      }
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label htmlFor="branding-id" className="block text-sm font-medium mb-1">Branding</label>
+                  <Select 
+                    value={linkFormData.brandingId} 
+                    onValueChange={(value) => setLinkFormData({...linkFormData, brandingId: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select branding" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {brandingInfoData.map(branding => (
+                        <SelectItem key={branding.id} value={branding.id}>{branding.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => {
+                  resetLinkForm();
+                  setLinkFormOpen(false);
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmitLink}>
+                  {selectedLink ? 'Update' : 'Create'} Link
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </PageTransition>
+    </DashboardLayout>
+  );
+};
+
+export default Accounts;
