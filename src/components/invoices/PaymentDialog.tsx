@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreditCardIcon, CheckIcon } from "lucide-react";
+import { CreditCardIcon, CheckIcon, QrCodeIcon } from "lucide-react";
 import { InvoiceData } from '@/utils/invoiceUtils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,7 +30,8 @@ export function PaymentDialog({ invoice, isOpen, onClose, onPaymentComplete }: P
     // Get the display name for the payment method
     const paymentMethodDisplay = 
       paymentMethod === "credit-card" ? "Credit Card" : 
-      paymentMethod === "bank-transfer" ? "Bank Transfer" : "Cash";
+      paymentMethod === "bank-transfer" ? "Bank Transfer" : 
+      paymentMethod === "square-upi" ? "Square UPI" : "Cash";
     
     // Simulate payment processing
     setTimeout(() => {
@@ -73,6 +74,7 @@ export function PaymentDialog({ invoice, isOpen, onClose, onPaymentComplete }: P
               <SelectContent>
                 <SelectItem value="credit-card">Credit Card</SelectItem>
                 <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
+                <SelectItem value="square-upi">Square UPI</SelectItem>
                 <SelectItem value="cash">Cash</SelectItem>
               </SelectContent>
             </Select>
@@ -106,6 +108,19 @@ export function PaymentDialog({ invoice, isOpen, onClose, onPaymentComplete }: P
             </div>
           )}
           
+          {paymentMethod === "square-upi" && (
+            <div className="space-y-2">
+              <Label htmlFor="upi-id">UPI ID</Label>
+              <Input id="upi-id" placeholder="example@upi" required />
+              <div className="mt-2 p-4 bg-muted/40 rounded-lg flex flex-col items-center">
+                <QrCodeIcon className="h-24 w-24 text-primary/70 mb-2" />
+                <p className="text-sm text-center text-muted-foreground">
+                  Scan this QR code with your Square UPI app to make payment
+                </p>
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="amount">Payment Amount</Label>
             <Input 
@@ -126,6 +141,8 @@ export function PaymentDialog({ invoice, isOpen, onClose, onPaymentComplete }: P
                 <>
                   {paymentMethod === "credit-card" ? (
                     <CreditCardIcon className="h-4 w-4 mr-2" />
+                  ) : paymentMethod === "square-upi" ? (
+                    <QrCodeIcon className="h-4 w-4 mr-2" />
                   ) : (
                     <CheckIcon className="h-4 w-4 mr-2" />
                   )}
