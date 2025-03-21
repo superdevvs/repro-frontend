@@ -9,6 +9,7 @@ import { CameraIcon, MapPinIcon, PlusIcon, SearchIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { PhotographerForm } from '@/components/photographers/PhotographerForm';
+import { PhotographerProfile } from '@/components/photographers/PhotographerProfile';
 import { useToast } from '@/hooks/use-toast';
 
 // Mock data for photographers
@@ -65,6 +66,9 @@ const Photographers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [formOpen, setFormOpen] = useState(false);
+  const [selectedPhotographer, setSelectedPhotographer] = useState<any>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   // Filter photographers based on search term and active filter
   const filteredPhotographers = photographersList.filter(photographer => {
@@ -103,6 +107,48 @@ const Photographers = () => {
     toast({
       title: 'Photographer Added',
       description: `${data.name} has been added to the directory.`,
+    });
+  };
+
+  const handleViewProfile = (photographer: any) => {
+    setSelectedPhotographer(photographer);
+    setProfileOpen(true);
+  };
+
+  const handleEditPhotographer = () => {
+    setProfileOpen(false);
+    setEditOpen(true);
+  };
+
+  const handleEditDirectly = (photographer: any) => {
+    setSelectedPhotographer(photographer);
+    setEditOpen(true);
+  };
+
+  const handleUpdatePhotographer = (data: any) => {
+    // Update the photographer in the list
+    setPhotographersList(prev => 
+      prev.map(p => 
+        p.id === selectedPhotographer.id 
+          ? { 
+              ...p, 
+              name: data.name, 
+              email: data.email, 
+              location: data.location, 
+              specialties: data.specialties, 
+              status: data.status,
+              avatar: data.avatar || p.avatar,
+            } 
+          : p
+      )
+    );
+    
+    setEditOpen(false);
+    
+    // Display success message
+    toast({
+      title: 'Photographer Updated',
+      description: `${data.name}'s profile has been updated.`,
     });
   };
 
@@ -231,7 +277,21 @@ const Photographers = () => {
                       <CameraIcon className="h-4 w-4 text-primary" />
                       <span>{photographer.shootsCompleted} shoots</span>
                     </div>
-                    <Button size="sm">View Profile</Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleEditDirectly(photographer)}
+                      >
+                        Edit
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={() => handleViewProfile(photographer)}
+                      >
+                        View Profile
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -240,11 +300,30 @@ const Photographers = () => {
         </div>
       </PageTransition>
       
+      {/* Add Photographer Form */}
       <PhotographerForm 
         open={formOpen} 
         onOpenChange={setFormOpen} 
         onSubmit={handleAddPhotographer} 
       />
+
+      {/* View Photographer Profile */}
+      <PhotographerProfile
+        photographer={selectedPhotographer}
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        onEdit={handleEditPhotographer}
+      />
+
+      {/* Edit Photographer Form */}
+      {selectedPhotographer && (
+        <PhotographerForm 
+          open={editOpen} 
+          onOpenChange={setEditOpen} 
+          onSubmit={handleUpdatePhotographer}
+          initialData={selectedPhotographer}
+        />
+      )}
     </DashboardLayout>
   );
 };

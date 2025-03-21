@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,6 +46,15 @@ interface PhotographerFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: PhotographerFormValues) => void;
+  initialData?: {
+    id: string;
+    name: string;
+    email: string;
+    location: string;
+    specialties: string[];
+    status: string;
+    avatar: string;
+  };
 }
 
 const specialtyOptions = [
@@ -59,16 +68,24 @@ const specialtyOptions = [
   '3D Tours',
 ];
 
-export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerFormProps) {
+export function PhotographerForm({ open, onOpenChange, onSubmit, initialData }: PhotographerFormProps) {
   const { toast } = useToast();
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isEditMode = !!initialData;
 
   const form = useForm<PhotographerFormValues>({
     resolver: zodResolver(photographerFormSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
+      name: initialData.name,
+      email: initialData.email,
+      location: initialData.location,
+      specialties: initialData.specialties,
+      status: initialData.status as 'available' | 'busy' | 'offline',
+      avatar: initialData.avatar,
+    } : {
       name: '',
       email: '',
       location: '',
@@ -77,6 +94,14 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
       avatar: '',
     },
   });
+
+  // Initialize the form with existing data if in edit mode
+  useEffect(() => {
+    if (initialData) {
+      setAvatarUrl(initialData.avatar);
+      setSelectedSpecialties(initialData.specialties);
+    }
+  }, [initialData]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -161,7 +186,7 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
     });
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     form.setValue('specialties', selectedSpecialties);
     if (selectedSpecialties.length > 0) {
       form.clearErrors('specialties');
@@ -184,30 +209,35 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
     }
     
     onSubmit(data);
-    form.reset();
-    setAvatarUrl('');
-    setSelectedSpecialties([]);
+    
+    if (!isEditMode) {
+      resetForm();
+    } else {
+      onOpenChange(false);
+    }
   };
 
   const resetForm = () => {
-    form.reset();
-    setAvatarUrl('');
-    setSelectedSpecialties([]);
+    if (!isEditMode) {
+      form.reset();
+      setAvatarUrl('');
+      setSelectedSpecialties([]);
+    }
     setShowUploadOptions(false);
     onOpenChange(false);
   };
 
-  React.useEffect(() => {
-    if (!open) {
+  useEffect(() => {
+    if (!open && !isEditMode) {
       resetForm();
     }
-  }, [open]);
+  }, [open, isEditMode]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Photographer</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Photographer' : 'Add New Photographer'}</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
@@ -389,7 +419,7 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
               <Button type="button" variant="outline" onClick={resetForm}>
                 Cancel
               </Button>
-              <Button type="submit">Add Photographer</Button>
+              <Button type="submit">{isEditMode ? 'Update Photographer' : 'Add Photographer'}</Button>
             </DialogFooter>
           </form>
         </Form>
