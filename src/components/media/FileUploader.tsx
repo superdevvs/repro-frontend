@@ -15,8 +15,10 @@ import {
   FilmIcon, 
   XIcon, 
   UploadCloudIcon,
-  DropboxIcon,
-  GoogleDriveIcon
+  CloudIcon,
+  PlusIcon,
+  BoxIcon,
+  MonitorIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -266,7 +268,7 @@ export function FileUploader({
             onClick={connectDropbox}
             className="flex-1"
           >
-            <DropboxIcon className="h-4 w-4 mr-2" />
+            <BoxIcon className="h-4 w-4 mr-2" />
             Dropbox
           </Button>
           
@@ -276,7 +278,7 @@ export function FileUploader({
             onClick={connectGoogleDrive}
             className="flex-1"
           >
-            <GoogleDriveIcon className="h-4 w-4 mr-2" />
+            <CloudIcon className="h-4 w-4 mr-2" />
             Google Drive
           </Button>
         </div>
@@ -314,7 +316,7 @@ export function FileUploader({
           <div className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <DropboxIcon className="h-5 w-5 text-blue-600" />
+                <BoxIcon className="h-5 w-5 text-blue-600" />
                 <h3 className="font-medium">Dropbox Files</h3>
               </div>
               <Button variant="outline" size="sm" onClick={() => setFiles([])}>
@@ -359,7 +361,7 @@ export function FileUploader({
           <div className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <GoogleDriveIcon className="h-5 w-5 text-green-600" />
+                <CloudIcon className="h-5 w-5 text-green-600" />
                 <h3 className="font-medium">Google Drive Files</h3>
               </div>
               <Button variant="outline" size="sm" onClick={() => setFiles([])}>
@@ -494,3 +496,4 @@ export function FileUploader({
 }
 
 export default FileUploader;
+
