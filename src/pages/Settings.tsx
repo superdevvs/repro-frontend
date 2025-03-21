@@ -1,1050 +1,569 @@
 import React, { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PageTransition } from '@/components/layout/PageTransition';
-import { 
-  AlertTriangleIcon,
-  BellIcon, 
-  CreditCardIcon, 
-  Download,
-  GlobeIcon, 
-  KeyIcon, 
-  MailIcon, 
-  PaletteIcon, 
-  SaveIcon, 
-  SettingsIcon, 
-  SmartphoneIcon, 
-  Trash2,
-  UserIcon 
-} from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ImageUpload } from '@/components/profile/ImageUpload';
 import { useToast } from '@/hooks/use-toast';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Switch } from "@/components/ui/switch"
+import { Separator } from "@/components/ui/separator"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ImageUpload } from "@/components/profile/ImageUpload"
+import { CameraIcon, DownloadIcon, SaveIcon, TrashIcon } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { supabase } from '@/integrations/supabase/client';
 
 const profileFormSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().optional(),
-  bio: z.string().optional(),
-  avatar: z.string().optional(),
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
 });
-
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 const accountFormSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
-  language: z.string(),
-  timezone: z.string(),
+  username: z.string().min(2, {
+    message: "Username must be at least 2 characters.",
+  }),
 });
-
-type AccountFormValues = z.infer<typeof accountFormSchema>;
 
 const securityFormSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-}).refine(data => data.newPassword === data.confirmPassword, {
+  password: z.string().min(8, {
+    message: "Password must be at least 8 characters.",
+  }),
+  confirmPassword: z.string().min(8, {
+    message: "Password must be at least 8 characters.",
+  }),
+}).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
-  path: ["confirmPassword"],
+  path: ["confirmPassword"], // path of error
 });
-
-type SecurityFormValues = z.infer<typeof securityFormSchema>;
 
 const SettingsPage = () => {
   const { user, role } = useAuth();
   const { toast } = useToast();
-  const [theme, setTheme] = useState('light');
-  const [sidebarCollapse, setSidebarCollapse] = useState(true);
-  const [animations, setAnimations] = useState(true);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
+  const [sidebarCollapse, setSidebarCollapse] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapse');
+    return saved ? saved === 'true' : true;
+  });
+  const [animations, setAnimations] = useState(() => {
+    const saved = localStorage.getItem('animations');
+    return saved ? saved === 'true' : true;
+  });
   const [deleteAccountDialogOpen, setDeleteAccountDialogOpen] = useState(false);
   const [isDownloadingData, setIsDownloadingData] = useState(false);
-  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailShoots: true,
-    emailInvoices: true,
-    emailMarketing: false,
-    smsShoots: true,
-    smsPayments: false
-  });
   
-  const profileForm = useForm<ProfileFormValues>({
+  const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
+  const [profilePicture, setProfilePicture] = useState<string | null>(user?.avatar || null);
+
+  const profileForm = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      firstName: user?.name?.split(' ')[0] || '',
-      lastName: user?.name?.split(' ')[1] || '',
-      email: user?.email || '',
-      phone: '',
-      bio: '',
-      avatar: user?.avatar || '',
+      name: user?.name || "",
+      email: user?.email || "",
     },
   });
-  
-  const accountForm = useForm<AccountFormValues>({
+
+  const accountForm = useForm<z.infer<typeof accountFormSchema>>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: {
-      username: 'johndoe',
-      language: 'en',
-      timezone: 'est',
+      username: user?.username || "",
     },
   });
-  
-  const securityForm = useForm<SecurityFormValues>({
+
+  const securityForm = useForm<z.infer<typeof securityFormSchema>>({
     resolver: zodResolver(securityFormSchema),
     defaultValues: {
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
+      password: "",
+      confirmPassword: "",
     },
   });
-  
+
+  // Apply theme on component mount and when theme changes
   useEffect(() => {
-    if (user) {
-      const nameParts = user.name.split(' ');
-      profileForm.reset({
-        firstName: nameParts[0] || '',
-        lastName: nameParts.slice(1).join(' ') || '',
-        email: user.email,
-        phone: profileForm.getValues('phone'),
-        bio: profileForm.getValues('bio'),
-        avatar: user.avatar || '',
+    // Apply the theme from localStorage on mount
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme) {
+      applyTheme(storedTheme);
+    }
+  }, []);
+
+  // Function to apply theme
+  const applyTheme = (selectedTheme: string) => {
+    document.documentElement.classList.remove('dark', 'light');
+    
+    if (selectedTheme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.classList.add(systemTheme);
+    } else {
+      document.documentElement.classList.add(selectedTheme);
+    }
+  };
+  
+  const handleProfileSubmit = async (values: z.infer<typeof profileFormSchema>) => {
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated.",
+      });
+      console.log('Profile settings saved:', values);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
       });
     }
-  }, [user]);
-  
-  const handleProfileSubmit = (data: ProfileFormValues) => {
-    toast({
-      title: "Profile Updated",
-      description: "Your profile information has been saved successfully.",
-    });
-    console.log('Profile data submitted:', data);
   };
-  
-  const handleAccountSubmit = (data: AccountFormValues) => {
-    toast({
-      title: "Account Updated",
-      description: "Your account settings have been saved successfully.",
-    });
-    console.log('Account data submitted:', data);
+
+  const handleAccountSubmit = async (values: z.infer<typeof accountFormSchema>) => {
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast({
+        title: "Account Updated",
+        description: "Your account settings have been updated.",
+      });
+      console.log('Account settings saved:', values);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update account. Please try again.",
+      });
+    }
   };
-  
-  const handleSecuritySubmit = (data: SecurityFormValues) => {
-    toast({
-      title: "Password Updated",
-      description: "Your password has been changed successfully.",
-    });
-    console.log('Security data submitted:', data);
-    securityForm.reset({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    });
+
+  const handleSecuritySubmit = async (values: z.infer<typeof securityFormSchema>) => {
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast({
+        title: "Security Updated",
+        description: "Your security settings have been updated.",
+      });
+      console.log('Security settings saved:', values);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update security settings. Please try again.",
+      });
+    }
   };
   
   const handleAppearanceSubmit = () => {
+    // Save settings to localStorage
+    localStorage.setItem('theme', theme);
+    localStorage.setItem('sidebarCollapse', sidebarCollapse.toString());
+    localStorage.setItem('animations', animations.toString());
+    
+    // Apply theme changes
+    applyTheme(theme);
+    
+    // Apply animation settings
+    document.documentElement.classList.toggle('reduce-motion', !animations);
+    
     toast({
       title: "Appearance Updated",
       description: "Your appearance preferences have been saved.",
     });
     console.log('Appearance settings saved:', { theme, sidebarCollapse, animations });
-    
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    document.documentElement.classList.toggle('light', theme === 'light');
-    
-    document.documentElement.classList.toggle('reduce-motion', !animations);
   };
   
-  const handleNotificationsSubmit = () => {
+  const handleNotificationSubmit = () => {
     toast({
       title: "Notifications Updated",
       description: "Your notification preferences have been saved.",
     });
-    console.log('Notification settings saved:', notificationSettings);
+    console.log('Notification settings saved:', { isNotificationEnabled });
   };
-  
+
   const handleAvatarChange = (url: string) => {
-    profileForm.setValue('avatar', url);
+    setProfilePicture(url);
+    toast({
+      title: "Avatar Updated",
+      description: "Your profile picture has been updated.",
+    });
+    console.log('Avatar URL:', url);
   };
-  
+
   const handleDownloadData = async () => {
     setIsDownloadingData(true);
-    
     try {
-      let userData: any = {
-        profile: {
-          name: user?.name,
-          email: user?.email,
-          avatar: user?.avatar,
-          role: role
-        },
-        settings: {
-          appearance: { theme, sidebarCollapse, animations },
-          notifications: notificationSettings,
-          account: accountForm.getValues()
-        }
-      };
-      
-      if (user?.id) {
-        // Get any custom tables data - in a real app, these would be actual table names
-        // const { data: shoots } = await supabase.from('shoots').select('*').eq('user_id', user.id);
-        // const { data: invoices } = await supabase.from('invoices').select('*').eq('user_id', user.id);
-        
-        // userData.shoots = shoots || [];
-        // userData.invoices = invoices || [];
-      }
-      
-      const dataStr = JSON.stringify(userData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `user_data_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
+      // Simulate data fetching and download
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       toast({
-        title: "Data Downloaded",
-        description: "Your data has been downloaded successfully.",
+        title: "Download Started",
+        description: "Your data is being downloaded.",
       });
+      console.log('Data download initiated');
     } catch (error) {
-      console.error("Error downloading user data:", error);
       toast({
-        title: "Download Failed",
-        description: "There was a problem downloading your data. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to download data. Please try again.",
       });
     } finally {
       setIsDownloadingData(false);
     }
   };
-  
+
   const handleDeleteAccount = async () => {
-    setIsDeletingAccount(true);
-    
     try {
-      if (supabase.auth && user?.id) {
-        // Delete user-related data first
-        // await supabase.from('profiles').delete().eq('id', user.id);
-        
-        // Delete user account
-        const { error } = await supabase.auth.admin.deleteUser(user.id);
-        
-        if (error) throw error;
-      }
-      
-      setDeleteAccountDialogOpen(false);
-      
+      // Simulate account deletion
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       toast({
         title: "Account Deleted",
-        description: "Your account has been permanently deleted.",
-        variant: "destructive",
+        description: "Your account has been successfully deleted.",
       });
-      
-      try {
-        await supabase.auth.signOut();
-      } catch (error) {
-        console.error("Error signing out:", error);
-      }
-      
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 2000);
+      console.log('Account deletion initiated');
     } catch (error) {
-      console.error("Error deleting account:", error);
-      
       toast({
-        title: "Deletion Failed",
-        description: "There was an error deleting your account. Please try again or contact support.",
         variant: "destructive",
+        title: "Error",
+        description: "Failed to delete account. Please try again.",
       });
-      
-      setDeleteAccountDialogOpen(false);
     } finally {
-      setIsDeletingAccount(false);
+      setDeleteAccountDialogOpen(false);
     }
   };
-  
-  const handleSignOutAllDevices = async () => {
-    try {
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
+
+  // Function to watch for system theme changes
+  useEffect(() => {
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       
-      if (error) throw error;
+      const handleChange = (e: MediaQueryListEvent) => {
+        document.documentElement.classList.remove('dark', 'light');
+        document.documentElement.classList.add(e.matches ? 'dark' : 'light');
+      };
       
-      toast({
-        title: "Signed Out",
-        description: "You have been signed out of all devices.",
-        variant: "destructive",
-      });
-      
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 2000);
-    } catch (error) {
-      console.error("Error signing out from all devices:", error);
-      
-      toast({
-        title: "Sign Out Failed",
-        description: "There was an error signing out from all devices. Please try again.",
-        variant: "destructive",
-      });
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
     }
-  };
-  
-  const handle2FAToggle = (checked: boolean) => {
-    if (checked) {
-      toast({
-        title: "2FA Enabled",
-        description: "Two-factor authentication has been enabled.",
-      });
-    } else {
-      toast({
-        title: "2FA Disabled",
-        description: "Two-factor authentication has been disabled.",
-      });
-    }
-  };
-  
-  const handleRevokeSession = (deviceName: string) => {
-    toast({
-      title: "Session Revoked",
-      description: `The session on ${deviceName} has been revoked.`,
-    });
-  };
+  }, [theme]);
   
   return (
-    <DashboardLayout>
-      <PageTransition>
-        <div className="space-y-6">
-          <div>
-            <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
-              Settings
-            </Badge>
-            <h1 className="text-3xl font-bold">Account Settings</h1>
-            <p className="text-muted-foreground">
-              Manage your account settings and preferences
-            </p>
-          </div>
-          
-          <Tabs defaultValue="profile" className="w-full">
-            <div className="flex flex-col sm:flex-row gap-6">
-              <div className="sm:w-[240px] flex-shrink-0">
-                <Card className="glass-card sticky top-6">
-                  <TabsList className="flex flex-col h-auto bg-transparent p-0">
-                    <div className="p-4 border-b border-border">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={profileForm.watch('avatar') || user?.avatar} alt={user?.name} />
-                          <AvatarFallback>{user?.name?.slice(0, 2)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-sm">{user?.name}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{role}</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-2 flex flex-col gap-1">
-                      <TabsTrigger value="profile" className="w-full justify-start gap-2 px-3 h-10 data-[state=active]:bg-accent">
-                        <UserIcon className="h-4 w-4" />
-                        Profile
-                      </TabsTrigger>
-                      <TabsTrigger value="account" className="w-full justify-start gap-2 px-3 h-10 data-[state=active]:bg-accent">
-                        <SettingsIcon className="h-4 w-4" />
-                        Account
-                      </TabsTrigger>
-                      <TabsTrigger value="appearance" className="w-full justify-start gap-2 px-3 h-10 data-[state=active]:bg-accent">
-                        <PaletteIcon className="h-4 w-4" />
-                        Appearance
-                      </TabsTrigger>
-                      <TabsTrigger value="notifications" className="w-full justify-start gap-2 px-3 h-10 data-[state=active]:bg-accent">
-                        <BellIcon className="h-4 w-4" />
-                        Notifications
-                      </TabsTrigger>
-                      <TabsTrigger value="billing" className="w-full justify-start gap-2 px-3 h-10 data-[state=active]:bg-accent">
-                        <CreditCardIcon className="h-4 w-4" />
-                        Billing
-                      </TabsTrigger>
-                      <TabsTrigger value="security" className="w-full justify-start gap-2 px-3 h-10 data-[state=active]:bg-accent">
-                        <KeyIcon className="h-4 w-4" />
-                        Security
-                      </TabsTrigger>
-                    </div>
-                  </TabsList>
-                </Card>
+    <div className="container relative pb-10">
+      <div className="mx-auto w-full max-w-2xl lg:max-w-none">
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          </TabsList>
+          <TabsContent value="profile" className="space-y-6">
+            <div className="grid gap-10">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Public profile</CardTitle>
+                  <CardDescription>
+                    Share a bit about yourself on your profile.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                  <div className="flex items-center justify-center">
+                    <ImageUpload onChange={handleAvatarChange} initialImage={profilePicture || user?.avatar} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Form {...profileForm}>
+                      <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4">
+                        <FormField
+                          control={profileForm.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Your Name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={profileForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input placeholder="your-email@example.com" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" className="gap-2">
+                          <SaveIcon className="h-4 w-4" />
+                          Save changes
+                        </Button>
+                      </form>
+                    </Form>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          <TabsContent value="account" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Account settings</CardTitle>
+                <CardDescription>
+                  Manage your account settings. Set your preferred username.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Form {...accountForm}>
+                  <form onSubmit={accountForm.handleSubmit(handleAccountSubmit)} className="space-y-4">
+                    <FormField
+                      control={accountForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Username</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="gap-2">
+                      <SaveIcon className="h-4 w-4" />
+                      Save changes
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="security" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Security</CardTitle>
+                <CardDescription>Update your password</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Form {...securityForm}>
+                  <form onSubmit={securityForm.handleSubmit(handleSecuritySubmit)} className="space-y-4">
+                    <FormField
+                      control={securityForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="Password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={securityForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="Confirm Password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="gap-2">
+                      <SaveIcon className="h-4 w-4" />
+                      Save changes
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="appearance" className="m-0">
+            <CardHeader>
+              <CardTitle>Appearance</CardTitle>
+              <CardDescription>
+                Customize the look and feel of the dashboard
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="theme">Theme</Label>
+                    <p className="text-sm text-muted-foreground">Select light or dark theme</p>
+                  </div>
+                  <Select value={theme} onValueChange={(value) => {
+                    setTheme(value);
+                    applyTheme(value);
+                  }}>
+                    <SelectTrigger id="theme" className="w-[180px]">
+                      <SelectValue placeholder="Select theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="light">Light</SelectItem>
+                      <SelectItem value="dark">Dark</SelectItem>
+                      <SelectItem value="system">System</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Separator />
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="sidebar">Sidebar</Label>
+                    <p className="text-sm text-muted-foreground">Automatically collapse sidebar on small screens</p>
+                  </div>
+                  <Switch 
+                    id="sidebar" 
+                    checked={sidebarCollapse} 
+                    onCheckedChange={(checked) => {
+                      setSidebarCollapse(checked);
+                      localStorage.setItem('sidebarCollapse', checked.toString());
+                    }} 
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="animations">Animations</Label>
+                    <p className="text-sm text-muted-foreground">Enable animations and transitions</p>
+                  </div>
+                  <Switch 
+                    id="animations" 
+                    checked={animations} 
+                    onCheckedChange={(checked) => {
+                      setAnimations(checked);
+                      document.documentElement.classList.toggle('reduce-motion', !checked);
+                      localStorage.setItem('animations', checked.toString());
+                    }} 
+                  />
+                </div>
               </div>
               
-              <div className="flex-1">
-                <Card className="glass-card">
-                  <TabsContent value="profile" className="m-0">
-                    <CardHeader>
-                      <CardTitle>Profile</CardTitle>
-                      <CardDescription>
-                        Manage your profile information
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <Form {...profileForm}>
-                        <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-6">
-                          <div className="flex flex-col sm:flex-row gap-6">
-                            <div className="sm:w-[120px] flex-shrink-0 flex flex-col items-center gap-2">
-                              <ImageUpload 
-                                onChange={handleAvatarChange} 
-                                initialImage={profileForm.getValues('avatar')}
-                              />
-                            </div>
-                            
-                            <div className="flex-1 space-y-4">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <FormField
-                                  control={profileForm.control}
-                                  name="firstName"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>First Name</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={profileForm.control}
-                                  name="lastName"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Last Name</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                              
-                              <FormField
-                                control={profileForm.control}
-                                name="email"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} type="email" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={profileForm.control}
-                                name="phone"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Phone Number</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} type="tel" placeholder="+1 (555) 123-4567" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={profileForm.control}
-                                name="bio"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Bio</FormLabel>
-                                    <FormControl>
-                                      <Textarea {...field} placeholder="Write a short bio..." />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          </div>
-                          
-                          <Separator />
-                          
-                          <div className="flex justify-end">
-                            <Button type="submit" className="gap-2">
-                              <SaveIcon className="h-4 w-4" />
-                              Save Changes
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    </CardContent>
-                  </TabsContent>
-                  
-                  <TabsContent value="account" className="m-0">
-                    <CardHeader>
-                      <CardTitle>Account</CardTitle>
-                      <CardDescription>
-                        Manage your account settings
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <Form {...accountForm}>
-                        <form onSubmit={accountForm.handleSubmit(handleAccountSubmit)} className="space-y-6">
-                          <div className="space-y-4">
-                            <FormField
-                              control={accountForm.control}
-                              name="username"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Username</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={accountForm.control}
-                              name="language"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Language</FormLabel>
-                                  <Select 
-                                    onValueChange={field.onChange} 
-                                    defaultValue={field.value}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select language" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="en">English</SelectItem>
-                                      <SelectItem value="es">Spanish</SelectItem>
-                                      <SelectItem value="fr">French</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={accountForm.control}
-                              name="timezone"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Timezone</FormLabel>
-                                  <Select 
-                                    onValueChange={field.onChange} 
-                                    defaultValue={field.value}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select timezone" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="est">Eastern Time (ET)</SelectItem>
-                                      <SelectItem value="cst">Central Time (CT)</SelectItem>
-                                      <SelectItem value="mst">Mountain Time (MT)</SelectItem>
-                                      <SelectItem value="pst">Pacific Time (PT)</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <Separator />
-                          
-                          <div>
-                            <h3 className="font-medium mb-4">Account Management</h3>
-                            <div className="space-y-4">
-                              <Button 
-                                variant="outline" 
-                                className="w-full justify-start text-left text-muted-foreground gap-2" 
-                                type="button"
-                                onClick={handleDownloadData}
-                                disabled={isDownloadingData}
-                              >
-                                <Download className="h-4 w-4" />
-                                {isDownloadingData ? 'Preparing Download...' : 'Download Your Data'}
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                className="w-full justify-start text-left text-destructive border-destructive/20 gap-2" 
-                                type="button"
-                                onClick={() => setDeleteAccountDialogOpen(true)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                Delete Account
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          <Separator />
-                          
-                          <div className="flex justify-end">
-                            <Button type="submit" className="gap-2">
-                              <SaveIcon className="h-4 w-4" />
-                              Save Changes
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    </CardContent>
-                  </TabsContent>
-                  
-                  <TabsContent value="appearance" className="m-0">
-                    <CardHeader>
-                      <CardTitle>Appearance</CardTitle>
-                      <CardDescription>
-                        Customize the look and feel of the dashboard
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label htmlFor="theme">Theme</Label>
-                            <p className="text-sm text-muted-foreground">Select light or dark theme</p>
-                          </div>
-                          <Select value={theme} onValueChange={setTheme}>
-                            <SelectTrigger id="theme" className="w-[180px]">
-                              <SelectValue placeholder="Select theme" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="light">Light</SelectItem>
-                              <SelectItem value="dark">Dark</SelectItem>
-                              <SelectItem value="system">System</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        <Separator />
-                        
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label htmlFor="sidebar">Sidebar</Label>
-                            <p className="text-sm text-muted-foreground">Automatically collapse sidebar on small screens</p>
-                          </div>
-                          <Switch 
-                            id="sidebar" 
-                            checked={sidebarCollapse} 
-                            onCheckedChange={setSidebarCollapse} 
-                          />
-                        </div>
-                        
-                        <Separator />
-                        
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label htmlFor="animations">Animations</Label>
-                            <p className="text-sm text-muted-foreground">Enable animations and transitions</p>
-                          </div>
-                          <Switch 
-                            id="animations" 
-                            checked={animations} 
-                            onCheckedChange={setAnimations} 
-                          />
-                        </div>
-                      </div>
-                      
-                      <Separator />
-                      
-                      <div className="flex justify-end">
-                        <Button className="gap-2" onClick={handleAppearanceSubmit}>
-                          <SaveIcon className="h-4 w-4" />
-                          Save Changes
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </TabsContent>
-                  
-                  <TabsContent value="notifications" className="m-0">
-                    <CardHeader>
-                      <CardTitle>Notifications</CardTitle>
-                      <CardDescription>
-                        Manage your notification preferences
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="space-y-4">
-                        <h3 className="font-medium">Email Notifications</h3>
-                        
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label htmlFor="email-shoots">Shoot Updates</Label>
-                            <p className="text-sm text-muted-foreground">Receive notifications about shoot updates</p>
-                          </div>
-                          <Switch 
-                            id="email-shoots" 
-                            checked={notificationSettings.emailShoots}
-                            onCheckedChange={(checked) => setNotificationSettings({
-                              ...notificationSettings,
-                              emailShoots: checked
-                            })}
-                          />
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label htmlFor="email-invoices">Invoice & Payments</Label>
-                            <p className="text-sm text-muted-foreground">Receive notifications about invoices and payments</p>
-                          </div>
-                          <Switch 
-                            id="email-invoices" 
-                            checked={notificationSettings.emailInvoices}
-                            onCheckedChange={(checked) => setNotificationSettings({
-                              ...notificationSettings,
-                              emailInvoices: checked
-                            })}
-                          />
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label htmlFor="email-marketing">Marketing & Updates</Label>
-                            <p className="text-sm text-muted-foreground">Receive marketing emails and platform updates</p>
-                          </div>
-                          <Switch 
-                            id="email-marketing" 
-                            checked={notificationSettings.emailMarketing}
-                            onCheckedChange={(checked) => setNotificationSettings({
-                              ...notificationSettings,
-                              emailMarketing: checked
-                            })}
-                          />
-                        </div>
-                        
-                        <Separator />
-                        
-                        <h3 className="font-medium">SMS Notifications</h3>
-                        
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label htmlFor="sms-shoots">Shoot Reminders</Label>
-                            <p className="text-sm text-muted-foreground">Receive SMS reminders about upcoming shoots</p>
-                          </div>
-                          <Switch 
-                            id="sms-shoots" 
-                            checked={notificationSettings.smsShoots}
-                            onCheckedChange={(checked) => setNotificationSettings({
-                              ...notificationSettings,
-                              smsShoots: checked
-                            })}
-                          />
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label htmlFor="sms-payments">Payment Confirmations</Label>
-                            <p className="text-sm text-muted-foreground">Receive SMS notifications for payment confirmations</p>
-                          </div>
-                          <Switch 
-                            id="sms-payments" 
-                            checked={notificationSettings.smsPayments}
-                            onCheckedChange={(checked) => setNotificationSettings({
-                              ...notificationSettings,
-                              smsPayments: checked
-                            })}
-                          />
-                        </div>
-                      </div>
-                      
-                      <Separator />
-                      
-                      <div className="flex justify-end">
-                        <Button className="gap-2" onClick={handleNotificationsSubmit}>
-                          <SaveIcon className="h-4 w-4" />
-                          Save Changes
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </TabsContent>
-                  
-                  <TabsContent value="billing" className="m-0">
-                    <CardHeader>
-                      <CardTitle>Billing</CardTitle>
-                      <CardDescription>
-                        Manage your billing information and subscription
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="space-y-4">
-                        <h3 className="font-medium">Current Plan</h3>
-                        
-                        <Card className="bg-primary/5 border-primary/20">
-                          <CardContent className="pt-6">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <Badge>Premium</Badge>
-                                <h3 className="font-medium text-lg mt-2">Premium Plan</h3>
-                                <p className="text-sm text-muted-foreground">$49.99/month</p>
-                              </div>
-                              <Button variant="outline">Change Plan</Button>
-                            </div>
-                            <p className="text-sm mt-4">Your next billing date is <strong>June 15, 2023</strong></p>
-                          </CardContent>
-                        </Card>
-                        
-                        <Separator />
-                        
-                        <h3 className="font-medium">Payment Method</h3>
-                        
-                        <div className="p-4 border rounded-md border-border flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center">
-                              <CreditCardIcon className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <p className="font-medium">•••• •••• •••• 4242</p>
-                              <p className="text-sm text-muted-foreground">Expires 12/24</p>
-                            </div>
-                          </div>
-                          <Button variant="outline">Update</Button>
-                        </div>
-                        
-                        <Separator />
-                        
-                        <h3 className="font-medium">Billing Address</h3>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="billing-name">Name</Label>
-                            <Input id="billing-name" defaultValue="John Doe" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="billing-company">Company (Optional)</Label>
-                            <Input id="billing-company" defaultValue="ABC Properties" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="billing-address">Address</Label>
-                            <Input id="billing-address" defaultValue="123 Main Street" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="billing-city">City</Label>
-                            <Input id="billing-city" defaultValue="Anytown" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="billing-state">State</Label>
-                            <Input id="billing-state" defaultValue="MD" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="billing-zip">ZIP</Label>
-                            <Input id="billing-zip" defaultValue="12345" />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <Separator />
-                      
-                      <div className="flex justify-end">
-                        <Button className="gap-2" onClick={() => {
-                          toast({
-                            title: "Billing Information Updated",
-                            description: "Your billing information has been saved.",
-                          });
-                        }}>
-                          <SaveIcon className="h-4 w-4" />
-                          Save Changes
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </TabsContent>
-                  
-                  <TabsContent value="security" className="m-0">
-                    <CardHeader>
-                      <CardTitle>Security</CardTitle>
-                      <CardDescription>
-                        Manage your security settings
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <Form {...securityForm}>
-                        <form onSubmit={securityForm.handleSubmit(handleSecuritySubmit)} className="space-y-6">
-                          <div className="space-y-4">
-                            <h3 className="font-medium">Change Password</h3>
-                            
-                            <div className="space-y-4">
-                              <FormField
-                                control={securityForm.control}
-                                name="currentPassword"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Current Password</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} type="password" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={securityForm.control}
-                                name="newPassword"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>New Password</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} type="password" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={securityForm.control}
-                                name="confirmPassword"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Confirm New Password</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} type="password" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <Button type="submit" className="w-full">Update Password</Button>
-                            </div>
-                          </div>
-                        </form>
-                      </Form>
-                      
-                      <Separator />
-                      
-                      <div className="space-y-4">
-                        <h3 className="font-medium">Two-Factor Authentication</h3>
-                        
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label htmlFor="two-factor">Enable 2FA</Label>
-                            <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
-                          </div>
-                          <Switch id="two-factor" onCheckedChange={handle2FAToggle} />
-                        </div>
-                        
-                        <Separator />
-                        
-                        <h3 className="font-medium">Sessions</h3>
-                        
-                        <div className="space-y-3">
-                          <div className="p-3 border rounded-md border-border flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded bg-green-500/10 flex items-center justify-center">
-                                <GlobeIcon className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <p className="font-medium">Chrome on Windows</p>
-                                <p className="text-xs text-muted-foreground">
-                                  <Badge variant="outline" className="mr-1 text-green-500 border-green-500/20 bg-green-500/10">Current</Badge>
-                                  Last active: Now
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="p-3 border rounded-md border-border flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center text-primary">
-                                <SmartphoneIcon className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <p className="font-medium">Safari on iPhone</p>
-                                <p className="text-xs text-muted-foreground">Last active: 2 hours ago</p>
-                              </div>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleRevokeSession('Safari on iPhone')}
-                            >
-                              Revoke
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <Separator />
-                      
-                      <div>
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start text-left text-destructive border-destructive/20 gap-2"
-                          onClick={handleSignOutAllDevices}
-                        >
-                          <AlertTriangleIcon className="h-4 w-4" />
-                          Sign Out All Devices
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </TabsContent>
-                </Card>
+              <Separator />
+              
+              <div className="flex justify-end">
+                <Button className="gap-2" onClick={handleAppearanceSubmit}>
+                  <SaveIcon className="h-4 w-4" />
+                  Save Changes
+                </Button>
               </div>
-            </div>
-          </Tabs>
+            </CardContent>
+          </TabsContent>
+          <TabsContent value="notifications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Preferences</CardTitle>
+                <CardDescription>
+                  Customize your notification settings.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between rounded-md border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium leading-none">
+                      Enable Notifications
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Allow us to send you notifications.
+                    </p>
+                  </div>
+                  <Switch id="notifications" checked={isNotificationEnabled} onCheckedChange={setIsNotificationEnabled} />
+                </div>
+                <Button onClick={handleNotificationSubmit}>Save Preferences</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+        <Separator className="my-4" />
+        <div className="flex justify-between">
+          <Button variant="outline" disabled={isDownloadingData} onClick={handleDownloadData} className="gap-2">
+            {isDownloadingData ? (
+              <>
+                Downloading...
+              </>
+            ) : (
+              <>
+                <DownloadIcon className="h-4 w-4" />
+                Download Data
+              </>
+            )}
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="gap-2">
+                <TrashIcon className="h-4 w-4" />
+                Delete Account
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete your account
+                  and remove your data from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteAccount}>Continue</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
-      </PageTransition>
-      
-      <Dialog open={deleteAccountDialogOpen} onOpenChange={setDeleteAccountDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-destructive">Delete Account</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="p-4 border border-destructive/20 bg-destructive/5 rounded-md">
-            <p className="text-sm text-destructive font-medium">This will:</p>
-            <ul className="text-sm text-destructive/90 mt-2 space-y-1 list-disc pl-5">
-              <li>Delete all your profile information</li>
-              <li>Delete all your shoots and media</li>
-              <li>Delete all your invoices and payment history</li>
-              <li>Cancel any active subscriptions</li>
-            </ul>
-          </div>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setDeleteAccountDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteAccount}
-              disabled={isDeletingAccount}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardLayout>
+      </div>
+    </div>
   );
 };
 

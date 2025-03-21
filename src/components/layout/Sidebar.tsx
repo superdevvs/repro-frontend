@@ -29,14 +29,31 @@ import {
 
 interface SidebarProps {
   className?: string;
+  collapsed?: boolean;
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, collapsed: propCollapsed }: SidebarProps) {
   const { pathname } = useLocation();
   const isMobile = useIsMobile();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    // Initialize from localStorage if available
+    const savedState = localStorage.getItem('sidebarCollapse');
+    return savedState ? savedState === 'true' : false;
+  });
   const [isOpen, setIsOpen] = useState(false);
   const { user, role, logout } = useAuth();
+  
+  // If collapsed prop is provided, use it (for controlled collapsing)
+  useEffect(() => {
+    if (propCollapsed !== undefined) {
+      setIsCollapsed(propCollapsed);
+    }
+  }, [propCollapsed]);
+  
+  // Save collapse state to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapse', isCollapsed.toString());
+  }, [isCollapsed]);
   
   // Close mobile sidebar when navigating or screen size changes
   useEffect(() => {
