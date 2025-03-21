@@ -9,7 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          recipient_id: string
+          sender_id: string
+          shoot_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          recipient_id: string
+          sender_id: string
+          shoot_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          recipient_id?: string
+          sender_id?: string
+          shoot_id?: string
+        }
+        Relationships: []
+      }
+      shoot_reschedule_requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          original_date: string
+          reason: string | null
+          requested_by: string
+          requested_date: string
+          shoot_id: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          original_date: string
+          reason?: string | null
+          requested_by: string
+          requested_date: string
+          shoot_id: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          original_date?: string
+          reason?: string | null
+          requested_by?: string
+          requested_date?: string
+          shoot_id?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

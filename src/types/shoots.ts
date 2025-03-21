@@ -3,7 +3,9 @@ export interface ShootData {
   id: string;
   scheduledDate: string;
   completedDate?: string;
+  time?: string;
   client: {
+    id?: string;
     name: string;
     email: string;
     phone?: string;
@@ -19,6 +21,7 @@ export interface ShootData {
     fullAddress: string;
   };
   photographer: {
+    id?: string;
     name: string;
     avatar?: string;
   };
