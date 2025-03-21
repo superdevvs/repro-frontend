@@ -78,6 +78,8 @@ const Photographers = () => {
   });
 
   const handleAddPhotographer = (data: any) => {
+    console.log("Adding new photographer with data:", data);
+    
     // Create unique ID for new photographer
     const newId = `${Date.now()}`;
     
@@ -93,6 +95,7 @@ const Photographers = () => {
       status: data.status,
     };
     
+    console.log("New photographer object created:", newPhotographer);
     setPhotographersList(prev => [...prev, newPhotographer]);
     setFormOpen(false);
     
@@ -101,9 +104,6 @@ const Photographers = () => {
       title: 'Photographer Added',
       description: `${data.name} has been added to the directory.`,
     });
-    
-    // Log the new photographer for debugging
-    console.log('New photographer added:', newPhotographer);
   };
 
   return (

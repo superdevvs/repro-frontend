@@ -81,6 +81,8 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      console.log("File selected:", file.name, file.type, file.size);
+      
       // Check file type
       if (!file.type.startsWith('image/')) {
         toast({
@@ -103,6 +105,7 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
       
       // Create URL for preview
       const url = URL.createObjectURL(file);
+      console.log("Created object URL:", url);
       setAvatarUrl(url);
       form.setValue('avatar', url);
       form.trigger('avatar');
@@ -112,6 +115,8 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
         title: 'File uploaded',
         description: `${file.name} has been uploaded successfully.`,
       });
+    } else {
+      console.log("No file selected");
     }
   };
 
@@ -133,6 +138,7 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
         ? 'https://ui.shadcn.com/avatars/02.png'  // Different image for each source
         : 'https://ui.shadcn.com/avatars/03.png';
       
+      console.log("Image URL being set:", placeholderUrl);
       setAvatarUrl(placeholderUrl);
       form.setValue('avatar', placeholderUrl);
       form.trigger('avatar');
@@ -174,6 +180,7 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
     // Make sure we have the avatar URL in the form data
     if (avatarUrl) {
       data.avatar = avatarUrl;
+      console.log("Final avatar URL in form submission:", avatarUrl);
     }
     
     onSubmit(data);
@@ -241,19 +248,22 @@ export function PhotographerForm({ open, onOpenChange, onSubmit }: PhotographerF
                 </Button>
                 <div className="space-y-2 mt-2">
                   <div className="flex items-center">
-                    <label className="cursor-pointer w-full">
-                      <Button type="button" variant="outline" className="w-full justify-start">
-                        <UploadIcon className="mr-2 h-4 w-4" />
-                        Upload from device
-                      </Button>
-                      <input 
-                        type="file" 
-                        ref={fileInputRef}
-                        className="hidden" 
-                        accept="image/*" 
-                        onChange={handleFileUpload} 
-                      />
-                    </label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <UploadIcon className="mr-2 h-4 w-4" />
+                      Upload from device
+                    </Button>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={handleFileUpload} 
+                    />
                   </div>
                   <Button 
                     type="button"
