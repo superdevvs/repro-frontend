@@ -290,8 +290,8 @@ const SettingsPage = () => {
             <CardContent>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="theme">Theme</Label>
-                  <div className="flex space-x-2">
+                  <Label htmlFor="theme-options">Theme</Label>
+                  <div className="flex space-x-2" id="theme-options">
                     <Button
                       variant={theme === 'light' ? 'default' : 'outline'}
                       onClick={() => setTheme('light')}
@@ -347,7 +347,7 @@ const SettingsPage = () => {
                 {isDownloadingData ? 'Downloading...' : 'Download Your Data'}
               </Button>
               
-              <AlertDialog>
+              <AlertDialog open={deleteAccountDialogOpen} onOpenChange={setDeleteAccountDialogOpen}>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive">Delete Account</Button>
                 </AlertDialogTrigger>
