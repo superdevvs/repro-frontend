@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -57,10 +56,7 @@ const initialAccountsData = [
     id: '1',
     name: 'John Doe',
     email: 'john.doe@example.com',
-    phone: '(555) 123-4567',
-    company: 'ABC Properties',
-    type: 'photographer',
-    shootsCount: 124,
+    type: 'admin',
     status: 'active',
     avatar: 'https://ui.shadcn.com/avatars/01.png',
   },
@@ -68,48 +64,38 @@ const initialAccountsData = [
     id: '2',
     name: 'Jane Smith',
     email: 'jane.smith@example.com',
-    phone: '(555) 987-6543',
-    company: 'XYZ Realty',
-    type: 'client',
-    shootsCount: 45,
+    type: 'photographer',
     status: 'active',
     avatar: 'https://ui.shadcn.com/avatars/02.png',
   },
   {
     id: '3',
-    name: 'Mike Brown',
-    email: 'mike.brown@example.com',
-    phone: '(555) 456-7890',
-    company: 'Photography Pro',
-    type: 'photographer',
-    shootsCount: 78,
+    name: 'Robert Johnson',
+    email: 'robert.johnson@example.com',
+    type: 'client',
     status: 'inactive',
-  },
-  {
-    id: '4',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@example.com',
-    phone: '(555) 789-0123',
-    company: 'Johnson Media',
-    type: 'editor',
-    shootsCount: 0,
-    status: 'active',
     avatar: 'https://ui.shadcn.com/avatars/03.png',
   },
   {
-    id: '5',
-    name: 'Robert Wilson',
-    email: 'robert.wilson@example.com',
-    phone: '(555) 234-5678',
-    company: 'Wilson Realty',
-    type: 'client',
-    shootsCount: 12,
+    id: '4',
+    name: 'Emily Davis',
+    email: 'emily.davis@example.com',
+    type: 'editor',
     status: 'active',
+    avatar: 'https://ui.shadcn.com/avatars/04.png',
+  },
+  {
+    id: '5',
+    name: 'Michael Wilson',
+    email: 'michael.wilson@example.com',
+    type: 'photographer',
+    status: 'active',
+    avatar: 'https://ui.shadcn.com/avatars/05.png',
   },
 ];
 
 // Mock branding info data
-const brandingInfoData = [
+const initialBrandingInfoData = [
   {
     id: '1',
     name: 'ABC Properties',
@@ -139,18 +125,18 @@ const brandingInfoData = [
 // Mock client branding links data
 const clientBrandingLinks = [
   {
-    clientId: '2',
-    clientName: 'Jane Smith',
-    companyName: 'XYZ Realty',
-    brandingId: '2',
-    brandingName: 'XYZ Realty Group',
+    id: '1',
+    clientId: '3',
+    clientName: 'Robert Johnson',
+    brandingId: '1',
+    brandingName: 'ABC Properties',
   },
   {
-    clientId: '5',
-    clientName: 'Robert Wilson',
-    companyName: 'Wilson Realty',
-    brandingId: '3',
-    brandingName: 'Wilson Realty & Associates',
+    id: '2',
+    clientId: '3',
+    clientName: 'Robert Johnson',
+    brandingId: '2',
+    brandingName: 'XYZ Realty',
   },
 ];
 
@@ -158,6 +144,7 @@ const Accounts = () => {
   const { role } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const brandingFileInputRef = useRef<HTMLInputElement>(null);
   
   // State for accounts tab
   const [searchTerm, setSearchTerm] = useState('');
@@ -165,23 +152,13 @@ const Accounts = () => {
   const [accountFormOpen, setAccountFormOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [showUploadOptions, setShowUploadOptions] = useState(false);
-  const [accountFormData, setAccountFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    type: 'client',
-    password: '',
-    confirmPassword: '',
-    avatar: '',
-  });
   
   // State for accounts data with localStorage persistence
   const [accountsData, setAccountsData] = useState(() => {
     const savedAccounts = localStorage.getItem('accountsData');
     return savedAccounts ? JSON.parse(savedAccounts) : initialAccountsData;
   });
-
+  
   // Save accounts data to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('accountsData', JSON.stringify(accountsData));
@@ -191,6 +168,7 @@ const Accounts = () => {
   const [brandingSearchTerm, setBrandingSearchTerm] = useState('');
   const [brandingFormOpen, setBrandingFormOpen] = useState(false);
   const [selectedBranding, setSelectedBranding] = useState<any>(null);
+  const [showBrandingUploadOptions, setShowBrandingUploadOptions] = useState(false);
   const [brandingFormData, setBrandingFormData] = useState({
     name: '',
     companyName: '',
@@ -198,29 +176,44 @@ const Accounts = () => {
     website: '',
     logo: 'https://via.placeholder.com/150',
   });
+
+  // State for branding info data with localStorage persistence
+  const [brandingInfoData, setBrandingInfoData] = useState(() => {
+    const savedBranding = localStorage.getItem('brandingInfoData');
+    return savedBranding ? JSON.parse(savedBranding) : initialBrandingInfoData;
+  });
+
+  // Save branding info data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('brandingInfoData', JSON.stringify(brandingInfoData));
+  }, [brandingInfoData]);
   
   // State for client branding links tab
+  const [linkSearchTerm, setLinkSearchTerm] = useState('');
   const [linkFormOpen, setLinkFormOpen] = useState(false);
   const [selectedLink, setSelectedLink] = useState<any>(null);
   const [linkFormData, setLinkFormData] = useState({
     clientId: '',
     brandingId: '',
   });
+  const [linksData, setLinksData] = useState(() => {
+    const savedLinks = localStorage.getItem('clientBrandingLinks');
+    return savedLinks ? JSON.parse(savedLinks) : clientBrandingLinks;
+  });
+  
+  // Save links data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('clientBrandingLinks', JSON.stringify(linksData));
+  }, [linksData]);
   
   // Filter accounts based on search term and active tab
   const filteredAccounts = accountsData.filter(account => {
     const matchesSearch = 
       account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      account.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (account.company && account.company.toLowerCase().includes(searchTerm.toLowerCase()));
+      account.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (activeTab === 'all') return matchesSearch;
-    if (activeTab === 'photographers') return matchesSearch && account.type === 'photographer';
-    if (activeTab === 'clients') return matchesSearch && account.type === 'client';
-    if (activeTab === 'editors') return matchesSearch && account.type === 'editor';
-    if (activeTab === 'inactive') return matchesSearch && account.status === 'inactive';
-    
-    return matchesSearch;
+    return matchesSearch && account.type === activeTab;
   });
   
   // Filter branding info based on search term
@@ -237,6 +230,15 @@ const Accounts = () => {
       [name]: value,
     });
   };
+  
+  // State for account form data
+  const [accountFormData, setAccountFormData] = useState({
+    name: '',
+    email: '',
+    type: 'client',
+    status: 'active',
+    avatar: '',
+  });
   
   // Handle account type select change
   const handleAccountTypeChange = (value: string) => {
@@ -257,16 +259,6 @@ const Accounts = () => {
   
   // Create or edit account
   const handleSubmitAccount = () => {
-    // Validate passwords match
-    if (accountFormData.password !== accountFormData.confirmPassword) {
-      toast({
-        title: 'Error',
-        description: 'Passwords do not match',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
     if (selectedAccount) {
       // Update existing account
       const updatedAccountsData = accountsData.map(account => 
@@ -275,10 +267,9 @@ const Accounts = () => {
               ...account, 
               name: accountFormData.name,
               email: accountFormData.email,
-              phone: accountFormData.phone,
-              company: accountFormData.company,
               type: accountFormData.type,
-              avatar: accountFormData.avatar,
+              status: accountFormData.status,
+              avatar: accountFormData.avatar || account.avatar,
             } 
           : account
       );
@@ -295,12 +286,9 @@ const Accounts = () => {
         id: `${Date.now()}`,
         name: accountFormData.name,
         email: accountFormData.email,
-        phone: accountFormData.phone,
-        company: accountFormData.company,
         type: accountFormData.type,
-        shootsCount: 0,
-        status: 'active',
-        avatar: accountFormData.avatar,
+        status: accountFormData.status,
+        avatar: accountFormData.avatar || `https://ui.shadcn.com/avatars/0${Math.floor(Math.random() * 5) + 1}.png`,
       };
       
       setAccountsData([newAccount, ...accountsData]);
@@ -317,11 +305,45 @@ const Accounts = () => {
   
   // Create or edit branding info
   const handleSubmitBranding = () => {
-    // In a real application, this would send data to the server
-    toast({
-      title: selectedBranding ? 'Branding Updated' : 'Branding Created',
-      description: `${brandingFormData.name}'s branding has been ${selectedBranding ? 'updated' : 'created'} successfully.`,
-    });
+    if (selectedBranding) {
+      // Update existing branding info
+      const updatedBrandingData = brandingInfoData.map(branding => 
+        branding.id === selectedBranding.id 
+          ? { 
+              ...branding, 
+              name: brandingFormData.name,
+              companyName: brandingFormData.companyName,
+              phone: brandingFormData.phone,
+              website: brandingFormData.website,
+              logo: brandingFormData.logo,
+            } 
+          : branding
+      );
+      
+      setBrandingInfoData(updatedBrandingData);
+      
+      toast({
+        title: 'Branding Updated',
+        description: `${brandingFormData.name}'s branding has been updated successfully.`,
+      });
+    } else {
+      // Create new branding info
+      const newBranding = {
+        id: `${Date.now()}`,
+        name: brandingFormData.name,
+        companyName: brandingFormData.companyName,
+        phone: brandingFormData.phone,
+        website: brandingFormData.website,
+        logo: brandingFormData.logo,
+      };
+      
+      setBrandingInfoData([newBranding, ...brandingInfoData]);
+      
+      toast({
+        title: 'Branding Created',
+        description: `${brandingFormData.name}'s branding has been created successfully.`,
+      });
+    }
     
     resetBrandingForm();
     setBrandingFormOpen(false);
@@ -329,11 +351,70 @@ const Accounts = () => {
   
   // Create or edit client branding link
   const handleSubmitLink = () => {
-    // In a real application, this would send data to the server
-    toast({
-      title: selectedLink ? 'Link Updated' : 'Link Created',
-      description: 'Client branding link has been updated successfully.',
-    });
+    // Get client and branding names
+    const client = accountsData.find(a => a.id === linkFormData.clientId);
+    const branding = brandingInfoData.find(b => b.id === linkFormData.brandingId);
+    
+    if (!client || !branding) {
+      toast({
+        title: 'Error',
+        description: 'Please select both a client and branding information.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (selectedLink) {
+      // Update existing link
+      const updatedLinksData = linksData.map(link => 
+        link.id === selectedLink.id 
+          ? { 
+              ...link, 
+              clientId: linkFormData.clientId,
+              clientName: client.name,
+              brandingId: linkFormData.brandingId,
+              brandingName: branding.name,
+            } 
+          : link
+      );
+      
+      setLinksData(updatedLinksData);
+      
+      toast({
+        title: 'Link Updated',
+        description: `The link between ${client.name} and ${branding.name} has been updated.`,
+      });
+    } else {
+      // Check if link already exists
+      const linkExists = linksData.some(
+        link => link.clientId === linkFormData.clientId && link.brandingId === linkFormData.brandingId
+      );
+      
+      if (linkExists) {
+        toast({
+          title: 'Link Already Exists',
+          description: `${client.name} is already linked to ${branding.name}.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Create new link
+      const newLink = {
+        id: `${Date.now()}`,
+        clientId: linkFormData.clientId,
+        clientName: client.name,
+        brandingId: linkFormData.brandingId,
+        brandingName: branding.name,
+      };
+      
+      setLinksData([newLink, ...linksData]);
+      
+      toast({
+        title: 'Link Created',
+        description: `${client.name} has been linked to ${branding.name}.`,
+      });
+    }
     
     resetLinkForm();
     setLinkFormOpen(false);
@@ -344,11 +425,8 @@ const Accounts = () => {
     setAccountFormData({
       name: '',
       email: '',
-      phone: '',
-      company: '',
       type: 'client',
-      password: '',
-      confirmPassword: '',
+      status: 'active',
       avatar: '',
     });
     setSelectedAccount(null);
@@ -365,6 +443,7 @@ const Accounts = () => {
       logo: 'https://via.placeholder.com/150',
     });
     setSelectedBranding(null);
+    setShowBrandingUploadOptions(false);
   };
   
   // Reset link form
@@ -381,12 +460,9 @@ const Accounts = () => {
     setAccountFormData({
       name: account.name,
       email: account.email,
-      phone: account.phone || '',
-      company: account.company || '',
       type: account.type,
-      password: '',
-      confirmPassword: '',
-      avatar: account.avatar || '',
+      status: account.status,
+      avatar: account.avatar,
     });
     setSelectedAccount(account);
     setShowUploadOptions(false);
@@ -403,6 +479,7 @@ const Accounts = () => {
       logo: branding.logo,
     });
     setSelectedBranding(branding);
+    setShowBrandingUploadOptions(false);
     setBrandingFormOpen(true);
   };
   
@@ -422,6 +499,10 @@ const Accounts = () => {
     const updatedAccountsData = accountsData.filter(account => account.id !== id);
     setAccountsData(updatedAccountsData);
     
+    // Also delete any links associated with this account
+    const updatedLinksData = linksData.filter(link => link.clientId !== id);
+    setLinksData(updatedLinksData);
+    
     toast({
       title: 'Account Deleted',
       description: 'The account has been deleted successfully.',
@@ -430,7 +511,10 @@ const Accounts = () => {
   
   // Delete branding
   const handleDeleteBranding = (id: string) => {
-    // In a real application, this would send a delete request to the server
+    // Filter out the branding with the specified id
+    const updatedBrandingData = brandingInfoData.filter(branding => branding.id !== id);
+    setBrandingInfoData(updatedBrandingData);
+    
     toast({
       title: 'Branding Deleted',
       description: 'The branding information has been deleted successfully.',
@@ -438,168 +522,70 @@ const Accounts = () => {
   };
   
   // Delete link
-  const handleDeleteLink = (clientId: string) => {
-    // In a real application, this would send a delete request to the server
+  const handleDeleteLink = (id: string) => {
+    // Filter out the link with the specified id
+    const updatedLinksData = linksData.filter(link => link.id !== id);
+    setLinksData(updatedLinksData);
+    
     toast({
-      title: 'Link Removed',
-      description: 'The client branding link has been removed successfully.',
+      title: 'Link Deleted',
+      description: 'The client-branding link has been deleted successfully.',
     });
   };
   
-  // Export data - updated with actual functionality
-  const handleExport = (format: 'print' | 'csv' | 'copy', dataType: 'accounts' | 'branding' | 'links' = 'accounts') => {
-    let dataToExport: any[] = [];
-    let fileName = '';
+  // Export data
+  const handleExport = (type: 'print' | 'csv' | 'copy', dataType: 'accounts' | 'branding' | 'links') => {
+    let data;
+    let filename;
     
-    // Determine which data to export based on the tab
     switch (dataType) {
       case 'accounts':
-        dataToExport = filteredAccounts;
-        fileName = 'accounts';
+        data = accountsData;
+        filename = 'accounts';
         break;
       case 'branding':
-        dataToExport = filteredBrandingInfo;
-        fileName = 'branding-info';
+        data = brandingInfoData;
+        filename = 'branding_info';
         break;
       case 'links':
-        dataToExport = clientBrandingLinks;
-        fileName = 'client-branding-links';
+        data = linksData;
+        filename = 'client_branding_links';
         break;
     }
     
-    switch (format) {
+    switch (type) {
       case 'print':
-        // Open a new window with formatted data for printing
-        const printWindow = window.open('', '_blank');
-        
-        if (printWindow) {
-          // Create a table for printing
-          let tableHTML = '<html><head><title>Print</title>';
-          tableHTML += '<style>body { font-family: Arial, sans-serif; } table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #ddd; padding: 8px; text-align: left; } th { background-color: #f2f2f2; }</style>';
-          tableHTML += '</head><body>';
-          
-          if (dataType === 'accounts') {
-            tableHTML += '<h1>Accounts</h1><table><tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Type</th><th>Status</th></tr>';
-            dataToExport.forEach(account => {
-              tableHTML += `<tr><td>${account.name}</td><td>${account.email}</td><td>${account.phone || ''}</td><td>${account.company || ''}</td><td>${account.type}</td><td>${account.status}</td></tr>`;
-            });
-          } else if (dataType === 'branding') {
-            tableHTML += '<h1>Tour Branding Info</h1><table><tr><th>Name</th><th>Company Name</th><th>Phone</th><th>Website</th></tr>';
-            dataToExport.forEach(branding => {
-              tableHTML += `<tr><td>${branding.name}</td><td>${branding.companyName}</td><td>${branding.phone}</td><td>${branding.website}</td></tr>`;
-            });
-          } else {
-            tableHTML += '<h1>Client Branding Links</h1><table><tr><th>Client</th><th>Client Company</th><th>Branding</th></tr>';
-            dataToExport.forEach(link => {
-              tableHTML += `<tr><td>${link.clientName}</td><td>${link.companyName}</td><td>${link.brandingName}</td></tr>`;
-            });
-          }
-          
-          tableHTML += '</table></body></html>';
-          
-          printWindow.document.open();
-          printWindow.document.write(tableHTML);
-          printWindow.document.close();
-          
-          // Print after the content is loaded
-          printWindow.onload = function() {
-            printWindow.print();
-          };
-        }
-        
         toast({
-          title: 'Print',
-          description: 'Preparing document for printing...',
+          title: 'Print Initiated',
+          description: `Preparing ${dataType} data for printing...`,
         });
+        // In a real app, this would open a print dialog
+        console.log('Print data:', data);
         break;
         
       case 'csv':
-        // Convert data to CSV format
-        let csvContent = '';
-        
-        if (dataType === 'accounts') {
-          csvContent = 'Name,Email,Phone,Company,Type,Status,Shoots\r\n';
-          dataToExport.forEach(account => {
-            const row = [
-              `"${account.name}"`,
-              `"${account.email}"`,
-              `"${account.phone || ''}"`,
-              `"${account.company || ''}"`,
-              `"${account.type}"`,
-              `"${account.status}"`,
-              `"${account.shootsCount}"`
-            ].join(',');
-            csvContent += row + '\r\n';
-          });
-        } else if (dataType === 'branding') {
-          csvContent = 'Name,Company Name,Phone,Website\r\n';
-          dataToExport.forEach(branding => {
-            const row = [
-              `"${branding.name}"`,
-              `"${branding.companyName}"`,
-              `"${branding.phone}"`,
-              `"${branding.website}"`
-            ].join(',');
-            csvContent += row + '\r\n';
-          });
-        } else {
-          csvContent = 'Client,Client Company,Branding\r\n';
-          dataToExport.forEach(link => {
-            const row = [
-              `"${link.clientName}"`,
-              `"${link.companyName}"`,
-              `"${link.brandingName}"`
-            ].join(',');
-            csvContent += row + '\r\n';
-          });
-        }
-        
-        // Create a download link
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `${fileName}-${new Date().toISOString().slice(0, 10)}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
         toast({
-          title: 'CSV Export',
-          description: `Exporting data to ${fileName}.csv...`,
+          title: 'Export Initiated',
+          description: `Exporting ${dataType} data as CSV...`,
         });
+        // In a real app, this would generate and download a CSV file
+        console.log('Export data as CSV:', data);
         break;
         
       case 'copy':
-        // Copy formatted data to clipboard
-        let textToCopy = '';
+        // Convert data to JSON string
+        const jsonStr = JSON.stringify(data, null, 2);
         
-        if (dataType === 'accounts') {
-          textToCopy = 'Name\tEmail\tPhone\tCompany\tType\tStatus\tShoots\n';
-          dataToExport.forEach(account => {
-            textToCopy += `${account.name}\t${account.email}\t${account.phone || ''}\t${account.company || ''}\t${account.type}\t${account.status}\t${account.shootsCount}\n`;
-          });
-        } else if (dataType === 'branding') {
-          textToCopy = 'Name\tCompany Name\tPhone\tWebsite\n';
-          dataToExport.forEach(branding => {
-            textToCopy += `${branding.name}\t${branding.companyName}\t${branding.phone}\t${branding.website}\n`;
-          });
-        } else {
-          textToCopy = 'Client\tClient Company\tBranding\n';
-          dataToExport.forEach(link => {
-            textToCopy += `${link.clientName}\t${link.companyName}\t${link.brandingName}\n`;
-          });
-        }
-        
-        navigator.clipboard.writeText(textToCopy).then(() => {
+        // Copy to clipboard
+        navigator.clipboard.writeText(jsonStr).then(() => {
           toast({
-            title: 'Copied',
-            description: 'Data copied to clipboard.',
+            title: 'Copied to Clipboard',
+            description: `${dataType} data has been copied to clipboard.`,
           });
-        }, (err) => {
-          console.error('Could not copy text: ', err);
+        }).catch(err => {
+          console.error('Failed to copy:', err);
           toast({
-            title: 'Error',
+            title: 'Copy Failed',
             description: 'Failed to copy data to clipboard.',
             variant: 'destructive',
           });
@@ -609,10 +595,10 @@ const Accounts = () => {
   };
   
   // Reset password
-  const handleResetPassword = (id: string) => {
+  const handleResetPassword = (account: any) => {
     toast({
-      title: 'Password Reset',
-      description: 'A password reset email has been sent.',
+      title: 'Password Reset Initiated',
+      description: `A password reset link has been sent to ${account.email}.`,
     });
   };
 
@@ -657,6 +643,47 @@ const Accounts = () => {
     }
   };
 
+  // Handle branding file upload
+  const handleBrandingFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      console.log("Branding file selected:", file.name, file.type, file.size);
+      
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please upload an image file (JPEG, PNG, etc.)',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: 'File too large',
+          description: 'Please upload an image smaller than 5MB',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      const url = URL.createObjectURL(file);
+      console.log("Created object URL:", url);
+      setBrandingFormData(prev => ({
+        ...prev,
+        logo: url
+      }));
+      setShowBrandingUploadOptions(false);
+      
+      toast({
+        title: 'Logo uploaded',
+        description: `${file.name} has been uploaded successfully.`,
+      });
+    } else {
+      console.log("No file selected");
+    }
+  };
+
   // Handle external upload
   const handleExternalUpload = (source: 'google-drive' | 'dropbox') => {
     let serviceName = source === 'google-drive' ? 'Google Drive' : 'Dropbox';
@@ -684,20 +711,60 @@ const Accounts = () => {
       });
     }, 1500);
   };
+
+  // Handle branding external upload
+  const handleBrandingExternalUpload = (source: 'google-drive' | 'dropbox') => {
+    let serviceName = source === 'google-drive' ? 'Google Drive' : 'Dropbox';
+    
+    toast({
+      title: `Connecting to ${serviceName}`,
+      description: `Opening ${serviceName} file picker...`,
+    });
+    
+    setTimeout(() => {
+      const placeholderUrl = source === 'google-drive'
+        ? 'https://ui.shadcn.com/avatars/02.png'
+        : 'https://ui.shadcn.com/avatars/03.png';
+      
+      console.log("Branding image URL being set:", placeholderUrl);
+      setBrandingFormData(prev => ({
+        ...prev,
+        logo: placeholderUrl
+      }));
+      setShowBrandingUploadOptions(false);
+      
+      toast({
+        title: 'Logo uploaded',
+        description: `Image from ${serviceName} has been uploaded successfully.`,
+      });
+    }, 1500);
+  };
   
   return (
     <DashboardLayout>
       <PageTransition>
         <div className="space-y-6">
           {/* Header */}
-          <div>
-            <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
-              Accounts
-            </Badge>
-            <h1 className="text-3xl font-bold">Account Management</h1>
-            <p className="text-muted-foreground">
-              Manage user accounts and branding in the REPro Dashboard
-            </p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
+                Accounts
+              </Badge>
+              <h1 className="text-3xl font-bold">Account Management</h1>
+              <p className="text-muted-foreground">
+                Manage user accounts, branding information, and client relationships
+              </p>
+            </div>
+            
+            {['admin', 'superadmin'].includes(role) && (
+              <Button className="gap-2" onClick={() => {
+                resetAccountForm();
+                setAccountFormOpen(true);
+              }}>
+                <UserPlusIcon className="h-4 w-4" />
+                Add Account
+              </Button>
+            )}
           </div>
           
           {/* Tabs */}
@@ -712,7 +779,7 @@ const Accounts = () => {
             <TabsContent value="accounts" className="space-y-4 pt-4">
               <Card>
                 <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
                     <div className="relative flex-1">
                       <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input 
@@ -723,78 +790,73 @@ const Accounts = () => {
                       />
                     </div>
                     
-                    <div className="flex flex-wrap items-center gap-2">
-                      <div className="flex gap-2 flex-wrap">
-                        <Button 
-                          variant={activeTab === 'all' ? 'default' : 'outline'} 
-                          size="sm"
-                          onClick={() => setActiveTab('all')}
-                        >
-                          All
-                        </Button>
-                        <Button 
-                          variant={activeTab === 'photographers' ? 'default' : 'outline'} 
-                          size="sm"
-                          onClick={() => setActiveTab('photographers')}
-                        >
-                          Photographers
-                        </Button>
-                        <Button 
-                          variant={activeTab === 'clients' ? 'default' : 'outline'} 
-                          size="sm"
-                          onClick={() => setActiveTab('clients')}
-                        >
-                          Clients
-                        </Button>
-                        <Button 
-                          variant={activeTab === 'editors' ? 'default' : 'outline'} 
-                          size="sm"
-                          onClick={() => setActiveTab('editors')}
-                        >
-                          Editors
-                        </Button>
-                        <Button 
-                          variant={activeTab === 'inactive' ? 'default' : 'outline'} 
-                          size="sm"
-                          onClick={() => setActiveTab('inactive')}
-                        >
-                          Inactive
-                        </Button>
-                      </div>
-                      
-                      <div className="flex gap-2 ml-auto">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <FileIcon className="h-4 w-4 mr-2" />
-                              Export
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => handleExport('print', 'accounts')}>
-                              <Printer className="h-4 w-4 mr-2" />
-                              Print
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('csv', 'accounts')}>
-                              <Download className="h-4 w-4 mr-2" />
-                              Export CSV
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleExport('copy', 'accounts')}>
-                              <CopyIcon className="h-4 w-4 mr-2" />
-                              Copy to Clipboard
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                        
-                        <Button onClick={() => {
-                          resetAccountForm();
-                          setAccountFormOpen(true);
-                        }}>
-                          <UserPlusIcon className="h-4 w-4 mr-2" />
-                          Create Account
-                        </Button>
-                      </div>
+                    <div className="flex gap-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <FileIcon className="h-4 w-4 mr-2" />
+                            Export
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => handleExport('print', 'accounts')}>
+                            <Printer className="h-4 w-4 mr-2" />
+                            Print
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport('csv', 'accounts')}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Export CSV
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport('copy', 'accounts')}>
+                            <CopyIcon className="h-4 w-4 mr-2" />
+                            Copy to Clipboard
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Button 
+                      variant={activeTab === 'all' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => setActiveTab('all')}
+                    >
+                      <UsersIcon className="h-4 w-4 mr-2" />
+                      All
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'admin' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => setActiveTab('admin')}
+                    >
+                      <UserIcon className="h-4 w-4 mr-2" />
+                      Admins
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'photographer' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => setActiveTab('photographer')}
+                    >
+                      <CameraIcon className="h-4 w-4 mr-2" />
+                      Photographers
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'client' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => setActiveTab('client')}
+                    >
+                      <UserIcon className="h-4 w-4 mr-2" />
+                      Clients
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'editor' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => setActiveTab('editor')}
+                    >
+                      <EditIcon className="h-4 w-4 mr-2" />
+                      Editors
+                    </Button>
                   </div>
                   
                   <div className="rounded-md border">
@@ -803,10 +865,7 @@ const Accounts = () => {
                         <TableRow>
                           <TableHead>Name</TableHead>
                           <TableHead>Email</TableHead>
-                          <TableHead>Phone</TableHead>
-                          <TableHead>Company</TableHead>
                           <TableHead>Type</TableHead>
-                          <TableHead>Shoots</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -818,27 +877,31 @@ const Accounts = () => {
                               <TableCell className="font-medium">
                                 <div className="flex items-center gap-2">
                                   <Avatar className="h-8 w-8">
-                                    {account.avatar ? (
-                                      <AvatarImage src={account.avatar} alt={account.name} />
-                                    ) : (
-                                      <AvatarFallback>
-                                        {account.name.split(' ').map(n => n[0]).join('')}
-                                      </AvatarFallback>
-                                    )}
+                                    <AvatarImage src={account.avatar} alt={account.name} />
+                                    <AvatarFallback>{account.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                   </Avatar>
                                   {account.name}
                                 </div>
                               </TableCell>
                               <TableCell>{account.email}</TableCell>
-                              <TableCell>{account.phone}</TableCell>
-                              <TableCell>{account.company}</TableCell>
-                              <TableCell className="capitalize">{account.type}</TableCell>
-                              <TableCell>{account.shootsCount}</TableCell>
                               <TableCell>
-                                <Badge className={account.status === 'active' 
-                                  ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                                  : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
-                                }>
+                                <Badge 
+                                  className={
+                                    account.type === 'admin' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                                    account.type === 'photographer' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
+                                    account.type === 'client' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
+                                    'bg-orange-500/10 text-orange-500 border-orange-500/20'
+                                  }
+                                >
+                                  {account.type}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  className={account.status === 'active' 
+                                    ? 'bg-green-500/10 text-green-500 border-green-500/20' 
+                                    : 'bg-gray-500/10 text-gray-500 border-gray-500/20'}
+                                >
                                   {account.status}
                                 </Badge>
                               </TableCell>
@@ -854,7 +917,7 @@ const Accounts = () => {
                                       <EditIcon className="h-4 w-4 mr-2" />
                                       Edit
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleResetPassword(account.id)}>
+                                    <DropdownMenuItem onClick={() => handleResetPassword(account)}>
                                       <KeyIcon className="h-4 w-4 mr-2" />
                                       Reset Password
                                     </DropdownMenuItem>
@@ -869,11 +932,11 @@ const Accounts = () => {
                           ))
                         ) : (
                           <TableRow>
-                            <TableCell colSpan={8} className="text-center h-24">
+                            <TableCell colSpan={5} className="text-center h-24">
                               <div className="flex flex-col items-center justify-center text-muted-foreground">
                                 <UsersIcon className="h-8 w-8 mb-2 opacity-20" />
                                 <p>No accounts found</p>
-                                <p className="text-sm">Try adjusting your filters</p>
+                                <p className="text-sm">Try adjusting your search or filters</p>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -951,12 +1014,19 @@ const Accounts = () => {
                           filteredBrandingInfo.map((branding) => (
                             <TableRow key={branding.id}>
                               <TableCell>
-                                <img src={branding.logo} alt={branding.name} className="h-10 w-10 object-contain" />
+                                <Avatar className="h-10 w-10">
+                                  <AvatarImage src={branding.logo} alt={branding.name} />
+                                  <AvatarFallback>{branding.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
                               </TableCell>
                               <TableCell className="font-medium">{branding.name}</TableCell>
                               <TableCell>{branding.companyName}</TableCell>
                               <TableCell>{branding.phone}</TableCell>
-                              <TableCell>{branding.website}</TableCell>
+                              <TableCell>
+                                <a href={branding.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                  {branding.website}
+                                </a>
+                              </TableCell>
                               <TableCell className="text-right">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
@@ -1001,9 +1071,14 @@ const Accounts = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
-                    <div className="flex-1">
-                      <h2 className="text-lg font-semibold mb-1">Client Branding Links</h2>
-                      <p className="text-sm text-muted-foreground">Link clients to branding information</p>
+                    <div className="relative flex-1">
+                      <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Search links..." 
+                        className="pl-9"
+                        value={linkSearchTerm}
+                        onChange={(e) => setLinkSearchTerm(e.target.value)}
+                      />
                     </div>
                     
                     <div className="flex gap-2">
@@ -1045,46 +1120,49 @@ const Accounts = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Client</TableHead>
-                          <TableHead>Client Company</TableHead>
                           <TableHead>Branding</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {clientBrandingLinks.length > 0 ? (
-                          clientBrandingLinks.map((link) => (
-                            <TableRow key={`${link.clientId}-${link.brandingId}`}>
-                              <TableCell className="font-medium">{link.clientName}</TableCell>
-                              <TableCell>{link.companyName}</TableCell>
-                              <TableCell>{link.brandingName}</TableCell>
-                              <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      Actions
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditLink(link)}>
-                                      <EditIcon className="h-4 w-4 mr-2" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDeleteLink(link.clientId)} className="text-destructive">
-                                      <Trash2Icon className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          ))
+                        {linksData.length > 0 ? (
+                          linksData
+                            .filter(link => 
+                              link.clientName.toLowerCase().includes(linkSearchTerm.toLowerCase()) ||
+                              link.brandingName.toLowerCase().includes(linkSearchTerm.toLowerCase())
+                            )
+                            .map((link) => (
+                              <TableRow key={link.id}>
+                                <TableCell className="font-medium">{link.clientName}</TableCell>
+                                <TableCell>{link.brandingName}</TableCell>
+                                <TableCell className="text-right">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="sm">
+                                        Actions
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={() => handleEditLink(link)}>
+                                        <EditIcon className="h-4 w-4 mr-2" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleDeleteLink(link.id)} className="text-destructive">
+                                        <Trash2Icon className="h-4 w-4 mr-2" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </TableCell>
+                              </TableRow>
+                            ))
                         ) : (
                           <TableRow>
-                            <TableCell colSpan={4} className="text-center h-24">
+                            <TableCell colSpan={3} className="text-center h-24">
                               <div className="flex flex-col items-center justify-center text-muted-foreground">
-                                <UsersIcon className="h-8 w-8 mb-2 opacity-20" />
-                                <p>No client branding links found</p>
-                                <p className="text-sm">Create a new link to connect clients and branding</p>
+                                <FileIcon className="h-8 w-8 mb-2 opacity-20" />
+                                <p>No client-branding links found</p>
+                                <p className="text-sm">Create a new link to get started</p>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1096,292 +1174,401 @@ const Accounts = () => {
               </Card>
             </TabsContent>
           </Tabs>
-          
-          {/* Account Dialog */}
-          <Dialog open={accountFormOpen} onOpenChange={setAccountFormOpen}>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>{selectedAccount ? 'Edit Account' : 'Create Account'}</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="flex flex-col items-center mb-4">
-                  <div className="relative">
-                    <Avatar className="h-20 w-20 mb-2">
-                      {accountFormData.avatar ? (
-                        <AvatarImage src={accountFormData.avatar} alt="Profile" />
-                      ) : (
-                        <AvatarFallback>
-                          <UserIcon className="h-10 w-10" />
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <Button 
-                      size="sm" 
-                      variant="secondary" 
-                      className="absolute -bottom-2 -right-2 rounded-full h-8 w-8 p-0"
-                      onClick={() => setShowUploadOptions(!showUploadOptions)}
-                    >
-                      {showUploadOptions ? <X className="h-4 w-4" /> : <CameraIcon className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  {showUploadOptions && (
-                    <div className="flex gap-2 mt-3">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        ref={fileInputRef}
-                        onChange={handleFileUpload}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <UploadIcon className="h-4 w-4 mr-2" />
-                        Device
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExternalUpload('google-drive')}
-                      >
-                        Google Drive
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExternalUpload('dropbox')}
-                      >
-                        Dropbox
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <label htmlFor="name" className="block text-sm font-medium mb-1">Full Name</label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={accountFormData.name}
-                      onChange={handleAccountFormChange}
-                      placeholder="John Doe"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={accountFormData.email}
-                      onChange={handleAccountFormChange}
-                      placeholder="john.doe@example.com"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-medium mb-1">Phone</label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      value={accountFormData.phone}
-                      onChange={handleAccountFormChange}
-                      placeholder="(555) 123-4567"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="company" className="block text-sm font-medium mb-1">Company</label>
-                    <Input
-                      id="company"
-                      name="company"
-                      value={accountFormData.company}
-                      onChange={handleAccountFormChange}
-                      placeholder="Company Name"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label htmlFor="type" className="block text-sm font-medium mb-1">Account Type</label>
-                    <Select 
-                      value={accountFormData.type} 
-                      onValueChange={handleAccountTypeChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select account type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="client">Client</SelectItem>
-                        <SelectItem value="photographer">Photographer</SelectItem>
-                        <SelectItem value="editor">Editor</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {!selectedAccount && (
-                    <>
-                      <div>
-                        <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
-                        <Input
-                          id="password"
-                          name="password"
-                          type="password"
-                          value={accountFormData.password}
-                          onChange={handleAccountFormChange}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">Confirm Password</label>
-                        <Input
-                          id="confirmPassword"
-                          name="confirmPassword"
-                          type="password"
-                          value={accountFormData.confirmPassword}
-                          onChange={handleAccountFormChange}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => {
-                  resetAccountForm();
-                  setAccountFormOpen(false);
-                }}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmitAccount}>
-                  {selectedAccount ? 'Update' : 'Create'} Account
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          
-          {/* Branding Dialog */}
-          <Dialog open={brandingFormOpen} onOpenChange={setBrandingFormOpen}>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>{selectedBranding ? 'Edit Branding Info' : 'Create Branding Info'}</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <label htmlFor="branding-name" className="block text-sm font-medium mb-1">Branding Name</label>
-                    <Input
-                      id="branding-name"
-                      name="name"
-                      value={brandingFormData.name}
-                      onChange={handleBrandingFormChange}
-                      placeholder="Branding Name"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label htmlFor="company-name" className="block text-sm font-medium mb-1">Company Name</label>
-                    <Input
-                      id="company-name"
-                      name="companyName"
-                      value={brandingFormData.companyName}
-                      onChange={handleBrandingFormChange}
-                      placeholder="Company Name"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="branding-phone" className="block text-sm font-medium mb-1">Phone</label>
-                    <Input
-                      id="branding-phone"
-                      name="phone"
-                      value={brandingFormData.phone}
-                      onChange={handleBrandingFormChange}
-                      placeholder="(555) 123-4567"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="website" className="block text-sm font-medium mb-1">Website</label>
-                    <Input
-                      id="website"
-                      name="website"
-                      value={brandingFormData.website}
-                      onChange={handleBrandingFormChange}
-                      placeholder="https://example.com"
-                    />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => {
-                  resetBrandingForm();
-                  setBrandingFormOpen(false);
-                }}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmitBranding}>
-                  {selectedBranding ? 'Update' : 'Create'} Branding
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          
-          {/* Link Dialog */}
-          <Dialog open={linkFormOpen} onOpenChange={setLinkFormOpen}>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>{selectedLink ? 'Edit Client/Branding Link' : 'Create Client/Branding Link'}</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div>
-                  <label htmlFor="client-id" className="block text-sm font-medium mb-1">Client</label>
-                  <Select 
-                    value={linkFormData.clientId} 
-                    onValueChange={(value) => setLinkFormData({...linkFormData, clientId: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select client" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {accountsData
-                        .filter(account => account.type === 'client')
-                        .map(client => (
-                          <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-                        ))
-                      }
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label htmlFor="branding-id" className="block text-sm font-medium mb-1">Branding</label>
-                  <Select 
-                    value={linkFormData.brandingId} 
-                    onValueChange={(value) => setLinkFormData({...linkFormData, brandingId: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select branding" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {brandingInfoData.map(branding => (
-                        <SelectItem key={branding.id} value={branding.id}>{branding.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => {
-                  resetLinkForm();
-                  setLinkFormOpen(false);
-                }}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmitLink}>
-                  {selectedLink ? 'Update' : 'Create'} Link
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
       </PageTransition>
+      
+      {/* Account Form Dialog */}
+      <Dialog open={accountFormOpen} onOpenChange={setAccountFormOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedAccount ? 'Edit Account' : 'Create Account'}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="flex justify-center mb-4">
+              <div className="relative">
+                <Avatar className="h-24 w-24 cursor-pointer border-2 border-border" onClick={() => setShowUploadOptions(true)}>
+                  {accountFormData.avatar ? (
+                    <AvatarImage src={accountFormData.avatar} alt="Profile" />
+                  ) : (
+                    <AvatarFallback className="bg-secondary">
+                      <CameraIcon className="h-8 w-8 text-muted-foreground" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <Button 
+                  type="button"
+                  size="sm" 
+                  variant="outline" 
+                  className="absolute bottom-0 right-0 h-8 w-8 p-0 rounded-full"
+                  onClick={() => setShowUploadOptions(true)}
+                >
+                  <UploadIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            {showUploadOptions && (
+              <div className="bg-card border rounded-md p-3 relative">
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  size="sm"
+                  className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                  onClick={() => setShowUploadOptions(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                <div className="space-y-2 mt-2">
+                  <div className="flex items-center">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <UploadIcon className="mr-2 h-4 w-4" />
+                      Upload from device
+                    </Button>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={handleFileUpload} 
+                    />
+                  </div>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={() => handleExternalUpload('google-drive')}
+                  >
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/2295px-Google_Drive_icon_%282020%29.svg.png" 
+                      alt="Google Drive" 
+                      className="mr-2 h-4 w-4" 
+                    />
+                    Upload from Google Drive
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={() => handleExternalUpload('dropbox')}
+                  >
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Dropbox_Icon.svg/2202px-Dropbox_Icon.svg.png" 
+                      alt="Dropbox" 
+                      className="mr-2 h-4 w-4" 
+                    />
+                    Upload from Dropbox
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium">
+                Full Name
+              </label>
+              <Input
+                id="name"
+                name="name"
+                value={accountFormData.name}
+                onChange={handleAccountFormChange}
+                placeholder="Enter full name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">
+                Email Address
+              </label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={accountFormData.email}
+                onChange={handleAccountFormChange}
+                placeholder="Enter email address"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="type" className="text-sm font-medium">
+                Account Type
+              </label>
+              <Select
+                value={accountFormData.type}
+                onValueChange={handleAccountTypeChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select account type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="photographer">Photographer</SelectItem>
+                  <SelectItem value="client">Client</SelectItem>
+                  <SelectItem value="editor">Editor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Status</label>
+              <div className="flex gap-4 mt-1">
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="status-active"
+                    name="status"
+                    className="mr-2"
+                    checked={accountFormData.status === 'active'}
+                    onChange={() => setAccountFormData({...accountFormData, status: 'active'})}
+                  />
+                  <label htmlFor="status-active">Active</label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="status-inactive"
+                    name="status"
+                    className="mr-2"
+                    checked={accountFormData.status === 'inactive'}
+                    onChange={() => setAccountFormData({...accountFormData, status: 'inactive'})}
+                  />
+                  <label htmlFor="status-inactive">Inactive</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAccountFormOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitAccount}>
+              {selectedAccount ? 'Update Account' : 'Create Account'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Branding Form Dialog */}
+      <Dialog open={brandingFormOpen} onOpenChange={setBrandingFormOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedBranding ? 'Edit Branding' : 'Create Branding Info'}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="flex justify-center mb-4">
+              <div className="relative">
+                <Avatar className="h-24 w-24 cursor-pointer border-2 border-border" onClick={() => setShowBrandingUploadOptions(true)}>
+                  {brandingFormData.logo ? (
+                    <AvatarImage src={brandingFormData.logo} alt="Logo" />
+                  ) : (
+                    <AvatarFallback className="bg-secondary">
+                      <CameraIcon className="h-8 w-8 text-muted-foreground" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <Button 
+                  type="button"
+                  size="sm" 
+                  variant="outline" 
+                  className="absolute bottom-0 right-0 h-8 w-8 p-0 rounded-full"
+                  onClick={() => setShowBrandingUploadOptions(true)}
+                >
+                  <UploadIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            {showBrandingUploadOptions && (
+              <div className="bg-card border rounded-md p-3 relative">
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  size="sm"
+                  className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full"
+                  onClick={() => setShowBrandingUploadOptions(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                <div className="space-y-2 mt-2">
+                  <div className="flex items-center">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => brandingFileInputRef.current?.click()}
+                    >
+                      <UploadIcon className="mr-2 h-4 w-4" />
+                      Upload from device
+                    </Button>
+                    <input 
+                      type="file" 
+                      ref={brandingFileInputRef}
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={handleBrandingFileUpload} 
+                    />
+                  </div>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={() => handleBrandingExternalUpload('google-drive')}
+                  >
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/2295px-Google_Drive_icon_%282020%29.svg.png" 
+                      alt="Google Drive" 
+                      className="mr-2 h-4 w-4" 
+                    />
+                    Upload from Google Drive
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={() => handleBrandingExternalUpload('dropbox')}
+                  >
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Dropbox_Icon.svg/2202px-Dropbox_Icon.svg.png" 
+                      alt="Dropbox" 
+                      className="mr-2 h-4 w-4" 
+                    />
+                    Upload from Dropbox
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium">
+                Name
+              </label>
+              <Input
+                id="name"
+                name="name"
+                value={brandingFormData.name}
+                onChange={handleBrandingFormChange}
+                placeholder="Enter branding name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="companyName" className="text-sm font-medium">
+                Company Name
+              </label>
+              <Input
+                id="companyName"
+                name="companyName"
+                value={brandingFormData.companyName}
+                onChange={handleBrandingFormChange}
+                placeholder="Enter company name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="phone" className="text-sm font-medium">
+                Phone
+              </label>
+              <Input
+                id="phone"
+                name="phone"
+                value={brandingFormData.phone}
+                onChange={handleBrandingFormChange}
+                placeholder="Enter phone number"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="website" className="text-sm font-medium">
+                Website
+              </label>
+              <Input
+                id="website"
+                name="website"
+                value={brandingFormData.website}
+                onChange={handleBrandingFormChange}
+                placeholder="Enter website URL"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBrandingFormOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitBranding}>
+              {selectedBranding ? 'Update Branding' : 'Create Branding'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Link Form Dialog */}
+      <Dialog open={linkFormOpen} onOpenChange={setLinkFormOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedLink ? 'Edit Link' : 'Create Client-Branding Link'}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="clientId" className="text-sm font-medium">
+                Client
+              </label>
+              <Select
+                value={linkFormData.clientId}
+                onValueChange={(value) => setLinkFormData({...linkFormData, clientId: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accountsData
+                    .filter(account => account.type === 'client')
+                    .map(client => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="brandingId" className="text-sm font-medium">
+                Branding
+              </label>
+              <Select
+                value={linkFormData.brandingId}
+                onValueChange={(value) => setLinkFormData({...linkFormData, brandingId: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select branding" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brandingInfoData.map(branding => (
+                    <SelectItem key={branding.id} value={branding.id}>
+                      {branding.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLinkFormOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitLink}>
+              {selectedLink ? 'Update Link' : 'Create Link'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
