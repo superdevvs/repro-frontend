@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { PageTransition } from '@/components/layout/PageTransition';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { FileUploader } from '@/components/media/FileUploader';
 import { 
   FolderIcon, 
   ImageIcon, 
@@ -20,8 +21,8 @@ import {
   XIcon,
   MoreHorizontalIcon
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-// Mock data for media items
 const mediaItems = [
   {
     id: '1',
@@ -90,11 +91,44 @@ const mediaItems = [
 ];
 
 const MediaPage = () => {
+  const { toast } = useToast();
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [currentFolder, setCurrentFolder] = useState('root');
+
+  const handleUploadComplete = (files: File[]) => {
+    setUploadDialogOpen(false);
+    
+    toast({
+      title: 'Upload Complete',
+      description: `Successfully uploaded ${files.length} files`,
+    });
+  };
+
+  const handleCreateFolder = () => {
+    if (!newFolderName.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a folder name',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Folder Created',
+      description: `Created folder: ${newFolderName}`,
+    });
+
+    setNewFolderName('');
+    setNewFolderDialogOpen(false);
+  };
+
   return (
     <DashboardLayout>
       <PageTransition>
         <div className="space-y-6">
-          {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
@@ -107,18 +141,24 @@ const MediaPage = () => {
             </div>
             
             <div className="flex gap-2">
-              <Button variant="outline" className="gap-2">
+              <Button 
+                variant="outline" 
+                className="gap-2"
+                onClick={() => setNewFolderDialogOpen(true)}
+              >
                 <FolderIcon className="h-4 w-4" />
                 New Folder
               </Button>
-              <Button className="gap-2">
+              <Button 
+                className="gap-2"
+                onClick={() => setUploadDialogOpen(true)}
+              >
                 <UploadIcon className="h-4 w-4" />
                 Upload Media
               </Button>
             </div>
           </div>
           
-          {/* Tabs and Search */}
           <div className="flex flex-col space-y-4">
             <Tabs defaultValue="all" className="w-full">
               <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
@@ -228,7 +268,6 @@ const MediaPage = () => {
               <TabsContent value="images" className="mt-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {mediaItems.filter(item => item.type === 'image').map((item) => (
-                    // Same card structure as above for images
                     <Card key={item.id} className="glass-card overflow-hidden hover:shadow-md transition-shadow">
                       <CardContent className="p-0">
                         <div className="relative">
@@ -292,7 +331,6 @@ const MediaPage = () => {
               <TabsContent value="videos" className="mt-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {mediaItems.filter(item => item.type === 'video').map((item) => (
-                    // Video cards here
                     <Card key={item.id} className="glass-card overflow-hidden hover:shadow-md transition-shadow">
                       <CardContent className="p-0">
                         <div className="relative">
@@ -361,7 +399,6 @@ const MediaPage = () => {
               <TabsContent value="documents" className="mt-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {mediaItems.filter(item => item.type === 'document').map((item) => (
-                    // Document cards here
                     <Card key={item.id} className="glass-card overflow-hidden hover:shadow-md transition-shadow">
                       <CardContent className="p-0">
                         <div className="relative">
@@ -419,6 +456,46 @@ const MediaPage = () => {
               </TabsContent>
             </Tabs>
           </div>
+
+          <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+            <DialogContent className="sm:max-w-[800px]">
+              <DialogHeader>
+                <DialogTitle>Upload Media</DialogTitle>
+              </DialogHeader>
+              <FileUploader 
+                onUploadComplete={handleUploadComplete}
+                className="mt-4"
+              />
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={newFolderDialogOpen} onOpenChange={setNewFolderDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Create New Folder</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <FolderIcon className="h-8 w-8 text-muted-foreground col-span-1" />
+                  <div className="col-span-3">
+                    <Input
+                      id="name"
+                      placeholder="Enter folder name"
+                      value={newFolderName}
+                      onChange={(e) => setNewFolderName(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleCreateFolder}>Create Folder</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </PageTransition>
     </DashboardLayout>

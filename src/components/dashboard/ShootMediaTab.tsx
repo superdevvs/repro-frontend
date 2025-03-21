@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, ImageIcon } from "lucide-react";
 import { ShootData } from '@/types/shoots';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FileUploader } from '@/components/media/FileUploader';
+import { useToast } from '@/hooks/use-toast';
 
 interface ShootMediaTabProps {
   shoot: ShootData;
@@ -10,6 +13,18 @@ interface ShootMediaTabProps {
 }
 
 export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
+  const { toast } = useToast();
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  
+  const handleUploadComplete = (files: File[]) => {
+    setUploadDialogOpen(false);
+    
+    toast({
+      title: 'Upload Complete',
+      description: `Successfully uploaded ${files.length} files for shoot #${shoot.id}`,
+    });
+  };
+  
   return (
     <>
       {shoot.media?.photos && shoot.media.photos.length > 0 ? (
@@ -28,7 +43,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           
           <div className="flex justify-end gap-2">
             {isPhotographer && (
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
                 <ImageIcon className="h-4 w-4 mr-2" />
                 Upload More
               </Button>
@@ -49,13 +64,27 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
               : 'Media will be available after the shoot is completed.'}
           </p>
           {isPhotographer && shoot.status === 'completed' && (
-            <Button>
+            <Button onClick={() => setUploadDialogOpen(true)}>
               <ImageIcon className="h-4 w-4 mr-2" />
               Upload Media
             </Button>
           )}
         </div>
       )}
+      
+      {/* Upload Media Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Upload Media for Shoot #{shoot.id}</DialogTitle>
+          </DialogHeader>
+          <FileUploader 
+            shootId={shoot.id.toString()}
+            onUploadComplete={handleUploadComplete}
+            className="mt-4"
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
