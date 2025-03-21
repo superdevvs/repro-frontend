@@ -81,7 +81,7 @@ export function ShootDetail({ shoot, isOpen, onClose }: ShootDetailProps) {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto outline-none focus:outline-none focus:ring-0">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto !outline-none !border-none !ring-0 !shadow-none focus:!outline-none focus:!ring-0">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="text-xl">Shoot Details</DialogTitle>
