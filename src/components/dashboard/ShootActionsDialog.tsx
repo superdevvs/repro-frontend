@@ -45,6 +45,15 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
     onClose();
   };
 
+  const handleCompleted = () => {
+    updateShoot(shoot.id, { status: 'completed' });
+    toast({
+      title: "Shoot completed",
+      description: `Shoot #${shoot.id} has been marked as completed.`,
+    });
+    onClose();
+  };
+
   const handleReschedule = () => {
     setShowRescheduleDialog(true);
   };
@@ -88,6 +97,11 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
             <Button variant="outline" onClick={handleReschedule}>
               Reschedule
             </Button>
+            {shoot.status === 'pending' && (
+              <Button variant="outline" onClick={handleCompleted}>
+                Mark as Completed
+              </Button>
+            )}
             <Button onClick={handleAccept}>
               Accept & Confirm
             </Button>
