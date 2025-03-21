@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -41,6 +40,7 @@ import { TaskManager } from '@/components/dashboard/TaskManager';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 // Define a proper client type for better type safety
 interface Client {
@@ -108,6 +108,7 @@ const Clients = () => {
   const { role } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -351,6 +352,15 @@ const Clients = () => {
 
   const handleBookShoot = (client: Client, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Close client details dialog if open
+    if (clientDetailsOpen) {
+      setClientDetailsOpen(false);
+    }
+    
+    // Navigate to the book shoot page and pass client id
+    navigate(`/book-shoot?clientId=${client.id}&clientName=${encodeURIComponent(client.name)}`);
+    
     toast({
       title: "Book Shoot",
       description: `Navigating to book a shoot for ${client.name}...`,

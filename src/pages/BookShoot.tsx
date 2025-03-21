@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { SchedulingForm } from '@/components/booking/SchedulingForm';
 import { ReviewForm } from '@/components/booking/ReviewForm';
 import { BookingComplete } from '@/components/booking/BookingComplete';
 import { useShoots } from '@/context/ShootsContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { ShootData } from '@/types/shoots';
 
@@ -38,6 +37,10 @@ const packages = [
 ];
 
 const BookShoot = () => {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const clientIdFromUrl = queryParams.get('clientId');
+  
   const [client, setClient] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
@@ -55,6 +58,12 @@ const BookShoot = () => {
   const { toast } = useToast();
   const { addShoot } = useShoots();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (clientIdFromUrl) {
+      setClient(clientIdFromUrl);
+    }
+  }, [clientIdFromUrl]);
 
   const getPackagePrice = () => {
     const pkg = packages.find(p => p.id === selectedPackage);
