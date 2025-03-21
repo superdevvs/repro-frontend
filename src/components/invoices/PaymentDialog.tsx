@@ -13,7 +13,7 @@ interface PaymentDialogProps {
   invoice: InvoiceData | null;
   isOpen: boolean;
   onClose: () => void;
-  onPaymentComplete?: (invoiceId: string) => void;
+  onPaymentComplete?: (invoiceId: string, paymentMethod: string) => void;
 }
 
 export function PaymentDialog({ invoice, isOpen, onClose, onPaymentComplete }: PaymentDialogProps) {
@@ -27,13 +27,18 @@ export function PaymentDialog({ invoice, isOpen, onClose, onPaymentComplete }: P
     e.preventDefault();
     setLoading(true);
     
+    // Get the display name for the payment method
+    const paymentMethodDisplay = 
+      paymentMethod === "credit-card" ? "Credit Card" : 
+      paymentMethod === "bank-transfer" ? "Bank Transfer" : "Cash";
+    
     // Simulate payment processing
     setTimeout(() => {
       setLoading(false);
       
-      // Call the onPaymentComplete callback to update the invoice status
+      // Call the onPaymentComplete callback to update the invoice status and payment method
       if (onPaymentComplete) {
-        onPaymentComplete(invoice.id);
+        onPaymentComplete(invoice.id, paymentMethodDisplay);
       }
       
       toast({

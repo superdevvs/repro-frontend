@@ -126,14 +126,14 @@ const InvoicesPage = () => {
     setPaymentDialogOpen(false);
   };
 
-  const handlePaymentComplete = (invoiceId: string) => {
+  const handlePaymentComplete = (invoiceId: string, paymentMethod: string) => {
     setInvoices(currentInvoices => 
       currentInvoices.map(invoice => 
         invoice.id === invoiceId 
           ? { 
               ...invoice, 
               status: 'paid', 
-              paymentMethod: selectedInvoice?.paymentMethod || 'Credit Card' 
+              paymentMethod: paymentMethod 
             } 
           : invoice
       )
