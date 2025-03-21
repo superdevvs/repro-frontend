@@ -88,9 +88,19 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
           </div>
           
           <DialogFooter className="flex flex-wrap justify-end gap-2">
-            <Button variant="outline" onClick={handleCancel}>
-              Cancel Shoot
-            </Button>
+            {/* Always show Cancel button except for completed shoots */}
+            {shoot.status !== 'completed' && (
+              <Button variant="outline" onClick={handleCancel}>
+                Cancel Shoot
+              </Button>
+            )}
+            
+            {/* Show different actions based on status */}
+            {shoot.status === 'hold' && (
+              <Button variant="outline" onClick={handleAccept}>
+                Confirm & Schedule
+              </Button>
+            )}
             
             {shoot.status === 'scheduled' && (
               <Button variant="outline" onClick={handlePending}>
@@ -104,14 +114,16 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
               </Button>
             )}
             
+            {/* Show Reschedule option for everything except completed shoots */}
             {shoot.status !== 'completed' && (
               <Button variant="outline" onClick={handleReschedule}>
                 Reschedule
               </Button>
             )}
             
+            {/* Primary action button */}
             <Button onClick={handleAccept}>
-              Accept & Confirm
+              {shoot.status === 'hold' ? 'Confirm & Schedule' : 'Accept & Confirm'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -135,7 +135,7 @@ const BookShoot = () => {
           totalQuote: getTotal(),
           ...(bypassPayment ? {} : { totalPaid: getTotal(), lastPaymentDate: new Date().toISOString().split('T')[0], lastPaymentType: 'Credit Card' })
         },
-        status: 'scheduled' as const,
+        status: 'hold' as const,
         notes: notes ? { shootNotes: notes } : undefined,
         createdBy: "Current User"
       };
@@ -302,3 +302,4 @@ const BookShoot = () => {
 };
 
 export default BookShoot;
+
