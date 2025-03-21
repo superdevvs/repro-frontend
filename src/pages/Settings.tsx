@@ -157,6 +157,35 @@ const SettingsPage = () => {
     });
   };
   
+  // Check the current theme on component mount
+  useEffect(() => {
+    // Detect current theme from document element class
+    if (document.documentElement.classList.contains('dark')) {
+      setTheme('dark');
+    } else {
+      setTheme('light');
+    }
+  }, []);
+  
+  // Apply theme change immediately when selection changes
+  const handleThemeChange = (selectedTheme: string) => {
+    setTheme(selectedTheme);
+    
+    // Apply theme immediately
+    if (selectedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else if (selectedTheme === 'light') {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    } else if (selectedTheme === 'system') {
+      // For system theme, check user's preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', prefersDark);
+      document.documentElement.classList.toggle('light', !prefersDark);
+    }
+  };
+  
   const handleAppearanceSubmit = () => {
     toast({
       title: "Appearance Updated",
@@ -164,8 +193,8 @@ const SettingsPage = () => {
     });
     console.log('Appearance settings saved:', { theme, sidebarCollapse, animations });
     
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    document.documentElement.classList.toggle('light', theme === 'light');
+    // This ensures theme is applied when the form is saved as well
+    handleThemeChange(theme);
     
     document.documentElement.classList.toggle('reduce-motion', !animations);
   };
@@ -631,7 +660,7 @@ const SettingsPage = () => {
                             <Label htmlFor="theme">Theme</Label>
                             <p className="text-sm text-muted-foreground">Select light or dark theme</p>
                           </div>
-                          <Select value={theme} onValueChange={setTheme}>
+                          <Select value={theme} onValueChange={handleThemeChange}>
                             <SelectTrigger id="theme" className="w-[180px]">
                               <SelectValue placeholder="Select theme" />
                             </SelectTrigger>
@@ -923,129 +952,3 @@ const SettingsPage = () => {
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>Confirm New Password</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} type="password" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <Button type="submit" className="w-full">Update Password</Button>
-                            </div>
-                          </div>
-                        </form>
-                      </Form>
-                      
-                      <Separator />
-                      
-                      <div className="space-y-4">
-                        <h3 className="font-medium">Two-Factor Authentication</h3>
-                        
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label htmlFor="two-factor">Enable 2FA</Label>
-                            <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
-                          </div>
-                          <Switch id="two-factor" onCheckedChange={handle2FAToggle} />
-                        </div>
-                        
-                        <Separator />
-                        
-                        <h3 className="font-medium">Sessions</h3>
-                        
-                        <div className="space-y-3">
-                          <div className="p-3 border rounded-md border-border flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded bg-green-500/10 flex items-center justify-center">
-                                <GlobeIcon className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <p className="font-medium">Chrome on Windows</p>
-                                <p className="text-xs text-muted-foreground">
-                                  <Badge variant="outline" className="mr-1 text-green-500 border-green-500/20 bg-green-500/10">Current</Badge>
-                                  Last active: Now
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="p-3 border rounded-md border-border flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center text-primary">
-                                <SmartphoneIcon className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <p className="font-medium">Safari on iPhone</p>
-                                <p className="text-xs text-muted-foreground">Last active: 2 hours ago</p>
-                              </div>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleRevokeSession('Safari on iPhone')}
-                            >
-                              Revoke
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <Separator />
-                      
-                      <div>
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start text-left text-destructive border-destructive/20 gap-2"
-                          onClick={handleSignOutAllDevices}
-                        >
-                          <AlertTriangleIcon className="h-4 w-4" />
-                          Sign Out All Devices
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </TabsContent>
-                </Card>
-              </div>
-            </div>
-          </Tabs>
-        </div>
-      </PageTransition>
-      
-      <Dialog open={deleteAccountDialogOpen} onOpenChange={setDeleteAccountDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-destructive">Delete Account</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="p-4 border border-destructive/20 bg-destructive/5 rounded-md">
-            <p className="text-sm text-destructive font-medium">This will:</p>
-            <ul className="text-sm text-destructive/90 mt-2 space-y-1 list-disc pl-5">
-              <li>Delete all your profile information</li>
-              <li>Delete all your shoots and media</li>
-              <li>Delete all your invoices and payment history</li>
-              <li>Cancel any active subscriptions</li>
-            </ul>
-          </div>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setDeleteAccountDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteAccount}
-              disabled={isDeletingAccount}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardLayout>
-  );
-};
-
-export default SettingsPage;
