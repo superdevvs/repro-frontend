@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -137,6 +136,13 @@ const defaultWorkingHours = {
   },
 };
 
+// Define a type for the calendar modifiers
+interface CalendarModifiers {
+  booked: Date[];
+  available: Date[];
+  partiallyBooked: Date[];
+}
+
 export default function Availability() {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -273,14 +279,18 @@ export default function Availability() {
   };
 
   // Prepare calendar day modifiers
-  const getCalendarModifiers = () => {
-    if (!selectedPhotographer) return {};
+  const getCalendarModifiers = (): CalendarModifiers => {
+    if (!selectedPhotographer) return {
+      booked: [],
+      available: [],
+      partiallyBooked: []
+    };
     
     const today = new Date();
-    const modifiers = {
-      booked: [] as Date[],
-      available: [] as Date[],
-      partiallyBooked: [] as Date[]
+    const modifiers: CalendarModifiers = {
+      booked: [],
+      available: [],
+      partiallyBooked: []
     };
     
     // Add 60 days of statuses
@@ -483,288 +493,6 @@ export default function Availability() {
                       onSelect={setSelectedDate}
                       className="rounded-md border pointer-events-auto"
                       modifiers={{
-                        booked: calendarModifiers.booked || [],
-                        available: calendarModifiers.available || [],
-                        partiallyBooked: calendarModifiers.partiallyBooked || []
-                      }}
-                      modifiersClassNames={{
-                        booked: "bg-red-100",
-                        available: "bg-green-100",
-                        partiallyBooked: "bg-yellow-100"
-                      }}
-                    />
-                    {selectedPhotographer && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-green-100 rounded-full"></div>
-                          <span className="text-xs">Available</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-yellow-100 rounded-full"></div>
-                          <span className="text-xs">Partially Booked</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-red-100 rounded-full"></div>
-                          <span className="text-xs">Unavailable</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                        booked: calendarModifiers.booked,
+                       
 
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>
-                  {selectedDate 
-                    ? `Availability for ${format(selectedDate, 'EEEE, MMMM dd, yyyy')}`
-                    : 'Please select a date'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {filteredTimeSlots.length > 0 ? (
-                  <div className="space-y-4">
-                    {filteredTimeSlots.map((slot) => (
-                      <div key={slot.id} className="flex items-center p-3 border rounded-md bg-background">
-                        <div className="mr-4 bg-primary/10 p-2 rounded-full">
-                          <Clock className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium">{slot.photographerName}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {slot.startTime} - {slot.endTime}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => {
-                              setEditingTimeSlot(slot);
-                              setIsEditRangeOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-red-500"
-                            onClick={() => handleDeleteTimeRange(slot.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <Clock className="h-10 w-10 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium">No Time Slots Available</h3>
-                    <p className="text-muted-foreground mt-1">
-                      {selectedDate ? 'There are no scheduled time slots for this date.' : 'Please select a date to view availability.'}
-                    </p>
-                    {selectedDate && selectedPhotographer && (
-                      <Button 
-                        variant="outline" 
-                        className="mt-4"
-                        onClick={() => setIsAddRangeOpen(true)}
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Time Slot
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Edit Working Hours Dialog */}
-        <Dialog open={isEditWorkingHoursOpen} onOpenChange={setIsEditWorkingHoursOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit Working Hours</DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => {
-                  const dayHours = workingHours[selectedPhotographer as keyof typeof workingHours]?.[day as keyof typeof workingHours[keyof typeof workingHours]];
-                  return (
-                    <div key={day} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="capitalize">{day}</Label>
-                        <Badge 
-                          variant="outline" 
-                          className={dayHours?.isWorking 
-                            ? "bg-green-500/10 text-green-600 border-green-200 cursor-pointer" 
-                            : "bg-red-500/10 text-red-600 border-red-200 cursor-pointer"}
-                          onClick={() => {
-                            if (selectedPhotographer) {
-                              const newWorkingHours = {...workingHours};
-                              const photographer = newWorkingHours[selectedPhotographer as keyof typeof newWorkingHours];
-                              if (photographer && day in photographer) {
-                                const updatedDay = {...photographer[day as keyof typeof photographer]};
-                                updatedDay.isWorking = !updatedDay.isWorking;
-                                
-                                if (updatedDay.isWorking && !updatedDay.start) {
-                                  updatedDay.start = "09:00";
-                                  updatedDay.end = "17:00";
-                                }
-                                
-                                photographer[day as keyof typeof photographer] = updatedDay;
-                                setWorkingHours(newWorkingHours);
-                              }
-                            }
-                          }}
-                        >
-                          {dayHours?.isWorking ? (
-                            <>
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Working
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="h-3 w-3 mr-1" />
-                              Off
-                            </>
-                          )}
-                        </Badge>
-                      </div>
-                      {dayHours?.isWorking && (
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label htmlFor={`${day}-start`}>Start Time</Label>
-                            <TimeSelect
-                              value={dayHours.start}
-                              onChange={(time) => {
-                                if (selectedPhotographer) {
-                                  const newWorkingHours = {...workingHours};
-                                  const photographer = newWorkingHours[selectedPhotographer as keyof typeof newWorkingHours];
-                                  if (photographer && day in photographer) {
-                                    const updatedDay = {...photographer[day as keyof typeof photographer]};
-                                    updatedDay.start = time;
-                                    photographer[day as keyof typeof photographer] = updatedDay;
-                                    setWorkingHours(newWorkingHours);
-                                  }
-                                }
-                              }}
-                              startHour={7}
-                              endHour={21}
-                              interval={30}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor={`${day}-end`}>End Time</Label>
-                            <TimeSelect
-                              value={dayHours.end}
-                              onChange={(time) => {
-                                if (selectedPhotographer) {
-                                  const newWorkingHours = {...workingHours};
-                                  const photographer = newWorkingHours[selectedPhotographer as keyof typeof newWorkingHours];
-                                  if (photographer && day in photographer) {
-                                    const updatedDay = {...photographer[day as keyof typeof photographer]};
-                                    updatedDay.end = time;
-                                    photographer[day as keyof typeof photographer] = updatedDay;
-                                    setWorkingHours(newWorkingHours);
-                                  }
-                                }
-                              }}
-                              startHour={7}
-                              endHour={21}
-                              interval={30}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditWorkingHoursOpen(false)}>Cancel</Button>
-              <Button onClick={handleUpdateWorkingHours}>Save Changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Time Range Dialog */}
-        <Dialog open={isEditRangeOpen} onOpenChange={setIsEditRangeOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Time Range</DialogTitle>
-            </DialogHeader>
-            {editingTimeSlot && (
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label>Photographer</Label>
-                  <div className="p-2 border rounded-md bg-muted/30">
-                    {editingTimeSlot.photographerName}
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Date</Label>
-                  <div className="p-2 border rounded-md bg-muted/30">
-                    {format(editingTimeSlot.date, 'MMMM dd, yyyy')}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label>Start Time</Label>
-                    <TimeSelect
-                      value={editingTimeSlot.startTime}
-                      onChange={(time) => setEditingTimeSlot({
-                        ...editingTimeSlot,
-                        startTime: time
-                      })}
-                      startHour={7}
-                      endHour={21}
-                      interval={30}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>End Time</Label>
-                    <TimeSelect
-                      value={editingTimeSlot.endTime}
-                      onChange={(time) => setEditingTimeSlot({
-                        ...editingTimeSlot,
-                        endTime: time
-                      })}
-                      startHour={7}
-                      endHour={21}
-                      interval={30}
-                    />
-                  </div>
-                </div>
-                {editingTimeSlot.startTime >= editingTimeSlot.endTime && (
-                  <div className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-4 w-4" />
-                    End time must be after start time
-                  </div>
-                )}
-              </div>
-            )}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => {
-                setIsEditRangeOpen(false);
-                setEditingTimeSlot(null);
-              }}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleEditTimeRange}
-                disabled={!editingTimeSlot || editingTimeSlot.startTime >= editingTimeSlot.endTime}
-              >
-                Save Changes
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </PageTransition>
-    </DashboardLayout>
-  );
-}
