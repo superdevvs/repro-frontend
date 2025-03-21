@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { TaskManager } from '@/components/dashboard/TaskManager';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock data for clients
 const clientsData = [
@@ -86,10 +87,23 @@ const clientsData = [
 
 const Clients = () => {
   const { role } = useAuth();
+  const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [clientDetailsOpen, setClientDetailsOpen] = useState(false);
+  
+  // State for client form
+  const [clientFormOpen, setClientFormOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [clientFormData, setClientFormData] = useState({
+    name: '',
+    company: '',
+    email: '',
+    phone: '',
+    address: '',
+    status: 'active',
+  });
   
   // Filter clients based on search term
   const filteredClients = clientsData.filter(client =>
@@ -102,6 +116,76 @@ const Clients = () => {
   const handleClientSelect = (client: any) => {
     setSelectedClient(client);
     setClientDetailsOpen(true);
+  };
+
+  // Open add client form
+  const handleAddClient = () => {
+    setIsEditing(false);
+    setClientFormData({
+      name: '',
+      company: '',
+      email: '',
+      phone: '',
+      address: '',
+      status: 'active',
+    });
+    setClientFormOpen(true);
+  };
+
+  // Open edit client form
+  const handleEditClient = (client: any, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsEditing(true);
+    setClientFormData({
+      name: client.name,
+      company: client.company,
+      email: client.email,
+      phone: client.phone,
+      address: client.address,
+      status: client.status,
+    });
+    setSelectedClient(client);
+    setClientFormOpen(true);
+  };
+
+  // Handle client form input change
+  const handleClientFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setClientFormData({
+      ...clientFormData,
+      [name]: value,
+    });
+  };
+
+  // Handle client form submission
+  const handleClientFormSubmit = () => {
+    // In a real application, this would send data to the server
+    toast({
+      title: isEditing ? "Client Updated" : "Client Added",
+      description: `${clientFormData.name}'s information has been ${isEditing ? 'updated' : 'added'} successfully.`,
+    });
+    
+    setClientFormOpen(false);
+  };
+
+  // Handle book shoot
+  const handleBookShoot = (client: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    toast({
+      title: "Book Shoot",
+      description: `Navigating to book a shoot for ${client.name}...`,
+    });
+    // In a real application, this would navigate to the booking page
+  };
+
+  // Handle client portal
+  const handleClientPortal = (client: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    toast({
+      title: "Client Portal",
+      description: `Opening client portal for ${client.name}...`,
+    });
+    // In a real application, this would navigate to the client portal
   };
   
   return (
@@ -121,7 +205,7 @@ const Clients = () => {
             </div>
             
             {['admin', 'superadmin'].includes(role) && (
-              <Button className="gap-2">
+              <Button className="gap-2" onClick={handleAddClient}>
                 <PlusIcon className="h-4 w-4" />
                 Add Client
               </Button>
@@ -197,15 +281,15 @@ const Clients = () => {
                                   <UserIcon className="h-4 w-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem onClick={(e) => handleEditClient(client, e)}>
                                   <EditIcon className="h-4 w-4 mr-2" />
                                   Edit Client
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem onClick={(e) => handleBookShoot(client, e)}>
                                   <HomeIcon className="h-4 w-4 mr-2" />
                                   Book Shoot
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem onClick={(e) => handleClientPortal(client, e)}>
                                   <ExternalLinkIcon className="h-4 w-4 mr-2" />
                                   Client Portal
                                 </DropdownMenuItem>
@@ -333,13 +417,99 @@ const Clients = () => {
               <div className="flex gap-3 justify-end">
                 {['admin', 'superadmin'].includes(role) && (
                   <>
-                    <Button variant="outline">Edit Client</Button>
-                    <Button>Book Shoot</Button>
+                    <Button variant="outline" onClick={() => handleEditClient(selectedClient)}>Edit Client</Button>
+                    <Button onClick={() => handleBookShoot(selectedClient, new Event('click') as unknown as React.MouseEvent)}>Book Shoot</Button>
                   </>
                 )}
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Client Form Dialog */}
+      <Dialog open={clientFormOpen} onOpenChange={setClientFormOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isEditing ? 'Edit Client' : 'Add Client'}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium">
+                Full Name
+              </label>
+              <Input
+                id="name"
+                name="name"
+                value={clientFormData.name}
+                onChange={handleClientFormChange}
+                placeholder="Enter client name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="company" className="text-sm font-medium">
+                Company
+              </label>
+              <Input
+                id="company"
+                name="company"
+                value={clientFormData.company}
+                onChange={handleClientFormChange}
+                placeholder="Enter company name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">
+                Email Address
+              </label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={clientFormData.email}
+                onChange={handleClientFormChange}
+                placeholder="Enter email address"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="phone" className="text-sm font-medium">
+                Phone Number
+              </label>
+              <Input
+                id="phone"
+                name="phone"
+                value={clientFormData.phone}
+                onChange={handleClientFormChange}
+                placeholder="Enter phone number"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="address" className="text-sm font-medium">
+                Address
+              </label>
+              <Input
+                id="address"
+                name="address"
+                value={clientFormData.address}
+                onChange={handleClientFormChange}
+                placeholder="Enter address"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setClientFormOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleClientFormSubmit}>
+              {isEditing ? 'Update Client' : 'Add Client'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
