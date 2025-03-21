@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,9 @@ import {
   ImageIcon, 
   FilmIcon, 
   XIcon, 
-  UploadCloudIcon 
+  UploadCloudIcon,
+  DropboxIcon,
+  GoogleDriveIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -45,20 +46,18 @@ export function FileUploader({
   const [progress, setProgress] = useState(0);
   const [uploadType, setUploadType] = useState<'raw' | 'edited'>('raw');
   const [notes, setNotes] = useState('');
+  const [uploadMethod, setUploadMethod] = useState<'local' | 'dropbox' | 'google'>('local');
   
-  // File validation
   const validateFiles = (fileList: FileList | File[]) => {
     const validFiles: File[] = [];
     const invalidFiles: { file: File; reason: string }[] = [];
     
     Array.from(fileList).forEach(file => {
-      // Check file type
       if (!allowedFileTypes.includes(file.type)) {
         invalidFiles.push({ file, reason: 'File type not supported' });
         return;
       }
       
-      // Check file size (100MB max)
       if (file.size > 100 * 1024 * 1024) {
         invalidFiles.push({ file, reason: 'File exceeds 100MB size limit' });
         return;
@@ -67,7 +66,6 @@ export function FileUploader({
       validFiles.push(file);
     });
     
-    // Show error for invalid files
     if (invalidFiles.length > 0) {
       toast({
         title: `${invalidFiles.length} file(s) couldn't be added`,
@@ -79,7 +77,6 @@ export function FileUploader({
     return validFiles;
   };
   
-  // Handle file selection from input
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
     
@@ -87,7 +84,6 @@ export function FileUploader({
     setFiles(prev => [...prev, ...validFiles]);
   };
   
-  // Handle drag and drop
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -100,7 +96,6 @@ export function FileUploader({
     setFiles(prev => [...prev, ...validFiles]);
   };
   
-  // Handle drag events
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -113,17 +108,46 @@ export function FileUploader({
     dropzoneRef.current?.classList.remove('border-primary', 'bg-primary/5');
   };
   
-  // Remove file from list
+  const connectDropbox = () => {
+    toast({
+      title: "Connecting to Dropbox",
+      description: "Redirecting to Dropbox authorization...",
+    });
+    
+    setUploadMethod('dropbox');
+    
+    setTimeout(() => {
+      toast({
+        title: "Dropbox Connected",
+        description: "Successfully connected to Dropbox. You can now select files.",
+      });
+    }, 2000);
+  };
+  
+  const connectGoogleDrive = () => {
+    toast({
+      title: "Connecting to Google Drive",
+      description: "Redirecting to Google authorization...",
+    });
+    
+    setUploadMethod('google');
+    
+    setTimeout(() => {
+      toast({
+        title: "Google Drive Connected",
+        description: "Successfully connected to Google Drive. You can now select files.",
+      });
+    }, 2000);
+  };
+  
   const handleRemoveFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
   
-  // Clear all files
   const handleClearFiles = () => {
     setFiles([]);
   };
   
-  // Start upload process
   const handleUpload = async () => {
     if (files.length === 0) {
       toast({
@@ -136,7 +160,6 @@ export function FileUploader({
     
     setUploading(true);
     
-    // Simulate upload progress
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
@@ -147,17 +170,14 @@ export function FileUploader({
       });
     }, 200);
     
-    // Simulate upload completion
     setTimeout(() => {
       clearInterval(interval);
       setProgress(100);
       
-      // Group files by type for the success message
       const imageFiles = files.filter(f => f.type.startsWith('image/')).length;
       const videoFiles = files.filter(f => f.type.startsWith('video/')).length;
       const zipFiles = files.filter(f => f.type.includes('zip')).length;
       
-      // Call the onUploadComplete callback
       if (onUploadComplete) {
         onUploadComplete(files);
       }
@@ -167,7 +187,6 @@ export function FileUploader({
         description: `Successfully uploaded ${files.length} files (${imageFiles} photos, ${videoFiles} videos, ${zipFiles} zip files)`,
       });
       
-      // Reset the uploader
       setUploading(false);
       setProgress(0);
       setFiles([]);
@@ -175,7 +194,6 @@ export function FileUploader({
     }, 4000);
   };
   
-  // Get file type icon
   const getFileIcon = (file: File) => {
     if (file.type.startsWith('image/')) {
       return <ImageIcon className="h-5 w-5 text-blue-500" />;
@@ -188,7 +206,6 @@ export function FileUploader({
     }
   };
   
-  // Format file size
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     
@@ -232,35 +249,157 @@ export function FileUploader({
           </TabsContent>
         </Tabs>
         
-        {/* Dropzone */}
-        <div
-          ref={dropzoneRef}
-          className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer"
-          onClick={() => fileInputRef.current?.click()}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-        >
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileInputChange}
-            multiple
-            hidden
-          />
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Button 
+            variant={uploadMethod === 'local' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => setUploadMethod('local')}
+            className="flex-1"
+          >
+            <UploadCloudIcon className="h-4 w-4 mr-2" />
+            Local Upload
+          </Button>
           
-          <UploadCloudIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">Drop files here or click to browse</h3>
-          <p className="text-sm text-muted-foreground mb-2">
-            Upload up to 100 files at once (100MB max per file)
-          </p>
-          <Button variant="outline" className="mt-2" disabled={uploading}>
-            <ArrowUpIcon className="h-4 w-4 mr-2" />
-            Select Files
+          <Button 
+            variant={uploadMethod === 'dropbox' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={connectDropbox}
+            className="flex-1"
+          >
+            <DropboxIcon className="h-4 w-4 mr-2" />
+            Dropbox
+          </Button>
+          
+          <Button 
+            variant={uploadMethod === 'google' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={connectGoogleDrive}
+            className="flex-1"
+          >
+            <GoogleDriveIcon className="h-4 w-4 mr-2" />
+            Google Drive
           </Button>
         </div>
         
-        {/* Notes */}
+        {uploadMethod === 'local' && (
+          <div
+            ref={dropzoneRef}
+            className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileInputChange}
+              multiple
+              hidden
+            />
+            
+            <UploadCloudIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Drop files here or click to browse</h3>
+            <p className="text-sm text-muted-foreground mb-2">
+              Upload up to 100 files at once (100MB max per file)
+            </p>
+            <Button variant="outline" className="mt-2" disabled={uploading}>
+              <ArrowUpIcon className="h-4 w-4 mr-2" />
+              Select Files
+            </Button>
+          </div>
+        )}
+        
+        {uploadMethod === 'dropbox' && (
+          <div className="border rounded-lg p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <DropboxIcon className="h-5 w-5 text-blue-600" />
+                <h3 className="font-medium">Dropbox Files</h3>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setFiles([])}>
+                <CheckCircleIcon className="h-4 w-4 mr-2" />
+                Select All
+              </Button>
+            </div>
+            
+            <div className="border rounded p-3 mb-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <ImageIcon className="h-5 w-5 text-blue-500 mr-2" />
+                <span>client_project_photo.jpg</span>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setFiles([...files, new File([], 'client_project_photo.jpg')])}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="border rounded p-3 mb-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <FilmIcon className="h-5 w-5 text-purple-500 mr-2" />
+                <span>property_tour.mov</span>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setFiles([...files, new File([], 'property_tour.mov')])}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="border rounded p-3 flex items-center justify-between">
+              <div className="flex items-center">
+                <FileIcon className="h-5 w-5 text-gray-500 mr-2" />
+                <span>listings_package.zip</span>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setFiles([...files, new File([], 'listings_package.zip')])}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {uploadMethod === 'google' && (
+          <div className="border rounded-lg p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <GoogleDriveIcon className="h-5 w-5 text-green-600" />
+                <h3 className="font-medium">Google Drive Files</h3>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setFiles([])}>
+                <CheckCircleIcon className="h-4 w-4 mr-2" />
+                Select All
+              </Button>
+            </div>
+            
+            <div className="border rounded p-3 mb-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <ImageIcon className="h-5 w-5 text-blue-500 mr-2" />
+                <span>real_estate_front.jpg</span>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setFiles([...files, new File([], 'real_estate_front.jpg')])}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="border rounded p-3 mb-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <ImageIcon className="h-5 w-5 text-blue-500 mr-2" />
+                <span>real_estate_kitchen.jpg</span>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setFiles([...files, new File([], 'real_estate_kitchen.jpg')])}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="border rounded p-3 flex items-center justify-between">
+              <div className="flex items-center">
+                <FilmIcon className="h-5 w-5 text-purple-500 mr-2" />
+                <span>property_walkthrough.mp4</span>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setFiles([...files, new File([], 'property_walkthrough.mp4')])}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+        
         <div className="mt-4">
           <label htmlFor="notes" className="text-sm font-medium block mb-2">
             Upload Notes (optional)
@@ -275,7 +414,6 @@ export function FileUploader({
           ></textarea>
         </div>
         
-        {/* Selected files list */}
         {files.length > 0 && (
           <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
@@ -323,7 +461,6 @@ export function FileUploader({
           </div>
         )}
         
-        {/* Upload progress */}
         {uploading && (
           <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
@@ -334,26 +471,23 @@ export function FileUploader({
           </div>
         )}
         
-        {/* Action buttons */}
-        <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
-          {!uploading && (
-            <>
-              <Button variant="outline" onClick={handleClearFiles} disabled={files.length === 0}>
-                Cancel
-              </Button>
-              <Button onClick={handleUpload} disabled={files.length === 0}>
-                <UploadCloudIcon className="h-4 w-4 mr-2" />
-                Upload {files.length > 0 ? `(${files.length} files)` : ''}
-              </Button>
-            </>
-          )}
-          
-          {uploading && (
-            <Button variant="outline" disabled>
-              Uploading...
+        {!uploading && (
+          <>
+            <Button variant="outline" onClick={handleClearFiles} disabled={files.length === 0}>
+              Cancel
             </Button>
-          )}
-        </div>
+            <Button onClick={handleUpload} disabled={files.length === 0}>
+              <UploadCloudIcon className="h-4 w-4 mr-2" />
+              Upload {files.length > 0 ? `(${files.length} files)` : ''}
+            </Button>
+          </>
+        )}
+        
+        {uploading && (
+          <Button variant="outline" disabled>
+            Uploading...
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

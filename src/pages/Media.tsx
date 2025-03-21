@@ -96,10 +96,7 @@ const MediaPage = () => {
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [currentFolder, setCurrentFolder] = useState('root');
-  const [folders, setFolders] = useState<{ id: string; name: string; parent: string }[]>([
-    { id: '1', name: 'Properties', parent: 'root' },
-    { id: '2', name: 'Documents', parent: 'root' }
-  ]);
+  const [folders, setFolders] = useState<{ id: string; name: string; parent: string }[]>([]);
 
   const handleUploadComplete = (files: File[]) => {
     setUploadDialogOpen(false);
