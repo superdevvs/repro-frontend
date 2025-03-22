@@ -426,8 +426,8 @@ export default function Availability() {
             </Dialog>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <Card className="md:col-span-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="md:col-span-1">
               <CardHeader>
                 <CardTitle>Manage Availability</CardTitle>
               </CardHeader>
@@ -440,7 +440,7 @@ export default function Availability() {
                         <SelectValue placeholder="All Photographers" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Photographers</SelectItem>
+                        <SelectItem value="">All Photographers</SelectItem>
                         {mockPhotographers.map(photographer => (
                           <SelectItem key={photographer.id} value={photographer.id}>
                             {photographer.name}
@@ -450,93 +450,93 @@ export default function Availability() {
                     </Select>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-6">
+                  {selectedPhotographer && (
                     <div>
-                      <div className="flex items-center mb-4">
-                        <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
-                        <h3 className="text-lg font-medium">Select Date</h3>
+                      <div className="flex items-center justify-between">
+                        <Label>Working Hours</Label>
+                        <Button variant="ghost" size="sm" onClick={() => setIsEditWorkingHoursOpen(true)}>
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
                       </div>
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={setSelectedDate}
-                        className="rounded-md border pointer-events-auto"
-                        modifiers={{
-                          booked: calendarModifiers.booked,
-                          available: calendarModifiers.available,
-                          partiallyBooked: calendarModifiers.partiallyBooked
-                        }}
-                        modifiersClassNames={{
-                          booked: "bg-red-100 text-red-600 border-red-200",
-                          available: "bg-green-100 text-green-600 border-green-200",
-                          partiallyBooked: "bg-amber-100 text-amber-600 border-amber-200"
-                        }}
-                      />
-                      
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <Badge variant="outline" className="bg-green-100 text-green-600 border-green-200">
-                          Available
-                        </Badge>
-                        <Badge variant="outline" className="bg-amber-100 text-amber-600 border-amber-200">
-                          Partially Booked
-                        </Badge>
-                        <Badge variant="outline" className="bg-red-100 text-red-600 border-red-200">
-                          Not Available
-                        </Badge>
+                      <div className="mt-2 text-sm">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Day</TableHead>
+                              <TableHead>Hours</TableHead>
+                              <TableHead className="w-[80px]">Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {workingHours[selectedPhotographer] ? (
+                              Object.entries(workingHours[selectedPhotographer]).map(([day, hours]) => (
+                                <TableRow key={day}>
+                                  <TableCell className="capitalize">{day}</TableCell>
+                                  <TableCell>
+                                    {hours.isWorking ? `${hours.start} - ${hours.end}` : 'Not Working'}
+                                  </TableCell>
+                                  <TableCell>
+                                    {hours.isWorking ? (
+                                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
+                                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                                        On
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-200">
+                                        <XCircle className="h-3 w-3 mr-1" />
+                                        Off
+                                      </Badge>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            ) : (
+                              <TableRow>
+                                <TableCell colSpan={3} className="text-center">No working hours set</TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
                       </div>
                     </div>
-
-                    {selectedPhotographer && selectedPhotographer !== "all" && (
-                      <div>
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-medium">Working Hours</h3>
-                          <Button variant="ghost" size="sm" onClick={() => setIsEditWorkingHoursOpen(true)}>
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                        </div>
-                        <div className="text-sm">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Day</TableHead>
-                                <TableHead>Hours</TableHead>
-                                <TableHead className="w-[80px]">Status</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {workingHours[selectedPhotographer] ? (
-                                Object.entries(workingHours[selectedPhotographer]).map(([day, hours]) => (
-                                  <TableRow key={day}>
-                                    <TableCell className="capitalize">{day}</TableCell>
-                                    <TableCell>
-                                      {hours.isWorking ? `${hours.start} - ${hours.end}` : 'Not Working'}
-                                    </TableCell>
-                                    <TableCell>
-                                      {hours.isWorking ? (
-                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
-                                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                                          On
-                                        </Badge>
-                                      ) : (
-                                        <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-200">
-                                          <XCircle className="h-3 w-3 mr-1" />
-                                          Off
-                                        </Badge>
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                ))
-                              ) : (
-                                <TableRow>
-                                  <TableCell colSpan={3} className="text-center">No working hours set</TableCell>
-                                </TableRow>
-                              )}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </div>
-                    )}
+                  )}
+                  
+                  <Separator className="my-4" />
+                  
+                  <div>
+                    <div className="flex items-center mb-4">
+                      <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
+                      <h3 className="text-lg font-medium">Select Date</h3>
+                    </div>
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      className="rounded-md border pointer-events-auto"
+                      modifiers={{
+                        booked: calendarModifiers.booked,
+                        available: calendarModifiers.available,
+                        partiallyBooked: calendarModifiers.partiallyBooked
+                      }}
+                      modifiersClassNames={{
+                        booked: "bg-red-100 text-red-600 border-red-200",
+                        available: "bg-green-100 text-green-600 border-green-200",
+                        partiallyBooked: "bg-amber-100 text-amber-600 border-amber-200"
+                      }}
+                    />
+                    
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Badge variant="outline" className="bg-green-100 text-green-600 border-green-200">
+                        Available
+                      </Badge>
+                      <Badge variant="outline" className="bg-amber-100 text-amber-600 border-amber-200">
+                        Partially Booked
+                      </Badge>
+                      <Badge variant="outline" className="bg-red-100 text-red-600 border-red-200">
+                        Not Available
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -548,27 +548,27 @@ export default function Availability() {
               </CardHeader>
               <CardContent>
                 {filteredTimeSlots.length > 0 ? (
-                  <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                  <div className="space-y-4">
                     {filteredTimeSlots.map(slot => (
-                      <div key={slot.id} className="flex items-center justify-between border p-2 rounded-md">
-                        <div className="flex items-center gap-2">
-                          <div className="bg-primary/10 p-1.5 rounded-full">
-                            <Clock className="h-4 w-4 text-primary" />
+                      <div key={slot.id} className="flex items-center justify-between border p-3 rounded-md">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-primary/10 p-2 rounded-full">
+                            <Clock className="h-5 w-5 text-primary" />
                           </div>
                           <div>
-                            <h4 className="font-medium text-sm">{slot.photographerName}</h4>
-                            <p className="text-xs text-muted-foreground">{slot.startTime} - {slot.endTime}</p>
+                            <h4 className="font-medium">{slot.photographerName}</h4>
+                            <p className="text-sm text-muted-foreground">{slot.startTime} - {slot.endTime}</p>
                           </div>
                         </div>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => {
                             setEditingTimeSlot(slot);
                             setIsEditRangeOpen(true);
                           }}>
-                            <Edit className="h-3.5 w-3.5" />
+                            <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteTimeRange(slot.id)}>
-                            <Trash2 className="h-3.5 w-3.5" />
+                          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteTimeRange(slot.id)}>
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -580,7 +580,7 @@ export default function Availability() {
                     <h3 className="font-medium text-lg">No Time Slots</h3>
                     <p className="text-muted-foreground mt-1">
                       {selectedDate
-                        ? selectedPhotographer && selectedPhotographer !== "all"
+                        ? selectedPhotographer
                           ? `No time slots found for ${mockPhotographers.find(p => p.id === selectedPhotographer)?.name || 'the selected photographer'} on this date.`
                           : 'No time slots found for any photographer on this date.'
                         : 'Please select a date to view time slots.'}
@@ -656,7 +656,7 @@ export default function Availability() {
                     <DialogHeader>
                       <DialogTitle>Edit Working Hours</DialogTitle>
                     </DialogHeader>
-                    {selectedPhotographer && selectedPhotographer !== "all" && (
+                    {selectedPhotographer && (
                       <div className="grid gap-4 py-4">
                         <p className="text-sm text-muted-foreground">
                           Set the working hours for {mockPhotographers.find(p => p.id === selectedPhotographer)?.name}
@@ -672,7 +672,7 @@ export default function Availability() {
                                     onCheckedChange={(checked) => {
                                       const updatedHours = {...workingHours};
                                       if (updatedHours[selectedPhotographer]) {
-                                        const dayKey = day as keyof typeof updatedHours[typeof selectedPhotographer];
+                                        const dayKey = day as keyof PhotographerWorkingHours;
                                         updatedHours[selectedPhotographer][dayKey].isWorking = checked;
                                         if (checked && !hours.start) {
                                           updatedHours[selectedPhotographer][dayKey].start = "09:00";
@@ -689,7 +689,7 @@ export default function Availability() {
                                         onChange={(time) => {
                                           const updatedHours = {...workingHours};
                                           if (updatedHours[selectedPhotographer]) {
-                                            const dayKey = day as keyof typeof updatedHours[typeof selectedPhotographer];
+                                            const dayKey = day as keyof PhotographerWorkingHours;
                                             updatedHours[selectedPhotographer][dayKey].start = time;
                                             setWorkingHours(updatedHours);
                                           }
@@ -703,7 +703,7 @@ export default function Availability() {
                                         onChange={(time) => {
                                           const updatedHours = {...workingHours};
                                           if (updatedHours[selectedPhotographer]) {
-                                            const dayKey = day as keyof typeof updatedHours[typeof selectedPhotographer];
+                                            const dayKey = day as keyof PhotographerWorkingHours;
                                             updatedHours[selectedPhotographer][dayKey].end = time;
                                             setWorkingHours(updatedHours);
                                           }
