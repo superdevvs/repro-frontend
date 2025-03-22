@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -97,7 +96,6 @@ const mockTimeSlots: PhotographerAvailability[] = [
   },
 ];
 
-// Default working hours for photographers
 const defaultWorkingHours = {
   "1": { // John Smith
     monday: { isWorking: true, start: "09:00", end: "17:00" },
@@ -154,7 +152,6 @@ export default function Availability() {
   const [editingTimeSlot, setEditingTimeSlot] = useState<PhotographerAvailability | null>(null);
   const [isEditRangeOpen, setIsEditRangeOpen] = useState<boolean>(false);
 
-  // Validate time slot form
   useEffect(() => {
     const isValid = 
       newTimeSlot.photographerId !== "" && 
@@ -166,7 +163,6 @@ export default function Availability() {
     setIsTimeSlotFormValid(isValid);
   }, [newTimeSlot, selectedDate]);
 
-  // Update new time slot when photographer is selected
   useEffect(() => {
     if (selectedPhotographer) {
       setNewTimeSlot(prev => ({
@@ -176,7 +172,6 @@ export default function Availability() {
     }
   }, [selectedPhotographer]);
 
-  // Filter time slots for selected date and photographer
   const filteredTimeSlots = timeSlots.filter(slot => {
     const sameDate = selectedDate && 
       isSameDay(slot.date, selectedDate);
@@ -237,7 +232,6 @@ export default function Availability() {
     });
   };
 
-  // Update working hours after edit
   const handleUpdateWorkingHours = () => {
     setIsEditWorkingHoursOpen(false);
     
@@ -250,19 +244,16 @@ export default function Availability() {
   const getPhotographerAvailabilityStatus = (photographerId: string, date?: Date) => {
     if (!date) return "unknown";
     
-    // Get day of week
     const dayOfWeek = date.getDay();
     const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
     const day = days[dayOfWeek];
     
-    // Check if photographer works on this day
     const photographerHours = workingHours[photographerId as keyof typeof workingHours];
     if (!photographerHours) return "unknown";
     
     const dayHours = photographerHours[day as keyof typeof photographerHours];
     if (!dayHours || !dayHours.isWorking) return "unavailable";
     
-    // Check if there are any existing appointments
     const dateAppointments = timeSlots.filter(slot => 
       slot.photographerId === photographerId &&
       isSameDay(slot.date, date)
@@ -272,7 +263,6 @@ export default function Availability() {
     return "available";
   };
 
-  // Prepare calendar day modifiers
   const getCalendarModifiers = () => {
     if (!selectedPhotographer) return {};
     
@@ -283,7 +273,6 @@ export default function Availability() {
       partiallyBooked: [] as Date[]
     };
     
-    // Add 60 days of statuses
     for (let i = 0; i < 60; i++) {
       const date = addDays(today, i);
       const status = getPhotographerAvailabilityStatus(selectedPhotographer, date);
@@ -408,7 +397,7 @@ export default function Availability() {
                         <SelectValue placeholder="All Photographers" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Photographers</SelectItem>
+                        <SelectItem value="all-photographers">All Photographers</SelectItem>
                         {mockPhotographers.map(photographer => (
                           <SelectItem key={photographer.id} value={photographer.id}>
                             {photographer.name}
@@ -418,7 +407,7 @@ export default function Availability() {
                     </Select>
                   </div>
                   
-                  {selectedPhotographer && (
+                  {selectedPhotographer && selectedPhotographer !== "all-photographers" && (
                     <div>
                       <div className="flex items-center justify-between">
                         <Label>Working Hours</Label>
@@ -493,7 +482,7 @@ export default function Availability() {
                         partiallyBooked: "bg-yellow-100"
                       }}
                     />
-                    {selectedPhotographer && (
+                    {selectedPhotographer && selectedPhotographer !== "all-photographers" && (
                       <div className="mt-4 flex flex-wrap gap-2">
                         <div className="flex items-center gap-1">
                           <div className="w-3 h-3 bg-green-100 rounded-full"></div>
@@ -566,7 +555,7 @@ export default function Availability() {
                     <p className="text-muted-foreground mt-1">
                       {selectedDate ? 'There are no scheduled time slots for this date.' : 'Please select a date to view availability.'}
                     </p>
-                    {selectedDate && selectedPhotographer && (
+                    {selectedDate && selectedPhotographer && selectedPhotographer !== "all-photographers" && (
                       <Button 
                         variant="outline" 
                         className="mt-4"
@@ -583,7 +572,6 @@ export default function Availability() {
           </div>
         </div>
 
-        {/* Edit Working Hours Dialog */}
         <Dialog open={isEditWorkingHoursOpen} onOpenChange={setIsEditWorkingHoursOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -603,7 +591,7 @@ export default function Availability() {
                             ? "bg-green-500/10 text-green-600 border-green-200 cursor-pointer" 
                             : "bg-red-500/10 text-red-600 border-red-200 cursor-pointer"}
                           onClick={() => {
-                            if (selectedPhotographer) {
+                            if (selectedPhotographer && selectedPhotographer !== "all-photographers") {
                               const newWorkingHours = {...workingHours};
                               const photographer = newWorkingHours[selectedPhotographer as keyof typeof newWorkingHours];
                               if (photographer && day in photographer) {
@@ -641,7 +629,7 @@ export default function Availability() {
                             <TimeSelect
                               value={dayHours.start}
                               onChange={(time) => {
-                                if (selectedPhotographer) {
+                                if (selectedPhotographer && selectedPhotographer !== "all-photographers") {
                                   const newWorkingHours = {...workingHours};
                                   const photographer = newWorkingHours[selectedPhotographer as keyof typeof newWorkingHours];
                                   if (photographer && day in photographer) {
@@ -662,7 +650,7 @@ export default function Availability() {
                             <TimeSelect
                               value={dayHours.end}
                               onChange={(time) => {
-                                if (selectedPhotographer) {
+                                if (selectedPhotographer && selectedPhotographer !== "all-photographers") {
                                   const newWorkingHours = {...workingHours};
                                   const photographer = newWorkingHours[selectedPhotographer as keyof typeof newWorkingHours];
                                   if (photographer && day in photographer) {
@@ -692,7 +680,6 @@ export default function Availability() {
           </DialogContent>
         </Dialog>
 
-        {/* Edit Time Range Dialog */}
         <Dialog open={isEditRangeOpen} onOpenChange={setIsEditRangeOpen}>
           <DialogContent>
             <DialogHeader>
@@ -768,3 +755,7 @@ export default function Availability() {
     </DashboardLayout>
   );
 }
+
+
+
+
