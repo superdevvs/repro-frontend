@@ -31,7 +31,7 @@ export function CreateInvoiceDialog({ isOpen, onClose, onInvoiceCreate }: Create
   const [services, setServices] = useState<string[]>(['Photography']);
   
   const handleAddService = () => {
-    setServices([...services, 'Photography']);
+    setServices([...services, '']);
   };
   
   const handleRemoveService = (index: number) => {
