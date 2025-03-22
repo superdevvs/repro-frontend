@@ -38,13 +38,15 @@ import {
   Edit, 
   CheckCircle2, 
   XCircle,
-  AlertCircle
+  AlertCircle,
+  CalendarCheck
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TimeSelect } from "@/components/ui/time-select";
 import { PhotographerAvailability } from "@/types/shoots";
 import { format, addDays, isSameDay } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
 
 const mockPhotographers = [
   { id: "1", name: "John Smith" },
@@ -157,6 +159,7 @@ export default function Availability() {
   const [isTimeSlotFormValid, setIsTimeSlotFormValid] = useState<boolean>(false);
   const [editingTimeSlot, setEditingTimeSlot] = useState<PhotographerAvailability | null>(null);
   const [isEditRangeOpen, setIsEditRangeOpen] = useState<boolean>(false);
+  const [editingWorkingHours, setEditingWorkingHours] = useState<any>(null);
 
   useEffect(() => {
     const isValid = 
@@ -182,7 +185,7 @@ export default function Availability() {
     const sameDate = selectedDate && 
       isSameDay(slot.date, selectedDate);
     
-    return sameDate && (!selectedPhotographer || slot.photographerId === selectedPhotographer);
+    return sameDate && (!selectedPhotographer || selectedPhotographer === "all-photographers" || slot.photographerId === selectedPhotographer);
   });
 
   const handleAddTimeRange = () => {
@@ -238,12 +241,41 @@ export default function Availability() {
     });
   };
 
+  const handleOpenEditWorkingHours = () => {
+    if (selectedPhotographer && selectedPhotographer !== "all-photographers") {
+      setEditingWorkingHours({
+        ...workingHours[selectedPhotographer as keyof typeof workingHours]
+      });
+      setIsEditWorkingHoursOpen(true);
+    }
+  };
+
   const handleUpdateWorkingHours = () => {
-    setIsEditWorkingHoursOpen(false);
+    if (selectedPhotographer && editingWorkingHours) {
+      const updatedWorkingHours = {
+        ...workingHours,
+        [selectedPhotographer]: editingWorkingHours
+      };
+      
+      setWorkingHours(updatedWorkingHours);
+      setIsEditWorkingHoursOpen(false);
+      
+      toast({
+        title: "Working Hours Updated",
+        description: `Working hours have been updated successfully`,
+      });
+    }
+  };
+
+  const handleDayWorkingHoursChange = (day: string, field: string, value: any) => {
+    if (!editingWorkingHours) return;
     
-    toast({
-      title: "Working Hours Updated",
-      description: `Working hours have been updated successfully`,
+    setEditingWorkingHours({
+      ...editingWorkingHours,
+      [day]: {
+        ...editingWorkingHours[day],
+        [field]: value
+      }
     });
   };
 
@@ -393,8 +425,8 @@ export default function Availability() {
             </Dialog>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="md:col-span-1">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <Card className="md:col-span-4">
               <CardHeader>
                 <CardTitle>Manage Availability</CardTitle>
               </CardHeader>
@@ -421,7 +453,7 @@ export default function Availability() {
                     <div>
                       <div className="flex items-center justify-between">
                         <Label>Working Hours</Label>
-                        <Button variant="ghost" size="sm" onClick={() => setIsEditWorkingHoursOpen(true)}>
+                        <Button variant="ghost" size="sm" onClick={handleOpenEditWorkingHours}>
                           <Edit className="h-4 w-4 mr-1" />
                           Edit
                         </Button>
@@ -480,20 +512,255 @@ export default function Availability() {
                       mode="single"
                       selected={selectedDate}
                       onSelect={setSelectedDate}
-                      className="rounded-md border pointer-events-auto"
+                      className="rounded-md border pointer-events-auto w-full"
                       modifiers={{
                         booked: calendarModifiers.booked,
                         available: calendarModifiers.available,
                         partiallyBooked: calendarModifiers.partiallyBooked
                       }}
+                      modifiersStyles={{
+                        booked: { backgroundColor: "rgba(239, 68, 68, 0.1)" },
+                        available: { backgroundColor: "rgba(34, 197, 94, 0.1)" },
+                        partiallyBooked: { backgroundColor: "rgba(234, 179, 8, 0.1)" }
+                      }}
                     />
+                    <div className="mt-4 flex flex-wrap gap-2 text-sm">
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-green-100 rounded-full mr-1"></div>
+                        <span>Available</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-yellow-100 rounded-full mr-1"></div>
+                        <span>Partially Booked</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-red-100 rounded-full mr-1"></div>
+                        <span>Unavailable</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+            
+            {/* Time Slots Card */}
+            <Card className="md:col-span-8">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle>
+                  <div className="flex items-center gap-2">
+                    <CalendarCheck className="h-5 w-5" />
+                    <span>
+                      {selectedDate 
+                        ? `Availability for ${format(selectedDate, 'MMMM d, yyyy')}` 
+                        : 'Select a date to view availability'}
+                    </span>
+                  </div>
+                </CardTitle>
+                {selectedDate && (
+                  <Button 
+                    size="sm"
+                    onClick={() => setIsAddRangeOpen(true)}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-1" />
+                    Add Slot
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                {filteredTimeSlots.length > 0 ? (
+                  <div className="space-y-4">
+                    {filteredTimeSlots.map((slot) => (
+                      <div 
+                        key={slot.id} 
+                        className="flex items-center justify-between p-3 border rounded-md hover:bg-accent/20 transition-colors"
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-primary/10 p-2 rounded">
+                            <Clock className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <div className="font-medium">{slot.photographerName}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {slot.startTime} - {slot.endTime}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setEditingTimeSlot(slot);
+                              setIsEditRangeOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDeleteTimeRange(slot.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <CalendarIcon className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <h3 className="text-lg font-medium">No availability slots found</h3>
+                    <p className="text-muted-foreground mt-1">
+                      {selectedDate
+                        ? `No photographers are available on ${format(selectedDate, 'MMM d, yyyy')}`
+                        : 'Select a date to view availability'}
+                    </p>
+                    {selectedDate && (
+                      <Button 
+                        variant="outline" 
+                        className="mt-4"
+                        onClick={() => setIsAddRangeOpen(true)}
+                      >
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Add Availability Slot
+                      </Button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
         </div>
       </PageTransition>
+      
+      {/* Edit Working Hours Dialog */}
+      <Dialog open={isEditWorkingHoursOpen} onOpenChange={setIsEditWorkingHoursOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Working Hours</DialogTitle>
+          </DialogHeader>
+          {editingWorkingHours && (
+            <div className="space-y-4 py-4">
+              {Object.entries(editingWorkingHours).map(([day, hours]: [string, any]) => (
+                <div key={day} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor={`day-${day}`} className="capitalize">{day}</Label>
+                    <Switch 
+                      id={`day-${day}`} 
+                      checked={hours.isWorking}
+                      onCheckedChange={(checked) => 
+                        handleDayWorkingHoursChange(day, 'isWorking', checked)
+                      }
+                    />
+                  </div>
+                  
+                  {hours.isWorking && (
+                    <div className="grid grid-cols-2 gap-4 pl-6 pt-2">
+                      <div className="space-y-2">
+                        <Label htmlFor={`start-${day}`}>Start Time</Label>
+                        <TimeSelect
+                          value={hours.start}
+                          onChange={(time) => 
+                            handleDayWorkingHoursChange(day, 'start', time)
+                          }
+                          startHour={6}
+                          endHour={20}
+                          interval={30}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`end-${day}`}>End Time</Label>
+                        <TimeSelect
+                          value={hours.end}
+                          onChange={(time) => 
+                            handleDayWorkingHoursChange(day, 'end', time)
+                          }
+                          startHour={7}
+                          endHour={22}
+                          interval={30}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditWorkingHoursOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateWorkingHours}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Time Slot Dialog */}
+      <Dialog open={isEditRangeOpen} onOpenChange={setIsEditRangeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Time Range</DialogTitle>
+          </DialogHeader>
+          {editingTimeSlot && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Photographer</Label>
+                <div className="border rounded-md p-2 bg-background">
+                  {editingTimeSlot.photographerName}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Date</Label>
+                <div className="border rounded-md p-2 bg-background">
+                  {format(editingTimeSlot.date, 'MMMM dd, yyyy')}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-start-time">Start Time</Label>
+                  <TimeSelect
+                    value={editingTimeSlot.startTime}
+                    onChange={(time) => setEditingTimeSlot({
+                      ...editingTimeSlot,
+                      startTime: time
+                    })}
+                    startHour={7}
+                    endHour={21}
+                    interval={30}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-end-time">End Time</Label>
+                  <TimeSelect
+                    value={editingTimeSlot.endTime}
+                    onChange={(time) => setEditingTimeSlot({
+                      ...editingTimeSlot,
+                      endTime: time
+                    })}
+                    startHour={7}
+                    endHour={21}
+                    interval={30}
+                  />
+                </div>
+              </div>
+              {editingTimeSlot.startTime >= editingTimeSlot.endTime && (
+                <div className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4" />
+                  End time must be after start time
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditRangeOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleEditTimeRange}
+              disabled={!editingTimeSlot || editingTimeSlot.startTime >= editingTimeSlot.endTime}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
