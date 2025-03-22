@@ -392,7 +392,7 @@ export default function Availability() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <Card className="md:col-span-6">
+            <Card className="md:col-span-9">
               <CardHeader>
                 <CardTitle>Manage Availability</CardTitle>
               </CardHeader>
@@ -416,8 +416,45 @@ export default function Availability() {
                   </div>
                   
                   {selectedPhotographer && selectedPhotographer !== "all-photographers" && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                      <div className="md:col-span-7">
+                        <div className="flex items-center mb-2">
+                          <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
+                          <h3 className="text-lg font-medium">Select Date</h3>
+                        </div>
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={setSelectedDate}
+                          className="rounded-md border pointer-events-auto w-full"
+                          modifiers={{
+                            booked: calendarModifiers.booked || [],
+                            available: calendarModifiers.available || [],
+                            partiallyBooked: calendarModifiers.partiallyBooked || []
+                          }}
+                          modifiersClassNames={{
+                            booked: "bg-red-100",
+                            available: "bg-green-100",
+                            partiallyBooked: "bg-yellow-100"
+                          }}
+                        />
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-green-100 rounded-full"></div>
+                            <span className="text-xs">Available</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-yellow-100 rounded-full"></div>
+                            <span className="text-xs">Partially Booked</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-red-100 rounded-full"></div>
+                            <span className="text-xs">Unavailable</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="md:col-span-5">
                         <div className="flex items-center justify-between mb-2">
                           <Label>Working Hours</Label>
                           <Button variant="ghost" size="sm" onClick={() => setIsEditWorkingHoursOpen(true)}>
@@ -466,43 +503,6 @@ export default function Availability() {
                           </Table>
                         </div>
                       </div>
-                      
-                      <div>
-                        <div className="flex items-center mb-2">
-                          <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
-                          <h3 className="text-lg font-medium">Select Date</h3>
-                        </div>
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          className="rounded-md border pointer-events-auto"
-                          modifiers={{
-                            booked: calendarModifiers.booked || [],
-                            available: calendarModifiers.available || [],
-                            partiallyBooked: calendarModifiers.partiallyBooked || []
-                          }}
-                          modifiersClassNames={{
-                            booked: "bg-red-100",
-                            available: "bg-green-100",
-                            partiallyBooked: "bg-yellow-100"
-                          }}
-                        />
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-green-100 rounded-full"></div>
-                            <span className="text-xs">Available</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-yellow-100 rounded-full"></div>
-                            <span className="text-xs">Partially Booked</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-red-100 rounded-full"></div>
-                            <span className="text-xs">Unavailable</span>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   )}
                   
@@ -519,7 +519,7 @@ export default function Availability() {
                           mode="single"
                           selected={selectedDate}
                           onSelect={setSelectedDate}
-                          className="rounded-md border pointer-events-auto"
+                          className="rounded-md border pointer-events-auto w-full"
                         />
                       </div>
                     </>
@@ -528,7 +528,7 @@ export default function Availability() {
               </CardContent>
             </Card>
 
-            <Card className="md:col-span-6">
+            <Card className="md:col-span-3">
               <CardHeader>
                 <CardTitle>
                   {selectedDate 
