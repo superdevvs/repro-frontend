@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,7 +96,6 @@ const mockTimeSlots: PhotographerAvailability[] = [
   },
 ];
 
-// Default working hours for photographers
 const defaultWorkingHours = {
   "1": { // John Smith
     monday: { isWorking: true, start: "09:00", end: "17:00" },
@@ -136,7 +135,6 @@ const defaultWorkingHours = {
   },
 };
 
-// Define a type for the calendar modifiers
 interface CalendarModifiers {
   booked: Date[];
   available: Date[];
@@ -160,7 +158,6 @@ export default function Availability() {
   const [editingTimeSlot, setEditingTimeSlot] = useState<PhotographerAvailability | null>(null);
   const [isEditRangeOpen, setIsEditRangeOpen] = useState<boolean>(false);
 
-  // Validate time slot form
   useEffect(() => {
     const isValid = 
       newTimeSlot.photographerId !== "" && 
@@ -172,7 +169,6 @@ export default function Availability() {
     setIsTimeSlotFormValid(isValid);
   }, [newTimeSlot, selectedDate]);
 
-  // Update new time slot when photographer is selected
   useEffect(() => {
     if (selectedPhotographer) {
       setNewTimeSlot(prev => ({
@@ -182,7 +178,6 @@ export default function Availability() {
     }
   }, [selectedPhotographer]);
 
-  // Filter time slots for selected date and photographer
   const filteredTimeSlots = timeSlots.filter(slot => {
     const sameDate = selectedDate && 
       isSameDay(slot.date, selectedDate);
@@ -243,7 +238,6 @@ export default function Availability() {
     });
   };
 
-  // Update working hours after edit
   const handleUpdateWorkingHours = () => {
     setIsEditWorkingHoursOpen(false);
     
@@ -256,19 +250,16 @@ export default function Availability() {
   const getPhotographerAvailabilityStatus = (photographerId: string, date?: Date) => {
     if (!date) return "unknown";
     
-    // Get day of week
     const dayOfWeek = date.getDay();
     const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
     const day = days[dayOfWeek];
     
-    // Check if photographer works on this day
     const photographerHours = workingHours[photographerId as keyof typeof workingHours];
     if (!photographerHours) return "unknown";
     
     const dayHours = photographerHours[day as keyof typeof photographerHours];
     if (!dayHours || !dayHours.isWorking) return "unavailable";
     
-    // Check if there are any existing appointments
     const dateAppointments = timeSlots.filter(slot => 
       slot.photographerId === photographerId &&
       isSameDay(slot.date, date)
@@ -278,7 +269,6 @@ export default function Availability() {
     return "available";
   };
 
-  // Prepare calendar day modifiers
   const getCalendarModifiers = (): CalendarModifiers => {
     if (!selectedPhotographer) return {
       booked: [],
@@ -293,7 +283,6 @@ export default function Availability() {
       partiallyBooked: []
     };
     
-    // Add 60 days of statuses
     for (let i = 0; i < 60; i++) {
       const date = addDays(today, i);
       const status = getPhotographerAvailabilityStatus(selectedPhotographer, date);
@@ -494,5 +483,17 @@ export default function Availability() {
                       className="rounded-md border pointer-events-auto"
                       modifiers={{
                         booked: calendarModifiers.booked,
-                       
-
+                        available: calendarModifiers.available,
+                        partiallyBooked: calendarModifiers.partiallyBooked
+                      }}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </PageTransition>
+    </DashboardLayout>
+  );
+}
