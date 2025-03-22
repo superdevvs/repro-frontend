@@ -392,7 +392,7 @@ export default function Availability() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <Card className="md:col-span-8">
+            <Card className="md:col-span-9">
               <CardHeader>
                 <CardTitle>Manage Availability</CardTitle>
               </CardHeader>
@@ -417,7 +417,7 @@ export default function Availability() {
                   
                   {selectedPhotographer && selectedPhotographer !== "all-photographers" && (
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                      <div className="md:col-span-12">
+                      <div className="md:col-span-7">
                         <div className="flex items-center mb-2">
                           <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
                           <h3 className="text-lg font-medium">Select Date</h3>
@@ -453,6 +453,56 @@ export default function Availability() {
                           </div>
                         </div>
                       </div>
+                      
+                      <div className="md:col-span-5">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label>Working Hours</Label>
+                          <Button variant="ghost" size="sm" onClick={() => setIsEditWorkingHoursOpen(true)}>
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
+                        <div className="text-sm">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Day</TableHead>
+                                <TableHead>Hours</TableHead>
+                                <TableHead className="w-[80px]">Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {workingHours[selectedPhotographer as keyof typeof workingHours] ? (
+                                Object.entries(workingHours[selectedPhotographer as keyof typeof workingHours]).map(([day, hours]) => (
+                                  <TableRow key={day}>
+                                    <TableCell className="capitalize">{day}</TableCell>
+                                    <TableCell>
+                                      {hours.isWorking ? `${hours.start} - ${hours.end}` : 'Not Working'}
+                                    </TableCell>
+                                    <TableCell>
+                                      {hours.isWorking ? (
+                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
+                                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                                          On
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-200">
+                                          <XCircle className="h-3 w-3 mr-1" />
+                                          Off
+                                        </Badge>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              ) : (
+                                <TableRow>
+                                  <TableCell colSpan={3} className="text-center">No working hours set</TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
                     </div>
                   )}
                   
@@ -478,7 +528,7 @@ export default function Availability() {
               </CardContent>
             </Card>
 
-            <Card className="md:col-span-4">
+            <Card className="md:col-span-3">
               <CardHeader>
                 <CardTitle>
                   {selectedDate 
