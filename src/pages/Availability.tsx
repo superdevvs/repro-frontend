@@ -407,7 +407,7 @@ export default function Availability() {
                         <SelectValue placeholder="All Photographers" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Photographers</SelectItem>
+                        <SelectItem value="all-photographers">All Photographers</SelectItem>
                         {mockPhotographers.map(photographer => (
                           <SelectItem key={photographer.id} value={photographer.id}>
                             {photographer.name}
@@ -417,7 +417,7 @@ export default function Availability() {
                     </Select>
                   </div>
                   
-                  {selectedPhotographer && (
+                  {selectedPhotographer && selectedPhotographer !== "all-photographers" && (
                     <div>
                       <div className="flex items-center justify-between">
                         <Label>Working Hours</Label>
