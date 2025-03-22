@@ -392,7 +392,7 @@ export default function Availability() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <Card className="md:col-span-9">
+            <Card className="md:col-span-6">
               <CardHeader>
                 <CardTitle>Manage Availability</CardTitle>
               </CardHeader>
@@ -511,7 +511,7 @@ export default function Availability() {
               </CardContent>
             </Card>
 
-            <Card className="md:col-span-3">
+            <Card className="md:col-span-6">
               <CardHeader>
                 <CardTitle>
                   {selectedDate 
