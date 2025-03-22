@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -53,6 +54,7 @@ const mockPhotographers = [
   { id: "4", name: "Jessica Davis" },
 ];
 
+// Define types for working hours structure
 interface WorkingHourSettings {
   isWorking: boolean;
   start: string;
@@ -116,8 +118,9 @@ const mockTimeSlots: PhotographerAvailability[] = [
   },
 ];
 
+// Default working hours for photographers
 const defaultWorkingHours: WorkingHoursData = {
-  "1": {
+  "1": { // John Smith
     monday: { isWorking: true, start: "09:00", end: "17:00" },
     tuesday: { isWorking: true, start: "09:00", end: "17:00" },
     wednesday: { isWorking: true, start: "09:00", end: "17:00" },
@@ -126,7 +129,7 @@ const defaultWorkingHours: WorkingHoursData = {
     saturday: { isWorking: false, start: "", end: "" },
     sunday: { isWorking: false, start: "", end: "" },
   },
-  "2": {
+  "2": { // Sarah Johnson
     monday: { isWorking: true, start: "10:00", end: "18:00" },
     tuesday: { isWorking: true, start: "10:00", end: "18:00" },
     wednesday: { isWorking: true, start: "10:00", end: "18:00" },
@@ -135,7 +138,7 @@ const defaultWorkingHours: WorkingHoursData = {
     saturday: { isWorking: true, start: "12:00", end: "16:00" },
     sunday: { isWorking: false, start: "", end: "" },
   },
-  "3": {
+  "3": { // Michael Brown
     monday: { isWorking: true, start: "08:00", end: "16:00" },
     tuesday: { isWorking: true, start: "08:00", end: "16:00" },
     wednesday: { isWorking: true, start: "08:00", end: "16:00" },
@@ -144,7 +147,7 @@ const defaultWorkingHours: WorkingHoursData = {
     saturday: { isWorking: false, start: "", end: "" },
     sunday: { isWorking: false, start: "", end: "" },
   },
-  "4": {
+  "4": { // Jessica Davis
     monday: { isWorking: true, start: "11:00", end: "19:00" },
     tuesday: { isWorking: true, start: "11:00", end: "19:00" },
     wednesday: { isWorking: true, start: "11:00", end: "19:00" },
@@ -155,6 +158,7 @@ const defaultWorkingHours: WorkingHoursData = {
   },
 };
 
+// Define a type for the calendar modifiers
 interface CalendarModifiers {
   booked: Date[];
   available: Date[];
@@ -178,6 +182,7 @@ export default function Availability() {
   const [editingTimeSlot, setEditingTimeSlot] = useState<PhotographerAvailability | null>(null);
   const [isEditRangeOpen, setIsEditRangeOpen] = useState<boolean>(false);
 
+  // Validate time slot form
   useEffect(() => {
     const isValid = 
       newTimeSlot.photographerId !== "" && 
@@ -189,6 +194,7 @@ export default function Availability() {
     setIsTimeSlotFormValid(isValid);
   }, [newTimeSlot, selectedDate]);
 
+  // Update new time slot when photographer is selected
   useEffect(() => {
     if (selectedPhotographer) {
       setNewTimeSlot(prev => ({
@@ -198,6 +204,7 @@ export default function Availability() {
     }
   }, [selectedPhotographer]);
 
+  // Filter time slots for selected date and photographer
   const filteredTimeSlots = timeSlots.filter(slot => {
     const sameDate = selectedDate && 
       isSameDay(slot.date, selectedDate);
@@ -258,6 +265,7 @@ export default function Availability() {
     });
   };
 
+  // Update working hours after edit
   const handleUpdateWorkingHours = () => {
     setIsEditWorkingHoursOpen(false);
     
@@ -270,16 +278,19 @@ export default function Availability() {
   const getPhotographerAvailabilityStatus = (photographerId: string, date?: Date) => {
     if (!date) return "unknown";
     
+    // Get day of week
     const dayOfWeek = date.getDay();
     const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
     const day = days[dayOfWeek];
     
+    // Check if photographer works on this day
     const photographerHours = workingHours[photographerId];
     if (!photographerHours) return "unknown";
     
     const dayHours = photographerHours[day as keyof PhotographerWorkingHours];
     if (!dayHours || !dayHours.isWorking) return "unavailable";
     
+    // Check if there are any existing appointments
     const dateAppointments = timeSlots.filter(slot => 
       slot.photographerId === photographerId &&
       isSameDay(slot.date, date)
@@ -289,7 +300,8 @@ export default function Availability() {
     return "available";
   };
 
-  const getCalendarModifiers = () => {
+  // Prepare calendar day modifiers
+  const getCalendarModifiers = (): CalendarModifiers => {
     if (!selectedPhotographer) return {
       booked: [],
       available: [],
@@ -303,6 +315,7 @@ export default function Availability() {
       partiallyBooked: []
     };
     
+    // Add 60 days of statuses
     for (let i = 0; i < 60; i++) {
       const date = addDays(today, i);
       const status = getPhotographerAvailabilityStatus(selectedPhotographer, date);
@@ -413,8 +426,8 @@ export default function Availability() {
             </Dialog>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-7 gap-6">
-            <Card className="md:col-span-5">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <Card className="md:col-span-3">
               <CardHeader>
                 <CardTitle>Manage Availability</CardTitle>
               </CardHeader>
@@ -427,7 +440,7 @@ export default function Availability() {
                         <SelectValue placeholder="All Photographers" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Photographers</SelectItem>
+                        <SelectItem value="all">All Photographers</SelectItem>
                         {mockPhotographers.map(photographer => (
                           <SelectItem key={photographer.id} value={photographer.id}>
                             {photographer.name}
@@ -443,24 +456,22 @@ export default function Availability() {
                         <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
                         <h3 className="text-lg font-medium">Select Date</h3>
                       </div>
-                      <div className="w-full">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          className="rounded-md border pointer-events-auto w-full min-w-[320px]"
-                          modifiers={{
-                            booked: calendarModifiers.booked,
-                            available: calendarModifiers.available,
-                            partiallyBooked: calendarModifiers.partiallyBooked
-                          }}
-                          modifiersClassNames={{
-                            booked: "bg-red-100 text-red-600 border-red-200",
-                            available: "bg-green-100 text-green-600 border-green-200",
-                            partiallyBooked: "bg-amber-100 text-amber-600 border-amber-200"
-                          }}
-                        />
-                      </div>
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        className="rounded-md border pointer-events-auto"
+                        modifiers={{
+                          booked: calendarModifiers.booked,
+                          available: calendarModifiers.available,
+                          partiallyBooked: calendarModifiers.partiallyBooked
+                        }}
+                        modifiersClassNames={{
+                          booked: "bg-red-100 text-red-600 border-red-200",
+                          available: "bg-green-100 text-green-600 border-green-200",
+                          partiallyBooked: "bg-amber-100 text-amber-600 border-amber-200"
+                        }}
+                      />
                       
                       <div className="mt-4 flex flex-wrap gap-2">
                         <Badge variant="outline" className="bg-green-100 text-green-600 border-green-200">
@@ -581,6 +592,7 @@ export default function Availability() {
                   </div>
                 )}
                 
+                {/* Edit Time Range Dialog */}
                 {editingTimeSlot && (
                   <Dialog open={isEditRangeOpen} onOpenChange={setIsEditRangeOpen}>
                     <DialogContent>
@@ -638,6 +650,7 @@ export default function Availability() {
                   </Dialog>
                 )}
                 
+                {/* Edit Working Hours Dialog */}
                 <Dialog open={isEditWorkingHoursOpen} onOpenChange={setIsEditWorkingHoursOpen}>
                   <DialogContent className="max-w-xl">
                     <DialogHeader>
@@ -651,9 +664,9 @@ export default function Availability() {
                         <div className="space-y-4">
                           {workingHours[selectedPhotographer] && 
                             Object.entries(workingHours[selectedPhotographer]).map(([day, hours]) => (
-                              <div key={day} className="grid gap-4 border-b pb-4 last:border-0">
-                                <div className="flex items-center justify-between">
-                                  <div className="capitalize font-medium">{day}</div>
+                              <div key={day} className="grid grid-cols-[120px_1fr] gap-4 items-center">
+                                <div className="capitalize font-medium">{day}</div>
+                                <div className="flex items-center gap-2">
                                   <Switch 
                                     checked={hours.isWorking}
                                     onCheckedChange={(checked) => {
@@ -669,12 +682,8 @@ export default function Availability() {
                                       }
                                     }}
                                   />
-                                </div>
-                                
-                                {hours.isWorking && (
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <Label className="text-sm">Start Time</Label>
+                                  {hours.isWorking && (
+                                    <div className="grid grid-cols-2 gap-2 flex-1">
                                       <TimeSelect
                                         value={hours.start}
                                         onChange={(time) => {
@@ -689,9 +698,6 @@ export default function Availability() {
                                         endHour={20}
                                         interval={30}
                                       />
-                                    </div>
-                                    <div>
-                                      <Label className="text-sm">End Time</Label>
                                       <TimeSelect
                                         value={hours.end}
                                         onChange={(time) => {
@@ -707,8 +713,8 @@ export default function Availability() {
                                         interval={30}
                                       />
                                     </div>
-                                  </div>
-                                )}
+                                  )}
+                                </div>
                               </div>
                             ))}
                         </div>
