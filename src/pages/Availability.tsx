@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -397,7 +398,7 @@ export default function Availability() {
                 <CardTitle>Manage Availability</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
                     <Label>Select Photographer</Label>
                     <Select value={selectedPhotographer} onValueChange={setSelectedPhotographer}>
