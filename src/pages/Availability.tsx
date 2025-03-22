@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -267,10 +268,14 @@ export default function Availability() {
     if (!selectedPhotographer) return {};
     
     const today = new Date();
-    const modifiers = {
-      booked: [] as Date[],
-      available: [] as Date[],
-      partiallyBooked: [] as Date[]
+    const modifiers: {
+      booked: Date[];
+      available: Date[];
+      partiallyBooked: Date[];
+    } = {
+      booked: [],
+      available: [],
+      partiallyBooked: []
     };
     
     for (let i = 0; i < 60; i++) {
@@ -755,7 +760,3 @@ export default function Availability() {
     </DashboardLayout>
   );
 }
-
-
-
-
