@@ -68,6 +68,7 @@ export function TimeSelect({
   placeholder = "Select time",
 }: TimeSelectProps) {
   const [open, setOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
   
   // Generate all possible time slots
   const allTimeSlots = React.useMemo(() => 
@@ -79,6 +80,13 @@ export function TimeSelect({
   const timeSlots = availableTimes ? 
     allTimeSlots.filter(time => availableTimes.includes(time)) : 
     allTimeSlots
+
+  // Handle time selection
+  const handleSelectTime = (time: string) => {
+    onChange?.(time)
+    setOpen(false)
+    setSearchQuery("")
+  }
   
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -96,26 +104,33 @@ export function TimeSelect({
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[220px]">
         <Command>
-          <CommandInput placeholder="Search time..." />
+          <CommandInput 
+            placeholder="Search time..." 
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+          />
           <CommandList>
             <CommandEmpty>No time found.</CommandEmpty>
             <CommandGroup>
-              {timeSlots.map((time) => (
-                <CommandItem
-                  key={time}
-                  onSelect={() => {
-                    onChange?.(time)
-                    setOpen(false)
-                  }}
-                  className={cn(
-                    "flex items-center gap-2 cursor-pointer",
-                    value === time && "bg-primary/10 text-primary"
-                  )}
-                >
-                  <Clock className="h-4 w-4" />
-                  {time}
-                </CommandItem>
-              ))}
+              {timeSlots
+                .filter(time => 
+                  searchQuery === "" || 
+                  time.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((time) => (
+                  <CommandItem
+                    key={time}
+                    value={time}
+                    onSelect={() => handleSelectTime(time)}
+                    className={cn(
+                      "flex items-center gap-2 cursor-pointer",
+                      value === time && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <Clock className="h-4 w-4" />
+                    {time}
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>
