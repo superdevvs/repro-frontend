@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -393,7 +392,7 @@ export default function Availability() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <Card className="md:col-span-9">
+            <Card className="md:col-span-6">
               <CardHeader>
                 <CardTitle>Manage Availability</CardTitle>
               </CardHeader>
@@ -417,7 +416,57 @@ export default function Availability() {
                   </div>
                   
                   {selectedPhotographer && selectedPhotographer !== "all-photographers" && (
-                    <div className="grid grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label>Working Hours</Label>
+                          <Button variant="ghost" size="sm" onClick={() => setIsEditWorkingHoursOpen(true)}>
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
+                        <div className="text-sm">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Day</TableHead>
+                                <TableHead>Hours</TableHead>
+                                <TableHead className="w-[80px]">Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {workingHours[selectedPhotographer as keyof typeof workingHours] ? (
+                                Object.entries(workingHours[selectedPhotographer as keyof typeof workingHours]).map(([day, hours]) => (
+                                  <TableRow key={day}>
+                                    <TableCell className="capitalize">{day}</TableCell>
+                                    <TableCell>
+                                      {hours.isWorking ? `${hours.start} - ${hours.end}` : 'Not Working'}
+                                    </TableCell>
+                                    <TableCell>
+                                      {hours.isWorking ? (
+                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
+                                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                                          On
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-200">
+                                          <XCircle className="h-3 w-3 mr-1" />
+                                          Off
+                                        </Badge>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              ) : (
+                                <TableRow>
+                                  <TableCell colSpan={3} className="text-center">No working hours set</TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                      
                       <div>
                         <div className="flex items-center mb-2">
                           <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
@@ -479,127 +528,69 @@ export default function Availability() {
               </CardContent>
             </Card>
 
-            <Card className="md:col-span-3">
+            <Card className="md:col-span-6">
               <CardHeader>
-                {selectedPhotographer && selectedPhotographer !== "all-photographers" ? (
-                  <CardTitle>Working Hours</CardTitle>
-                ) : (
-                  <CardTitle>
-                    {selectedDate 
-                      ? `Availability for ${format(selectedDate, 'EEEE, MMMM dd, yyyy')}`
-                      : 'Please select a date'}
-                  </CardTitle>
-                )}
+                <CardTitle>
+                  {selectedDate 
+                    ? `Availability for ${format(selectedDate, 'EEEE, MMMM dd, yyyy')}`
+                    : 'Please select a date'}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                {selectedPhotographer && selectedPhotographer !== "all-photographers" ? (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label>Working Hours</Label>
-                      <Button variant="ghost" size="sm" onClick={() => setIsEditWorkingHoursOpen(true)}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    </div>
-                    <div className="text-sm">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Day</TableHead>
-                            <TableHead>Hours</TableHead>
-                            <TableHead className="w-[80px]">Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {workingHours[selectedPhotographer as keyof typeof workingHours] ? (
-                            Object.entries(workingHours[selectedPhotographer as keyof typeof workingHours]).map(([day, hours]) => (
-                              <TableRow key={day}>
-                                <TableCell className="capitalize">{day}</TableCell>
-                                <TableCell>
-                                  {hours.isWorking ? `${hours.start} - ${hours.end}` : 'Not Working'}
-                                </TableCell>
-                                <TableCell>
-                                  {hours.isWorking ? (
-                                    <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
-                                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                                      On
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-200">
-                                      <XCircle className="h-3 w-3 mr-1" />
-                                      Off
-                                    </Badge>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          ) : (
-                            <TableRow>
-                              <TableCell colSpan={3} className="text-center">No working hours set</TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
+                {filteredTimeSlots.length > 0 ? (
+                  <div className="space-y-4">
+                    {filteredTimeSlots.map((slot) => (
+                      <div key={slot.id} className="flex items-center p-3 border rounded-md bg-background">
+                        <div className="mr-4 bg-primary/10 p-2 rounded-full">
+                          <Clock className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium">{slot.photographerName}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {slot.startTime} - {slot.endTime}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => {
+                              setEditingTimeSlot(slot);
+                              setIsEditRangeOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-red-500"
+                            onClick={() => handleDeleteTimeRange(slot.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <>
-                    {filteredTimeSlots.length > 0 ? (
-                      <div className="space-y-4">
-                        {filteredTimeSlots.map((slot) => (
-                          <div key={slot.id} className="flex items-center p-3 border rounded-md bg-background">
-                            <div className="mr-4 bg-primary/10 p-2 rounded-full">
-                              <Clock className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-medium">{slot.photographerName}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {slot.startTime} - {slot.endTime}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                onClick={() => {
-                                  setEditingTimeSlot(slot);
-                                  setIsEditRangeOpen(true);
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="text-red-500"
-                                onClick={() => handleDeleteTimeRange(slot.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-8 text-center">
-                        <Clock className="h-10 w-10 text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-medium">No Time Slots Available</h3>
-                        <p className="text-muted-foreground mt-1">
-                          {selectedDate ? 'There are no scheduled time slots for this date.' : 'Please select a date to view availability.'}
-                        </p>
-                        {selectedDate && selectedPhotographer && selectedPhotographer !== "all-photographers" && (
-                          <Button 
-                            variant="outline" 
-                            className="mt-4"
-                            onClick={() => setIsAddRangeOpen(true)}
-                          >
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Add Time Slot
-                          </Button>
-                        )}
-                      </div>
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Clock className="h-10 w-10 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium">No Time Slots Available</h3>
+                    <p className="text-muted-foreground mt-1">
+                      {selectedDate ? 'There are no scheduled time slots for this date.' : 'Please select a date to view availability.'}
+                    </p>
+                    {selectedDate && selectedPhotographer && selectedPhotographer !== "all-photographers" && (
+                      <Button 
+                        variant="outline" 
+                        className="mt-4"
+                        onClick={() => setIsAddRangeOpen(true)}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Time Slot
+                      </Button>
                     )}
-                  </>
+                  </div>
                 )}
               </CardContent>
             </Card>
