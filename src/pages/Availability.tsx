@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -264,7 +265,11 @@ export default function Availability() {
   };
 
   const getCalendarModifiers = () => {
-    if (!selectedPhotographer) return {};
+    if (!selectedPhotographer) return {
+      booked: [] as Date[],
+      available: [] as Date[],
+      partiallyBooked: [] as Date[]
+    };
     
     const today = new Date();
     const modifiers: {
@@ -387,8 +392,8 @@ export default function Availability() {
             </Dialog>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="md:col-span-1">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <Card className="md:col-span-3">
               <CardHeader>
                 <CardTitle>Manage Availability</CardTitle>
               </CardHeader>
@@ -507,7 +512,7 @@ export default function Availability() {
               </CardContent>
             </Card>
 
-            <Card className="md:col-span-2">
+            <Card className="md:col-span-9">
               <CardHeader>
                 <CardTitle>
                   {selectedDate 
