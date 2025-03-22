@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -417,97 +416,114 @@ export default function Availability() {
                   </div>
                   
                   {selectedPhotographer && selectedPhotographer !== "all-photographers" && (
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <Label>Working Hours</Label>
-                        <Button variant="ghost" size="sm" onClick={() => setIsEditWorkingHoursOpen(true)}>
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                      </div>
-                      <div className="mt-2 text-sm">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Day</TableHead>
-                              <TableHead>Hours</TableHead>
-                              <TableHead className="w-[80px]">Status</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {workingHours[selectedPhotographer as keyof typeof workingHours] ? (
-                              Object.entries(workingHours[selectedPhotographer as keyof typeof workingHours]).map(([day, hours]) => (
-                                <TableRow key={day}>
-                                  <TableCell className="capitalize">{day}</TableCell>
-                                  <TableCell>
-                                    {hours.isWorking ? `${hours.start} - ${hours.end}` : 'Not Working'}
-                                  </TableCell>
-                                  <TableCell>
-                                    {hours.isWorking ? (
-                                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
-                                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                                        On
-                                      </Badge>
-                                    ) : (
-                                      <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-200">
-                                        <XCircle className="h-3 w-3 mr-1" />
-                                        Off
-                                      </Badge>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
-                              ))
-                            ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label>Working Hours</Label>
+                          <Button variant="ghost" size="sm" onClick={() => setIsEditWorkingHoursOpen(true)}>
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
+                        <div className="text-sm">
+                          <Table>
+                            <TableHeader>
                               <TableRow>
-                                <TableCell colSpan={3} className="text-center">No working hours set</TableCell>
+                                <TableHead>Day</TableHead>
+                                <TableHead>Hours</TableHead>
+                                <TableHead className="w-[80px]">Status</TableHead>
                               </TableRow>
-                            )}
-                          </TableBody>
-                        </Table>
+                            </TableHeader>
+                            <TableBody>
+                              {workingHours[selectedPhotographer as keyof typeof workingHours] ? (
+                                Object.entries(workingHours[selectedPhotographer as keyof typeof workingHours]).map(([day, hours]) => (
+                                  <TableRow key={day}>
+                                    <TableCell className="capitalize">{day}</TableCell>
+                                    <TableCell>
+                                      {hours.isWorking ? `${hours.start} - ${hours.end}` : 'Not Working'}
+                                    </TableCell>
+                                    <TableCell>
+                                      {hours.isWorking ? (
+                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
+                                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                                          On
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-200">
+                                          <XCircle className="h-3 w-3 mr-1" />
+                                          Off
+                                        </Badge>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              ) : (
+                                <TableRow>
+                                  <TableCell colSpan={3} className="text-center">No working hours set</TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex items-center mb-2">
+                          <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
+                          <h3 className="text-lg font-medium">Select Date</h3>
+                        </div>
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={setSelectedDate}
+                          className="rounded-md border pointer-events-auto"
+                          modifiers={{
+                            booked: calendarModifiers.booked || [],
+                            available: calendarModifiers.available || [],
+                            partiallyBooked: calendarModifiers.partiallyBooked || []
+                          }}
+                          modifiersClassNames={{
+                            booked: "bg-red-100",
+                            available: "bg-green-100",
+                            partiallyBooked: "bg-yellow-100"
+                          }}
+                        />
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-green-100 rounded-full"></div>
+                            <span className="text-xs">Available</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-yellow-100 rounded-full"></div>
+                            <span className="text-xs">Partially Booked</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-red-100 rounded-full"></div>
+                            <span className="text-xs">Unavailable</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
                   
-                  <Separator className="my-4" />
-                  
-                  <div>
-                    <div className="flex items-center mb-4">
-                      <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
-                      <h3 className="text-lg font-medium">Select Date</h3>
-                    </div>
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      className="rounded-md border pointer-events-auto"
-                      modifiers={{
-                        booked: calendarModifiers.booked || [],
-                        available: calendarModifiers.available || [],
-                        partiallyBooked: calendarModifiers.partiallyBooked || []
-                      }}
-                      modifiersClassNames={{
-                        booked: "bg-red-100",
-                        available: "bg-green-100",
-                        partiallyBooked: "bg-yellow-100"
-                      }}
-                    />
-                    {selectedPhotographer && selectedPhotographer !== "all-photographers" && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-green-100 rounded-full"></div>
-                          <span className="text-xs">Available</span>
+                  {(!selectedPhotographer || selectedPhotographer === "all-photographers") && (
+                    <>
+                      <Separator className="my-4" />
+                      
+                      <div>
+                        <div className="flex items-center mb-4">
+                          <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
+                          <h3 className="text-lg font-medium">Select Date</h3>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-yellow-100 rounded-full"></div>
-                          <span className="text-xs">Partially Booked</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-red-100 rounded-full"></div>
-                          <span className="text-xs">Unavailable</span>
-                        </div>
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={setSelectedDate}
+                          className="rounded-md border pointer-events-auto"
+                        />
                       </div>
-                    )}
-                  </div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
