@@ -3,7 +3,7 @@ import React from 'react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Link2 } from "lucide-react";
+import { Link2, ExternalLink } from "lucide-react";
 import { format } from 'date-fns';
 import { ShootData } from '@/types/shoots';
 import {
@@ -23,6 +23,12 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Not set';
     return format(new Date(dateString), 'MMMM d, yyyy');
+  };
+
+  const openTourLink = (url?: string) => {
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
@@ -79,6 +85,59 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
             </div>
           </div>
         </div>
+
+        {shoot.tourLinks && (
+          <>
+            <Separator />
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Tour Links</h3>
+              <div className="space-y-2">
+                {shoot.tourLinks.branded && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Branded Tour</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7"
+                      onClick={() => openTourLink(shoot.tourLinks?.branded)}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                      View
+                    </Button>
+                  </div>
+                )}
+                {shoot.tourLinks.mls && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">MLS Tour</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7"
+                      onClick={() => openTourLink(shoot.tourLinks?.mls)}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                      View
+                    </Button>
+                  </div>
+                )}
+                {shoot.tourLinks.genericMls && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Generic MLS Tour</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7"
+                      onClick={() => openTourLink(shoot.tourLinks?.genericMls)}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                      View
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
       
       <div className="space-y-4">
@@ -155,44 +214,6 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
             )}
           </div>
         </div>
-        
-        {shoot.tourLinks && (
-          <>
-            <Separator />
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Tour Links</h3>
-              <div className="space-y-2">
-                {shoot.tourLinks.branded && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Branded Tour</span>
-                    <Button variant="outline" size="sm" className="h-7">
-                      <Link2 className="h-3.5 w-3.5 mr-1" />
-                      View
-                    </Button>
-                  </div>
-                )}
-                {shoot.tourLinks.mls && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">MLS Tour</span>
-                    <Button variant="outline" size="sm" className="h-7">
-                      <Link2 className="h-3.5 w-3.5 mr-1" />
-                      View
-                    </Button>
-                  </div>
-                )}
-                {shoot.tourLinks.genericMls && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Generic MLS Tour</span>
-                    <Button variant="outline" size="sm" className="h-7">
-                      <Link2 className="h-3.5 w-3.5 mr-1" />
-                      View
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
-        )}
       </div>
     </div>
   );
