@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Carousel,
   CarouselContent,
@@ -37,13 +37,14 @@ export function SlideshowViewer({ photos, title, onDownload }: SlideshowViewerPr
       description: `${title} video is being downloaded`,
     });
     
-    // Create a temporary anchor element
-    const link = document.createElement('a');
-    link.href = photos[currentSlide]; // Download current slide as a fallback
-    link.download = `${title.replace(/\s+/g, '_')}_video.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Use the browser's download capability
+    // Create a temporary link element for downloading
+    const downloadLink = document.createElement('a');
+    downloadLink.href = photos[currentSlide]; // Download current slide as a fallback
+    downloadLink.download = `${title.replace(/\s+/g, '_')}_photo.jpg`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
   };
   
   const togglePlayback = () => {
@@ -110,7 +111,7 @@ export function SlideshowViewer({ photos, title, onDownload }: SlideshowViewerPr
           </Button>
           <Button onClick={handleDownload} variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
-            Download Video
+            Download Photo
           </Button>
         </div>
       </div>

@@ -97,6 +97,11 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   };
 
   const handleImageClick = (imageSrc: string) => {
+    if (slideshowDialogOpen) {
+      handlePhotoSelect(imageSrc);
+      return;
+    }
+    
     setSelectedImage(imageSrc);
   };
 
@@ -144,6 +149,9 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       title: 'Slideshow Created',
       description: `Successfully created "${newSlideshow.title}" slideshow`,
     });
+    
+    setViewingSlideshowUrl(newSlideshow.url);
+    setViewSlideshowDialogOpen(true);
     
     setSelectedPhotos([]);
     setSlideshowTitle("New Slideshow");
@@ -225,13 +233,13 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
     const slideshow = displaySlideshows.find(s => s.url === url);
     if (slideshow) {
       toast({
-        title: "Video Download Started",
-        description: `${slideshow.title} video is being downloaded`,
+        title: "Slideshow Download Started",
+        description: `${slideshow.title} is being downloaded`,
       });
       
       const link = document.createElement('a');
       link.href = displayPhotos[0];
-      link.download = `${slideshow.title.replace(/\s+/g, '_')}_video.mp4`;
+      link.download = `${slideshow.title.replace(/\s+/g, '_')}_photo.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -280,7 +288,13 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           <TabsContent value="photos" className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {displayPhotos.map((photo, index) => (
-                <div key={index} className="relative aspect-square rounded-md overflow-hidden border cursor-pointer group" onClick={() => handleImageClick(photo)}>
+                <div 
+                  key={index} 
+                  className={`relative aspect-square rounded-md overflow-hidden border cursor-pointer group ${
+                    selectedPhotos.includes(photo) && slideshowDialogOpen ? 'ring-2 ring-primary' : ''
+                  }`}
+                  onClick={() => handleImageClick(photo)}
+                >
                   <img 
                     src={photo} 
                     alt={`Property photo ${index + 1}`} 
@@ -291,8 +305,19 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                       <p className="text-primary/70 font-bold text-2xl rotate-[-30deg]">WATERMARK</p>
                     </div>
                   )}
+                  {selectedPhotos.includes(photo) && slideshowDialogOpen && (
+                    <div className="absolute top-1 right-1 h-5 w-5 bg-primary rounded-full flex items-center justify-center text-white text-xs">
+                      {selectedPhotos.indexOf(photo) + 1}
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Eye className="h-8 w-8 text-white" />
+                    {slideshowDialogOpen ? (
+                      <div className="text-white font-bold">
+                        {selectedPhotos.includes(photo) ? 'Selected' : 'Select'}
+                      </div>
+                    ) : (
+                      <Eye className="h-8 w-8 text-white" />
+                    )}
                   </div>
                 </div>
               ))}
@@ -305,10 +330,48 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                   Upload More
                 </Button>
               )}
-              <Button variant="outline" onClick={() => setSlideshowDialogOpen(true)}>
+              <Button variant="outline" onClick={() => {
+                setSlideshowDialogOpen(true);
+                setSelectedPhotos([]);
+              }}>
                 <Image className="h-4 w-4 mr-2" />
                 Create Slideshow
               </Button>
+              {selectedPhotos.length > 0 && (
+                <Button onClick={() => {
+                  const newSlideshow = {
+                    id: `slide-${uuidv4().slice(0, 8)}`,
+                    title: `Quick Slideshow (${selectedPhotos.length} photos)`,
+                    url: `https://example.com/slideshows/${shoot.id}-${uuidv4().slice(0, 6)}`,
+                    visible: true
+                  };
+                  
+                  setDisplaySlideshows(prevSlideshows => [...prevSlideshows, newSlideshow]);
+                  
+                  const updatedSlideshows = shoot.media?.slideshows ? 
+                    [...shoot.media.slideshows, newSlideshow] : 
+                    [newSlideshow];
+                  
+                  updateShoot(shoot.id, {
+                    media: {
+                      ...shoot.media,
+                      slideshows: updatedSlideshows,
+                      photos: shoot.media?.photos || []
+                    }
+                  });
+                  
+                  toast({
+                    title: 'Slideshow Created',
+                    description: `Quick slideshow with ${selectedPhotos.length} photos created`,
+                  });
+                  
+                  setViewingSlideshowUrl(newSlideshow.url);
+                  setViewSlideshowDialogOpen(true);
+                }}>
+                  <Play className="h-4 w-4 mr-2" />
+                  Create Quick Slideshow ({selectedPhotos.length})
+                </Button>
+              )}
               <Button>
                 <Download className="h-4 w-4 mr-2" />
                 Download All
@@ -600,12 +663,15 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
         </DialogContent>
       </Dialog>
       
-      <Dialog open={slideshowDialogOpen} onOpenChange={setSlideshowDialogOpen}>
+      <Dialog open={slideshowDialogOpen} onOpenChange={(open) => {
+        setSlideshowDialogOpen(open);
+        if (!open) setSelectedPhotos([]);
+      }}>
         <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>Create Slideshow</DialogTitle>
             <DialogDescription>
-              Create a slideshow from selected images for this property.
+              Select photos and click on them to add to your slideshow. Selected photos will be highlighted.
             </DialogDescription>
           </DialogHeader>
           
@@ -642,7 +708,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
             <Separator />
             
             <div>
-              <h3 className="text-sm font-medium mb-2">Select Photos ({selectedPhotos.length} selected)</h3>
+              <h3 className="text-sm font-medium mb-2">Selected Photos ({selectedPhotos.length})</h3>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[400px] overflow-y-auto p-1">
                 {displayPhotos.map((photo, index) => (
                   <div 
@@ -669,12 +735,15 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           </div>
           
           <div className="flex justify-between mt-4">
-            <Button variant="outline" onClick={() => setSlideshowDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => {
+              setSlideshowDialogOpen(false);
+              setSelectedPhotos([]);
+            }}>Cancel</Button>
             <Button 
               onClick={handleSlideshowCreate}
               disabled={selectedPhotos.length === 0}
             >
-              Create Slideshow
+              Create & View Slideshow
             </Button>
           </div>
         </DialogContent>
@@ -721,26 +790,67 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       <Dialog open={viewSlideshowDialogOpen} onOpenChange={setViewSlideshowDialogOpen}>
         <DialogContent className="sm:max-w-[90vw] max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Video Preview</DialogTitle>
+            <DialogTitle>Slideshow Preview</DialogTitle>
           </DialogHeader>
           
           <div className="w-full bg-black rounded-md flex items-center justify-center overflow-hidden p-4">
             {viewingSlideshowUrl ? (
               <SlideshowViewer 
-                photos={displayPhotos.slice(0, 5)} 
-                title={displaySlideshows.find(s => s.url === viewingSlideshowUrl)?.title || "Video"}
-                onDownload={() => viewingSlideshowUrl && downloadSlideshow(viewingSlideshowUrl)}
+                photos={selectedPhotos.length > 0 ? selectedPhotos : displayPhotos.slice(0, 5)} 
+                title={displaySlideshows.find(s => s.url === viewingSlideshowUrl)?.title || "Slideshow"}
+                onDownload={() => {
+                  if (viewingSlideshowUrl) {
+                    const slideshow = displaySlideshows.find(s => s.url === viewingSlideshowUrl);
+                    if (slideshow) {
+                      const photos = selectedPhotos.length > 0 ? selectedPhotos : displayPhotos.slice(0, 5);
+                      
+                      toast({
+                        title: "Photo Downloading",
+                        description: `Downloading from ${slideshow.title}`,
+                      });
+                      
+                      const link = document.createElement('a');
+                      link.href = photos[0];
+                      link.download = `${slideshow.title.replace(/\s+/g, '_')}_photo.jpg`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }
+                  }
+                }}
               />
             ) : (
-              <div className="text-white">Loading video...</div>
+              <div className="text-white">Loading slideshow...</div>
             )}
           </div>
           
           <div className="flex justify-between mt-4">
-            <Button variant="outline" onClick={() => setViewSlideshowDialogOpen(false)}>Close</Button>
-            <Button onClick={() => viewingSlideshowUrl && downloadSlideshow(viewingSlideshowUrl)}>
+            <Button variant="outline" onClick={() => {
+              setViewSlideshowDialogOpen(false);
+              setSelectedPhotos([]);
+            }}>Close</Button>
+            <Button onClick={() => {
+              if (viewingSlideshowUrl) {
+                const slideshow = displaySlideshows.find(s => s.url === viewingSlideshowUrl);
+                if (slideshow) {
+                  const photos = selectedPhotos.length > 0 ? selectedPhotos : displayPhotos.slice(0, 5);
+                  
+                  toast({
+                    title: "Photo Download Started",
+                    description: `Downloading from ${slideshow.title}`,
+                  });
+                  
+                  const link = document.createElement('a');
+                  link.href = photos[0];
+                  link.download = `${slideshow.title.replace(/\s+/g, '_')}_photo.jpg`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }
+              }
+            }}>
               <Download className="h-4 w-4 mr-2" />
-              Download Video
+              Download Photo
             </Button>
           </div>
         </DialogContent>
