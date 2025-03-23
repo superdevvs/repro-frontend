@@ -18,7 +18,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { v4 as uuidv4 } from 'uuid';
 import { useShoots } from '@/context/ShootsContext';
 import { SlideshowViewer } from './SlideshowViewer';
-import jsPDF from 'jspdf';
+import { jsPDF } from "jspdf";
 
 const examplePhotos = [
   "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200&auto=format",
@@ -777,4 +777,3 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
     </>
   );
 }
-
