@@ -64,6 +64,11 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const [slideshowTitle, setSlideshowTitle] = useState("New Slideshow");
   const [viewSlideshowDialogOpen, setViewSlideshowDialogOpen] = useState(false);
   const [viewingSlideshowUrl, setViewingSlideshowUrl] = useState<string | null>(null);
+  const [displaySlideshows, setDisplaySlideshows] = useState<{id: string, title: string, url: string, visible: boolean}[]>(
+    shoot.media?.slideshows && shoot.media.slideshows.length > 0
+      ? shoot.media.slideshows
+      : sampleSlideshows
+  );
   
   const isAdmin = ['admin', 'superadmin'].includes(role);
   const isPaid = shoot.payment.totalPaid && shoot.payment.totalPaid >= shoot.payment.totalQuote;
@@ -71,10 +76,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const displayPhotos = shoot.media?.photos && shoot.media.photos.length > 0 
     ? shoot.media.photos 
     : examplePhotos;
-  
-  const displaySlideshows = shoot.media?.slideshows && shoot.media.slideshows.length > 0
-    ? shoot.media.slideshows
-    : sampleSlideshows;
   
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -120,6 +121,8 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       visible: true
     };
     
+    setDisplaySlideshows(prevSlideshows => [...prevSlideshows, newSlideshow]);
+    
     const updatedSlideshows = shoot.media?.slideshows ? 
       [...shoot.media.slideshows, newSlideshow] : 
       [newSlideshow];
@@ -163,6 +166,10 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const handleUpdateSlideshow = () => {
     if (!currentSlideshow) return;
     
+    setDisplaySlideshows(prevSlideshows => 
+      prevSlideshows.map(s => s.id === currentSlideshow.id ? currentSlideshow : s)
+    );
+    
     const updatedSlideshows = shoot.media?.slideshows?.map(s => 
       s.id === currentSlideshow.id ? currentSlideshow : s
     ) || [];
@@ -184,6 +191,10 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   };
 
   const toggleSlideshowVisibility = (slideshowId: string, currentVisibility: boolean) => {
+    setDisplaySlideshows(prevSlideshows => 
+      prevSlideshows.map(s => s.id === slideshowId ? {...s, visible: !currentVisibility} : s)
+    );
+    
     const updatedSlideshows = shoot.media?.slideshows?.map(s => 
       s.id === slideshowId ? {...s, visible: !currentVisibility} : s
     ) || [];
