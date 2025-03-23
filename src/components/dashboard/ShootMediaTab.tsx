@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2, Play, Pause } from "lucide-react";
@@ -67,7 +66,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const [viewingSlideshowUrl, setViewingSlideshowUrl] = useState<string | null>(null);
   const [photoCarouselOpen, setPhotoCarouselOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  // Add the missing state for displaySlideshows
   const [displaySlideshows, setDisplaySlideshows] = useState(
     shoot.media?.slideshows || sampleSlideshows
   );
@@ -847,8 +845,9 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           
           <div className="relative flex-1 overflow-hidden my-4">
             <SlideshowViewer 
-              images={displayPhotos} 
-              initialSlide={currentPhotoIndex}
+              photos={displayPhotos} 
+              title={shoot.location.fullAddress || "Property Photos"}
+              currentIndex={currentPhotoIndex}
               onDownload={handlePhotoDownload}
               showControls={true}
               showDownloadButton={true}
@@ -880,42 +879,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           
           <div className="relative flex-1 overflow-hidden my-4">
             <SlideshowViewer 
-              images={displayPhotos} 
-              initialSlide={0}
-              onDownload={handlePhotoDownload}
-              showControls={true}
-              showDownloadButton={true}
-            />
-          </div>
-          
-          <div className="flex justify-between mt-4">
-            <Button variant="outline" onClick={() => setViewSlideshowDialogOpen(false)}>
-              Close
-            </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => {
-                if (viewingSlideshowUrl) {
-                  copyLink(viewingSlideshowUrl);
-                }
-              }}>
-                <Copy className="h-4 w-4 mr-2" />
-                Copy Link
-              </Button>
-              <Button onClick={() => {
-                if (viewingSlideshowUrl) {
-                  const slideshow = displaySlideshows.find(s => s.url === viewingSlideshowUrl);
-                  if (slideshow) {
-                    downloadSlideshow(slideshow.url);
-                  }
-                }
-              }}>
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
+              photos={displayPhotos} 
+              title={displaySlideshows.find(s => s.url === viewingSlideshowUrl)?.title || 'Slideshow'}
+             
+
