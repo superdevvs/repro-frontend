@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -11,16 +10,13 @@ import { useShoots } from '@/context/ShootsContext';
 
 const Shoots = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  // Set the default tab to 'hold' instead of 'scheduled'
   const [selectedTab, setSelectedTab] = useState('hold');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   
-  // Use the shoots from context instead of importing directly from data file
   const { shoots } = useShoots();
   
-  // Filter shoots based on search term and selected tab
   const filteredShoots = shoots.filter(shoot => {
     const matchesSearch = 
       shoot.location.fullAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -35,7 +31,6 @@ const Shoots = () => {
     return false;
   });
   
-  // Special logic for completed shoots to display albums and additional content
   const isCompletedTab = selectedTab === 'completed';
   
   const handleShootSelect = (shoot: ShootData) => {

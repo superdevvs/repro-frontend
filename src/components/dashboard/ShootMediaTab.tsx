@@ -18,6 +18,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { v4 as uuidv4 } from 'uuid';
 import { useShoots } from '@/context/ShootsContext';
 import { SlideshowViewer } from './SlideshowViewer';
+import jsPDF from 'jspdf';
 
 const examplePhotos = [
   "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200&auto=format",
@@ -104,7 +105,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   };
 
   const handleSlideshowCreate = () => {
-    // This would call the Ayrshare API in a real implementation
     if (selectedPhotos.length === 0) {
       toast({
         title: 'Error',
@@ -114,7 +114,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       return;
     }
     
-    // Generate a new slideshow
     const newSlideshow = {
       id: `slide-${uuidv4().slice(0, 8)}`,
       title: slideshowTitle || `${shoot.location.city} ${slideshowOrientation} Slideshow`,
@@ -122,7 +121,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       visible: true
     };
     
-    // Update the shoot with the new slideshow
     const updatedSlideshows = shoot.media?.slideshows ? 
       [...shoot.media.slideshows, newSlideshow] : 
       [newSlideshow];
@@ -145,7 +143,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       description: `Successfully created "${newSlideshow.title}" slideshow`,
     });
     
-    // Reset and close dialog
     setSelectedPhotos([]);
     setSlideshowTitle("New Slideshow");
     setSlideshowDialogOpen(false);
@@ -167,7 +164,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const handleUpdateSlideshow = () => {
     if (!currentSlideshow) return;
     
-    // Update the slideshow in the shoot data
     const updatedSlideshows = shoot.media?.slideshows?.map(s => 
       s.id === currentSlideshow.id ? currentSlideshow : s
     ) || [];
@@ -189,7 +185,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   };
 
   const toggleSlideshowVisibility = (slideshowId: string, currentVisibility: boolean) => {
-    // Update the slideshow visibility in the shoot data
     const updatedSlideshows = shoot.media?.slideshows?.map(s => 
       s.id === slideshowId ? {...s, visible: !currentVisibility} : s
     ) || [];
@@ -209,22 +204,70 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   };
 
   const viewSlideshow = (url: string) => {
-    // Find the slideshow with this URL
     const slideshow = displaySlideshows.find(s => s.url === url);
     if (slideshow) {
-      // Set some photos to view in the slideshow (in a real app, these would be the actual slideshow photos)
-      // Here we're just using the first few photos as an example
       setViewingSlideshowUrl(url);
       setViewSlideshowDialogOpen(true);
     }
   };
 
   const downloadSlideshow = (url: string) => {
-    // In a real implementation this would trigger a download
-    toast({
-      title: 'Downloading Slideshow',
-      description: 'Your slideshow is being downloaded',
-    });
+    const slideshow = displaySlideshows.find(s => s.url === url);
+    if (slideshow) {
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "px",
+        format: [800, 600]
+      });
+
+      const downloadPdf = async () => {
+        const slideshowPhotos = displayPhotos.slice(0, 5);
+        
+        for (let i = 0; i < slideshowPhotos.length; i++) {
+          if (i > 0) {
+            doc.addPage();
+          }
+          
+          try {
+            doc.setFontSize(16);
+            doc.text(`${slideshow.title} - Slide ${i + 1}`, 40, 40);
+            
+            const img = new Image();
+            img.src = slideshowPhotos[i];
+            
+            await new Promise((resolve) => {
+              img.onload = () => {
+                const imgWidth = img.width;
+                const imgHeight = img.height;
+                const pdfWidth = doc.internal.pageSize.getWidth() - 80;
+                const pdfHeight = doc.internal.pageSize.getHeight() - 100;
+                
+                const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+                const width = imgWidth * ratio;
+                const height = imgHeight * ratio;
+                
+                const x = (doc.internal.pageSize.getWidth() - width) / 2;
+                const y = 80;
+                
+                doc.addImage(slideshowPhotos[i], 'JPEG', x, y, width, height);
+                resolve(null);
+              };
+            });
+          } catch (error) {
+            console.error(`Error adding image ${i} to PDF:`, error);
+          }
+        }
+        
+        doc.save(`${slideshow.title.replace(/\s+/g, '_')}_slideshow.pdf`);
+      };
+      
+      downloadPdf();
+      
+      toast({
+        title: 'Downloading Slideshow',
+        description: 'Your slideshow is being downloaded as a PDF',
+      });
+    }
   };
 
   const copyLink = (link: string) => {
@@ -236,7 +279,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   };
 
   const downloadQRCode = (link: string) => {
-    // This would generate and download a QR code for the link
     toast({
       title: 'QR Code Downloaded',
       description: 'QR code has been downloaded',
@@ -571,7 +613,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
         </div>
       </div>
       
-      {/* Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
@@ -588,27 +629,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
         </DialogContent>
       </Dialog>
       
-      {/* Image View Dialog */}
-      {selectedImage && (
-        <Dialog open={!!selectedImage} onOpenChange={handleCloseImageView}>
-          <DialogContent className="sm:max-w-[90vw] max-h-[90vh] p-0 overflow-hidden">
-            <div className="relative w-full h-full" onClick={handleCloseImageView}>
-              <img 
-                src={selectedImage} 
-                alt="Property full view" 
-                className="object-contain w-full h-full max-h-[80vh]"
-              />
-              {!isPaid && (
-                <div className="absolute inset-0 bg-white/30 flex items-center justify-center pointer-events-none">
-                  <p className="text-primary/70 font-bold text-4xl rotate-[-30deg]">WATERMARK</p>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-      
-      {/* Slideshow Creation Dialog */}
       <Dialog open={slideshowDialogOpen} onOpenChange={setSlideshowDialogOpen}>
         <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
@@ -689,7 +709,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Slideshow Dialog */}
       <Dialog open={editSlideshowDialogOpen} onOpenChange={setEditSlideshowDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -728,7 +747,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
         </DialogContent>
       </Dialog>
       
-      {/* View Slideshow Dialog - Updated with SlideshowViewer component */}
       <Dialog open={viewSlideshowDialogOpen} onOpenChange={setViewSlideshowDialogOpen}>
         <DialogContent className="sm:max-w-[90vw] max-h-[90vh]">
           <DialogHeader>
@@ -739,7 +757,8 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
             {viewingSlideshowUrl ? (
               <SlideshowViewer 
                 photos={displayPhotos.slice(0, 5)} 
-                title={displaySlideshows.find(s => s.url === viewingSlideshowUrl)?.title || "Slideshow"} 
+                title={displaySlideshows.find(s => s.url === viewingSlideshowUrl)?.title || "Slideshow"}
+                onDownload={() => viewingSlideshowUrl && downloadSlideshow(viewingSlideshowUrl)}
               />
             ) : (
               <div className="text-white">Loading slideshow...</div>
@@ -758,3 +777,4 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
     </>
   );
 }
+
