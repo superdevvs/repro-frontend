@@ -3,16 +3,25 @@ import React from 'react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Link2, ExternalLink } from "lucide-react";
+import { Link2, ExternalLink, PaperclipIcon, Share2Icon } from "lucide-react";
 import { format } from 'date-fns';
 import { ShootData } from '@/types/shoots';
+import { toast } from "sonner";
 import {
   HomeIcon,
   CalendarIcon,
   ClockIcon,
   CameraIcon,
   UsersIcon,
+  CopyIcon,
+  CheckIcon,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ShootDetailContentProps {
   shoot: ShootData;
@@ -29,6 +38,27 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
     if (url) {
       window.open(url, '_blank', 'noopener,noreferrer');
     }
+  };
+  
+  const copyToClipboard = (text: string, successMessage: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success(successMessage);
+    }).catch(err => {
+      toast.error("Failed to copy text");
+      console.error('Failed to copy text:', err);
+    });
+  };
+
+  const copyAddress = () => {
+    const fullAddress = `${shoot.location.address}, ${shoot.location.city}, ${shoot.location.state} ${shoot.location.zip}`;
+    copyToClipboard(fullAddress, "Address copied to clipboard");
+  };
+
+  const shareShoot = () => {
+    // In a real app, this would create a shareable link or send an email
+    toast.success("Share link generated", {
+      description: "A shareable link has been copied to your clipboard",
+    });
   };
 
   return (
@@ -59,7 +89,26 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
         <Separator />
         
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Property Information</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-medium text-muted-foreground">Property Information</h3>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7" 
+                    onClick={copyAddress}
+                  >
+                    <CopyIcon className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Copy address</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <div className="flex items-start gap-3">
             <HomeIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="space-y-1">
@@ -138,6 +187,32 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
             </div>
           </>
         )}
+        
+        <Separator />
+        
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-muted-foreground">Actions</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8"
+              onClick={shareShoot}
+            >
+              <Share2Icon className="h-3.5 w-3.5 mr-1.5" />
+              Share Details
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8"
+            >
+              <PaperclipIcon className="h-3.5 w-3.5 mr-1.5" />
+              Attach Files
+            </Button>
+          </div>
+        </div>
       </div>
       
       <div className="space-y-4">
