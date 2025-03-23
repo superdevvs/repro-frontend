@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import { Download, Play, Pause } from "lucide-react";
@@ -21,6 +22,7 @@ export function SlideshowViewer({ photos, title, onDownload }: SlideshowViewerPr
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [intervalId, setIntervalId] = useState<number | null>(null);
+  const [api, setApi] = useState<CarouselApi | null>(null);
   const { toast } = useToast();
   
   const handleDownload = () => {
@@ -55,10 +57,9 @@ export function SlideshowViewer({ photos, title, onDownload }: SlideshowViewerPr
     } else {
       // Start the slideshow
       const id = window.setInterval(() => {
-        setCurrentSlide((prevSlide) => {
-          const nextSlide = (prevSlide + 1) % photos.length;
-          return nextSlide;
-        });
+        if (api) {
+          api.scrollNext();
+        }
       }, 3000); // Change slide every 3 seconds
       
       setIntervalId(id);
@@ -66,8 +67,28 @@ export function SlideshowViewer({ photos, title, onDownload }: SlideshowViewerPr
     }
   };
   
+  // Update current slide when API changes
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    const onSelect = () => {
+      setCurrentSlide(api.selectedScrollSnap());
+    };
+    
+    api.on("select", onSelect);
+    
+    // Initial selection
+    setCurrentSlide(api.selectedScrollSnap());
+
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api]);
+  
   // Clean up interval on unmount
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       if (intervalId) {
         clearInterval(intervalId);
@@ -96,8 +117,7 @@ export function SlideshowViewer({ photos, title, onDownload }: SlideshowViewerPr
       
       <Carousel 
         className="w-full max-w-4xl mx-auto"
-        value={currentSlide}
-        onValueChange={(value) => setCurrentSlide(value)}
+        setApi={setApi}
       >
         <CarouselContent>
           {photos.map((photo, index) => (
