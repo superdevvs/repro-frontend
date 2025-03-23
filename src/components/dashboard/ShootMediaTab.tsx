@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2, Play, Pause } from "lucide-react";
@@ -881,5 +882,23 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
             <SlideshowViewer 
               photos={displayPhotos} 
               title={displaySlideshows.find(s => s.url === viewingSlideshowUrl)?.title || 'Slideshow'}
-             
-
+              onDownload={handlePhotoDownload}
+              showControls={true}
+              showDownloadButton={true}
+            />
+          </div>
+          
+          <div className="flex justify-between mt-4">
+            <Button variant="outline" onClick={() => setViewSlideshowDialogOpen(false)}>
+              Close
+            </Button>
+            <Button variant="outline" onClick={() => copyLink(viewingSlideshowUrl || '')}>
+              <Copy className="h-4 w-4 mr-2" />
+              Copy Link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
