@@ -35,6 +35,9 @@ const Shoots = () => {
     return false;
   });
   
+  // Special logic for completed shoots to display albums and additional content
+  const isCompletedTab = selectedTab === 'completed';
+  
   const handleShootSelect = (shoot: ShootData) => {
     setSelectedShoot(shoot);
     setIsDetailOpen(true);
@@ -45,13 +48,28 @@ const Shoots = () => {
     setSelectedShoot(null);
   };
   
+  // Group completed shoots by photographer
+  const groupedCompletedShoots = isCompletedTab
+    ? filteredShoots.reduce((acc, shoot) => {
+        const key = shoot.photographer.name;
+        if (!acc[key]) {
+          acc[key] = [];
+        }
+        acc[key].push(shoot);
+        return acc;
+      }, {} as Record<string, ShootData[]>)
+    : {};
+  
   return (
     <DashboardLayout>
       <PageTransition>
         <div className="space-y-6">
           <ShootsHeader 
-            title="Property Shoots" 
-            subtitle="Manage and track all property photoshoot sessions." 
+            title={isCompletedTab ? "Completed Shoots" : "Property Shoots"} 
+            subtitle={isCompletedTab 
+              ? "View and manage completed property photoshoots."
+              : "Manage and track all property photoshoot sessions."
+            } 
           />
           
           <ShootsFilter 

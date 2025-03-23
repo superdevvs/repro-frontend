@@ -23,12 +23,15 @@ export function ShootDetailTabs({
   isPhotographer,
   role
 }: ShootDetailTabsProps) {
+  // If the shoot is completed, we should allow media tab regardless of whether media exists
+  const showMediaTab = shoot.status === 'completed' || (shoot.media?.photos && shoot.media.photos.length > 0);
+  
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="details">Details</TabsTrigger>
         <TabsTrigger value="notes">Notes</TabsTrigger>
-        <TabsTrigger value="media" disabled={!shoot.media?.photos?.length}>Media</TabsTrigger>
+        <TabsTrigger value="media" disabled={!showMediaTab}>Media</TabsTrigger>
       </TabsList>
       
       <TabsContent value="details" className="mt-4">

@@ -15,12 +15,14 @@ import {
   MessageSquare,
   PenLine,
   DollarSignIcon,
+  CheckCircle,
 } from "lucide-react";
 import { ShootData } from '@/types/shoots';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { ShootDetailTabs } from './ShootDetailTabs';
 import { MessageDialog } from './MessageDialog';
 import { ShootActionsDialog } from './ShootActionsDialog';
+import { useShoots } from '@/context/ShootsContext';
 
 interface ShootDetailProps {
   shoot: ShootData | null;
@@ -30,6 +32,7 @@ interface ShootDetailProps {
 
 export function ShootDetail({ shoot, isOpen, onClose }: ShootDetailProps) {
   const { role } = useAuth();
+  const { updateShoot } = useShoots();
   const [activeTab, setActiveTab] = useState("details");
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -78,10 +81,20 @@ export function ShootDetail({ shoot, isOpen, onClose }: ShootDetailProps) {
     setIsEditDialogOpen(false);
   };
   
+  const handleMarkAsCompleted = () => {
+    if (shoot && shoot.status === 'scheduled') {
+      const now = new Date().toISOString().split('T')[0];
+      updateShoot(shoot.id, {
+        status: 'completed',
+        completedDate: now
+      });
+    }
+  };
+  
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="text-xl">Shoot Details</DialogTitle>
@@ -120,8 +133,8 @@ export function ShootDetail({ shoot, isOpen, onClose }: ShootDetailProps) {
             )}
             
             {isPhotographer && shoot.status === 'scheduled' && (
-              <Button>
-                <CalendarIcon className="h-4 w-4 mr-2" />
+              <Button onClick={handleMarkAsCompleted}>
+                <CheckCircle className="h-4 w-4 mr-2" />
                 Mark as Completed
               </Button>
             )}
