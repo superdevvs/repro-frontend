@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2 } from "lucide-react";
+import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2, Play } from "lucide-react";
 import { ShootData } from '@/types/shoots';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { FileUploader } from '@/components/media/FileUploader';
@@ -18,7 +18,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { v4 as uuidv4 } from 'uuid';
 import { useShoots } from '@/context/ShootsContext';
 import { SlideshowViewer } from './SlideshowViewer';
-import { jsPDF } from "jspdf";
 
 const examplePhotos = [
   "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200&auto=format",
@@ -214,59 +213,17 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const downloadSlideshow = (url: string) => {
     const slideshow = displaySlideshows.find(s => s.url === url);
     if (slideshow) {
-      const doc = new jsPDF({
-        orientation: "landscape",
-        unit: "px",
-        format: [800, 600]
-      });
-
-      const downloadPdf = async () => {
-        const slideshowPhotos = displayPhotos.slice(0, 5);
-        
-        for (let i = 0; i < slideshowPhotos.length; i++) {
-          if (i > 0) {
-            doc.addPage();
-          }
-          
-          try {
-            doc.setFontSize(16);
-            doc.text(`${slideshow.title} - Slide ${i + 1}`, 40, 40);
-            
-            const img = new Image();
-            img.src = slideshowPhotos[i];
-            
-            await new Promise((resolve) => {
-              img.onload = () => {
-                const imgWidth = img.width;
-                const imgHeight = img.height;
-                const pdfWidth = doc.internal.pageSize.getWidth() - 80;
-                const pdfHeight = doc.internal.pageSize.getHeight() - 100;
-                
-                const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-                const width = imgWidth * ratio;
-                const height = imgHeight * ratio;
-                
-                const x = (doc.internal.pageSize.getWidth() - width) / 2;
-                const y = 80;
-                
-                doc.addImage(slideshowPhotos[i], 'JPEG', x, y, width, height);
-                resolve(null);
-              };
-            });
-          } catch (error) {
-            console.error(`Error adding image ${i} to PDF:`, error);
-          }
-        }
-        
-        doc.save(`${slideshow.title.replace(/\s+/g, '_')}_slideshow.pdf`);
-      };
-      
-      downloadPdf();
-      
       toast({
-        title: 'Downloading Slideshow',
-        description: 'Your slideshow is being downloaded as a PDF',
+        title: "Video Download Started",
+        description: `${slideshow.title} video is being downloaded`,
       });
+      
+      const link = document.createElement('a');
+      link.href = displayPhotos[0];
+      link.download = `${slideshow.title.replace(/\s+/g, '_')}_video.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -435,9 +392,12 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                 <div className="space-y-4">
                   {displaySlideshows.map((slideshow) => (
                     <div key={slideshow.id} className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="font-medium">{slideshow.title}</p>
-                        <p className="text-sm text-muted-foreground truncate max-w-[300px]">{slideshow.url}</p>
+                      <div className="flex items-center gap-2">
+                        <Play className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">{slideshow.title}</p>
+                          <p className="text-sm text-muted-foreground truncate max-w-[300px]">{slideshow.url}</p>
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={() => viewSlideshow(slideshow.url)}>
@@ -750,18 +710,18 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       <Dialog open={viewSlideshowDialogOpen} onOpenChange={setViewSlideshowDialogOpen}>
         <DialogContent className="sm:max-w-[90vw] max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Slideshow Preview</DialogTitle>
+            <DialogTitle>Video Preview</DialogTitle>
           </DialogHeader>
           
           <div className="w-full bg-black rounded-md flex items-center justify-center overflow-hidden p-4">
             {viewingSlideshowUrl ? (
               <SlideshowViewer 
                 photos={displayPhotos.slice(0, 5)} 
-                title={displaySlideshows.find(s => s.url === viewingSlideshowUrl)?.title || "Slideshow"}
+                title={displaySlideshows.find(s => s.url === viewingSlideshowUrl)?.title || "Video"}
                 onDownload={() => viewingSlideshowUrl && downloadSlideshow(viewingSlideshowUrl)}
               />
             ) : (
-              <div className="text-white">Loading slideshow...</div>
+              <div className="text-white">Loading video...</div>
             )}
           </div>
           
@@ -769,7 +729,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
             <Button variant="outline" onClick={() => setViewSlideshowDialogOpen(false)}>Close</Button>
             <Button onClick={() => viewingSlideshowUrl && downloadSlideshow(viewingSlideshowUrl)}>
               <Download className="h-4 w-4 mr-2" />
-              Download Slideshow
+              Download Video
             </Button>
           </div>
         </DialogContent>
