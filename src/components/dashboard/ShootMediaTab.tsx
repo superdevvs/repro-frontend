@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2 } from "lucide-react";
@@ -18,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from '@/components/auth/AuthProvider';
 import { v4 as uuidv4 } from 'uuid';
 import { useShoots } from '@/context/ShootsContext';
+import { SlideshowViewer } from './SlideshowViewer';
 
 const examplePhotos = [
   "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200&auto=format",
@@ -127,12 +127,17 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       [...shoot.media.slideshows, newSlideshow] : 
       [newSlideshow];
     
-    updateShoot(shoot.id, {
+    const updatedShoot = {
+      ...shoot,
       media: {
         ...shoot.media,
         slideshows: updatedSlideshows,
         photos: shoot.media?.photos || []
       }
+    };
+    
+    updateShoot(shoot.id, {
+      media: updatedShoot.media
     });
     
     toast({
@@ -204,8 +209,14 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   };
 
   const viewSlideshow = (url: string) => {
-    setViewingSlideshowUrl(url);
-    setViewSlideshowDialogOpen(true);
+    // Find the slideshow with this URL
+    const slideshow = displaySlideshows.find(s => s.url === url);
+    if (slideshow) {
+      // Set some photos to view in the slideshow (in a real app, these would be the actual slideshow photos)
+      // Here we're just using the first few photos as an example
+      setViewingSlideshowUrl(url);
+      setViewSlideshowDialogOpen(true);
+    }
   };
 
   const downloadSlideshow = (url: string) => {
@@ -717,36 +728,19 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
         </DialogContent>
       </Dialog>
       
-      {/* View Slideshow Dialog */}
+      {/* View Slideshow Dialog - Updated with SlideshowViewer component */}
       <Dialog open={viewSlideshowDialogOpen} onOpenChange={setViewSlideshowDialogOpen}>
         <DialogContent className="sm:max-w-[90vw] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Slideshow Preview</DialogTitle>
           </DialogHeader>
           
-          <div className="w-full h-[60vh] bg-black rounded-md flex items-center justify-center overflow-hidden">
+          <div className="w-full bg-black rounded-md flex items-center justify-center overflow-hidden p-4">
             {viewingSlideshowUrl ? (
-              <div className="relative w-full h-full">
-                {/* In a real implementation, this would be an iframe or a slideshow component */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                  <h3 className="text-2xl font-bold mb-4">Slideshow Preview</h3>
-                  <div className="slideshow-container w-full h-4/5 overflow-hidden">
-                    {/* Mock slideshow with sample images */}
-                    <div className="slideshow-images flex flex-col gap-4">
-                      {displayPhotos.slice(0, 3).map((photo, index) => (
-                        <div key={index} className="w-full max-h-[200px] overflow-hidden rounded-md">
-                          <img 
-                            src={photo} 
-                            alt={`Slideshow image ${index + 1}`} 
-                            className="w-full object-cover"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <p className="mt-4 text-sm opacity-70">Slideshow URL: {viewingSlideshowUrl}</p>
-                </div>
-              </div>
+              <SlideshowViewer 
+                photos={displayPhotos.slice(0, 5)} 
+                title={displaySlideshows.find(s => s.url === viewingSlideshowUrl)?.title || "Slideshow"} 
+              />
             ) : (
               <div className="text-white">Loading slideshow...</div>
             )}

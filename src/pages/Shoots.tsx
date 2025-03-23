@@ -48,18 +48,6 @@ const Shoots = () => {
     setSelectedShoot(null);
   };
   
-  // Group completed shoots by photographer
-  const groupedCompletedShoots = isCompletedTab
-    ? filteredShoots.reduce((acc, shoot) => {
-        const key = shoot.photographer.name;
-        if (!acc[key]) {
-          acc[key] = [];
-        }
-        acc[key].push(shoot);
-        return acc;
-      }, {} as Record<string, ShootData[]>)
-    : {};
-  
   return (
     <DashboardLayout>
       <PageTransition>
