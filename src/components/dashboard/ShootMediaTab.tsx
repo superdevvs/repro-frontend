@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2, Play, Pause } from "lucide-react";
@@ -789,3 +790,132 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
             >
               Create & View Slideshow
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={editSlideshowDialogOpen} onOpenChange={setEditSlideshowDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Slideshow</DialogTitle>
+            <DialogDescription>
+              Update slideshow details and settings.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {currentSlideshow && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editTitle">Slideshow Title</Label>
+                <Input 
+                  id="editTitle" 
+                  value={currentSlideshow.title}
+                  onChange={(e) => setCurrentSlideshow({...currentSlideshow, title: e.target.value})}
+                  placeholder="Enter slideshow title"
+                  className="mt-1"
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="slideshowVisible" 
+                  checked={currentSlideshow.visible}
+                  onCheckedChange={(checked) => setCurrentSlideshow({...currentSlideshow, visible: checked as boolean})}
+                />
+                <Label htmlFor="slideshowVisible">Visible to client</Label>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex justify-between mt-4">
+            <Button variant="outline" onClick={() => setEditSlideshowDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateSlideshow}>
+              Update Slideshow
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={photoCarouselOpen} onOpenChange={setPhotoCarouselOpen}>
+        <DialogContent className="sm:max-w-[900px] flex flex-col max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Photo Gallery</DialogTitle>
+            <DialogDescription>
+              Browse all photos in this gallery
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="relative flex-1 overflow-hidden my-4">
+            <SlideshowViewer 
+              images={displayPhotos} 
+              initialSlide={currentPhotoIndex}
+              onDownload={handlePhotoDownload}
+              showControls={true}
+              showDownloadButton={true}
+            />
+          </div>
+          
+          <div className="flex justify-between mt-4">
+            <Button variant="outline" onClick={() => setPhotoCarouselOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={() => handlePhotoDownload(displayPhotos[currentPhotoIndex])}>
+              <Download className="h-4 w-4 mr-2" />
+              Download Current Photo
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={viewSlideshowDialogOpen} onOpenChange={setViewSlideshowDialogOpen}>
+        <DialogContent className="sm:max-w-[900px] flex flex-col max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {displaySlideshows.find(s => s.url === viewingSlideshowUrl)?.title || 'Slideshow'}
+            </DialogTitle>
+            <DialogDescription>
+              Viewing property slideshow
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="relative flex-1 overflow-hidden my-4">
+            <SlideshowViewer 
+              images={displayPhotos} 
+              initialSlide={0}
+              onDownload={handlePhotoDownload}
+              showControls={true}
+              showDownloadButton={true}
+            />
+          </div>
+          
+          <div className="flex justify-between mt-4">
+            <Button variant="outline" onClick={() => setViewSlideshowDialogOpen(false)}>
+              Close
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => {
+                if (viewingSlideshowUrl) {
+                  copyLink(viewingSlideshowUrl);
+                }
+              }}>
+                <Copy className="h-4 w-4 mr-2" />
+                Copy Link
+              </Button>
+              <Button onClick={() => {
+                if (viewingSlideshowUrl) {
+                  const slideshow = displaySlideshows.find(s => s.url === viewingSlideshowUrl);
+                  if (slideshow) {
+                    downloadSlideshow(slideshow.url);
+                  }
+                }
+              }}>
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
