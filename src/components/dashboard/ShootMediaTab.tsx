@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2 } from "lucide-react";
@@ -16,6 +15,32 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from '@/components/auth/AuthProvider';
+
+const examplePhotos = [
+  "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200&auto=format",
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format",
+  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1200&auto=format",
+  "https://images.unsplash.com/photo-1600585152220-90363fe7e115?q=80&w=1200&auto=format",
+  "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?q=80&w=1200&auto=format",
+  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&auto=format",
+  "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=1200&auto=format",
+  "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?q=80&w=1200&auto=format",
+];
+
+const sampleSlideshows = [
+  {
+    id: "slide-1",
+    title: "Modern Interior Showcase",
+    url: "https://example.com/slideshows/modern-interior-123",
+    visible: true
+  },
+  {
+    id: "slide-2",
+    title: "Property Exterior Views",
+    url: "https://example.com/slideshows/exterior-views-456",
+    visible: false
+  }
+];
 
 interface ShootMediaTabProps {
   shoot: ShootData;
@@ -35,6 +60,14 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   
   const isAdmin = ['admin', 'superadmin'].includes(role);
   const isPaid = shoot.payment.totalPaid && shoot.payment.totalPaid >= shoot.payment.totalQuote;
+
+  const displayPhotos = shoot.media?.photos && shoot.media.photos.length > 0 
+    ? shoot.media.photos 
+    : examplePhotos;
+  
+  const displaySlideshows = shoot.media?.slideshows && shoot.media.slideshows.length > 0
+    ? shoot.media.slideshows
+    : sampleSlideshows;
   
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -155,62 +188,42 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           </TabsList>
           
           <TabsContent value="photos" className="space-y-4">
-            {shoot.media?.photos && shoot.media.photos.length > 0 ? (
-              <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {shoot.media.photos.map((photo, index) => (
-                    <div key={index} className="relative aspect-square rounded-md overflow-hidden border cursor-pointer group" onClick={() => handleImageClick(photo)}>
-                      <img 
-                        src={photo} 
-                        alt={`Property photo ${index + 1}`} 
-                        className="object-cover w-full h-full"
-                      />
-                      {!isPaid && (
-                        <div className="absolute inset-0 bg-white/30 flex items-center justify-center pointer-events-none">
-                          <p className="text-primary/70 font-bold text-2xl rotate-[-30deg]">WATERMARK</p>
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Eye className="h-8 w-8 text-white" />
-                      </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {displayPhotos.map((photo, index) => (
+                <div key={index} className="relative aspect-square rounded-md overflow-hidden border cursor-pointer group" onClick={() => handleImageClick(photo)}>
+                  <img 
+                    src={photo} 
+                    alt={`Property photo ${index + 1}`} 
+                    className="object-cover w-full h-full"
+                  />
+                  {!isPaid && (
+                    <div className="absolute inset-0 bg-white/30 flex items-center justify-center pointer-events-none">
+                      <p className="text-primary/70 font-bold text-2xl rotate-[-30deg]">WATERMARK</p>
                     </div>
-                  ))}
-                </div>
-                
-                <div className="flex flex-wrap justify-end gap-2">
-                  {isPhotographer && (
-                    <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload More
-                    </Button>
                   )}
-                  <Button variant="outline" onClick={() => setSlideshowDialogOpen(true)}>
-                    <Image className="h-4 w-4 mr-2" />
-                    Create Slideshow
-                  </Button>
-                  <Button>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download All
-                  </Button>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Eye className="h-8 w-8 text-white" />
+                  </div>
                 </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <ImageIcon className="h-10 w-10 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">No Media Available</h3>
-                <p className="text-muted-foreground mt-1 mb-4">
-                  {shoot.status === 'completed' 
-                    ? 'No media has been uploaded for this shoot yet.' 
-                    : 'Media will be available after the shoot is completed.'}
-                </p>
-                {isPhotographer && shoot.status === 'completed' && (
-                  <Button onClick={() => setUploadDialogOpen(true)}>
-                    <ImageIcon className="h-4 w-4 mr-2" />
-                    Upload Media
-                  </Button>
-                )}
-              </div>
-            )}
+              ))}
+            </div>
+            
+            <div className="flex flex-wrap justify-end gap-2">
+              {isPhotographer && (
+                <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload More
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => setSlideshowDialogOpen(true)}>
+                <Image className="h-4 w-4 mr-2" />
+                Create Slideshow
+              </Button>
+              <Button>
+                <Download className="h-4 w-4 mr-2" />
+                Download All
+              </Button>
+            </div>
           </TabsContent>
           
           <TabsContent value="services" className="space-y-4">
@@ -243,74 +256,47 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
               <CardContent className="space-y-4">
                 {shoot.tourLinks ? (
                   <div className="space-y-4">
-                    {shoot.tourLinks.branded && (
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="font-medium">Branded Tour</p>
-                          <p className="text-sm text-muted-foreground truncate max-w-[300px]">{shoot.tourLinks.branded}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => window.open(shoot.tourLinks?.branded)}>
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => copyLink(shoot.tourLinks?.branded || '')}>
-                            <Copy className="h-4 w-4 mr-1" />
-                            Copy
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => downloadQRCode(shoot.tourLinks?.branded || '')}>
-                            <QrCode className="h-4 w-4 mr-1" />
-                            QR
-                          </Button>
-                        </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-medium">Branded Tour</p>
+                        <p className="text-sm text-muted-foreground truncate max-w-[300px]">https://tours.example.com/branded/123456</p>
                       </div>
-                    )}
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => copyLink('https://tours.example.com/branded/123456')}>
+                          <Copy className="h-4 w-4 mr-1" />
+                          Copy
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => downloadQRCode('https://tours.example.com/branded/123456')}>
+                          <QrCode className="h-4 w-4 mr-1" />
+                          QR
+                        </Button>
+                      </div>
+                    </div>
                     
-                    {shoot.tourLinks.mls && (
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="font-medium">MLS Tour</p>
-                          <p className="text-sm text-muted-foreground truncate max-w-[300px]">{shoot.tourLinks.mls}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => window.open(shoot.tourLinks?.mls)}>
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => copyLink(shoot.tourLinks?.mls || '')}>
-                            <Copy className="h-4 w-4 mr-1" />
-                            Copy
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => downloadQRCode(shoot.tourLinks?.mls || '')}>
-                            <QrCode className="h-4 w-4 mr-1" />
-                            QR
-                          </Button>
-                        </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-medium">MLS Tour</p>
+                        <p className="text-sm text-muted-foreground truncate max-w-[300px]">https://tours.example.com/mls/123456</p>
                       </div>
-                    )}
-                    
-                    {shoot.tourLinks.genericMls && (
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="font-medium">Generic MLS Tour</p>
-                          <p className="text-sm text-muted-foreground truncate max-w-[300px]">{shoot.tourLinks.genericMls}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => window.open(shoot.tourLinks?.genericMls)}>
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => copyLink(shoot.tourLinks?.genericMls || '')}>
-                            <Copy className="h-4 w-4 mr-1" />
-                            Copy
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => downloadQRCode(shoot.tourLinks?.genericMls || '')}>
-                            <QrCode className="h-4 w-4 mr-1" />
-                            QR
-                          </Button>
-                        </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => copyLink('https://tours.example.com/mls/123456')}>
+                          <Copy className="h-4 w-4 mr-1" />
+                          Copy
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => downloadQRCode('https://tours.example.com/mls/123456')}>
+                          <QrCode className="h-4 w-4 mr-1" />
+                          QR
+                        </Button>
                       </div>
-                    )}
+                    </div>
                   </div>
                 ) : (
                   <p className="text-muted-foreground">No tour links available for this property</p>
@@ -324,37 +310,33 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                 <CardDescription>Slideshows and other media files</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {shoot.media?.slideshows && shoot.media.slideshows.length > 0 ? (
-                  <div className="space-y-4">
-                    {shoot.media.slideshows.map((slideshow) => (
-                      <div key={slideshow.id} className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="font-medium">{slideshow.title}</p>
-                          <p className="text-sm text-muted-foreground truncate max-w-[300px]">{slideshow.url}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => downloadSlideshow(slideshow.url)}>
-                            <Download className="h-4 w-4 mr-1" />
-                            Download
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => handleEditSlideshow(slideshow)}>
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => toggleSlideshowVisibility(slideshow.id, slideshow.visible)}>
-                            {slideshow.visible ? (
-                              <><EyeOff className="h-4 w-4 mr-1" />Hide</>
-                            ) : (
-                              <><Eye className="h-4 w-4 mr-1" />Show</>
-                            )}
-                          </Button>
-                        </div>
+                <div className="space-y-4">
+                  {displaySlideshows.map((slideshow) => (
+                    <div key={slideshow.id} className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-medium">{slideshow.title}</p>
+                        <p className="text-sm text-muted-foreground truncate max-w-[300px]">{slideshow.url}</p>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No slideshows created yet for this property</p>
-                )}
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => downloadSlideshow(slideshow.url)}>
+                          <Download className="h-4 w-4 mr-1" />
+                          Download
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleEditSlideshow(slideshow)}>
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => toggleSlideshowVisibility(slideshow.id, slideshow.visible)}>
+                          {slideshow.visible ? (
+                            <><EyeOff className="h-4 w-4 mr-1" />Hide</>
+                          ) : (
+                            <><Eye className="h-4 w-4 mr-1" />Show</>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
               <CardFooter>
                 <Button variant="outline" onClick={() => setSlideshowDialogOpen(true)}>
@@ -575,32 +557,28 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
             
             <div>
               <h3 className="text-sm font-medium mb-2">Select Photos</h3>
-              {shoot.media?.photos && shoot.media.photos.length > 0 ? (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[400px] overflow-y-auto p-1">
-                  {shoot.media.photos.map((photo, index) => (
-                    <div 
-                      key={index} 
-                      className={`relative aspect-square rounded-md overflow-hidden border cursor-pointer ${
-                        selectedPhotos.includes(photo) ? 'ring-2 ring-primary' : ''
-                      }`}
-                      onClick={() => handlePhotoSelect(photo)}
-                    >
-                      <img 
-                        src={photo} 
-                        alt={`Property photo ${index + 1}`} 
-                        className="object-cover w-full h-full"
-                      />
-                      {selectedPhotos.includes(photo) && (
-                        <div className="absolute top-1 right-1 h-5 w-5 bg-primary rounded-full flex items-center justify-center text-white text-xs">
-                          {selectedPhotos.indexOf(photo) + 1}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No photos available to create a slideshow</p>
-              )}
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[400px] overflow-y-auto p-1">
+                {displayPhotos.map((photo, index) => (
+                  <div 
+                    key={index} 
+                    className={`relative aspect-square rounded-md overflow-hidden border cursor-pointer ${
+                      selectedPhotos.includes(photo) ? 'ring-2 ring-primary' : ''
+                    }`}
+                    onClick={() => handlePhotoSelect(photo)}
+                  >
+                    <img 
+                      src={photo} 
+                      alt={`Property photo ${index + 1}`} 
+                      className="object-cover w-full h-full"
+                    />
+                    {selectedPhotos.includes(photo) && (
+                      <div className="absolute top-1 right-1 h-5 w-5 bg-primary rounded-full flex items-center justify-center text-white text-xs">
+                        {selectedPhotos.indexOf(photo) + 1}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
           

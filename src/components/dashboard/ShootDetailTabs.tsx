@@ -23,8 +23,8 @@ export function ShootDetailTabs({
   isPhotographer,
   role
 }: ShootDetailTabsProps) {
-  // If the shoot is completed, we should allow media tab regardless of whether media exists
-  const showMediaTab = shoot.status === 'completed' || (shoot.media?.photos && shoot.media.photos.length > 0);
+  // Always show media tab for demo purposes or if media exists
+  const showMediaTab = true;
   
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
