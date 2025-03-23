@@ -46,6 +46,7 @@ export function SlideshowViewer({
   }, [api, currentIndex, safePhotos.length]);
   
   const handleDownload = (photoUrl?: string) => {
+    // If there's an external onDownload handler, use it
     if (onDownload) {
       onDownload(photoUrl || safePhotos[currentSlide]);
       return;
@@ -53,7 +54,14 @@ export function SlideshowViewer({
 
     // Default download behavior - download current or specified photo
     const urlToDownload = photoUrl || safePhotos[currentSlide];
-    if (!urlToDownload) return;
+    if (!urlToDownload) {
+      toast({
+        title: "Error",
+        description: "No photo available to download",
+        variant: "destructive",
+      });
+      return;
+    }
     
     toast({
       title: "Photo Download Started",
@@ -63,7 +71,11 @@ export function SlideshowViewer({
     // Use the browser's download capability
     const downloadLink = document.createElement('a');
     downloadLink.href = urlToDownload;
-    downloadLink.download = `${title.replace(/\s+/g, '_')}_photo.jpg`;
+    
+    // Extract filename from URL or create a custom one
+    const fileName = urlToDownload.split('/').pop() || `${title.replace(/\s+/g, '_')}_photo.jpg`;
+    downloadLink.download = fileName;
+    
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
