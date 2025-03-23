@@ -64,11 +64,8 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const [slideshowTitle, setSlideshowTitle] = useState("New Slideshow");
   const [viewSlideshowDialogOpen, setViewSlideshowDialogOpen] = useState(false);
   const [viewingSlideshowUrl, setViewingSlideshowUrl] = useState<string | null>(null);
-  const [displaySlideshows, setDisplaySlideshows] = useState<{id: string, title: string, url: string, visible: boolean}[]>(
-    shoot.media?.slideshows && shoot.media.slideshows.length > 0
-      ? shoot.media.slideshows
-      : sampleSlideshows
-  );
+  const [photoCarouselOpen, setPhotoCarouselOpen] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   
   const isAdmin = ['admin', 'superadmin'].includes(role);
   const isPaid = shoot.payment.totalPaid && shoot.payment.totalPaid >= shoot.payment.totalQuote;
@@ -102,11 +99,35 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       return;
     }
     
-    setSelectedImage(imageSrc);
+    const photoIndex = displayPhotos.findIndex(photo => photo === imageSrc);
+    if (photoIndex !== -1) {
+      setCurrentPhotoIndex(photoIndex);
+      setPhotoCarouselOpen(true);
+    } else {
+      setSelectedImage(imageSrc);
+    }
   };
 
   const handleCloseImageView = () => {
     setSelectedImage(null);
+  };
+
+  const handlePhotoDownload = (photoUrl?: string) => {
+    if (!photoUrl) return;
+    
+    const fileName = photoUrl.split('/').pop() || 'photo.jpg';
+    
+    toast({
+      title: "Photo Download Started",
+      description: `Downloading ${fileName}`,
+    });
+    
+    const downloadLink = document.createElement('a');
+    downloadLink.href = photoUrl;
+    downloadLink.download = fileName;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
   };
 
   const handleSlideshowCreate = () => {
@@ -310,13 +331,32 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                       {selectedPhotos.indexOf(photo) + 1}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     {slideshowDialogOpen ? (
                       <div className="text-white font-bold">
                         {selectedPhotos.includes(photo) ? 'Selected' : 'Select'}
                       </div>
                     ) : (
-                      <Eye className="h-8 w-8 text-white" />
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="bg-white/80 hover:bg-white"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePhotoDownload(photo);
+                          }}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="bg-white/80 hover:bg-white"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -851,6 +891,31 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
             }}>
               <Download className="h-4 w-4 mr-2" />
               Download Photo
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={photoCarouselOpen} onOpenChange={setPhotoCarouselOpen}>
+        <DialogContent className="sm:max-w-[90vw] max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Photo Viewer</DialogTitle>
+          </DialogHeader>
+          
+          <div className="w-full bg-black/5 rounded-md flex items-center justify-center overflow-hidden p-4">
+            <SlideshowViewer 
+              photos={displayPhotos} 
+              title="Property Photos"
+              onDownload={handlePhotoDownload}
+              currentIndex={currentPhotoIndex}
+            />
+          </div>
+          
+          <div className="flex justify-between mt-4">
+            <Button variant="outline" onClick={() => setPhotoCarouselOpen(false)}>Close</Button>
+            <Button onClick={() => handlePhotoDownload(displayPhotos[currentPhotoIndex])}>
+              <Download className="h-4 w-4 mr-2" />
+              Download Current Photo
             </Button>
           </div>
         </DialogContent>

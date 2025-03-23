@@ -15,32 +15,41 @@ import { useToast } from "@/hooks/use-toast";
 interface SlideshowViewerProps {
   photos: string[];
   title: string;
-  onDownload?: () => void;
+  onDownload?: (photoUrl?: string) => void;
+  currentIndex?: number;
 }
 
-export function SlideshowViewer({ photos, title, onDownload }: SlideshowViewerProps) {
+export function SlideshowViewer({ photos, title, onDownload, currentIndex = 0 }: SlideshowViewerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(currentIndex);
   const [intervalId, setIntervalId] = useState<number | null>(null);
   const [api, setApi] = useState<CarouselApi | null>(null);
   const { toast } = useToast();
   
-  const handleDownload = () => {
+  // Set initial slide based on currentIndex prop
+  useEffect(() => {
+    if (api && currentIndex) {
+      api.scrollTo(currentIndex);
+    }
+  }, [api, currentIndex]);
+  
+  const handleDownload = (photoUrl?: string) => {
     if (onDownload) {
-      onDownload();
+      onDownload(photoUrl || photos[currentSlide]);
       return;
     }
 
-    // Default download behavior - simulate video download
+    // Default download behavior - download current or specified photo
+    const urlToDownload = photoUrl || photos[currentSlide];
+    
     toast({
-      title: "Video Download Started",
-      description: `${title} video is being downloaded`,
+      title: "Photo Download Started",
+      description: `${title} photo is being downloaded`,
     });
     
     // Use the browser's download capability
-    // Create a temporary link element for downloading
     const downloadLink = document.createElement('a');
-    downloadLink.href = photos[currentSlide]; // Download current slide as a fallback
+    downloadLink.href = urlToDownload;
     downloadLink.download = `${title.replace(/\s+/g, '_')}_photo.jpg`;
     document.body.appendChild(downloadLink);
     downloadLink.click();
@@ -109,9 +118,9 @@ export function SlideshowViewer({ photos, title, onDownload }: SlideshowViewerPr
               <><Play className="h-4 w-4 mr-2" />Play</>
             )}
           </Button>
-          <Button onClick={handleDownload} variant="outline" size="sm">
+          <Button onClick={() => handleDownload()} variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
-            Download Photo
+            Download Current Photo
           </Button>
         </div>
       </div>
@@ -124,12 +133,25 @@ export function SlideshowViewer({ photos, title, onDownload }: SlideshowViewerPr
           {photos.map((photo, index) => (
             <CarouselItem key={index}>
               <div className="p-1">
-                <div className="overflow-hidden rounded-md">
+                <div className="overflow-hidden rounded-md relative group">
                   <img
                     src={photo}
                     alt={`Slide ${index + 1}`}
                     className="w-full object-cover aspect-video"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(photo);
+                      }}
+                      className="bg-white/80 hover:bg-white"
+                    >
+                      <Download className="h-4 w-4 mr-2" />Download
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CarouselItem>
