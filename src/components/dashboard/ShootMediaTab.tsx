@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2 } from "lucide-react";
@@ -15,6 +16,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from '@/components/auth/AuthProvider';
+import { v4 as uuidv4 } from 'uuid';
+import { useShoots } from '@/context/ShootsContext';
 
 const examplePhotos = [
   "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200&auto=format",
@@ -50,6 +53,7 @@ interface ShootMediaTabProps {
 export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const { toast } = useToast();
   const { role } = useAuth();
+  const { updateShoot } = useShoots();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [slideshowDialogOpen, setSlideshowDialogOpen] = useState(false);
@@ -57,6 +61,9 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [editSlideshowDialogOpen, setEditSlideshowDialogOpen] = useState(false);
   const [currentSlideshow, setCurrentSlideshow] = useState<{id: string, title: string, url: string, visible: boolean} | null>(null);
+  const [slideshowTitle, setSlideshowTitle] = useState("New Slideshow");
+  const [viewSlideshowDialogOpen, setViewSlideshowDialogOpen] = useState(false);
+  const [viewingSlideshowUrl, setViewingSlideshowUrl] = useState<string | null>(null);
   
   const isAdmin = ['admin', 'superadmin'].includes(role);
   const isPaid = shoot.payment.totalPaid && shoot.payment.totalPaid >= shoot.payment.totalQuote;
@@ -98,13 +105,44 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
 
   const handleSlideshowCreate = () => {
     // This would call the Ayrshare API in a real implementation
+    if (selectedPhotos.length === 0) {
+      toast({
+        title: 'Error',
+        description: 'Please select at least one photo for the slideshow',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Generate a new slideshow
+    const newSlideshow = {
+      id: `slide-${uuidv4().slice(0, 8)}`,
+      title: slideshowTitle || `${shoot.location.city} ${slideshowOrientation} Slideshow`,
+      url: `https://example.com/slideshows/${shoot.id}-${uuidv4().slice(0, 6)}`,
+      visible: true
+    };
+    
+    // Update the shoot with the new slideshow
+    const updatedSlideshows = shoot.media?.slideshows ? 
+      [...shoot.media.slideshows, newSlideshow] : 
+      [newSlideshow];
+    
+    updateShoot(shoot.id, {
+      media: {
+        ...shoot.media,
+        slideshows: updatedSlideshows,
+        photos: shoot.media?.photos || []
+      }
+    });
+    
     toast({
       title: 'Slideshow Created',
-      description: `Successfully created a ${slideshowOrientation} slideshow with ${selectedPhotos.length} photos`,
+      description: `Successfully created "${newSlideshow.title}" slideshow`,
     });
     
     // Reset and close dialog
     setSelectedPhotos([]);
+    setSlideshowTitle("New Slideshow");
     setSlideshowDialogOpen(false);
   };
 
@@ -124,6 +162,19 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const handleUpdateSlideshow = () => {
     if (!currentSlideshow) return;
     
+    // Update the slideshow in the shoot data
+    const updatedSlideshows = shoot.media?.slideshows?.map(s => 
+      s.id === currentSlideshow.id ? currentSlideshow : s
+    ) || [];
+    
+    updateShoot(shoot.id, {
+      media: {
+        ...shoot.media,
+        slideshows: updatedSlideshows,
+        photos: shoot.media?.photos || []
+      }
+    });
+    
     toast({
       title: 'Slideshow Updated',
       description: 'Slideshow title has been updated successfully',
@@ -133,10 +184,28 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   };
 
   const toggleSlideshowVisibility = (slideshowId: string, currentVisibility: boolean) => {
+    // Update the slideshow visibility in the shoot data
+    const updatedSlideshows = shoot.media?.slideshows?.map(s => 
+      s.id === slideshowId ? {...s, visible: !currentVisibility} : s
+    ) || [];
+    
+    updateShoot(shoot.id, {
+      media: {
+        ...shoot.media,
+        slideshows: updatedSlideshows,
+        photos: shoot.media?.photos || []
+      }
+    });
+    
     toast({
       title: `Slideshow ${currentVisibility ? 'Hidden' : 'Visible'}`,
       description: `The slideshow is now ${currentVisibility ? 'hidden' : 'visible'}`,
     });
+  };
+
+  const viewSlideshow = (url: string) => {
+    setViewingSlideshowUrl(url);
+    setViewSlideshowDialogOpen(true);
   };
 
   const downloadSlideshow = (url: string) => {
@@ -318,6 +387,10 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                         <p className="text-sm text-muted-foreground truncate max-w-[300px]">{slideshow.url}</p>
                       </div>
                       <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => viewSlideshow(slideshow.url)}>
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => downloadSlideshow(slideshow.url)}>
                           <Download className="h-4 w-4 mr-1" />
                           Download
@@ -536,6 +609,17 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           
           <div className="space-y-4">
             <div>
+              <Label htmlFor="slideshowTitle">Slideshow Title</Label>
+              <Input 
+                id="slideshowTitle" 
+                value={slideshowTitle}
+                onChange={(e) => setSlideshowTitle(e.target.value)}
+                placeholder="Enter slideshow title"
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
               <h3 className="text-sm font-medium mb-2">Select Orientation</h3>
               <RadioGroup 
                 value={slideshowOrientation} 
@@ -556,7 +640,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
             <Separator />
             
             <div>
-              <h3 className="text-sm font-medium mb-2">Select Photos</h3>
+              <h3 className="text-sm font-medium mb-2">Select Photos ({selectedPhotos.length} selected)</h3>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[400px] overflow-y-auto p-1">
                 {displayPhotos.map((photo, index) => (
                   <div 
@@ -628,6 +712,51 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
             <Button variant="outline" onClick={() => setEditSlideshowDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleUpdateSlideshow}>
               Update Slideshow
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* View Slideshow Dialog */}
+      <Dialog open={viewSlideshowDialogOpen} onOpenChange={setViewSlideshowDialogOpen}>
+        <DialogContent className="sm:max-w-[90vw] max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Slideshow Preview</DialogTitle>
+          </DialogHeader>
+          
+          <div className="w-full h-[60vh] bg-black rounded-md flex items-center justify-center overflow-hidden">
+            {viewingSlideshowUrl ? (
+              <div className="relative w-full h-full">
+                {/* In a real implementation, this would be an iframe or a slideshow component */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                  <h3 className="text-2xl font-bold mb-4">Slideshow Preview</h3>
+                  <div className="slideshow-container w-full h-4/5 overflow-hidden">
+                    {/* Mock slideshow with sample images */}
+                    <div className="slideshow-images flex flex-col gap-4">
+                      {displayPhotos.slice(0, 3).map((photo, index) => (
+                        <div key={index} className="w-full max-h-[200px] overflow-hidden rounded-md">
+                          <img 
+                            src={photo} 
+                            alt={`Slideshow image ${index + 1}`} 
+                            className="w-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm opacity-70">Slideshow URL: {viewingSlideshowUrl}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-white">Loading slideshow...</div>
+            )}
+          </div>
+          
+          <div className="flex justify-between mt-4">
+            <Button variant="outline" onClick={() => setViewSlideshowDialogOpen(false)}>Close</Button>
+            <Button onClick={() => viewingSlideshowUrl && downloadSlideshow(viewingSlideshowUrl)}>
+              <Download className="h-4 w-4 mr-2" />
+              Download Slideshow
             </Button>
           </div>
         </DialogContent>

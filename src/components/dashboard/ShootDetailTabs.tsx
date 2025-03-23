@@ -23,7 +23,7 @@ export function ShootDetailTabs({
   isPhotographer,
   role
 }: ShootDetailTabsProps) {
-  // Always show media tab for demo purposes or if media exists
+  // Always show media tab
   const showMediaTab = true;
   
   return (
