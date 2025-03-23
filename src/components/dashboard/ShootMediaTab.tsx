@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2, Play } from "lucide-react";
+import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2, Play, Pause } from "lucide-react";
 import { ShootData } from '@/types/shoots';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { FileUploader } from '@/components/media/FileUploader';
@@ -66,6 +66,10 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const [viewingSlideshowUrl, setViewingSlideshowUrl] = useState<string | null>(null);
   const [photoCarouselOpen, setPhotoCarouselOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  // Add the missing state for displaySlideshows
+  const [displaySlideshows, setDisplaySlideshows] = useState(
+    shoot.media?.slideshows || sampleSlideshows
+  );
   
   const isAdmin = ['admin', 'superadmin'].includes(role);
   const isPaid = shoot.payment.totalPaid && shoot.payment.totalPaid >= shoot.payment.totalQuote;
@@ -785,141 +789,3 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
             >
               Create & View Slideshow
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={editSlideshowDialogOpen} onOpenChange={setEditSlideshowDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Edit Slideshow</DialogTitle>
-          </DialogHeader>
-          
-          {currentSlideshow && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="slideshowTitle">Slideshow Title</Label>
-                <Input 
-                  id="slideshowTitle" 
-                  value={currentSlideshow.title}
-                  onChange={(e) => setCurrentSlideshow({...currentSlideshow, title: e.target.value})}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="slideshowUrl">Slideshow URL (Read Only)</Label>
-                <Input 
-                  id="slideshowUrl" 
-                  value={currentSlideshow.url}
-                  readOnly
-                  disabled
-                />
-              </div>
-            </div>
-          )}
-          
-          <div className="flex justify-between mt-4">
-            <Button variant="outline" onClick={() => setEditSlideshowDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleUpdateSlideshow}>
-              Update Slideshow
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={viewSlideshowDialogOpen} onOpenChange={setViewSlideshowDialogOpen}>
-        <DialogContent className="sm:max-w-[90vw] max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>Slideshow Preview</DialogTitle>
-          </DialogHeader>
-          
-          <div className="w-full bg-black rounded-md flex items-center justify-center overflow-hidden p-4">
-            {viewingSlideshowUrl ? (
-              <SlideshowViewer 
-                photos={selectedPhotos.length > 0 ? selectedPhotos : displayPhotos.slice(0, 5)} 
-                title={displaySlideshows.find(s => s.url === viewingSlideshowUrl)?.title || "Slideshow"}
-                onDownload={() => {
-                  if (viewingSlideshowUrl) {
-                    const slideshow = displaySlideshows.find(s => s.url === viewingSlideshowUrl);
-                    if (slideshow) {
-                      const photos = selectedPhotos.length > 0 ? selectedPhotos : displayPhotos.slice(0, 5);
-                      
-                      toast({
-                        title: "Photo Downloading",
-                        description: `Downloading from ${slideshow.title}`,
-                      });
-                      
-                      const link = document.createElement('a');
-                      link.href = photos[0];
-                      link.download = `${slideshow.title.replace(/\s+/g, '_')}_photo.jpg`;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }
-                  }
-                }}
-              />
-            ) : (
-              <div className="text-white">Loading slideshow...</div>
-            )}
-          </div>
-          
-          <div className="flex justify-between mt-4">
-            <Button variant="outline" onClick={() => {
-              setViewSlideshowDialogOpen(false);
-              setSelectedPhotos([]);
-            }}>Close</Button>
-            <Button onClick={() => {
-              if (viewingSlideshowUrl) {
-                const slideshow = displaySlideshows.find(s => s.url === viewingSlideshowUrl);
-                if (slideshow) {
-                  const photos = selectedPhotos.length > 0 ? selectedPhotos : displayPhotos.slice(0, 5);
-                  
-                  toast({
-                    title: "Photo Download Started",
-                    description: `Downloading from ${slideshow.title}`,
-                  });
-                  
-                  const link = document.createElement('a');
-                  link.href = photos[0];
-                  link.download = `${slideshow.title.replace(/\s+/g, '_')}_photo.jpg`;
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }
-              }
-            }}>
-              <Download className="h-4 w-4 mr-2" />
-              Download Photo
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={photoCarouselOpen} onOpenChange={setPhotoCarouselOpen}>
-        <DialogContent className="sm:max-w-[90vw] max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>Photo Viewer</DialogTitle>
-          </DialogHeader>
-          
-          <div className="w-full bg-black/5 rounded-md flex items-center justify-center overflow-hidden p-4">
-            <SlideshowViewer 
-              photos={displayPhotos} 
-              title="Property Photos"
-              onDownload={handlePhotoDownload}
-              currentIndex={currentPhotoIndex}
-            />
-          </div>
-          
-          <div className="flex justify-between mt-4">
-            <Button variant="outline" onClick={() => setPhotoCarouselOpen(false)}>Close</Button>
-            <Button onClick={() => handlePhotoDownload(displayPhotos[currentPhotoIndex])}>
-              <Download className="h-4 w-4 mr-2" />
-              Download Current Photo
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
