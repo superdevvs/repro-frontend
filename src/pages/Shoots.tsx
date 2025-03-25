@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -7,6 +8,8 @@ import { ShootsFilter } from '@/components/dashboard/ShootsFilter';
 import { ShootsContent } from '@/components/dashboard/ShootsContent';
 import { ShootData } from '@/types/shoots';
 import { useShoots } from '@/context/ShootsContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FileUploader } from '@/components/media/FileUploader';
 
 const Shoots = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,8 +17,9 @@ const Shoots = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   
-  const { shoots } = useShoots();
+  const { shoots, updateShoot } = useShoots();
   
   const filteredShoots = shoots.filter(shoot => {
     const matchesSearch = 
@@ -43,6 +47,31 @@ const Shoots = () => {
     setSelectedShoot(null);
   };
   
+  const handleUploadMedia = (shoot: ShootData) => {
+    setSelectedShoot(shoot);
+    setIsUploadDialogOpen(true);
+  };
+  
+  const handleUploadComplete = (files: File[]) => {
+    if (!selectedShoot) return;
+    
+    // Create URLs for the uploaded files (in a real app, these would be hosted URLs)
+    const photoUrls = files
+      .filter(file => file.type.startsWith('image/'))
+      .map(() => '/placeholder.svg');
+    
+    // Update the shoot with new media
+    updateShoot(selectedShoot.id, {
+      media: {
+        ...selectedShoot.media,
+        photos: [...(selectedShoot.media?.photos || []), ...photoUrls]
+      }
+    });
+    
+    // Close the dialog after upload is complete
+    setIsUploadDialogOpen(false);
+  };
+  
   return (
     <DashboardLayout>
       <PageTransition>
@@ -68,6 +97,8 @@ const Shoots = () => {
             filteredShoots={filteredShoots}
             viewMode={viewMode}
             onShootSelect={handleShootSelect}
+            onUploadMedia={isCompletedTab ? handleUploadMedia : undefined}
+            showMedia={isCompletedTab}
           />
         </div>
         
@@ -76,6 +107,18 @@ const Shoots = () => {
           isOpen={isDetailOpen}
           onClose={closeDetail}
         />
+        
+        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Upload Media for {selectedShoot?.location.fullAddress}</DialogTitle>
+            </DialogHeader>
+            <FileUploader 
+              shootId={selectedShoot?.id} 
+              onUploadComplete={handleUploadComplete}
+            />
+          </DialogContent>
+        </Dialog>
       </PageTransition>
     </DashboardLayout>
   );

@@ -1,319 +1,133 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Table, 
   TableBody, 
-  TableCaption, 
   TableCell, 
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  CreditCard, 
-  Download, 
-  Edit, 
-  Eye, 
-  MoreHorizontal, 
-  SendIcon, 
-  Upload, 
-  FileText,
-  ChevronRight,
-  CalendarClock
-} from "lucide-react";
+  CalendarIcon, 
+  ChevronRightIcon, 
+  ImageIcon, 
+  MapPinIcon,
+  UploadIcon
+} from 'lucide-react';
 import { ShootData } from '@/types/shoots';
 import { format } from 'date-fns';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Card, CardContent } from "@/components/ui/card";
-import { MessageDialog } from './MessageDialog';
-import { ShootActionsDialog } from './ShootActionsDialog';
-import { useToast } from "@/hooks/use-toast";
 
 interface ShootsListProps {
   shoots: ShootData[];
-  onViewDetails: (shoot: ShootData) => void;
+  onSelect: (shoot: ShootData) => void;
+  onUploadMedia?: (shoot: ShootData) => void;
+  showMedia?: boolean;
 }
 
-export function ShootsList({ shoots, onViewDetails }: ShootsListProps) {
-  const { role } = useAuth();
-  const isMobile = useIsMobile();
-  const isAdmin = ['admin', 'superadmin'].includes(role);
-  const isPhotographer = role === 'photographer';
-  const { toast } = useToast();
-  
-  const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
-  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  
-  const getStatusBadge = (status: ShootData['status']) => {
-    switch (status) {
-      case 'scheduled':
-        return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">Scheduled</Badge>;
-      case 'completed':
-        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Completed</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending</Badge>;
-      case 'hold':
-        return <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20">Hold</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
-  
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    return format(new Date(dateString), 'MM/dd/yyyy');
-  };
-  
-  const getPaymentStatus = (shoot: ShootData) => {
-    if (!shoot.payment.totalPaid) return <Badge variant="outline">Unpaid</Badge>;
-    if (shoot.payment.totalPaid < shoot.payment.totalQuote) {
-      return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Partial</Badge>;
-    }
-    return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Paid</Badge>;
+export function ShootsList({ 
+  shoots, 
+  onSelect,
+  onUploadMedia,
+  showMedia = false
+}: ShootsListProps) {
+  const statusColorMap = {
+    'completed': 'bg-green-500',
+    'scheduled': 'bg-blue-500',
+    'pending': 'bg-amber-500',
+    'hold': 'bg-purple-500'
   };
 
-  const handleOpenMessageDialog = (shoot: ShootData) => {
-    setSelectedShoot(shoot);
-    setIsMessageDialogOpen(true);
-  };
-
-  const handleCloseMessageDialog = () => {
-    setIsMessageDialogOpen(false);
-  };
-
-  const handleOpenEditDialog = (shoot: ShootData) => {
-    setSelectedShoot(shoot);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleCloseEditDialog = () => {
-    setIsEditDialogOpen(false);
-  };
-  
-  if (isMobile) {
-    return (
-      <>
-        <div className="space-y-4">
-          {shoots.length > 0 ? (
-            shoots.map((shoot) => (
-              <Card key={shoot.id} className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="p-4 space-y-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-semibold">{shoot.client.name}</div>
-                        <div className="text-xs text-muted-foreground">{formatDate(shoot.scheduledDate)}</div>
-                      </div>
-                      <div>{getStatusBadge(shoot.status)}</div>
-                    </div>
-                    
-                    <div className="text-sm truncate">{shoot.location.fullAddress}</div>
-                    
-                    <div className="flex justify-between items-center border-t pt-3 mt-3">
-                      <div className="text-xs text-muted-foreground">
-                        {shoot.photographer.name}
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0" 
-                          onClick={() => handleOpenMessageDialog(shoot)}
-                        >
-                          <SendIcon className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0" 
-                          onClick={() => handleOpenEditDialog(shoot)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0" 
-                          onClick={() => onViewDetails(shoot)}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No shoots found.
-            </div>
-          )}
-        </div>
-        
-        {selectedShoot && (
-          <>
-            <MessageDialog
-              shoot={selectedShoot}
-              isOpen={isMessageDialogOpen}
-              onClose={handleCloseMessageDialog}
-            />
-            
-            <ShootActionsDialog
-              shoot={selectedShoot}
-              isOpen={isEditDialogOpen}
-              onClose={handleCloseEditDialog}
-            />
-          </>
-        )}
-      </>
-    );
-  }
-  
   return (
-    <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead>Services</TableHead>
-              <TableHead>Photographer</TableHead>
-              {role === 'superadmin' && <TableHead>Payment</TableHead>}
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {shoots.length > 0 ? (
-              shoots.map((shoot) => (
-                <TableRow key={shoot.id}>
-                  <TableCell className="font-medium">{formatDate(shoot.scheduledDate)}</TableCell>
-                  <TableCell>{shoot.client.name}</TableCell>
-                  <TableCell className="max-w-[200px] truncate" title={shoot.location.fullAddress}>
-                    {shoot.location.fullAddress}
-                  </TableCell>
-                  <TableCell className="max-w-[150px] truncate" title={shoot.services.join(', ')}>
-                    {shoot.services.length > 0 ? shoot.services.join(', ') : 'N/A'}
-                  </TableCell>
-                  <TableCell>{shoot.photographer.name}</TableCell>
-                  {role === 'superadmin' && (
-                    <TableCell>{getPaymentStatus(shoot)}</TableCell>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[60px]"><Checkbox /></TableHead>
+            <TableHead>Address</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Photographer</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Status</TableHead>
+            {showMedia && <TableHead>Media</TableHead>}
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {shoots.map((shoot) => (
+            <TableRow key={shoot.id} className="cursor-pointer" onClick={() => onSelect(shoot)}>
+              <TableCell><Checkbox onClick={(e) => e.stopPropagation()} /></TableCell>
+              <TableCell className="font-medium">
+                <div className="flex items-center">
+                  <MapPinIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                  {shoot.location.fullAddress}
+                </div>
+              </TableCell>
+              <TableCell>{shoot.client.name}</TableCell>
+              <TableCell>{shoot.photographer.name}</TableCell>
+              <TableCell>
+                <div className="flex items-center">
+                  <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                  {format(new Date(shoot.scheduledDate), 'MMM dd, yyyy')}
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge 
+                  variant="secondary" 
+                  className={`${statusColorMap[shoot.status]} text-white`}
+                >
+                  {shoot.status.charAt(0).toUpperCase() + shoot.status.slice(1)}
+                </Badge>
+              </TableCell>
+              {showMedia && (
+                <TableCell>
+                  {shoot.media?.photos && shoot.media.photos.length > 0 ? (
+                    <div className="flex -space-x-2">
+                      {shoot.media.photos.slice(0, 3).map((photo, index) => (
+                        <Avatar key={index} className="border-2 border-background w-8 h-8">
+                          <AvatarImage src={photo} alt="Media" />
+                          <AvatarFallback>
+                            <ImageIcon className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                      {shoot.media.photos.length > 3 && (
+                        <Avatar className="border-2 border-background bg-muted w-8 h-8">
+                          <AvatarFallback>+{shoot.media.photos.length - 3}</AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">No media</span>
                   )}
-                  <TableCell>{getStatusBadge(shoot.status)}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onViewDetails(shoot)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuItem onClick={() => handleOpenMessageDialog(shoot)}>
-                          <SendIcon className="mr-2 h-4 w-4" />
-                          Send Message
-                        </DropdownMenuItem>
-                        
-                        {(isAdmin || isPhotographer) && (
-                          <DropdownMenuItem onClick={() => handleOpenEditDialog(shoot)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit Shoot
-                          </DropdownMenuItem>
-                        )}
-                        
-                        {isAdmin && (
-                          <>
-                            <DropdownMenuItem>
-                              <FileText className="mr-2 h-4 w-4" />
-                              Generate Invoice
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <CalendarClock className="mr-2 h-4 w-4" />
-                              Reschedule
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        
-                        {isPhotographer && (
-                          <>
-                            <DropdownMenuItem>
-                              <Upload className="mr-2 h-4 w-4" />
-                              Upload Media
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        
-                        {role === 'superadmin' && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                              <CreditCard className="mr-2 h-4 w-4" />
-                              Process Payment
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        
-                        {shoot.status === 'completed' && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                              <Download className="mr-2 h-4 w-4" />
-                              Download Media
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={role === 'superadmin' ? 8 : 7} className="h-24 text-center">
-                  No shoots found.
                 </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      {selectedShoot && (
-        <>
-          <MessageDialog
-            shoot={selectedShoot}
-            isOpen={isMessageDialogOpen}
-            onClose={handleCloseMessageDialog}
-          />
-          
-          <ShootActionsDialog
-            shoot={selectedShoot}
-            isOpen={isEditDialogOpen}
-            onClose={handleCloseEditDialog}
-          />
-        </>
-      )}
-    </>
+              )}
+              <TableCell className="text-right">
+                {showMedia && onUploadMedia ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUploadMedia(shoot);
+                    }}
+                  >
+                    <UploadIcon className="h-4 w-4 mr-2" /> Upload
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </Button>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
