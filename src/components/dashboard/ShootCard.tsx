@@ -16,13 +16,41 @@ import {
 import { format } from 'date-fns';
 import { ShootData } from '@/types/shoots';
 
-interface ShootCardProps {
+interface LegacyShootCardProps {
+  id?: string;
+  address: string;
+  date: string;
+  time: string;
+  photographer: {
+    name: string;
+    avatar: string;
+  };
+  client: {
+    name: string;
+  };
+  status: 'scheduled' | 'completed' | 'pending' | 'hold';
+  price: number;
+  delay?: number;
+}
+
+interface NewShootCardProps {
   shoot: ShootData;
-  onClick?: () => void;
   showMedia?: boolean;
 }
 
-export function ShootCard({ shoot, onClick, showMedia = false }: ShootCardProps) {
+type ShootCardProps = (LegacyShootCardProps | NewShootCardProps) & {
+  onClick?: () => void;
+};
+
+export function ShootCard(props: ShootCardProps) {
+  // Check if using the new props structure
+  const isNewProps = 'shoot' in props;
+  
+  // Setup all needed variables whether using new or legacy props
+  const status = isNewProps ? props.shoot.status : props.status;
+  const showMedia = isNewProps ? props.showMedia : false;
+  const onClick = props.onClick;
+  
   const statusColorMap = {
     'completed': 'bg-green-500',
     'scheduled': 'bg-blue-500',
@@ -42,46 +70,123 @@ export function ShootCard({ shoot, onClick, showMedia = false }: ShootCardProps)
     if (!timeString) return 'TBD';
     return timeString;
   };
+
+  // If using new props structure
+  if (isNewProps) {
+    const { shoot } = props;
+    
+    return (
+      <div 
+        className="cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={onClick}
+      >
+        {showMedia && shoot.media?.photos && shoot.media.photos.length > 0 && (
+          <div className="relative h-40 w-full overflow-hidden">
+            <img 
+              src={shoot.media.photos[0]}
+              alt={shoot.location.address}
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs font-medium">
+              {shoot.media.photos.length} photos
+            </div>
+          </div>
+        )}
+        
+        <CardHeader className="p-4 pb-2">
+          <div className="flex justify-between items-start">
+            <Badge 
+              variant="secondary" 
+              className={`${statusColorMap[shoot.status]} text-white mb-2`}
+            >
+              {shoot.status.charAt(0).toUpperCase() + shoot.status.slice(1)}
+            </Badge>
+            
+            {shoot.time && (
+              <div className="flex items-center text-xs text-muted-foreground">
+                <ClockIcon className="h-3 w-3 mr-1" />
+                {formatTime(shoot.time)}
+              </div>
+            )}
+          </div>
+          
+          <CardTitle className="text-base line-clamp-1">
+            <div className="flex items-start">
+              <MapPinIcon className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0 text-muted-foreground" />
+              <span>{shoot.location.fullAddress}</span>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent className="p-4 pt-2">
+          <div className="flex items-center text-sm mb-2">
+            <UserIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+            <span className="font-medium">{shoot.client.name}</span>
+          </div>
+          
+          <div className="flex items-center text-sm mb-2">
+            <CameraIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+            <span>{shoot.photographer.name}</span>
+          </div>
+          
+          <div className="flex items-center text-sm">
+            <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+            <span>{formatDate(shoot.scheduledDate)}</span>
+          </div>
+          
+          {showMedia && !shoot.media?.photos && (
+            <div className="mt-3 flex items-center text-sm text-muted-foreground">
+              <ImageIcon className="h-4 w-4 mr-2" />
+              <span>No media uploaded yet</span>
+            </div>
+          )}
+        </CardContent>
+        
+        <CardFooter className="p-4 pt-0">
+          <div className="w-full">
+            <Separator className="my-2" />
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center">
+                <HomeIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span>{shoot.services.join(', ') || 'No services'}</span>
+              </div>
+              <span className="font-medium">
+                {shoot.payment.totalQuote > 0 ? `$${shoot.payment.totalQuote.toFixed(2)}` : 'TBD'}
+              </span>
+            </div>
+          </div>
+        </CardFooter>
+      </div>
+    );
+  }
+  
+  // Using legacy props structure
+  const { address, date, time, photographer, client, price } = props;
   
   return (
     <div 
       className="cursor-pointer hover:bg-muted/50 transition-colors"
       onClick={onClick}
     >
-      {showMedia && shoot.media?.photos && shoot.media.photos.length > 0 && (
-        <div className="relative h-40 w-full overflow-hidden">
-          <img 
-            src={shoot.media.photos[0]}
-            alt={shoot.location.address}
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs font-medium">
-            {shoot.media.photos.length} photos
-          </div>
-        </div>
-      )}
-      
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start">
           <Badge 
             variant="secondary" 
-            className={`${statusColorMap[shoot.status]} text-white mb-2`}
+            className={`${statusColorMap[status]} text-white mb-2`}
           >
-            {shoot.status.charAt(0).toUpperCase() + shoot.status.slice(1)}
+            {status.charAt(0).toUpperCase() + status.slice(1)}
           </Badge>
           
-          {shoot.time && (
-            <div className="flex items-center text-xs text-muted-foreground">
-              <ClockIcon className="h-3 w-3 mr-1" />
-              {formatTime(shoot.time)}
-            </div>
-          )}
+          <div className="flex items-center text-xs text-muted-foreground">
+            <ClockIcon className="h-3 w-3 mr-1" />
+            {formatTime(time)}
+          </div>
         </div>
         
         <CardTitle className="text-base line-clamp-1">
           <div className="flex items-start">
             <MapPinIcon className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0 text-muted-foreground" />
-            <span>{shoot.location.fullAddress}</span>
+            <span>{address}</span>
           </div>
         </CardTitle>
       </CardHeader>
@@ -89,25 +194,18 @@ export function ShootCard({ shoot, onClick, showMedia = false }: ShootCardProps)
       <CardContent className="p-4 pt-2">
         <div className="flex items-center text-sm mb-2">
           <UserIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span className="font-medium">{shoot.client.name}</span>
+          <span className="font-medium">{client.name}</span>
         </div>
         
         <div className="flex items-center text-sm mb-2">
           <CameraIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span>{shoot.photographer.name}</span>
+          <span>{photographer.name}</span>
         </div>
         
         <div className="flex items-center text-sm">
           <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span>{formatDate(shoot.scheduledDate)}</span>
+          <span>{formatDate(date)}</span>
         </div>
-        
-        {showMedia && !shoot.media?.photos && (
-          <div className="mt-3 flex items-center text-sm text-muted-foreground">
-            <ImageIcon className="h-4 w-4 mr-2" />
-            <span>No media uploaded yet</span>
-          </div>
-        )}
       </CardContent>
       
       <CardFooter className="p-4 pt-0">
@@ -116,10 +214,10 @@ export function ShootCard({ shoot, onClick, showMedia = false }: ShootCardProps)
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center">
               <HomeIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-              <span>{shoot.services.join(', ') || 'No services'}</span>
+              <span>Photography</span>
             </div>
             <span className="font-medium">
-              {shoot.payment.totalQuote > 0 ? `$${shoot.payment.totalQuote.toFixed(2)}` : 'TBD'}
+              {price > 0 ? `$${price.toFixed(2)}` : 'TBD'}
             </span>
           </div>
         </div>
