@@ -81,4 +81,10 @@
     text-align: center;
     justify-content: center;
   }
+  
+  .mobile-scrollable {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    max-height: 100%;
+  }
 }

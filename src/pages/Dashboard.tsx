@@ -7,11 +7,13 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { StatsCardGrid } from '@/components/dashboard/StatsCardGrid';
 import { RevenueOverview } from '@/components/dashboard/RevenueOverview';
 import { CalendarSection } from '@/components/dashboard/CalendarSection';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Dashboard = () => {
   const { role } = useAuth();
+  const isMobile = useIsMobile();
   
-  const calendarHeight = 400;
+  const calendarHeight = isMobile ? 300 : 400;
   
   const showRevenue = ['admin', 'superadmin'].includes(role);
   const showClientStats = ['admin', 'superadmin'].includes(role);
@@ -21,7 +23,7 @@ const Dashboard = () => {
   
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 pb-6">
         <DashboardHeader isAdmin={isAdmin} />
         
         <StatsCardGrid
