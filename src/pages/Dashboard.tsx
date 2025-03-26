@@ -39,6 +39,8 @@ const Dashboard = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
   
+  const calendarHeight = 210;
+  
   const showRevenue = ['admin', 'superadmin'].includes(role);
   const showClientStats = ['admin', 'superadmin'].includes(role);
   const showPhotographerInterface = role === 'photographer';
@@ -240,7 +242,7 @@ const Dashboard = () => {
           </div>
           
           <div className="lg:col-span-2">
-            <Calendar height={210} />
+            <Calendar height={calendarHeight} />
           </div>
         </div>
         
