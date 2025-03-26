@@ -40,7 +40,7 @@ const Dashboard = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
   
-  const calendarHeight = 210;
+  const calendarHeight = 400;
   
   const showRevenue = ['admin', 'superadmin'].includes(role);
   const showClientStats = ['admin', 'superadmin'].includes(role);
@@ -214,13 +214,14 @@ const Dashboard = () => {
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
                         <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
                         <YAxis 
-                          tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} 
+                          // Fix: Ensure value is treated as a number before arithmetic operation
+                          tickFormatter={(value) => `${(Number(value) * 100).toFixed(0)}%`} 
                           tick={{ fontSize: 10 }} 
                           tickLine={false} 
                           axisLine={false}
                           domain={[0, 0.5]} 
                         />
-                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value * 100).toFixed(1)}%`} />} />
+                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(Number(value) * 100).toFixed(1)}%`} />} />
                         <Line 
                           type="monotone" 
                           dataKey="growth" 

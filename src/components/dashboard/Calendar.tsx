@@ -21,7 +21,7 @@ import { ChevronLeft, ChevronRight, CalendarIcon, MapPinIcon } from 'lucide-reac
 
 interface CalendarProps {
   className?: string;
-  height: number;
+  height?: number;
 }
 
 export function Calendar({ className, height = 400 }: CalendarProps) {
@@ -78,7 +78,7 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn("w-full", className)}
-      style={{ height }}
+      style={{ height: height }}
     >
       <Card className="glass-card">
         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border">
