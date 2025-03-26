@@ -65,8 +65,7 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
   const visibleHours = useMemo(() => {
     const now = new Date();
     const currentHour = getHours(now);
-    const currentMinute = getMinutes(now);
-  
+    
     if (isToday(currentDate)) {
       return hours.filter(hour => hour >= currentHour - 2);
     }
