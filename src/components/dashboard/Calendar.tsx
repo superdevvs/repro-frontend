@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import {
   format,
@@ -20,7 +21,7 @@ import { ChevronLeft, ChevronRight, CalendarIcon, MapPinIcon } from 'lucide-reac
 
 interface CalendarProps {
   className?: string;
-  height?: number;
+  height: number;
 }
 
 export function Calendar({ className, height = 400 }: CalendarProps) {
@@ -48,13 +49,13 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
 
   const events = useMemo(() => {
     const eventsForWeek = shoots.filter(shoot =>
-      days.some(day => isSameDay(new Date(shoot.date), day))
+      days.some(day => isSameDay(new Date(shoot.scheduledDate), day))
     );
 
     return hours.map(hour => {
       return days.map(day => {
         return eventsForWeek.filter(shoot => {
-          const shootDate = new Date(shoot.date);
+          const shootDate = new Date(shoot.scheduledDate);
           return isSameDay(shootDate, day) && getHours(shootDate) === hour;
         });
       });
@@ -128,10 +129,10 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
                         <Badge className="absolute top-1 right-1 rounded-full h-5 w-5 text-xs">
                           {event.status}
                         </Badge>
-                        <p className="font-medium">{event.title}</p>
+                        <p className="font-medium">{event.client.name}</p>
                         <p className="text-muted-foreground flex items-center gap-1">
                           <MapPinIcon className="h-3 w-3" />
-                          {event.location}
+                          {event.location.fullAddress}
                         </p>
                       </div>
                     );
