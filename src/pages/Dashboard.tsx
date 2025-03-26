@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';

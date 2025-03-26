@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import {
   format,
@@ -179,6 +180,9 @@ export function Calendar({ className, events = [], height = 400 }: CalendarProps
 
   // Calculate how many rows of hours to display based on the height
   const visibleHours = Math.min(6, hours.length);
+  
+  // Use the height prop directly without arithmetic operations
+  const calendarHeight = typeof height === 'number' ? height : 400;
 
   return (
     <motion.div
@@ -186,7 +190,7 @@ export function Calendar({ className, events = [], height = 400 }: CalendarProps
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn("w-full", className)}
-      style={{ height: height }}
+      style={{ height: calendarHeight }}
     >
       <Card className="glass-card overflow-hidden h-full flex flex-col">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center border-b border-border pb-2 gap-2 flex-shrink-0">
