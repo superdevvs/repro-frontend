@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -241,7 +240,7 @@ const Dashboard = () => {
           </div>
           
           <div className="lg:col-span-2">
-            <Calendar height={300 * 0.7} />
+            <Calendar height={210} />
           </div>
         </div>
         
