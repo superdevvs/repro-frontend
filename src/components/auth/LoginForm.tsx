@@ -9,6 +9,7 @@ import { EyeIcon, EyeOffIcon, KeyIcon, MailIcon, ShieldIcon, UserIcon } from 'lu
 import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function LoginForm() {
   // Login state
@@ -28,6 +29,7 @@ export function LoginForm() {
   
   const { login } = useAuth();
   const { toast: uiToast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,22 +102,22 @@ export function LoginForm() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="w-full max-w-md p-8 glass-card rounded-2xl"
+      className={`w-full max-w-md ${isMobile ? 'mobile-compact-form px-4' : 'p-8'} glass-card rounded-2xl`}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="login">Login</TabsTrigger>
           <TabsTrigger value="signup">Sign Up</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="login" className="space-y-6">
+        <TabsContent value="login" className={`${isMobile ? 'space-y-3' : 'space-y-6'}`}>
           <div className="text-center">
-            <h2 className="text-2xl font-semibold mb-2">Welcome Back</h2>
-            <p className="text-muted-foreground">Enter your credentials to access the dashboard</p>
+            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold mb-2`}>Welcome Back</h2>
+            {!isMobile && <p className="text-muted-foreground">Enter your credentials to access the dashboard</p>}
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
+          <form onSubmit={handleSubmit} className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
+            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
               <Label htmlFor="email">Email address</Label>
               <div className="relative">
                 <MailIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -131,12 +133,14 @@ export function LoginForm() {
               </div>
             </div>
             
-            <div className="space-y-2">
+            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <a href="#" className="text-xs text-primary hover:underline">
-                  Forgot password?
-                </a>
+                {!isMobile && (
+                  <a href="#" className="text-xs text-primary hover:underline">
+                    Forgot password?
+                  </a>
+                )}
               </div>
               <div className="relative">
                 <KeyIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -199,14 +203,14 @@ export function LoginForm() {
           </div>
         </TabsContent>
         
-        <TabsContent value="signup" className="space-y-6">
+        <TabsContent value="signup" className={`${isMobile ? 'space-y-3' : 'space-y-6'}`}>
           <div className="text-center">
-            <h2 className="text-2xl font-semibold mb-2">Create Account</h2>
-            <p className="text-muted-foreground">Sign up to get started with our platform</p>
+            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold mb-2`}>Create Account</h2>
+            {!isMobile && <p className="text-muted-foreground">Sign up to get started with our platform</p>}
           </div>
           
-          <form onSubmit={handleSignup} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={handleSignup} className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
+            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
               <Label htmlFor="signup-name">Full Name</Label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -222,7 +226,7 @@ export function LoginForm() {
               </div>
             </div>
             
-            <div className="space-y-2">
+            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
               <Label htmlFor="signup-email">Email address</Label>
               <div className="relative">
                 <MailIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -238,7 +242,7 @@ export function LoginForm() {
               </div>
             </div>
             
-            <div className="space-y-2">
+            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
               <Label htmlFor="signup-password">Password</Label>
               <div className="relative">
                 <KeyIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -265,7 +269,7 @@ export function LoginForm() {
               </div>
             </div>
             
-            <div className="space-y-2">
+            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
               <Label htmlFor="confirm-password">Confirm Password</Label>
               <div className="relative">
                 <KeyIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />

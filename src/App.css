@@ -1,4 +1,3 @@
-
 #root {
   max-width: 100%;
   margin: 0 auto;
@@ -86,5 +85,34 @@
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
     max-height: 100%;
+  }
+  
+  .mobile-compact-form .glass-card {
+    padding: 1rem !important;
+  }
+  
+  .mobile-compact-form .space-y-6 {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .mobile-compact-form h2 {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .mobile-compact-form p {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .mobile-compact-form .space-y-2 {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .mobile-compact-form .space-y-4 {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
   }
 }
