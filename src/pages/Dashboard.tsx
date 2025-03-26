@@ -1,24 +1,39 @@
+
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { Calendar } from '@/components/dashboard/Calendar';
 import { UpcomingShoots } from '@/components/dashboard/UpcomingShoots';
+import { TaskManager } from '@/components/dashboard/TaskManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { CalendarIcon, CameraIcon, DollarSignIcon, ImageIcon, UsersIcon, PlusIcon, HomeIcon } from 'lucide-react';
+import { CalendarIcon, CameraIcon, DollarSignIcon, ImageIcon, UsersIcon, PlusIcon, HomeIcon, BarChart3Icon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  AreaChart,
+  Area,
+  Line,
+  LineChart
+} from 'recharts';
+import { ChartContainer, ChartTooltipContent, ChartTooltip } from '@/components/ui/chart';
 
 const revenueData = [
-  { name: 'Jan', revenue: 4000 },
-  { name: 'Feb', revenue: 5500 },
-  { name: 'Mar', revenue: 7800 },
-  { name: 'Apr', revenue: 8200 },
-  { name: 'May', revenue: 9000 },
-  { name: 'Jun', revenue: 10500 },
+  { name: 'Jan', revenue: 4000, growth: 0.4, profit: 1200 },
+  { name: 'Feb', revenue: 5500, growth: 0.25, profit: 1650 },
+  { name: 'Mar', revenue: 7800, growth: 0.35, profit: 2340 },
+  { name: 'Apr', revenue: 8200, growth: 0.05, profit: 2460 },
+  { name: 'May', revenue: 9000, growth: 0.1, profit: 2700 },
+  { name: 'Jun', revenue: 10500, growth: 0.17, profit: 3150 },
 ];
 
 const Dashboard = () => {
@@ -110,16 +125,6 @@ const Dashboard = () => {
           )}
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <UpcomingShoots />
-          </div>
-          
-          <div className="lg:col-span-2">
-            <Calendar />
-          </div>
-        </div>
-        
         {showRevenue && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -129,37 +134,121 @@ const Dashboard = () => {
             <Card className="glass-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <DollarSignIcon className="h-5 w-5 text-primary" />
+                  <BarChart3Icon className="h-5 w-5 text-primary" />
                   <CardTitle>Revenue Overview</CardTitle>
                 </div>
                 <Badge variant="outline">2023</Badge>
               </CardHeader>
               <CardContent className="pt-6">
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={revenueData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                    <YAxis tickFormatter={(value) => `$${value}`} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                    <Tooltip 
-                      formatter={(value) => [`$${value}`, 'Revenue']}
-                      contentStyle={{ 
-                        background: 'rgba(255, 255, 255, 0.8)', 
-                        border: '1px solid rgba(0, 0, 0, 0.05)',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-                      }}
-                    />
-                    <Bar 
-                      dataKey="revenue" 
-                      fill="hsl(var(--primary))" 
-                      radius={[4, 4, 0, 0]}
-                      barSize={40}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Monthly Revenue</h3>
+                    <ChartContainer 
+                      config={{
+                        revenue: {
+                          label: "Revenue",
+                          theme: {
+                            light: "#8B5CF6",
+                            dark: "#8B5CF6"
+                          }
+                        },
+                        profit: {
+                          label: "Profit",
+                          theme: {
+                            light: "#D946EF",
+                            dark: "#D946EF"
+                          }
+                        }
+                      }} 
+                      className="h-[200px]"
+                    >
+                      <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                          </linearGradient>
+                          <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#D946EF" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#D946EF" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                        <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                        <YAxis tickFormatter={(value) => `$${value}`} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => `$${value}`} />} />
+                        <Area 
+                          type="monotone" 
+                          dataKey="revenue" 
+                          stroke="#8B5CF6" 
+                          fillOpacity={1} 
+                          fill="url(#colorRevenue)" 
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="profit" 
+                          stroke="#D946EF" 
+                          fillOpacity={1} 
+                          fill="url(#colorProfit)" 
+                        />
+                      </AreaChart>
+                    </ChartContainer>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Growth Trend</h3>
+                    <ChartContainer 
+                      config={{
+                        growth: {
+                          label: "Growth Rate",
+                          theme: {
+                            light: "#F97316",
+                            dark: "#F97316"
+                          }
+                        }
+                      }} 
+                      className="h-[200px]"
+                    >
+                      <LineChart data={revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                        <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                        <YAxis 
+                          tickFormatter={(value) => `${(value * 100).toFixed(0)}%`} 
+                          tick={{ fontSize: 10 }} 
+                          tickLine={false} 
+                          axisLine={false}
+                          domain={[0, 0.5]} 
+                        />
+                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(value * 100).toFixed(1)}%`} />} />
+                        <Line 
+                          type="monotone" 
+                          dataKey="growth" 
+                          stroke="#F97316" 
+                          activeDot={{ r: 8 }}
+                          strokeWidth={2}
+                        />
+                      </LineChart>
+                    </ChartContainer>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
+        )}
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <UpcomingShoots />
+          </div>
+          
+          <div className="lg:col-span-2">
+            <Calendar height={300} />
+          </div>
+        </div>
+        
+        {!showClientInterface && (
+          <div>
+            <TaskManager />
+          </div>
         )}
       </div>
     </DashboardLayout>

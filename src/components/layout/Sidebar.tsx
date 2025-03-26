@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
@@ -110,13 +109,15 @@ export function Sidebar({ className }: SidebarProps) {
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/photographers'}
           />
-          <NavLink
-            to="/clients"
-            icon={<UserIcon className="h-4 w-4" />}
-            label="Clients"
-            isCollapsed={isCollapsed && !isMobile}
-            isActive={pathname === '/clients'}
-          />
+          {role !== 'client' && (
+            <NavLink
+              to="/clients"
+              icon={<UserIcon className="h-4 w-4" />}
+              label="Clients"
+              isCollapsed={isCollapsed && !isMobile}
+              isActive={pathname === '/clients'}
+            />
+          )}
           {['admin', 'superadmin'].includes(role) && (
             <NavLink
               to="/accounts"

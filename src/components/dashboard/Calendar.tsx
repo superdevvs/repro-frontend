@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import {
   format,
@@ -38,6 +37,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface CalendarProps {
   className?: string;
   events?: ShootData[];
+  height?: number;
 }
 
 // Fallback to mock data if no events are provided
@@ -73,7 +73,7 @@ const mockEvents = [
 
 type ViewType = 'day' | 'week' | 'month';
 
-export function Calendar({ className, events = [] }: CalendarProps) {
+export function Calendar({ className, events = [], height = 400 }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('week');
   const { role } = useAuth();
@@ -177,15 +177,19 @@ export function Calendar({ className, events = [] }: CalendarProps) {
     }
   };
 
+  // Calculate how many rows of hours to display based on the height
+  const visibleHours = Math.min(6, hours.length);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn("w-full", className)}
+      style={{ height: height }}
     >
-      <Card className="glass-card overflow-hidden">
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center border-b border-border pb-4 gap-2">
+      <Card className="glass-card overflow-hidden h-full flex flex-col">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center border-b border-border pb-2 gap-2 flex-shrink-0">
           <div className="flex items-center gap-2">
             <CalendarIcon className="h-5 w-5 text-primary" />
             <CardTitle>Calendar</CardTitle>
@@ -244,18 +248,18 @@ export function Calendar({ className, events = [] }: CalendarProps) {
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className="p-0 overflow-auto flex-1">
           <div className="min-w-[700px]">
             <div className="grid grid-cols-8 gap-px">
               {/* Empty cell for time column */}
-              <div className="h-10 p-2 border-b border-r border-border bg-muted/30" />
+              <div className="h-8 p-2 border-b border-r border-border bg-muted/30" />
               
               {/* Day headers */}
               {daysToDisplay.map((day, i) => (
                 <div 
                   key={i}
                   className={cn(
-                    "flex flex-col items-center justify-center h-10 p-2 border-b border-r border-border",
+                    "flex flex-col items-center justify-center h-8 p-2 border-b border-r border-border",
                     isToday(day) ? "bg-primary/5" : "bg-muted/30",
                     viewType === "month" && "col-span-1"
                   )}
@@ -265,7 +269,7 @@ export function Calendar({ className, events = [] }: CalendarProps) {
                       {format(day, 'EEE')}
                     </span>
                     <span className={cn(
-                      "text-sm w-6 h-6 flex items-center justify-center rounded-full",
+                      "text-xs w-5 h-5 flex items-center justify-center rounded-full",
                       isToday(day) && "bg-primary text-primary-foreground"
                     )}>
                       {format(day, 'd')}
@@ -274,11 +278,11 @@ export function Calendar({ className, events = [] }: CalendarProps) {
                 </div>
               ))}
               
-              {/* Time slots */}
-              {hours.map((hour) => (
+              {/* Time slots - only show first few hours for compact view */}
+              {hours.slice(0, visibleHours).map((hour) => (
                 <React.Fragment key={hour}>
                   {/* Time label */}
-                  <div className="timeline-hour h-20 flex items-center justify-end pr-2 border-r border-b border-border text-xs text-muted-foreground sticky left-0 bg-background z-10">
+                  <div className="timeline-hour h-12 flex items-center justify-end pr-2 border-r border-b border-border text-xs text-muted-foreground sticky left-0 bg-background z-10">
                     {format(addHours(startOfDay(new Date()), hour), 'h a')}
                   </div>
                   
@@ -291,7 +295,7 @@ export function Calendar({ className, events = [] }: CalendarProps) {
                       <div 
                         key={`${hour}-${dayIndex}`}
                         className={cn(
-                          "timeline-slot h-20 relative border-b border-r border-border p-1",
+                          "timeline-slot h-12 relative border-b border-r border-border p-1",
                           hasEvents ? "bg-primary/5" : "bg-background",
                           isToday(day) && "bg-primary/5"
                         )}
@@ -301,18 +305,14 @@ export function Calendar({ className, events = [] }: CalendarProps) {
                             <TooltipProvider key={event.id}>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="absolute inset-1 rounded-md bg-primary/20 border border-primary/30 p-2 hover:bg-primary/30 transition-colors cursor-pointer overflow-hidden">
+                                  <div className="absolute inset-1 rounded-md bg-primary/20 border border-primary/30 p-1 hover:bg-primary/30 transition-colors cursor-pointer overflow-hidden">
                                     <div className="flex flex-col h-full">
                                       <span className="text-xs font-medium truncate">{event.title}</span>
-                                      <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                      <div className="flex items-center text-xs text-muted-foreground">
                                         <ClockIcon className="h-3 w-3 mr-1 flex-shrink-0" />
                                         <span className="truncate">
-                                          {format(event.startTime, 'h:mm a')} - {format(event.endTime, 'h:mm a')}
+                                          {format(event.startTime, 'h:mm a')}
                                         </span>
-                                      </div>
-                                      <div className="mt-auto flex items-center text-xs">
-                                        <UserIcon className="h-3 w-3 mr-1 text-muted-foreground flex-shrink-0" />
-                                        <span className="truncate">{event.photographer}</span>
                                       </div>
                                     </div>
                                   </div>
