@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -13,7 +12,6 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// Mock data for the chart
 const revenueData = [
   { name: 'Jan', revenue: 4000 },
   { name: 'Feb', revenue: 5500 },
@@ -27,7 +25,6 @@ const Dashboard = () => {
   const { role } = useAuth();
   const navigate = useNavigate();
   
-  // Show different stats based on role
   const showRevenue = ['admin', 'superadmin'].includes(role);
   const showClientStats = ['admin', 'superadmin'].includes(role);
   const showPhotographerInterface = role === 'photographer';
@@ -36,7 +33,6 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Welcome header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
@@ -56,7 +52,6 @@ const Dashboard = () => {
           )}
         </div>
         
-        {/* Stats cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {showRevenue && (
             <StatsCard
@@ -115,20 +110,16 @@ const Dashboard = () => {
           )}
         </div>
         
-        {/* Main content area */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Calendar takes up 2 columns */}
-          <div className="lg:col-span-2">
-            <Calendar />
-          </div>
-          
-          {/* Upcoming shoots takes up 1 column */}
           <div className="lg:col-span-1">
             <UpcomingShoots />
           </div>
+          
+          <div className="lg:col-span-2">
+            <Calendar />
+          </div>
         </div>
         
-        {/* Revenue chart for admins */}
         {showRevenue && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
