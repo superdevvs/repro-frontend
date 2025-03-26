@@ -241,7 +241,7 @@ const Dashboard = () => {
           </div>
           
           <div className="lg:col-span-2">
-            <Calendar height={300} />
+            <Calendar height={300 * 0.7} />
           </div>
         </div>
         
