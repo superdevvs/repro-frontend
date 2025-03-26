@@ -13,7 +13,8 @@ const Dashboard = () => {
   const { role } = useAuth();
   const isMobile = useIsMobile();
   
-  const calendarHeight = isMobile ? 300 : 400;
+  // Reduce the calendar height to prevent overflow
+  const calendarHeight = isMobile ? 300 : 350;
   
   const showRevenue = ['admin', 'superadmin'].includes(role);
   const showClientStats = ['admin', 'superadmin'].includes(role);
@@ -23,7 +24,7 @@ const Dashboard = () => {
   
   return (
     <DashboardLayout>
-      <div className="space-y-8 pb-6">
+      <div className="space-y-6 pb-10">
         <DashboardHeader isAdmin={isAdmin} />
         
         <StatsCardGrid
