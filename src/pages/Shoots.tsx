@@ -6,23 +6,21 @@ import { ShootDetail } from '@/components/dashboard/ShootDetail';
 import { ShootsHeader } from '@/components/dashboard/ShootsHeader';
 import { ShootsFilter } from '@/components/dashboard/ShootsFilter';
 import { ShootsContent } from '@/components/dashboard/ShootsContent';
-import { ImportShootsDialog } from '@/components/dashboard/ImportShootsDialog';
-import { ShootData } from '@/types/shoots';
-import { useShoots } from '@/context/ShootsContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileUploader } from '@/components/media/FileUploader';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from '@/components/ui/pagination';
+import { ShootData } from '@/types/shoots';
+import { useShoots } from '@/context/ShootsContext';
 
 const ITEMS_PER_PAGE = 6;
 
 const Shoots = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTab, setSelectedTab] = useState('hold');
+  const [selectedTab, setSelectedTab] = useState('scheduled');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   
   const { shoots, updateShoot } = useShoots();
@@ -84,10 +82,6 @@ const Shoots = () => {
     // Close the dialog after upload is complete
     setIsUploadDialogOpen(false);
   };
-  
-  const handleImportClick = () => {
-    setIsImportDialogOpen(true);
-  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -112,7 +106,6 @@ const Shoots = () => {
             setSelectedTab={setSelectedTab}
             viewMode={viewMode}
             setViewMode={setViewMode}
-            onImportClick={handleImportClick}
           />
           
           <ShootsContent 
@@ -191,11 +184,6 @@ const Shoots = () => {
             />
           </DialogContent>
         </Dialog>
-        
-        <ImportShootsDialog 
-          isOpen={isImportDialogOpen}
-          onClose={() => setIsImportDialogOpen(false)}
-        />
       </PageTransition>
     </DashboardLayout>
   );

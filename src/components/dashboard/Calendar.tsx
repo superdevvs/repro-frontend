@@ -5,7 +5,6 @@ import {
   addDays,
   startOfWeek,
   getHours,
-  getMinutes,
   isToday,
   isSameDay,
 } from 'date-fns';
@@ -43,8 +42,10 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
     setCurrentDate(addDays(currentDate, 7));
   };
 
+  // We'll only show a subset of hours to prevent overlap
   const hours = useMemo(() => {
-    return Array.from({ length: 24 }, (_, i) => i);
+    // Show business hours (8am to 8pm)
+    return Array.from({ length: 13 }, (_, i) => i + 8);
   }, []);
 
   const events = useMemo(() => {
@@ -62,16 +63,6 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
     });
   }, [days, hours, shoots]);
 
-  const visibleHours = useMemo(() => {
-    const now = new Date();
-    const currentHour = getHours(now);
-    
-    if (isToday(currentDate)) {
-      return hours.filter(hour => hour >= currentHour - 2);
-    }
-    return hours;
-  }, [currentDate, hours]);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -80,7 +71,7 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
       className={cn("w-full", className)}
       style={{ height: height }}
     >
-      <Card className="glass-card">
+      <Card className="glass-card h-full">
         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border">
           <div className="flex items-center gap-2">
             <CalendarIcon className="h-5 w-5 text-primary" />
@@ -100,38 +91,44 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
             {days.map((day) => (
               <div
                 key={day.toISOString()}
-                className="text-center text-sm text-muted-foreground"
+                className={cn(
+                  "text-center text-sm py-1",
+                  isToday(day) ? "font-bold text-primary" : "text-muted-foreground"
+                )}
               >
-                {format(day, 'EEE')}
+                <div>{format(day, 'EEE')}</div>
+                <div className="text-xs">{format(day, 'MMM d')}</div>
               </div>
             ))}
           </div>
           <ScrollArea className="h-[calc(100%-4rem)]">
             <div className="relative">
-              {visibleHours.map((hour) => (
+              {hours.map((hour) => (
                 <div
                   key={hour}
-                  className="grid grid-cols-1 gap-1 border-b border-border py-2 first:pt-0 last:border-none"
+                  className="grid gap-1 border-b border-border py-2 first:pt-0 last:border-none"
                   style={{
                     gridTemplateColumns: '40px repeat(7, minmax(0, 1fr))',
                   }}
                 >
-                  <div className="text-xs text-muted-foreground text-right">{`${hour}:00`}</div>
+                  <div className="text-xs text-muted-foreground text-right pr-2">
+                    {`${hour}:00`}
+                  </div>
                   {days.map((day, dayIndex) => {
-                    const event = events[hour][dayIndex][0];
-                    if (!event) return <div key={day.toISOString()} />;
+                    const event = events[hour - 8][dayIndex][0];
+                    if (!event) return <div key={day.toISOString()} className="h-10" />;
                     return (
                       <div
                         key={day.toISOString()}
-                        className="relative rounded-md bg-primary/10 text-primary p-1 text-xs overflow-hidden"
+                        className="relative rounded-md bg-primary/10 text-primary p-1 text-xs h-10 overflow-hidden"
                       >
-                        <Badge className="absolute top-1 right-1 rounded-full h-5 w-5 text-xs">
-                          {event.status}
+                        <Badge className="absolute top-1 right-1 rounded-full h-4 w-4 text-[8px] p-0 flex items-center justify-center">
+                          {event.status.charAt(0).toUpperCase()}
                         </Badge>
-                        <p className="font-medium">{event.client.name}</p>
-                        <p className="text-muted-foreground flex items-center gap-1">
-                          <MapPinIcon className="h-3 w-3" />
-                          {event.location.fullAddress}
+                        <p className="font-medium truncate">{event.client.name}</p>
+                        <p className="text-muted-foreground flex items-center gap-1 truncate">
+                          <MapPinIcon className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{event.location.fullAddress}</span>
                         </p>
                       </div>
                     );

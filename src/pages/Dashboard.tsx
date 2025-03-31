@@ -19,7 +19,7 @@ const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   
   // Reduce the calendar height to prevent overflow
-  const calendarHeight = isMobile ? 300 : 350;
+  const calendarHeight = isMobile ? 300 : 400;
   
   const showRevenue = ['admin', 'superadmin'].includes(role);
   const showClientStats = ['admin', 'superadmin'].includes(role);
@@ -37,12 +37,14 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 pb-10">
-        <DashboardHeader isAdmin={isAdmin} />
-        
-        <TimeRangeFilter 
-          selectedRange={timeRange}
-          onChange={handleTimeRangeChange}
-        />
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+          <DashboardHeader isAdmin={isAdmin} />
+          <TimeRangeFilter 
+            selectedRange={timeRange}
+            onChange={handleTimeRangeChange}
+            className="mt-4 sm:mt-0"
+          />
+        </div>
         
         <StatsCardGrid
           showRevenue={showRevenue}

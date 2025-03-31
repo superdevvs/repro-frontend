@@ -8,7 +8,6 @@ import {
   ListIcon, 
   SearchIcon, 
   PlusIcon,
-  UploadIcon,
   FilterIcon
 } from 'lucide-react';
 
@@ -19,7 +18,6 @@ interface ShootsFilterProps {
   setSelectedTab: (tab: string) => void;
   viewMode: 'grid' | 'list';
   setViewMode: (mode: 'grid' | 'list') => void;
-  onImportClick?: () => void;
   onFilterClick?: () => void;
 }
 
@@ -30,7 +28,6 @@ export function ShootsFilter({
   setSelectedTab, 
   viewMode,
   setViewMode,
-  onImportClick,
   onFilterClick
 }: ShootsFilterProps) {
   return (
@@ -46,7 +43,7 @@ export function ShootsFilter({
       </div>
       
       <Tabs 
-        defaultValue="hold" 
+        defaultValue="scheduled" 
         value={selectedTab}
         onValueChange={setSelectedTab}
         className="w-full md:w-auto"
@@ -64,12 +61,6 @@ export function ShootsFilter({
         {onFilterClick && (
           <Button variant="outline" size="icon" onClick={onFilterClick}>
             <FilterIcon className="h-4 w-4" />
-          </Button>
-        )}
-        
-        {onImportClick && (
-          <Button variant="outline" size="icon" onClick={onImportClick}>
-            <UploadIcon className="h-4 w-4" />
           </Button>
         )}
         

@@ -55,6 +55,11 @@ export const getTotalPaidAmount = (shoots: ShootData[]): number => {
   }, 0);
 };
 
+export const getEstimatedTaxAmount = (shoots: ShootData[], taxRate: number = 0.15): number => {
+  const totalRevenue = getTotalPaidAmount(shoots);
+  return totalRevenue * taxRate;
+};
+
 export const getUniqueClientsCount = (shoots: ShootData[]): number => {
   const clientNames = new Set(shoots.map(shoot => shoot.client.name));
   return clientNames.size;

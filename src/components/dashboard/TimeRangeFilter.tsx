@@ -7,11 +7,22 @@ import { TimeRange } from '@/utils/dateUtils';
 interface TimeRangeFilterProps {
   selectedRange: TimeRange;
   onChange: (range: TimeRange) => void;
+  className?: string;
 }
 
-export function TimeRangeFilter({ selectedRange, onChange }: TimeRangeFilterProps) {
+export function TimeRangeFilter({ selectedRange, onChange, className }: TimeRangeFilterProps) {
   return (
-    <div className="flex items-center gap-2 mb-4">
+    <div className={`flex items-center gap-2 ${className}`}>
+      <div className="flex items-center text-xs text-muted-foreground gap-1 mr-2">
+        <Calendar className="h-3.5 w-3.5" />
+        <span>
+          {selectedRange === 'day' && 'Today'}
+          {selectedRange === 'week' && 'This Week'}
+          {selectedRange === 'month' && 'This Month'}
+          {selectedRange === 'year' && 'This Year'}
+        </span>
+      </div>
+      
       <div className="bg-muted/20 p-1 rounded-lg flex items-center">
         <Button
           variant={selectedRange === 'day' ? 'default' : 'ghost'}
@@ -45,15 +56,6 @@ export function TimeRangeFilter({ selectedRange, onChange }: TimeRangeFilterProp
         >
           Year
         </Button>
-      </div>
-      <div className="flex items-center text-xs text-muted-foreground gap-1">
-        <Calendar className="h-3.5 w-3.5" />
-        <span>
-          {selectedRange === 'day' && 'Today'}
-          {selectedRange === 'week' && 'This Week'}
-          {selectedRange === 'month' && 'This Month'}
-          {selectedRange === 'year' && 'This Year'}
-        </span>
       </div>
     </div>
   );
