@@ -3,25 +3,45 @@ import React from 'react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { CameraIcon, DollarSignIcon, UsersIcon, ImageIcon, HomeIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ShootData } from '@/types/shoots';
+import { 
+  getActiveShootsCount, 
+  getTotalPaidAmount,
+  getUniqueClientsCount,
+  getTotalMediaAssetsCount,
+  getScheduledTodayShoots
+} from '@/utils/dateUtils';
 
 interface StatsCardGridProps {
   showRevenue: boolean;
   showClientStats: boolean;
   showPhotographerInterface: boolean;
+  shoots: ShootData[];
 }
 
 export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
   showRevenue,
   showClientStats,
   showPhotographerInterface,
+  shoots,
 }) => {
+  // Calculate stats based on actual data
+  const totalRevenue = getTotalPaidAmount(shoots);
+  const activeShootsCount = getActiveShootsCount(shoots);
+  const scheduledTodayCount = getScheduledTodayShoots(shoots).length;
+  const totalClientsCount = getUniqueClientsCount(shoots);
+  const mediaAssetsCount = getTotalMediaAssetsCount(shoots);
+  
+  // Calculate the properties shot for photographers
+  const completedShoots = shoots.filter(shoot => shoot.status === 'completed').length;
+  
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {showRevenue && (
         <StatsCard
           title="Total Revenue"
-          value="$42,500"
-          description="This month"
+          value={`$${totalRevenue.toLocaleString()}`}
+          description="From paid shoots"
           icon={<DollarSignIcon className="h-5 w-5" />}
           trend="up"
           trendValue="12%"
@@ -31,8 +51,8 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
       
       <StatsCard
         title="Active Shoots"
-        value="24"
-        description="8 scheduled today"
+        value={activeShootsCount.toString()}
+        description={`${scheduledTodayCount} scheduled today`}
         icon={<CameraIcon className="h-5 w-5" />}
         trend="up"
         trendValue="4"
@@ -42,8 +62,8 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
       {showClientStats && (
         <StatsCard
           title="Total Clients"
-          value="145"
-          description="12 new this month"
+          value={totalClientsCount.toString()}
+          description="Unique clients"
           icon={<UsersIcon className="h-5 w-5" />}
           trend="up"
           trendValue="9%"
@@ -53,8 +73,8 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
       
       <StatsCard
         title="Media Assets"
-        value="3,456"
-        description="268 added this week"
+        value={mediaAssetsCount.toString()}
+        description="Total photos"
         icon={<ImageIcon className="h-5 w-5" />}
         trend="up"
         trendValue="22%"
@@ -64,8 +84,8 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
       {showPhotographerInterface && (
         <StatsCard
           title="Properties Shot"
-          value="87"
-          description="This quarter"
+          value={completedShoots.toString()}
+          description="Completed shoots"
           icon={<HomeIcon className="h-5 w-5" />}
           trend="up"
           trendValue="14%"

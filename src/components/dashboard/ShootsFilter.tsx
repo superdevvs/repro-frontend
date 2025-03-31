@@ -8,7 +8,8 @@ import {
   ListIcon, 
   SearchIcon, 
   PlusIcon,
-  UploadIcon
+  UploadIcon,
+  FilterIcon
 } from 'lucide-react';
 
 interface ShootsFilterProps {
@@ -19,6 +20,7 @@ interface ShootsFilterProps {
   viewMode: 'grid' | 'list';
   setViewMode: (mode: 'grid' | 'list') => void;
   onImportClick?: () => void;
+  onFilterClick?: () => void;
 }
 
 export function ShootsFilter({ 
@@ -28,7 +30,8 @@ export function ShootsFilter({
   setSelectedTab, 
   viewMode,
   setViewMode,
-  onImportClick
+  onImportClick,
+  onFilterClick
 }: ShootsFilterProps) {
   return (
     <div className="flex flex-col md:flex-row gap-4">
@@ -58,6 +61,12 @@ export function ShootsFilter({
       </Tabs>
       
       <div className="flex items-center gap-2">
+        {onFilterClick && (
+          <Button variant="outline" size="icon" onClick={onFilterClick}>
+            <FilterIcon className="h-4 w-4" />
+          </Button>
+        )}
+        
         {onImportClick && (
           <Button variant="outline" size="icon" onClick={onImportClick}>
             <UploadIcon className="h-4 w-4" />

@@ -14,18 +14,62 @@ import {
   Line
 } from 'recharts';
 import { ChartContainer, ChartTooltipContent, ChartTooltip } from '@/components/ui/chart';
+import { ShootData } from '@/types/shoots';
+import { TimeRange } from '@/utils/dateUtils';
+import { format, parseISO, getMonth, getYear } from 'date-fns';
 
-// Revenue data
-const revenueData = [
-  { name: 'Jan', revenue: 4000, growth: 0.4, profit: 1200 },
-  { name: 'Feb', revenue: 5500, growth: 0.25, profit: 1650 },
-  { name: 'Mar', revenue: 7800, growth: 0.35, profit: 2340 },
-  { name: 'Apr', revenue: 8200, growth: 0.05, profit: 2460 },
-  { name: 'May', revenue: 9000, growth: 0.1, profit: 2700 },
-  { name: 'Jun', revenue: 10500, growth: 0.17, profit: 3150 },
-];
+interface RevenueOverviewProps {
+  shoots: ShootData[];
+  timeRange: TimeRange;
+}
 
-export const RevenueOverview: React.FC = () => {
+export const RevenueOverview: React.FC<RevenueOverviewProps> = ({ shoots, timeRange }) => {
+  // Generate revenue data based on actual shoots
+  const currentYear = new Date().getFullYear();
+
+  // Process data for charts
+  const generateRevenueData = () => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const data = months.map(month => ({
+      name: month,
+      revenue: 0,
+      profit: 0,
+      growth: 0,
+      count: 0
+    }));
+
+    // Filter paid shoots from the current year
+    const paidShoots = shoots.filter(shoot => {
+      if (!shoot.payment.totalPaid) return false;
+      const shootDate = new Date(shoot.scheduledDate);
+      return getYear(shootDate) === currentYear;
+    });
+
+    // Aggregate revenue by month
+    paidShoots.forEach(shoot => {
+      const shootDate = new Date(shoot.scheduledDate);
+      const monthIndex = getMonth(shootDate);
+      const amount = shoot.payment.totalPaid || 0;
+      
+      data[monthIndex].revenue += amount;
+      data[monthIndex].profit += amount * 0.3; // Assuming 30% profit margin
+      data[monthIndex].count += 1;
+    });
+
+    // Calculate growth rates
+    for (let i = 1; i < data.length; i++) {
+      if (data[i-1].revenue > 0) {
+        data[i].growth = (data[i].revenue - data[i-1].revenue) / data[i-1].revenue;
+      } else {
+        data[i].growth = data[i].revenue > 0 ? 1 : 0;
+      }
+    }
+
+    return data;
+  };
+
+  const revenueData = generateRevenueData();
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -38,7 +82,7 @@ export const RevenueOverview: React.FC = () => {
             <BarChart3Icon className="h-5 w-5 text-primary" />
             <CardTitle>Revenue Overview</CardTitle>
           </div>
-          <Badge variant="outline">2023</Badge>
+          <Badge variant="outline">{currentYear}</Badge>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
