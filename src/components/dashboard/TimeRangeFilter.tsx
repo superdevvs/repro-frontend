@@ -12,8 +12,8 @@ interface TimeRangeFilterProps {
 
 export function TimeRangeFilter({ selectedRange, onChange, className }: TimeRangeFilterProps) {
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <div className="flex items-center text-xs text-muted-foreground gap-1 mr-2">
+    <div className={`flex flex-col sm:flex-row items-end sm:items-center gap-2 ${className}`}>
+      <div className="flex items-center text-xs text-muted-foreground gap-1 whitespace-nowrap">
         <Calendar className="h-3.5 w-3.5" />
         <span>
           {selectedRange === 'day' && 'Today'}

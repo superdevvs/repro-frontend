@@ -48,6 +48,10 @@ export const getActiveShootsCount = (shoots: ShootData[]): number => {
   return shoots.filter(shoot => shoot.status === 'scheduled').length;
 };
 
+export const getCompletedShootsCount = (shoots: ShootData[]): number => {
+  return shoots.filter(shoot => shoot.status === 'completed').length;
+};
+
 export const getTotalPaidAmount = (shoots: ShootData[]): number => {
   return shoots.reduce((total, shoot) => {
     const paidAmount = shoot.payment?.totalPaid || 0;

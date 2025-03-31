@@ -30,6 +30,30 @@ interface SidebarProps {
   className?: string;
 }
 
+interface NavLinkProps {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  isCollapsed: boolean;
+  isActive: boolean;
+}
+
+function NavLink({ to, icon, label, isCollapsed, isActive }: NavLinkProps) {
+  return (
+    <Link
+      to={to}
+      className={cn(
+        'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/50',
+        isActive ? 'bg-secondary/80 font-medium' : 'text-muted-foreground',
+        isCollapsed && 'justify-center p-2'
+      )}
+    >
+      {icon}
+      {!isCollapsed && <span>{label}</span>}
+    </Link>
+  );
+}
+
 export function Sidebar({ className }: SidebarProps) {
   const { pathname } = useLocation();
   const isMobile = useIsMobile();
@@ -37,7 +61,6 @@ export function Sidebar({ className }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { user, role, logout } = useAuth();
   
-  // Close mobile sidebar when navigating or screen size changes
   useEffect(() => {
     setIsOpen(false);
   }, [pathname, isMobile]);
@@ -86,13 +109,6 @@ export function Sidebar({ className }: SidebarProps) {
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/dashboard'}
           />
-          <NavLink
-            to="/shoots"
-            icon={<CameraIcon className="h-4 w-4" />}
-            label="Shoots"
-            isCollapsed={isCollapsed && !isMobile}
-            isActive={pathname === '/shoots'}
-          />
           {['admin', 'superadmin'].includes(role) && (
             <NavLink
               to="/book-shoot"
@@ -102,6 +118,20 @@ export function Sidebar({ className }: SidebarProps) {
               isActive={pathname === '/book-shoot'}
             />
           )}
+          <NavLink
+            to="/shoots"
+            icon={<CameraIcon className="h-4 w-4" />}
+            label="Shoots"
+            isCollapsed={isCollapsed && !isMobile}
+            isActive={pathname === '/shoots'}
+          />
+          <NavLink
+            to="/shoot-calendar"
+            icon={<CalendarIcon className="h-4 w-4" />}
+            label="Shoot Calendar"
+            isCollapsed={isCollapsed && !isMobile}
+            isActive={pathname === '/shoot-calendar'}
+          />
           <NavLink
             to="/photographers"
             icon={<UsersIcon className="h-4 w-4" />}
@@ -218,29 +248,5 @@ export function Sidebar({ className }: SidebarProps) {
     >
       <SidebarContent />
     </motion.div>
-  );
-}
-
-interface NavLinkProps {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-  isCollapsed: boolean;
-  isActive: boolean;
-}
-
-function NavLink({ to, icon, label, isCollapsed, isActive }: NavLinkProps) {
-  return (
-    <Link
-      to={to}
-      className={cn(
-        'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/50',
-        isActive ? 'bg-secondary/80 font-medium' : 'text-muted-foreground',
-        isCollapsed && 'justify-center p-2'
-      )}
-    >
-      {icon}
-      {!isCollapsed && <span>{label}</span>}
-    </Link>
   );
 }

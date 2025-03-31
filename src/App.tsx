@@ -17,6 +17,7 @@ import Settings from "./pages/Settings";
 import Accounts from "./pages/Accounts";
 import Availability from "./pages/Availability";
 import Reports from "./pages/Reports";
+import ShootCalendar from "./pages/ShootCalendar";
 import NotFound from "./pages/NotFound";
 import { ShootsProvider } from './context/ShootsContext';
 
@@ -58,6 +59,11 @@ const AppRoutes = () => {
       <Route path="/book-shoot" element={
         <ProtectedRoute>
           <BookShoot />
+        </ProtectedRoute>
+      } />
+      <Route path="/shoot-calendar" element={
+        <ProtectedRoute>
+          <ShootCalendar />
         </ProtectedRoute>
       } />
       <Route path="/photographers" element={

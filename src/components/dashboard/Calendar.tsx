@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { useShoots } from '@/context/ShootsContext';
 import { ShootData } from '@/types/shoots';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, CalendarIcon, MapPinIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPinIcon } from 'lucide-react';
 
 interface CalendarProps {
   className?: string;
@@ -42,10 +42,9 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
     setCurrentDate(addDays(currentDate, 7));
   };
 
-  // We'll only show a subset of hours to prevent overlap
+  // Show business hours (8am to 6pm)
   const hours = useMemo(() => {
-    // Show business hours (8am to 8pm)
-    return Array.from({ length: 13 }, (_, i) => i + 8);
+    return Array.from({ length: 11 }, (_, i) => i + 8);
   }, []);
 
   const events = useMemo(() => {
@@ -64,81 +63,80 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
   }, [days, hours, shoots]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={cn("w-full", className)}
-      style={{ height: height }}
-    >
-      <Card className="glass-card h-full">
-        <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border">
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5 text-primary" />
-            <CardTitle>Calendar</CardTitle>
+    <div className={cn("w-full h-full", className)}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-medium">{format(currentDate, 'MMMM yyyy')}</h3>
+        <div className="flex items-center gap-2">
+          <Button size="icon" variant="outline" onClick={goToPreviousWeek}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button size="icon" variant="outline" onClick={goToNextWeek}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {days.map((day) => (
+          <div
+            key={day.toISOString()}
+            className={cn(
+              "text-center text-sm py-1 font-medium",
+              isToday(day) ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            <div>{format(day, 'EEE')}</div>
+            <div className={cn(
+              "text-xs rounded-full w-6 h-6 flex items-center justify-center mx-auto",
+              isToday(day) ? "bg-primary text-primary-foreground" : ""
+            )}>
+              {format(day, 'd')}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button size="icon" onClick={goToPreviousWeek}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button size="icon" onClick={goToNextWeek}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-2">
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {days.map((day) => (
-              <div
-                key={day.toISOString()}
-                className={cn(
-                  "text-center text-sm py-1",
-                  isToday(day) ? "font-bold text-primary" : "text-muted-foreground"
-                )}
-              >
-                <div>{format(day, 'EEE')}</div>
-                <div className="text-xs">{format(day, 'MMM d')}</div>
+        ))}
+      </div>
+      
+      <ScrollArea className="h-[calc(100%-4rem)]">
+        <div className="relative">
+          {hours.map((hour) => (
+            <div
+              key={hour}
+              className="grid gap-1 border-b border-border py-2 first:pt-0 last:border-none"
+              style={{
+                gridTemplateColumns: '50px repeat(7, minmax(0, 1fr))',
+              }}
+            >
+              <div className="text-xs text-muted-foreground text-right pr-2 font-medium">
+                {`${hour}:00`}
               </div>
-            ))}
-          </div>
-          <ScrollArea className="h-[calc(100%-4rem)]">
-            <div className="relative">
-              {hours.map((hour) => (
-                <div
-                  key={hour}
-                  className="grid gap-1 border-b border-border py-2 first:pt-0 last:border-none"
-                  style={{
-                    gridTemplateColumns: '40px repeat(7, minmax(0, 1fr))',
-                  }}
-                >
-                  <div className="text-xs text-muted-foreground text-right pr-2">
-                    {`${hour}:00`}
-                  </div>
-                  {days.map((day, dayIndex) => {
-                    const event = events[hour - 8][dayIndex][0];
-                    if (!event) return <div key={day.toISOString()} className="h-10" />;
-                    return (
+              {days.map((day, dayIndex) => {
+                const eventsAtThisTime = events[hour - 8][dayIndex];
+                if (eventsAtThisTime.length === 0) return <div key={day.toISOString()} className="h-14 px-1" />;
+                
+                return (
+                  <div key={day.toISOString()} className="h-14 px-1 relative">
+                    {eventsAtThisTime.map((event, idx) => (
                       <div
-                        key={day.toISOString()}
-                        className="relative rounded-md bg-primary/10 text-primary p-1 text-xs h-10 overflow-hidden"
+                        key={`${event.id}-${idx}`}
+                        className="absolute top-0 left-0 right-0 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-primary p-1.5 text-xs h-full overflow-hidden border border-primary/20 cursor-pointer"
                       >
                         <Badge className="absolute top-1 right-1 rounded-full h-4 w-4 text-[8px] p-0 flex items-center justify-center">
                           {event.status.charAt(0).toUpperCase()}
                         </Badge>
-                        <p className="font-medium truncate">{event.client.name}</p>
-                        <p className="text-muted-foreground flex items-center gap-1 truncate">
-                          <MapPinIcon className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{event.location.fullAddress}</span>
+                        <p className="font-medium leading-tight truncate">{event.client.name}</p>
+                        <p className="text-muted-foreground flex items-center gap-0.5 truncate text-[9px] mt-0.5">
+                          <MapPinIcon className="h-2.5 w-2.5 flex-shrink-0" />
+                          <span className="truncate">{event.location.city}</span>
                         </p>
                       </div>
-                    );
-                  })}
-                </div>
-              ))}
+                    ))}
+                  </div>
+                );
+              })}
             </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-    </motion.div>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
   );
 }

@@ -1,7 +1,17 @@
 
 import React from 'react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { CameraIcon, DollarSignIcon, UsersIcon, ImageIcon, HomeIcon, ReceiptIcon } from 'lucide-react';
+import { 
+  CameraIcon, 
+  DollarSignIcon, 
+  UsersIcon, 
+  ImageIcon, 
+  HomeIcon, 
+  ReceiptIcon, 
+  CheckIcon,
+  HardDriveIcon,
+  FilesIcon
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ShootData } from '@/types/shoots';
 import { 
@@ -10,14 +20,17 @@ import {
   getUniqueClientsCount,
   getTotalMediaAssetsCount,
   getScheduledTodayShoots,
-  getEstimatedTaxAmount
+  getEstimatedTaxAmount,
+  getCompletedShootsCount
 } from '@/utils/dateUtils';
+import { TimeRange } from '@/utils/dateUtils';
 
 interface StatsCardGridProps {
   showRevenue: boolean;
   showClientStats: boolean;
   showPhotographerInterface: boolean;
   shoots: ShootData[];
+  timeRange: TimeRange;
 }
 
 export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
@@ -25,6 +38,7 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
   showClientStats,
   showPhotographerInterface,
   shoots,
+  timeRange,
 }) => {
   // Calculate stats based on actual data
   const totalRevenue = getTotalPaidAmount(shoots);
@@ -33,9 +47,8 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
   const totalClientsCount = getUniqueClientsCount(shoots);
   const mediaAssetsCount = getTotalMediaAssetsCount(shoots);
   const estimatedTax = getEstimatedTaxAmount(shoots);
-  
-  // Calculate the properties shot for photographers
-  const completedShoots = shoots.filter(shoot => shoot.status === 'completed').length;
+  const completedShoots = getCompletedShootsCount(shoots);
+  const totalShoots = shoots.length;
   
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -43,7 +56,7 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         <StatsCard
           title="Total Revenue"
           value={`$${totalRevenue.toLocaleString()}`}
-          description="From paid shoots"
+          description={`For ${timeRange} period`}
           icon={<DollarSignIcon className="h-5 w-5" />}
           trend="up"
           trendValue="12%"
@@ -95,6 +108,36 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         delay={4}
       />
       
+      <StatsCard
+        title="Completed Shoots"
+        value={completedShoots.toString()}
+        description="Finished projects"
+        icon={<CheckIcon className="h-5 w-5" />}
+        trend="up"
+        trendValue="14%"
+        delay={5}
+      />
+      
+      <StatsCard
+        title="Total Shoots"
+        value={totalShoots.toString()}
+        description="All time"
+        icon={<FilesIcon className="h-5 w-5" />}
+        trend="up"
+        trendValue="8%"
+        delay={6}
+      />
+      
+      <StatsCard
+        title="Storage"
+        value="12.4 GB"
+        description="Dropbox, AWS S3"
+        icon={<HardDriveIcon className="h-5 w-5" />}
+        trend="up"
+        trendValue="5%"
+        delay={7}
+      />
+      
       {showPhotographerInterface && (
         <StatsCard
           title="Properties Shot"
@@ -103,7 +146,7 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
           icon={<HomeIcon className="h-5 w-5" />}
           trend="up"
           trendValue="14%"
-          delay={3}
+          delay={6}
         />
       )}
     </div>

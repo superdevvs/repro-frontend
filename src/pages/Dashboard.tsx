@@ -6,7 +6,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { StatsCardGrid } from '@/components/dashboard/StatsCardGrid';
 import { RevenueOverview } from '@/components/dashboard/RevenueOverview';
-import { CalendarSection } from '@/components/dashboard/CalendarSection';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useShoots } from '@/context/ShootsContext';
 import { TimeRangeFilter } from '@/components/dashboard/TimeRangeFilter';
@@ -17,9 +16,6 @@ const Dashboard = () => {
   const isMobile = useIsMobile();
   const { shoots } = useShoots();
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
-  
-  // Reduce the calendar height to prevent overflow
-  const calendarHeight = isMobile ? 300 : 400;
   
   const showRevenue = ['admin', 'superadmin'].includes(role);
   const showClientStats = ['admin', 'superadmin'].includes(role);
@@ -37,12 +33,12 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 pb-10">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <div className="flex flex-col gap-4 sm:flex-row justify-between items-start sm:items-center mb-6">
           <DashboardHeader isAdmin={isAdmin} />
           <TimeRangeFilter 
             selectedRange={timeRange}
             onChange={handleTimeRangeChange}
-            className="mt-4 sm:mt-0"
+            className="ml-auto"
           />
         </div>
         
@@ -51,11 +47,10 @@ const Dashboard = () => {
           showClientStats={showClientStats}
           showPhotographerInterface={showPhotographerInterface}
           shoots={filteredShoots}
+          timeRange={timeRange}
         />
         
         {showRevenue && <RevenueOverview shoots={filteredShoots} timeRange={timeRange} />}
-        
-        <CalendarSection calendarHeight={calendarHeight} />
         
         {!showClientInterface && <TaskManager />}
       </div>
