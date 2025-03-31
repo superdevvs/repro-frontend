@@ -8,8 +8,25 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Send, User, Users } from 'lucide-react';
+import { 
+  MessageSquare, 
+  Send, 
+  User, 
+  Users, 
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  Search
+} from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import {
+  Menubar,
+  MenubarContent,
+  MenubarMenu,
+  MenubarTrigger,
+  MenubarItem,
+} from "@/components/ui/menubar";
 
 interface Message {
   id: string;
@@ -40,6 +57,8 @@ const Messages = () => {
   const [activeTab, setActiveTab] = useState('inbox');
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
+  const [isConversationsCollapsed, setIsConversationsCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Mock data
   const conversations: Conversation[] = [
@@ -143,6 +162,12 @@ const Messages = () => {
     ],
   };
   
+  const filteredConversations = conversations.filter(
+    (convo) => 
+      convo.participant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      convo.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleSendMessage = () => {
     if (!messageInput.trim() || !selectedConversation) return;
     
@@ -154,6 +179,10 @@ const Messages = () => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const toggleConversations = () => {
+    setIsConversationsCollapsed(!isConversationsCollapsed);
   };
   
   return (
@@ -169,72 +198,148 @@ const Messages = () => {
               Communicate with clients and photographers.
             </p>
           </div>
-          <Button className="mt-4 sm:mt-0">
-            <MessageSquare className="mr-2 h-4 w-4" /> New Message
-          </Button>
+          <div className="flex items-center gap-2 mt-4 sm:mt-0">
+            <Menubar className="border-none p-0">
+              <MenubarMenu>
+                <MenubarTrigger className={cn(
+                  "bg-primary text-primary-foreground hover:bg-primary/90 focus:bg-primary/90",
+                  "p-2 rounded-md"
+                )}>
+                  <div className="flex items-center gap-2">
+                    <Menu className="h-4 w-4" />
+                    <span>Options</span>
+                  </div>
+                </MenubarTrigger>
+                <MenubarContent>
+                  {activeTab === 'inbox' ? (
+                    <MenubarItem onClick={() => setActiveTab('archived')}>
+                      View Archived
+                    </MenubarItem>
+                  ) : (
+                    <MenubarItem onClick={() => setActiveTab('inbox')}>
+                      View Inbox
+                    </MenubarItem>
+                  )}
+                  <MenubarItem onClick={toggleConversations}>
+                    {isConversationsCollapsed ? "Show Conversations" : "Hide Conversations"}
+                  </MenubarItem>
+                </MenubarContent>
+              </MenubarMenu>
+            </Menubar>
+            <Button>
+              <MessageSquare className="mr-2 h-4 w-4" /> New Message
+            </Button>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <Card className="lg:col-span-4 glass-card">
-            <CardHeader className="px-4 py-3 border-b border-border">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Conversations</CardTitle>
-                <Tabs defaultValue="inbox" onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="inbox">Inbox</TabsTrigger>
-                    <TabsTrigger value="archived">Archived</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[calc(80vh-13rem)]">
-                <div className="flex flex-col">
-                  {conversations.map((conversation) => (
-                    <motion.div
-                      key={conversation.id}
-                      whileHover={{ backgroundColor: 'rgba(0,0,0,0.05)' }}
-                      className={`cursor-pointer p-4 border-b border-border hover:bg-accent/50 transition-colors ${
-                        selectedConversation === conversation.id ? 'bg-accent/50' : ''
-                      }`}
-                      onClick={() => setSelectedConversation(conversation.id)}
+          {/* Conversations Column - Collapsible */}
+          <motion.div 
+            className={cn(
+              "lg:col-span-4 lg:block",
+              isConversationsCollapsed ? "hidden" : ""
+            )}
+            initial={false}
+            animate={{ 
+              width: isConversationsCollapsed ? 0 : "auto",
+              opacity: isConversationsCollapsed ? 0 : 1
+            }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="glass-card h-full">
+              <CardHeader className="px-4 py-3 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Conversations</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Tabs defaultValue="inbox" onValueChange={setActiveTab} className="w-[180px]">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="inbox">Inbox</TabsTrigger>
+                        <TabsTrigger value="archived">Archived</TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={toggleConversations}
+                      className="lg:block hidden"
                     >
-                      <div className="flex items-start gap-3">
-                        <Avatar>
-                          <AvatarImage src={conversation.participant.avatar} />
-                          <AvatarFallback>{conversation.participant.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium truncate">{conversation.participant.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDate(conversation.timestamp)}
-                            </p>
-                          </div>
-                          <p className="text-sm text-muted-foreground truncate">{conversation.lastMessage}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs py-0">
-                              {conversation.participant.role}
-                            </Badge>
-                            {conversation.unreadCount > 0 && (
-                              <Badge className="text-xs">{conversation.unreadCount}</Badge>
-                            )}
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="mt-2 relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search conversations..." 
+                    className="pl-9"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[calc(80vh-16rem)]">
+                  <div className="flex flex-col">
+                    {filteredConversations.map((conversation) => (
+                      <motion.div
+                        key={conversation.id}
+                        whileHover={{ backgroundColor: 'rgba(0,0,0,0.05)' }}
+                        className={`cursor-pointer p-4 border-b border-border hover:bg-accent/50 transition-colors ${
+                          selectedConversation === conversation.id ? 'bg-accent/50' : ''
+                        }`}
+                        onClick={() => setSelectedConversation(conversation.id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Avatar>
+                            <AvatarImage src={conversation.participant.avatar} />
+                            <AvatarFallback>{conversation.participant.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="font-medium truncate">{conversation.participant.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatDate(conversation.timestamp)}
+                              </p>
+                            </div>
+                            <p className="text-sm text-muted-foreground truncate">{conversation.lastMessage}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="outline" className="text-xs py-0">
+                                {conversation.participant.role}
+                              </Badge>
+                              {conversation.unreadCount > 0 && (
+                                <Badge className="text-xs">{conversation.unreadCount}</Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </motion.div>
           
-          <Card className="lg:col-span-8 glass-card">
+          {/* Messages Column */}
+          <Card className={cn(
+            "glass-card",
+            isConversationsCollapsed ? "lg:col-span-12" : "lg:col-span-8"
+          )}>
             {selectedConversation ? (
               <>
                 <CardHeader className="px-4 py-3 border-b border-border">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
+                      {isConversationsCollapsed && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={toggleConversations}
+                          className="lg:block hidden"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Avatar>
                         <AvatarImage 
                           src={conversations.find(c => c.id === selectedConversation)?.participant.avatar} 
@@ -257,7 +362,7 @@ const Messages = () => {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="p-0 flex flex-col h-[calc(80vh-13rem)]">
+                <CardContent className="p-0 flex flex-col h-[calc(80vh-16rem)]">
                   <ScrollArea className="flex-1 p-4">
                     <div className="flex flex-col gap-4">
                       {messages[selectedConversation]?.map((message) => (
@@ -301,11 +406,23 @@ const Messages = () => {
                 </CardContent>
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center h-[calc(80vh-10rem)]">
+              <div className="flex flex-col items-center justify-center h-[calc(80vh-16rem)]">
+                {isConversationsCollapsed && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={toggleConversations}
+                    className="absolute top-4 left-4 lg:block hidden"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                )}
                 <User className="h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-medium">No conversation selected</h3>
                 <p className="text-sm text-muted-foreground">
-                  Select a conversation from the list to start messaging
+                  {isConversationsCollapsed 
+                    ? "Expand the sidebar to view conversations" 
+                    : "Select a conversation from the list to start messaging"}
                 </p>
               </div>
             )}
