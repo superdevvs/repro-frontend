@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
@@ -24,6 +25,7 @@ import {
   UserIcon,
   BuildingIcon,
   MenuIcon,
+  MessageSquareIcon,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -121,16 +123,23 @@ export function Sidebar({ className }: SidebarProps) {
           <NavLink
             to="/shoots"
             icon={<CameraIcon className="h-4 w-4" />}
-            label="Shoots"
+            label="Past Shoots"
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/shoots'}
           />
           <NavLink
             to="/shoot-calendar"
             icon={<CalendarIcon className="h-4 w-4" />}
-            label="Shoot Calendar"
+            label="Calendar"
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/shoot-calendar'}
+          />
+          <NavLink
+            to="/messages"
+            icon={<MessageSquareIcon className="h-4 w-4" />}
+            label="Messages"
+            isCollapsed={isCollapsed && !isMobile}
+            isActive={pathname === '/messages'}
           />
           <NavLink
             to="/photographers"

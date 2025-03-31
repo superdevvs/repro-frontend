@@ -37,7 +37,7 @@ export function Navbar() {
         // In a real app, this would use the user's location or a default location
         // This is a mock response for demo purposes
         setWeather({
-          temp: 72,
+          temp: 22, // Using Celsius
           condition: 'Partly Cloudy',
           icon: '⛅️'
         });
@@ -46,7 +46,7 @@ export function Navbar() {
         // const res = await fetch(`https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=auto:ip`);
         // const data = await res.json();
         // setWeather({
-        //   temp: data.current.temp_f,
+        //   temp: data.current.temp_c,
         //   condition: data.current.condition.text,
         //   icon: data.current.condition.icon
         // });
@@ -71,9 +71,9 @@ export function Navbar() {
     >
       <div className="flex items-center gap-4">
         <Button 
-          variant="ghost" 
+          variant="default" 
           size="sm" 
-          className="mr-2 flex items-center gap-1"
+          className="mr-2 flex items-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90"
           onClick={() => navigate('/book-shoot')}
         >
           <PlusCircleIcon className="h-4 w-4" />
@@ -95,7 +95,7 @@ export function Navbar() {
         {weather && (
           <div className="hidden md:flex items-center gap-1 text-sm text-muted-foreground">
             <CloudIcon className="h-4 w-4" />
-            <span>{weather.icon} {weather.temp}°F</span>
+            <span>{weather.icon} {weather.temp}°C</span>
           </div>
         )}
         
