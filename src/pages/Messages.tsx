@@ -125,7 +125,7 @@ const Messages = () => {
           name: 'Me',
           avatar: 'https://ui.shadcn.com/avatars/02.png',
         },
-        content: 'I've reviewed your request and can confirm the booking.',
+        content: "I've reviewed your request and can confirm the booking.",
         timestamp: '2023-09-14T10:00:00',
         isRead: true,
       },
