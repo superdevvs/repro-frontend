@@ -18,10 +18,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 interface PhotographerFromShoots {
   id: string;
   name: string;
-  email?: string;
+  email: string; // Changed from optional to required
   avatar?: string;
   location?: string;
-  rating?: number;
+  rating?: number | string; // Allow either number or string for rating
   shootsCompleted: number;
   specialties?: string[];
   status: 'available' | 'busy' | 'offline';
@@ -54,6 +54,7 @@ const Photographers = () => {
         photographersMap.set(photographer.name, {
           id: photographer.id || photographer.name.replace(/\s+/g, '-').toLowerCase(),
           name: photographer.name,
+          email: photographer.email || `${photographer.name.toLowerCase().replace(/\s+/g, '.')}@example.com`, // Default email
           avatar: photographer.avatar || `https://ui.shadcn.com/avatars/0${Math.floor(Math.random() * 5) + 1}.png`,
           shootsCompleted: completedShoots,
           // Random status for demonstration - in a real app, this would come from data
@@ -90,7 +91,7 @@ const Photographers = () => {
     // Create unique ID for new photographer
     const newId = `${Date.now()}`;
     
-    const newPhotographer = {
+    const newPhotographer: PhotographerFromShoots = {
       id: newId,
       name: data.name,
       email: data.email,
@@ -356,12 +357,25 @@ const Photographers = () => {
       />
 
       {/* View Photographer Profile */}
-      <PhotographerProfile
-        photographer={selectedPhotographer}
-        open={profileOpen}
-        onOpenChange={setProfileOpen}
-        onEdit={handleEditPhotographer}
-      />
+      {selectedPhotographer && (
+        <PhotographerProfile
+          photographer={{
+            id: selectedPhotographer.id,
+            name: selectedPhotographer.name,
+            email: selectedPhotographer.email,
+            avatar: selectedPhotographer.avatar || '',
+            location: selectedPhotographer.location || '',
+            rating: typeof selectedPhotographer.rating === 'string' ? 
+              parseFloat(selectedPhotographer.rating) : (selectedPhotographer.rating || 0),
+            shootsCompleted: selectedPhotographer.shootsCompleted,
+            specialties: selectedPhotographer.specialties || [],
+            status: selectedPhotographer.status
+          }}
+          open={profileOpen}
+          onOpenChange={setProfileOpen}
+          onEdit={handleEditPhotographer}
+        />
+      )}
 
       {/* Edit Photographer Form */}
       {selectedPhotographer && (
@@ -369,7 +383,15 @@ const Photographers = () => {
           open={editOpen} 
           onOpenChange={setEditOpen} 
           onSubmit={handleUpdatePhotographer}
-          initialData={selectedPhotographer}
+          initialData={{
+            id: selectedPhotographer.id,
+            name: selectedPhotographer.name,
+            email: selectedPhotographer.email,
+            location: selectedPhotographer.location || '',
+            specialties: selectedPhotographer.specialties || [],
+            status: selectedPhotographer.status,
+            avatar: selectedPhotographer.avatar || ''
+          }}
         />
       )}
     </DashboardLayout>
