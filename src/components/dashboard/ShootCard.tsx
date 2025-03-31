@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -11,10 +11,22 @@ import {
   MapPinIcon, 
   UserIcon,
   CameraIcon,
-  ImageIcon
+  ImageIcon,
+  CloudIcon,
+  SunIcon,
+  CloudSunIcon,
+  CloudRainIcon,
+  CloudSnowIcon
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ShootData } from '@/types/shoots';
+
+interface WeatherInfo {
+  temp: number;
+  condition: string;
+  icon: string;
+  iconComponent: React.ReactNode;
+}
 
 interface LegacyShootCardProps {
   id?: string;
@@ -71,6 +83,43 @@ export function ShootCard(props: ShootCardProps) {
     return timeString;
   };
 
+  // Get mock weather data for the shoot date
+  const [weather, setWeather] = useState<WeatherInfo | null>(null);
+  
+  const getWeatherIcon = (condition: string) => {
+    condition = condition.toLowerCase();
+    if (condition.includes('sun') || condition.includes('clear')) {
+      return <SunIcon className="h-4 w-4 text-amber-500" />;
+    } else if (condition.includes('rain')) {
+      return <CloudRainIcon className="h-4 w-4 text-blue-500" />;
+    } else if (condition.includes('snow')) {
+      return <CloudSnowIcon className="h-4 w-4 text-blue-200" />;
+    } else if (condition.includes('cloud') && condition.includes('part')) {
+      return <CloudSunIcon className="h-4 w-4 text-gray-500" />;
+    } else {
+      return <CloudIcon className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  useEffect(() => {
+    // Mock weather API call
+    // In a real app, you would fetch from a weather API using the shoot date and location
+    const getRandomWeather = () => {
+      const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Snow'];
+      const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
+      const randomTemp = Math.floor(Math.random() * 40) + 50; // Random temp between 50-90°F
+      
+      return {
+        temp: randomTemp,
+        condition: randomCondition,
+        icon: '🌤️', // This would be the icon URL from the API
+        iconComponent: getWeatherIcon(randomCondition)
+      };
+    };
+    
+    setWeather(getRandomWeather());
+  }, []);
+
   // If using new props structure
   if (isNewProps) {
     const { shoot } = props;
@@ -102,10 +151,10 @@ export function ShootCard(props: ShootCardProps) {
               {shoot.status.charAt(0).toUpperCase() + shoot.status.slice(1)}
             </Badge>
             
-            {shoot.time && (
-              <div className="flex items-center text-xs text-muted-foreground">
-                <ClockIcon className="h-3 w-3 mr-1" />
-                {formatTime(shoot.time)}
+            {weather && (
+              <div className="flex items-center text-xs text-muted-foreground bg-muted/50 p-1 rounded">
+                {weather.iconComponent}
+                <span className="ml-1">{weather.temp}°F</span>
               </div>
             )}
           </div>
@@ -129,10 +178,17 @@ export function ShootCard(props: ShootCardProps) {
             <span>{shoot.photographer.name}</span>
           </div>
           
-          <div className="flex items-center text-sm">
+          <div className="flex items-center text-sm mb-2">
             <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
             <span>{formatDate(shoot.scheduledDate)}</span>
           </div>
+          
+          {weather && (
+            <div className="flex items-center text-sm">
+              <CloudIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span>{weather.condition}</span>
+            </div>
+          )}
           
           {showMedia && !shoot.media?.photos && (
             <div className="mt-3 flex items-center text-sm text-muted-foreground">
@@ -177,10 +233,12 @@ export function ShootCard(props: ShootCardProps) {
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </Badge>
           
-          <div className="flex items-center text-xs text-muted-foreground">
-            <ClockIcon className="h-3 w-3 mr-1" />
-            {formatTime(time)}
-          </div>
+          {weather && (
+            <div className="flex items-center text-xs text-muted-foreground bg-muted/50 p-1 rounded">
+              {weather.iconComponent}
+              <span className="ml-1">{weather.temp}°F</span>
+            </div>
+          )}
         </div>
         
         <CardTitle className="text-base line-clamp-1">
@@ -202,10 +260,17 @@ export function ShootCard(props: ShootCardProps) {
           <span>{photographer.name}</span>
         </div>
         
-        <div className="flex items-center text-sm">
+        <div className="flex items-center text-sm mb-2">
           <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
           <span>{formatDate(date)}</span>
         </div>
+        
+        {weather && (
+          <div className="flex items-center text-sm">
+            <CloudIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+            <span>{weather.condition}</span>
+          </div>
+        )}
       </CardContent>
       
       <CardFooter className="p-4 pt-0">

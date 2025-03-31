@@ -20,6 +20,7 @@ import Reports from "./pages/Reports";
 import ShootCalendar from "./pages/ShootCalendar";
 import NotFound from "./pages/NotFound";
 import { ShootsProvider } from './context/ShootsContext';
+import { ThemeProvider } from './hooks/useTheme';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -114,17 +115,19 @@ const AppRoutes = () => {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner position="top-right" closeButton richColors />
-        <BrowserRouter>
-          <AuthProvider>
-            <ShootsProvider>
-              <AppRoutes />
-            </ShootsProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner position="top-right" closeButton richColors />
+          <BrowserRouter>
+            <AuthProvider>
+              <ShootsProvider>
+                <AppRoutes />
+              </ShootsProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

@@ -1,12 +1,15 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { useTheme } from '@/hooks/useTheme';
 
 interface DashboardHeaderProps {
   isAdmin: boolean;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ isAdmin }) => {
+  const { theme } = useTheme();
+  
   return (
     <div>
       <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">

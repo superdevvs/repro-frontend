@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { BellIcon, SearchIcon } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { BellIcon, SearchIcon, SunIcon, MoonIcon, PlusCircleIcon, CloudIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,9 +15,52 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/hooks/useTheme';
+
+interface WeatherData {
+  temp: number;
+  condition: string;
+  icon: string;
+}
 
 export function Navbar() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+
+  // Fetch current weather data for demo purposes
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        // In a real app, this would use the user's location or a default location
+        // This is a mock response for demo purposes
+        setWeather({
+          temp: 72,
+          condition: 'Partly Cloudy',
+          icon: '⛅️'
+        });
+        
+        // Actual API call would look like:
+        // const res = await fetch(`https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=auto:ip`);
+        // const data = await res.json();
+        // setWeather({
+        //   temp: data.current.temp_f,
+        //   condition: data.current.condition.text,
+        //   icon: data.current.condition.icon
+        // });
+      } catch (error) {
+        console.error('Failed to fetch weather:', error);
+      }
+    };
+
+    fetchWeather();
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   return (
     <motion.div 
@@ -26,16 +69,50 @@ export function Navbar() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.3, delay: 0.1 }}
     >
-      <div className="flex w-full max-w-sm items-center gap-1.5">
-        <SearchIcon className="h-4 w-4 text-muted-foreground absolute ml-3" />
-        <Input 
-          type="search" 
-          placeholder="Search..." 
-          className="pl-9 bg-secondary/50 border-none focus-visible:ring-primary/20"
-        />
+      <div className="flex items-center gap-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="mr-2 flex items-center gap-1"
+          onClick={() => navigate('/book-shoot')}
+        >
+          <PlusCircleIcon className="h-4 w-4" />
+          <span className="hidden sm:inline">New Shoot</span>
+        </Button>
+      
+        <div className="flex w-full max-w-sm items-center gap-1.5 relative">
+          <SearchIcon className="h-4 w-4 text-muted-foreground absolute ml-3" />
+          <Input 
+            type="search" 
+            placeholder="Search..." 
+            className="pl-9 bg-secondary/50 border-none focus-visible:ring-primary/20"
+          />
+        </div>
       </div>
       
       <div className="flex items-center gap-4">
+        {/* Weather Info */}
+        {weather && (
+          <div className="hidden md:flex items-center gap-1 text-sm text-muted-foreground">
+            <CloudIcon className="h-4 w-4" />
+            <span>{weather.icon} {weather.temp}°F</span>
+          </div>
+        )}
+        
+        {/* Theme Toggle */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? (
+            <SunIcon className="h-5 w-5" />
+          ) : (
+            <MoonIcon className="h-5 w-5" />
+          )}
+        </Button>
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
