@@ -6,6 +6,7 @@ import { ShootDetail } from '@/components/dashboard/ShootDetail';
 import { ShootsHeader } from '@/components/dashboard/ShootsHeader';
 import { ShootsFilter } from '@/components/dashboard/ShootsFilter';
 import { ShootsContent } from '@/components/dashboard/ShootsContent';
+import { ImportShootsDialog } from '@/components/dashboard/ImportShootsDialog';
 import { ShootData } from '@/types/shoots';
 import { useShoots } from '@/context/ShootsContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -18,6 +19,7 @@ const Shoots = () => {
   const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   
   const { shoots, updateShoot } = useShoots();
   
@@ -72,6 +74,10 @@ const Shoots = () => {
     setIsUploadDialogOpen(false);
   };
   
+  const handleImportClick = () => {
+    setIsImportDialogOpen(true);
+  };
+  
   return (
     <DashboardLayout>
       <PageTransition>
@@ -91,6 +97,7 @@ const Shoots = () => {
             setSelectedTab={setSelectedTab}
             viewMode={viewMode}
             setViewMode={setViewMode}
+            onImportClick={handleImportClick}
           />
           
           <ShootsContent 
@@ -119,6 +126,11 @@ const Shoots = () => {
             />
           </DialogContent>
         </Dialog>
+        
+        <ImportShootsDialog 
+          isOpen={isImportDialogOpen}
+          onClose={() => setIsImportDialogOpen(false)}
+        />
       </PageTransition>
     </DashboardLayout>
   );

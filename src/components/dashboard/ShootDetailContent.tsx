@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +54,6 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
   };
 
   const shareShoot = () => {
-    // In a real app, this would create a shareable link or send an email
     toast.success("Share link generated", {
       description: "A shareable link has been copied to your clipboard",
     });
@@ -246,7 +244,7 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
           <div className="flex flex-wrap gap-2">
             {shoot.services.length > 0 ? (
               shoot.services.map((service, index) => (
-                <Badge key={index} variant="outline">
+                <Badge key={index} variant="outline" className="bg-primary/10">
                   {service}
                 </Badge>
               ))
