@@ -11,7 +11,7 @@ import { ShootData } from '@/types/shoots';
 import { useShoots } from '@/context/ShootsContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileUploader } from '@/components/media/FileUploader';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from '@/components/ui/pagination';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -156,7 +156,7 @@ const Shoots = () => {
                   if (page === 2 || page === totalPages - 1) {
                     return (
                       <PaginationItem key={`ellipsis-${page}`}>
-                        <PaginationLink disabled>...</PaginationLink>
+                        <PaginationEllipsis />
                       </PaginationItem>
                     );
                   }

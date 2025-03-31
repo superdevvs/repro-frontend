@@ -43,9 +43,9 @@ export const RevenueOverview: React.FC<RevenueOverviewProps> = ({ shoots, timeRa
     const paidShoots = shoots.filter(shoot => {
       if (!shoot.payment?.totalPaid) return false;
       
-      const shootDate = shoot.scheduledDate instanceof Date
-        ? shoot.scheduledDate
-        : parseISO(String(shoot.scheduledDate));
+      const shootDate = typeof shoot.scheduledDate === 'string'
+        ? parseISO(shoot.scheduledDate)
+        : new Date(shoot.scheduledDate);
         
       return getYear(shootDate) === currentYear;
     });
@@ -53,9 +53,9 @@ export const RevenueOverview: React.FC<RevenueOverviewProps> = ({ shoots, timeRa
     // Aggregate revenue by month
     paidShoots.forEach(shoot => {
       try {
-        const shootDate = shoot.scheduledDate instanceof Date
-          ? shoot.scheduledDate
-          : parseISO(String(shoot.scheduledDate));
+        const shootDate = typeof shoot.scheduledDate === 'string'
+          ? parseISO(shoot.scheduledDate) 
+          : new Date(shoot.scheduledDate);
           
         const monthIndex = getMonth(shootDate);
         const amount = shoot.payment?.totalPaid || 0;

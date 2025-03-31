@@ -26,9 +26,9 @@ export const filterShootsByDateRange = (shoots: ShootData[], timeRange: TimeRang
   
   return shoots.filter(shoot => {
     // Ensure we're working with a valid date
-    const shootDate = shoot.scheduledDate instanceof Date 
-      ? shoot.scheduledDate 
-      : parseISO(shoot.scheduledDate);
+    const shootDate = typeof shoot.scheduledDate === 'string'
+      ? parseISO(shoot.scheduledDate)
+      : new Date(shoot.scheduledDate);
     
     return !isBefore(shootDate, startDate) && !isAfter(shootDate, endDate);
   });
@@ -37,9 +37,9 @@ export const filterShootsByDateRange = (shoots: ShootData[], timeRange: TimeRang
 export const getScheduledTodayShoots = (shoots: ShootData[]): ShootData[] => {
   const today = new Date();
   return shoots.filter(shoot => {
-    const shootDate = shoot.scheduledDate instanceof Date
-      ? shoot.scheduledDate
-      : parseISO(shoot.scheduledDate);
+    const shootDate = typeof shoot.scheduledDate === 'string'
+      ? parseISO(shoot.scheduledDate)
+      : new Date(shoot.scheduledDate);
     return isSameDay(shootDate, today);
   });
 };
