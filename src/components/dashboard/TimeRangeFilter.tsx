@@ -2,10 +2,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock } from 'lucide-react';
+import { TimeRange } from '@/utils/dateUtils';
 
 interface TimeRangeFilterProps {
-  selectedRange: 'day' | 'week' | 'month' | 'year';
-  onChange: (range: 'day' | 'week' | 'month' | 'year') => void;
+  selectedRange: TimeRange;
+  onChange: (range: TimeRange) => void;
 }
 
 export function TimeRangeFilter({ selectedRange, onChange }: TimeRangeFilterProps) {

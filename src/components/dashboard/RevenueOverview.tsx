@@ -11,9 +11,10 @@ import {
   YAxis, 
   CartesianGrid, 
   LineChart,
-  Line
+  Line,
+  ResponsiveContainer,
+  Tooltip
 } from 'recharts';
-import { ChartContainer, ChartTooltipContent, ChartTooltip } from '@/components/ui/chart';
 import { ShootData } from '@/types/shoots';
 import { TimeRange } from '@/utils/dateUtils';
 import { format, parseISO, getMonth, getYear } from 'date-fns';
@@ -40,20 +41,31 @@ export const RevenueOverview: React.FC<RevenueOverviewProps> = ({ shoots, timeRa
 
     // Filter paid shoots from the current year
     const paidShoots = shoots.filter(shoot => {
-      if (!shoot.payment.totalPaid) return false;
-      const shootDate = new Date(shoot.scheduledDate);
+      if (!shoot.payment?.totalPaid) return false;
+      
+      const shootDate = shoot.scheduledDate instanceof Date
+        ? shoot.scheduledDate
+        : parseISO(String(shoot.scheduledDate));
+        
       return getYear(shootDate) === currentYear;
     });
 
     // Aggregate revenue by month
     paidShoots.forEach(shoot => {
-      const shootDate = new Date(shoot.scheduledDate);
-      const monthIndex = getMonth(shootDate);
-      const amount = shoot.payment.totalPaid || 0;
-      
-      data[monthIndex].revenue += amount;
-      data[monthIndex].profit += amount * 0.3; // Assuming 30% profit margin
-      data[monthIndex].count += 1;
+      try {
+        const shootDate = shoot.scheduledDate instanceof Date
+          ? shoot.scheduledDate
+          : parseISO(String(shoot.scheduledDate));
+          
+        const monthIndex = getMonth(shootDate);
+        const amount = shoot.payment?.totalPaid || 0;
+        
+        data[monthIndex].revenue += amount;
+        data[monthIndex].profit += amount * 0.3; // Assuming 30% profit margin
+        data[monthIndex].count += 1;
+      } catch (error) {
+        console.error("Error processing shoot data:", error, shoot);
+      }
     });
 
     // Calculate growth rates
@@ -69,6 +81,25 @@ export const RevenueOverview: React.FC<RevenueOverviewProps> = ({ shoots, timeRa
   };
 
   const revenueData = generateRevenueData();
+  
+  // Custom tooltip for charts
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background p-2 border rounded shadow-md">
+          <p className="font-medium">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{ color: entry.color }}>
+              {entry.name}: {entry.name === 'growth' 
+                ? `${(entry.value * 100).toFixed(1)}%` 
+                : `$${entry.value.toFixed(2)}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
   
   return (
     <motion.div
@@ -88,91 +119,71 @@ export const RevenueOverview: React.FC<RevenueOverviewProps> = ({ shoots, timeRa
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-sm font-medium mb-2">Monthly Revenue</h3>
-              <ChartContainer 
-                config={{
-                  revenue: {
-                    label: "Revenue",
-                    theme: {
-                      light: "#8B5CF6",
-                      dark: "#8B5CF6"
-                    }
-                  },
-                  profit: {
-                    label: "Profit",
-                    theme: {
-                      light: "#D946EF",
-                      dark: "#D946EF"
-                    }
-                  }
-                }} 
-                className="h-[200px]"
-              >
-                <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#D946EF" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#D946EF" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                  <YAxis tickFormatter={(value) => `$${value}`} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                  <ChartTooltip content={<ChartTooltipContent formatter={(value) => `$${value}`} />} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="#8B5CF6" 
-                    fillOpacity={1} 
-                    fill="url(#colorRevenue)" 
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="profit" 
-                    stroke="#D946EF" 
-                    fillOpacity={1} 
-                    fill="url(#colorProfit)" 
-                  />
-                </AreaChart>
-              </ChartContainer>
+              <div className="h-[200px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#D946EF" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#D946EF" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                    <YAxis 
+                      tickFormatter={(value) => `$${value}`} 
+                      tick={{ fontSize: 10 }} 
+                      tickLine={false} 
+                      axisLine={false} 
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="#8B5CF6" 
+                      fillOpacity={1} 
+                      fill="url(#colorRevenue)" 
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="profit" 
+                      stroke="#D946EF" 
+                      fillOpacity={1} 
+                      fill="url(#colorProfit)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
             <div>
               <h3 className="text-sm font-medium mb-2">Growth Trend</h3>
-              <ChartContainer 
-                config={{
-                  growth: {
-                    label: "Growth Rate",
-                    theme: {
-                      light: "#F97316",
-                      dark: "#F97316"
-                    }
-                  }
-                }} 
-                className="h-[200px]"
-              >
-                <LineChart data={revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                  <YAxis 
-                    tickFormatter={(value) => `${(Number(value) * 100).toFixed(0)}%`} 
-                    tick={{ fontSize: 10 }} 
-                    tickLine={false} 
-                    axisLine={false}
-                    domain={[0, 0.5]} 
-                  />
-                  <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${(Number(value) * 100).toFixed(1)}%`} />} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="growth" 
-                    stroke="#F97316" 
-                    activeDot={{ r: 8 }}
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ChartContainer>
+              <div className="h-[200px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                    <YAxis 
+                      tickFormatter={(value) => `${(Number(value) * 100).toFixed(0)}%`} 
+                      tick={{ fontSize: 10 }} 
+                      tickLine={false} 
+                      axisLine={false}
+                      domain={[0, 0.5]} 
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="growth" 
+                      stroke="#F97316" 
+                      activeDot={{ r: 8 }}
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </CardContent>

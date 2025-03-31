@@ -11,6 +11,9 @@ import { ShootData } from '@/types/shoots';
 import { useShoots } from '@/context/ShootsContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileUploader } from '@/components/media/FileUploader';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+
+const ITEMS_PER_PAGE = 6;
 
 const Shoots = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,6 +23,7 @@ const Shoots = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   
   const { shoots, updateShoot } = useShoots();
   
@@ -36,6 +40,13 @@ const Shoots = () => {
     if (selectedTab === 'hold') return matchesSearch && shoot.status === 'hold';
     return false;
   });
+  
+  // Pagination
+  const totalPages = Math.ceil(filteredShoots.length / ITEMS_PER_PAGE);
+  const paginatedShoots = filteredShoots.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
   
   const isCompletedTab = selectedTab === 'completed';
   
@@ -77,6 +88,10 @@ const Shoots = () => {
   const handleImportClick = () => {
     setIsImportDialogOpen(true);
   };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
   
   return (
     <DashboardLayout>
@@ -101,12 +116,62 @@ const Shoots = () => {
           />
           
           <ShootsContent 
-            filteredShoots={filteredShoots}
+            filteredShoots={paginatedShoots}
             viewMode={viewMode}
             onShootSelect={handleShootSelect}
             onUploadMedia={isCompletedTab ? handleUploadMedia : undefined}
             showMedia={isCompletedTab}
           />
+
+          {totalPages > 1 && (
+            <Pagination className="mt-6">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                
+                {[...Array(totalPages)].map((_, index) => {
+                  const page = index + 1;
+                  // Show current page, first, last, and pages around current
+                  if (
+                    page === 1 || 
+                    page === totalPages || 
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationLink 
+                          isActive={page === currentPage}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  }
+                  // Show ellipsis for skipped pages
+                  if (page === 2 || page === totalPages - 1) {
+                    return (
+                      <PaginationItem key={`ellipsis-${page}`}>
+                        <PaginationLink disabled>...</PaginationLink>
+                      </PaginationItem>
+                    );
+                  }
+                  return null;
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </div>
         
         <ShootDetail 

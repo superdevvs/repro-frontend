@@ -1,6 +1,6 @@
 
 import { ShootData } from "@/types/shoots";
-import { addDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, isBefore, isAfter, isSameDay } from "date-fns";
+import { addDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, isBefore, isAfter, isSameDay, parseISO } from "date-fns";
 
 export type TimeRange = 'day' | 'week' | 'month' | 'year';
 
@@ -25,7 +25,11 @@ export const filterShootsByDateRange = (shoots: ShootData[], timeRange: TimeRang
   const [startDate, endDate] = getDateRangeFromTimeRange(timeRange);
   
   return shoots.filter(shoot => {
-    const shootDate = new Date(shoot.scheduledDate);
+    // Ensure we're working with a valid date
+    const shootDate = shoot.scheduledDate instanceof Date 
+      ? shoot.scheduledDate 
+      : parseISO(shoot.scheduledDate);
+    
     return !isBefore(shootDate, startDate) && !isAfter(shootDate, endDate);
   });
 };
@@ -33,7 +37,9 @@ export const filterShootsByDateRange = (shoots: ShootData[], timeRange: TimeRang
 export const getScheduledTodayShoots = (shoots: ShootData[]): ShootData[] => {
   const today = new Date();
   return shoots.filter(shoot => {
-    const shootDate = new Date(shoot.scheduledDate);
+    const shootDate = shoot.scheduledDate instanceof Date
+      ? shoot.scheduledDate
+      : parseISO(shoot.scheduledDate);
     return isSameDay(shootDate, today);
   });
 };
@@ -44,7 +50,7 @@ export const getActiveShootsCount = (shoots: ShootData[]): number => {
 
 export const getTotalPaidAmount = (shoots: ShootData[]): number => {
   return shoots.reduce((total, shoot) => {
-    const paidAmount = shoot.payment.totalPaid || 0;
+    const paidAmount = shoot.payment?.totalPaid || 0;
     return total + paidAmount;
   }, 0);
 };
