@@ -8,6 +8,8 @@ import { Card } from '@/components/ui/card';
 import { CheckCircleIcon } from 'lucide-react';
 import { getClientsData } from '@/data/clientsData';
 import { Client } from '@/types/clients';
+import { PackageType } from '@/types/services';
+import { loadPackages } from '@/data/servicesData';
 
 interface ClientPropertyFormProps {
   client: string;
@@ -23,7 +25,7 @@ interface ClientPropertyFormProps {
   clients: Array<{ id: string; name: string; company?: string }>;
   selectedPackage: string;
   setSelectedPackage: (id: string) => void;
-  packages: Array<{ id: string; name: string; description: string; price: number }>;
+  packages?: Array<{ id: string; name: string; description: string; price: number }>;
 }
 
 export function ClientPropertyForm({
@@ -40,16 +42,22 @@ export function ClientPropertyForm({
   clients: propClients,
   selectedPackage,
   setSelectedPackage,
-  packages
+  packages: propPackages
 }: ClientPropertyFormProps) {
   // Use local state to manage clients list from localStorage
   const [localClients, setLocalClients] = useState<Client[]>([]);
+  // Load packages from localStorage or use provided ones
+  const [packages, setPackages] = useState<PackageType[]>([]);
   
   // Get latest clients data from localStorage on mount and when prop clients change
   useEffect(() => {
     const updatedClients = getClientsData();
     setLocalClients(updatedClients);
-  }, [propClients]);
+    
+    // Load packages from localStorage or use provided ones
+    const storedPackages = loadPackages();
+    setPackages(propPackages || storedPackages);
+  }, [propClients, propPackages]);
   
   // Find the selected client's name for display
   const selectedClient = localClients.find(c => c.id === client) || 
@@ -140,7 +148,7 @@ export function ClientPropertyForm({
       <div>
         <Label>Select Package</Label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-          {packages.map((pkg) => (
+          {packages.filter(pkg => pkg.featured).map((pkg) => (
             <Card
               key={pkg.id}
               className={`cursor-pointer transition-all ${

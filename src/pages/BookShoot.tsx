@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,18 +17,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { ShootData } from '@/types/shoots';
 import { Client } from '@/types/clients';
 import { initialClientsData } from '@/data/clientsData';
+import { loadPackages, loadServices } from '@/data/servicesData';
+import { PackageType, ServiceType } from '@/types/services';
 
 const photographers = [
   { id: '1', name: 'John Doe', avatar: 'https://ui.shadcn.com/avatars/01.png', rate: 150, availability: true },
   { id: '2', name: 'Jane Smith', avatar: 'https://ui.shadcn.com/avatars/02.png', rate: 175, availability: true },
   { id: '3', name: 'Mike Brown', avatar: 'https://ui.shadcn.com/avatars/03.png', rate: 200, availability: false },
-];
-
-const packages = [
-  { id: '1', name: 'Basic', description: 'Photos only', price: 150 },
-  { id: '2', name: 'Standard', description: 'Photos + Floor Plans', price: 250 },
-  { id: '3', name: 'Premium', description: 'Photos + Video + Floor Plans', price: 350 },
-  { id: '4', name: 'Luxury', description: 'Photos + Video + 3D Tour + Floor Plans', price: 500 },
 ];
 
 const BookShoot = () => {
@@ -41,6 +37,9 @@ const BookShoot = () => {
     const storedClients = localStorage.getItem('clientsData');
     return storedClients ? JSON.parse(storedClients) : initialClientsData;
   });
+  
+  const [packages, setPackages] = useState<PackageType[]>([]);
+  const [services, setServices] = useState<ServiceType[]>([]);
   
   const [client, setClient] = useState(clientIdFromUrl || '');
   const [address, setAddress] = useState('');
@@ -65,6 +64,10 @@ const BookShoot = () => {
     if (storedClients) {
       setClients(JSON.parse(storedClients));
     }
+    
+    // Load services and packages
+    setPackages(loadPackages());
+    setServices(loadServices());
   }, []);
 
   useEffect(() => {
@@ -104,6 +107,17 @@ const BookShoot = () => {
     return photographers.filter(p => p.availability);
   };
 
+  const getSelectedPackageServices = (): string[] => {
+    const pkg = packages.find(p => p.id === selectedPackage);
+    if (!pkg) return [];
+    
+    // Map service IDs to service names
+    return pkg.services.map(serviceId => {
+      const service = services.find(s => s.id === serviceId);
+      return service ? service.name : '';
+    }).filter(name => name !== '');
+  };
+
   const handleSubmit = () => {
     if (step === 3) {
       if (!client || !address || !city || !state || !zip || !date || !time || !photographer || !selectedPackage) {
@@ -122,6 +136,7 @@ const BookShoot = () => {
       const newShoot: ShootData = {
         id: uuidv4(),
         scheduledDate: date.toISOString().split('T')[0],
+        time: time,
         client: {
           name: selectedClientData?.name || 'Unknown Client',
           email: selectedClientData?.email || `client${client}@example.com`,
@@ -139,7 +154,7 @@ const BookShoot = () => {
           name: selectedPhotographerData?.name || 'Unknown Photographer',
           avatar: selectedPhotographerData?.avatar
         },
-        services: selectedPackageData ? [selectedPackageData.name] : [],
+        services: getSelectedPackageServices(),
         payment: {
           baseQuote: getPackagePrice(),
           taxRate: 6.00,

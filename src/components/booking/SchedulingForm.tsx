@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -9,13 +9,8 @@ import { CalendarIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-
-interface PackageType {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-}
+import { PackageType } from '@/types/services';
+import { loadPackages } from '@/data/servicesData';
 
 interface SchedulingFormProps {
   date: Date | undefined;
@@ -25,7 +20,7 @@ interface SchedulingFormProps {
   selectedPackage: string;
   notes: string;
   setNotes: (notes: string) => void;
-  packages: PackageType[];
+  packages?: PackageType[];
 }
 
 export function SchedulingForm({
@@ -36,8 +31,15 @@ export function SchedulingForm({
   selectedPackage,
   notes,
   setNotes,
-  packages
+  packages: propPackages
 }: SchedulingFormProps) {
+  const [packages, setPackages] = useState<PackageType[]>([]);
+  
+  // Load packages from localStorage on mount
+  useEffect(() => {
+    setPackages(propPackages || loadPackages());
+  }, [propPackages]);
+  
   // Generate available times based on selected date
   const getAvailableTimes = () => {
     if (!date) return [];
