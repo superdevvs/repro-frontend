@@ -20,7 +20,7 @@ const BookingContent = () => {
     step, setStep,
     isComplete,
     notes, setNotes,
-    selectedPackage,
+    selectedPackage, setSelectedPackage,
     client, setClient,
     address, setAddress,
     city, setCity,
@@ -76,7 +76,7 @@ const BookingContent = () => {
                     setZip={setZip}
                     clients={clients}
                     selectedPackage={selectedPackage}
-                    setSelectedPackage={setPackage => setSelectedPackage(setPackage)}
+                    setSelectedPackage={setSelectedPackage}
                     packages={packages}
                   />
                 )}
