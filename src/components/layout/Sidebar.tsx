@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   NavigationMenu,
@@ -148,15 +149,15 @@ export function Sidebar() {
   const items = isAdmin ? adminItems : isGuest ? guestItems : [];
 
   return (
-    <div className="hidden border-r bg-gray-100/40 dark:bg-gray-800/40 h-screen w-60 flex-col space-y-1 text-sm font-medium md:flex">
+    <div className="hidden md:flex border-r bg-gray-100/40 dark:bg-gray-800/40 h-screen w-60 flex-col space-y-1 text-sm font-medium">
       <div className="flex flex-col gap-y-4 px-3 py-2">
-        <NavigationMenu>
-          <NavigationMenuList>
+        <NavigationMenu orientation="vertical" className="w-full">
+          <NavigationMenuList className="flex-col items-start w-full">
             {items.map((item) => (
-              <NavigationMenuItem key={item.title}>
-                <Link to={item.href} className="relative">
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    <div className="flex items-center">
+              <NavigationMenuItem key={item.title} className="w-full">
+                <Link to={item.href} className="relative w-full">
+                  <NavigationMenuLink className={`${navigationMenuTriggerStyle()} justify-start w-full`}>
+                    <div className="flex items-center w-full">
                       <item.icon className="mr-2 h-4 w-4" />
                       {item.title}
                       {item.badge && (
@@ -193,13 +194,13 @@ export function MobileSidebar() {
       </SheetTrigger>
       <SheetContent side="left" className="w-60 p-0">
         <div className="flex flex-col gap-y-4 px-3 py-2">
-          <NavigationMenu>
-            <NavigationMenuList>
+          <NavigationMenu orientation="vertical" className="w-full">
+            <NavigationMenuList className="flex-col items-start w-full">
               {items.map((item) => (
-                <NavigationMenuItem key={item.title}>
-                  <Link to={item.href} className="relative">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      <div className="flex items-center">
+                <NavigationMenuItem key={item.title} className="w-full">
+                  <Link to={item.href} className="relative w-full">
+                    <NavigationMenuLink className={`${navigationMenuTriggerStyle()} justify-start w-full`}>
+                      <div className="flex items-center w-full">
                         <item.icon className="mr-2 h-4 w-4" />
                         {item.title}
                         {item.badge && (
