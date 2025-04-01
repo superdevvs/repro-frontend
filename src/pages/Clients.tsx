@@ -36,19 +36,20 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { TaskManager } from '@/components/dashboard/TaskManager';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Client } from '@/types/clients';
 import { initialClientsData } from '@/data/clientsData';
+import { useShoots } from '@/context/ShootsContext';
 
 const Clients = () => {
   const { role } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { shoots } = useShoots();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -82,6 +83,63 @@ const Clients = () => {
     const storedClients = localStorage.getItem('clientsData');
     return storedClients ? JSON.parse(storedClients) : initialClientsData;
   });
+  
+  useEffect(() => {
+    if (shoots.length > 0) {
+      const clientShootCounts = new Map<string, { count: number, lastDate: string }>();
+      
+      shoots.forEach(shoot => {
+        const clientName = shoot.client.name;
+        if (!clientShootCounts.has(clientName)) {
+          clientShootCounts.set(clientName, { count: 1, lastDate: shoot.scheduledDate });
+        } else {
+          const current = clientShootCounts.get(clientName)!;
+          current.count++;
+          const currentDate = new Date(current.lastDate);
+          const shootDate = new Date(shoot.scheduledDate);
+          if (shootDate > currentDate) {
+            current.lastDate = shoot.scheduledDate;
+          }
+          clientShootCounts.set(clientName, current);
+        }
+      });
+      
+      const updatedClients = clientsData.map(client => {
+        const shootData = clientShootCounts.get(client.name);
+        if (shootData) {
+          return {
+            ...client,
+            shootsCount: shootData.count,
+            lastActivity: shootData.lastDate
+          };
+        }
+        return client;
+      });
+      
+      const existingClientNames = new Set(clientsData.map(c => c.name));
+      clientShootCounts.forEach((data, clientName) => {
+        if (!existingClientNames.has(clientName)) {
+          const clientShoot = shoots.find(s => s.client.name === clientName);
+          if (clientShoot) {
+            const newClient: Client = {
+              id: `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: clientName,
+              company: clientShoot.client.company || '',
+              email: clientShoot.client.email || '',
+              phone: clientShoot.client.phone || '',
+              address: '',
+              status: 'active',
+              shootsCount: data.count,
+              lastActivity: data.lastDate
+            };
+            updatedClients.push(newClient);
+          }
+        }
+      });
+      
+      setClientsData(updatedClients);
+    }
+  }, [shoots]);
   
   useEffect(() => {
     localStorage.setItem('clientsData', JSON.stringify(clientsData));
@@ -320,7 +378,7 @@ const Clients = () => {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout className="max-w-full">
       <PageTransition>
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -372,6 +430,7 @@ const Clients = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Shoots</TableHead>
+                      <TableHead>Last Activity</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -385,6 +444,7 @@ const Clients = () => {
                           <TableCell>{client.email}</TableCell>
                           <TableCell>{client.phone}</TableCell>
                           <TableCell>{client.shootsCount}</TableCell>
+                          <TableCell>{new Date(client.lastActivity).toLocaleDateString()}</TableCell>
                           <TableCell>
                             <Badge 
                               className={client.status === 'active' 
@@ -435,7 +495,7 @@ const Clients = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center h-24">
+                        <TableCell colSpan={8} className="text-center h-24">
                           <div className="flex flex-col items-center justify-center text-muted-foreground">
                             <UserIcon className="h-8 w-8 mb-2 opacity-20" />
                             <p>No clients found</p>
@@ -449,8 +509,6 @@ const Clients = () => {
               </div>
             </CardContent>
           </Card>
-          
-          <TaskManager />
         </div>
       </PageTransition>
       
