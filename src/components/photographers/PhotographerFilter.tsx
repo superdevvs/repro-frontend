@@ -1,72 +1,115 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SearchIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Search, X, Camera, Pen } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface PhotographerFilterProps {
   searchTerm: string;
-  setSearchTerm: (term: string) => void;
+  setSearchTerm: (value: string) => void;
   activeFilter: string;
-  setActiveFilter: (filter: string) => void;
+  setActiveFilter: (value: string) => void;
+  activeTab: 'photographers' | 'editors';
+  setActiveTab: (value: 'photographers' | 'editors') => void;
 }
 
-export function PhotographerFilter({ 
-  searchTerm, 
-  setSearchTerm, 
-  activeFilter, 
-  setActiveFilter 
+export function PhotographerFilter({
+  searchTerm,
+  setSearchTerm,
+  activeFilter,
+  setActiveFilter,
+  activeTab,
+  setActiveTab
 }: PhotographerFilterProps) {
   return (
-    <Card className="glass-card shadow-sm hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search photographers by name, location or specialty..." 
-              className="pl-9 h-11"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button 
-              variant={activeFilter === 'All' ? 'default' : 'outline'} 
+    <div className="space-y-4">
+      {/* Tabs for Photographers/Editors */}
+      <div className="flex justify-between items-center">
+        <ToggleGroup type="single" value={activeTab} onValueChange={(value) => value && setActiveTab(value as 'photographers' | 'editors')} className="border rounded-lg p-1 bg-muted/20">
+          <ToggleGroupItem value="photographers" className="rounded-md gap-2 data-[state=on]:bg-background data-[state=on]:shadow">
+            <Camera className="h-4 w-4" />
+            <span>Photographers</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="editors" className="rounded-md gap-2 data-[state=on]:bg-background data-[state=on]:shadow">
+            <Pen className="h-4 w-4" />
+            <span>Editors</span>
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
+      {/* Search and Status Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            type="text"
+            placeholder={activeTab === 'photographers' ? "Search photographers..." : "Search editors..."}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 w-full"
+          />
+          {searchTerm && (
+            <Button
+              variant="ghost"
               size="sm"
-              className="font-medium transition-colors"
-              onClick={() => setActiveFilter('All')}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
+              onClick={() => setSearchTerm('')}
             >
-              All
+              <X className="h-4 w-4" />
+              <span className="sr-only">Clear search</span>
             </Button>
-            <Button 
-              variant={activeFilter === 'available' ? 'default' : 'outline'} 
-              size="sm"
-              className="font-medium text-green-600 bg-green-50 border-green-200 hover:bg-green-100 hover:text-green-700 transition-colors"
-              onClick={() => setActiveFilter('available')}
-            >
-              Available
-            </Button>
-            <Button 
-              variant={activeFilter === 'busy' ? 'default' : 'outline'} 
-              size="sm"
-              className="font-medium text-yellow-600 bg-yellow-50 border-yellow-200 hover:bg-yellow-100 hover:text-yellow-700 transition-colors"
-              onClick={() => setActiveFilter('busy')}
-            >
-              Busy
-            </Button>
-            <Button 
-              variant={activeFilter === 'offline' ? 'default' : 'outline'} 
-              size="sm"
-              className="font-medium text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-              onClick={() => setActiveFilter('offline')}
-            >
-              Offline
-            </Button>
-          </div>
+          )}
         </div>
-      </CardContent>
-    </Card>
+        
+        <div className="flex gap-2">
+          <Button
+            variant={activeFilter === 'All' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('All')}
+            className={cn(
+              "text-xs sm:text-sm",
+              activeFilter === 'All' ? "bg-primary text-primary-foreground" : ""
+            )}
+          >
+            All
+          </Button>
+          <Button
+            variant={activeFilter === 'Available' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('Available')}
+            className={cn(
+              "text-xs sm:text-sm",
+              activeFilter === 'Available' ? "bg-green-600 text-white hover:bg-green-700" : ""
+            )}
+          >
+            Available
+          </Button>
+          <Button
+            variant={activeFilter === 'Busy' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('Busy')}
+            className={cn(
+              "text-xs sm:text-sm",
+              activeFilter === 'Busy' ? "bg-amber-500 text-white hover:bg-amber-600" : ""
+            )}
+          >
+            Busy
+          </Button>
+          <Button
+            variant={activeFilter === 'Offline' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('Offline')}
+            className={cn(
+              "text-xs sm:text-sm",
+              activeFilter === 'Offline' ? "bg-gray-500 text-white hover:bg-gray-600" : ""
+            )}
+          >
+            Offline
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

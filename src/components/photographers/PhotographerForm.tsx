@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -33,24 +33,33 @@ import { SpecialtiesSelector, photographerFormSchema, PhotographerFormValues } f
 interface PhotographerFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: PhotographerFormValues) => void;
+  onSubmit: (data: any) => void;
   initialData?: {
-    id: string;
+    id?: string;
     name: string;
     email: string;
     location: string;
     specialties: string[];
     status: string;
-    avatar: string;
+    avatar?: string;
   };
+  formType?: 'photographers' | 'editors';
 }
 
-export function PhotographerForm({ open, onOpenChange, onSubmit, initialData }: PhotographerFormProps) {
+export function PhotographerForm({ 
+  open, 
+  onOpenChange, 
+  onSubmit, 
+  initialData,
+  formType = 'photographers'
+}: PhotographerFormProps) {
   const { toast } = useToast();
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const isEditMode = !!initialData;
+  const isEditorForm = formType === 'editors';
+  const entityType = isEditorForm ? 'Editor' : 'Photographer';
 
   const form = useForm<PhotographerFormValues>({
     resolver: zodResolver(photographerFormSchema),
@@ -71,7 +80,6 @@ export function PhotographerForm({ open, onOpenChange, onSubmit, initialData }: 
     },
   });
 
-  // Initialize the form with existing data if in edit mode
   useEffect(() => {
     if (initialData) {
       setAvatarUrl(initialData.avatar);
@@ -105,7 +113,6 @@ export function PhotographerForm({ open, onOpenChange, onSubmit, initialData }: 
       return;
     }
     
-    // Make sure we have the avatar URL in the form data
     if (avatarUrl) {
       data.avatar = avatarUrl;
       console.log("Final avatar URL in form submission:", avatarUrl);
@@ -138,9 +145,14 @@ export function PhotographerForm({ open, onOpenChange, onSubmit, initialData }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Edit Photographer' : 'Add New Photographer'}</DialogTitle>
+          <DialogTitle>{initialData ? `Edit ${entityType}` : `Add New ${entityType}`}</DialogTitle>
+          <DialogDescription>
+            {initialData 
+              ? `Update ${entityType.toLowerCase()} information in your directory.` 
+              : `Add a new ${entityType.toLowerCase()} to your directory.`}
+          </DialogDescription>
         </DialogHeader>
         
         <Form {...form}>

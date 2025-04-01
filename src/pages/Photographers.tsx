@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -17,26 +16,29 @@ const Photographers = () => {
   const { photographersList, setPhotographersList } = usePhotographersData();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [activeTab, setActiveTab] = useState<'photographers' | 'editors'>('photographers');
   const [formOpen, setFormOpen] = useState(false);
   const [selectedPhotographer, setSelectedPhotographer] = useState<PhotographerFromShoots | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
-  // Filter photographers based on search term and active filter
   const filteredPhotographers = photographersList.filter(photographer => {
+    const matchesType = activeTab === 'photographers' 
+      ? !photographer.specialties?.includes('editing') 
+      : photographer.specialties?.includes('editing');
+    
     const matchesSearch = 
       photographer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (photographer.location?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (photographer.specialties?.some(s => s.toLowerCase().includes(searchTerm.toLowerCase())) || false);
     
-    if (activeFilter === 'All') return matchesSearch;
-    return matchesSearch && photographer.status === activeFilter.toLowerCase();
+    if (activeFilter === 'All') return matchesType && matchesSearch;
+    return matchesType && matchesSearch && photographer.status === activeFilter.toLowerCase();
   });
 
   const handleAddPhotographer = (data: any) => {
     console.log("Adding new photographer with data:", data);
     
-    // Create unique ID for new photographer
     const newId = `${Date.now()}`;
     
     const newPhotographer: PhotographerFromShoots = {
@@ -54,9 +56,8 @@ const Photographers = () => {
     setPhotographersList(prev => [...prev, newPhotographer]);
     setFormOpen(false);
     
-    // Display success message
     toast({
-      title: 'Photographer Added',
+      title: `${activeTab === 'photographers' ? 'Photographer' : 'Editor'} Added`,
       description: `${data.name} has been added to the directory.`,
     });
   };
@@ -77,7 +78,6 @@ const Photographers = () => {
   };
 
   const handleUpdatePhotographer = (data: any) => {
-    // Update the photographer in the list
     setPhotographersList(prev => 
       prev.map(p => 
         p.id === selectedPhotographer?.id 
@@ -96,7 +96,6 @@ const Photographers = () => {
     
     setEditOpen(false);
     
-    // Display success message
     toast({
       title: 'Photographer Updated',
       description: `${data.name}'s profile has been updated.`,
@@ -112,18 +111,20 @@ const Photographers = () => {
     <DashboardLayout>
       <PageTransition>
         <div className="space-y-6">
-          {/* Enhanced Header */}
-          <PhotographersHeader onAddClick={() => setFormOpen(true)} />
+          <PhotographersHeader 
+            onAddClick={() => setFormOpen(true)} 
+            activeTab={activeTab}
+          />
           
-          {/* Improved Search and filter */}
           <PhotographerFilter 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             activeFilter={activeFilter}
             setActiveFilter={setActiveFilter}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
           />
           
-          {/* Photographers grid with enhanced UI */}
           {filteredPhotographers.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredPhotographers.map((photographer) => (
@@ -140,19 +141,19 @@ const Photographers = () => {
               searchTerm={searchTerm}
               onClearFilters={handleClearFilters}
               onAddPhotographer={() => setFormOpen(true)}
+              activeTab={activeTab}
             />
           )}
         </div>
       </PageTransition>
       
-      {/* Add Photographer Form */}
       <PhotographerForm 
         open={formOpen} 
         onOpenChange={setFormOpen} 
         onSubmit={handleAddPhotographer} 
+        formType={activeTab}
       />
 
-      {/* View Photographer Profile */}
       {selectedPhotographer && (
         <PhotographerProfile
           photographer={{
@@ -170,10 +171,10 @@ const Photographers = () => {
           open={profileOpen}
           onOpenChange={setProfileOpen}
           onEdit={handleEditPhotographer}
+          profileType={activeTab}
         />
       )}
 
-      {/* Edit Photographer Form */}
       {selectedPhotographer && (
         <PhotographerForm 
           open={editOpen} 
@@ -188,6 +189,7 @@ const Photographers = () => {
             status: selectedPhotographer.status,
             avatar: selectedPhotographer.avatar || ''
           }}
+          formType={activeTab}
         />
       )}
     </DashboardLayout>

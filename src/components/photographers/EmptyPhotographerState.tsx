@@ -1,20 +1,24 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, CameraIcon, SearchX, UserPlus } from 'lucide-react';
+import { PlusIcon, CameraIcon, SearchX, UserPlus, Pen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface EmptyPhotographerStateProps {
   searchTerm: string;
   onClearFilters: () => void;
   onAddPhotographer?: () => void;
+  activeTab: 'photographers' | 'editors';
 }
 
 export function EmptyPhotographerState({ 
   searchTerm, 
   onClearFilters,
-  onAddPhotographer
+  onAddPhotographer,
+  activeTab
 }: EmptyPhotographerStateProps) {
+  const isPhotographerTab = activeTab === 'photographers';
+
   return (
     <div className="flex flex-col items-center justify-center p-8 md:p-12 border border-dashed border-gray-300 rounded-lg bg-gray-50/50 transition-all animate-fadeIn">
       <div className="relative mb-6">
@@ -22,18 +26,22 @@ export function EmptyPhotographerState({
         {searchTerm ? (
           <SearchX className="h-16 w-16 text-gray-400 relative z-10" />
         ) : (
-          <CameraIcon className="h-16 w-16 text-gray-400 relative z-10" />
+          isPhotographerTab ? 
+            <CameraIcon className="h-16 w-16 text-gray-400 relative z-10" /> : 
+            <Pen className="h-16 w-16 text-gray-400 relative z-10" />
         )}
       </div>
       
       <h3 className="text-xl md:text-2xl font-semibold text-gray-700 mb-2">
-        {searchTerm ? "No matching photographers" : "No photographers found"}
+        {searchTerm 
+          ? `No matching ${isPhotographerTab ? 'photographers' : 'editors'}` 
+          : `No ${isPhotographerTab ? 'photographers' : 'editors'} found`}
       </h3>
       
       <p className="text-gray-500 mb-6 text-center max-w-md">
         {searchTerm 
-          ? `We couldn't find any photographers matching "${searchTerm}".` 
-          : "There are no photographers in your directory yet."}
+          ? `We couldn't find any ${isPhotographerTab ? 'photographers' : 'editors'} matching "${searchTerm}".` 
+          : `There are no ${isPhotographerTab ? 'photographers' : 'editors'} in your directory yet.`}
       </p>
       
       <div className="flex flex-col sm:flex-row gap-3">
@@ -52,7 +60,7 @@ export function EmptyPhotographerState({
             onClick={onAddPhotographer}
             className="group shadow-sm hover:shadow-md transition-all">
             <UserPlus className="mr-2 h-4 w-4" />
-            Add photographer
+            Add {isPhotographerTab ? 'photographer' : 'editor'}
           </Button>
         )}
       </div>
@@ -61,7 +69,7 @@ export function EmptyPhotographerState({
         <div className="mt-8 p-4 bg-blue-50 border border-blue-100 rounded-md max-w-md">
           <h4 className="font-medium text-blue-700 mb-2">Pro tip</h4>
           <p className="text-sm text-blue-600">
-            Add photographers to your directory to easily assign them to shoots and manage their availability.
+            Add {isPhotographerTab ? 'photographers' : 'editors'} to your directory to easily assign them to shoots and manage their availability.
           </p>
         </div>
       )}

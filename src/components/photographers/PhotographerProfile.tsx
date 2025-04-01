@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -22,24 +21,37 @@ type Photographer = {
   rating: number;
   shootsCompleted: number;
   specialties: string[];
-  status: string;
+  status: 'available' | 'busy' | 'offline';
 };
 
 interface PhotographerProfileProps {
-  photographer: Photographer | null;
+  photographer: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+    location: string;
+    rating: number;
+    shootsCompleted: number;
+    specialties: string[];
+    status: 'available' | 'busy' | 'offline';
+  };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEdit: () => void;
+  profileType?: 'photographers' | 'editors';
 }
 
 export function PhotographerProfile({ 
   photographer, 
   open, 
   onOpenChange,
-  onEdit
+  onEdit,
+  profileType = 'photographers'
 }: PhotographerProfileProps) {
-  if (!photographer) return null;
-
+  const isEditorProfile = profileType === 'editors';
+  const entityType = isEditorProfile ? 'Editor' : 'Photographer';
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available':
@@ -58,11 +70,11 @@ export function PhotographerProfile({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Photographer Profile</DialogTitle>
+          <DialogTitle>{entityType} Profile</DialogTitle>
           <DialogDescription>
-            View photographer details and statistics
+            View detailed information about this {entityType.toLowerCase()}.
           </DialogDescription>
         </DialogHeader>
 
