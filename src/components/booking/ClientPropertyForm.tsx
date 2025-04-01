@@ -25,7 +25,7 @@ interface ClientPropertyFormProps {
   clients: Array<{ id: string; name: string; company?: string }>;
   selectedPackage: string;
   setSelectedPackage: (id: string) => void;
-  packages?: Array<{ id: string; name: string; description: string; price: number }>;
+  packages?: PackageType[];
 }
 
 export function ClientPropertyForm({

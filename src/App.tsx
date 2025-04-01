@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Index from '@/pages/Index';
 import Dashboard from '@/pages/Dashboard';
 import Shoots from '@/pages/Shoots';
 import BookShoot from '@/pages/BookShoot';
-import ShootCalendar from '@/pages/Calendar';
+import ShootCalendar from '@/pages/ShootCalendar';
 import Clients from '@/pages/Clients';
 import Photographers from '@/pages/Photographers';
 import Invoices from '@/pages/Invoices';
@@ -43,4 +44,3 @@ function App() {
 }
 
 export default App;
-
