@@ -91,21 +91,9 @@ export function ShootsProvider({ children }: { children: React.ReactNode }) {
   };
   
   const getUniqueEditors = () => {
-    // Assuming editors are stored in shoot.editor field
-    // If not, this will need to be adapted based on your data structure
-    const editorMap = new Map<string, number>();
-    
-    shoots.forEach(shoot => {
-      if (shoot.editor && shoot.editor.name) {
-        const name = shoot.editor.name;
-        editorMap.set(name, (editorMap.get(name) || 0) + 1);
-      }
-    });
-    
-    return Array.from(editorMap.entries()).map(([name, shootCount]) => ({
-      name, 
-      shootCount
-    }));
+    // Since there's no editor field in ShootData, we'll return an empty array
+    // In the future, if editor data is added to ShootData, this can be updated
+    return [];
   };
   
   const getUniqueClients = () => {
