@@ -19,10 +19,12 @@ import { ServiceType, PackageType } from '@/types/services';
 import { ServiceDialog } from '@/components/services/ServiceDialog';
 import { PackageDialog } from '@/components/services/PackageDialog';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/hooks/useTheme';
 
 const Settings = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [services, setServices] = useState<ServiceType[]>([]);
   const [packages, setPackages] = useState<PackageType[]>([]);
@@ -32,6 +34,10 @@ const Settings = () => {
   const [editingPackage, setEditingPackage] = useState<PackageType | null>(null);
   const [activeTab, setActiveTab] = useState("profile");
   const [activeServicesTab, setActiveServicesTab] = useState("services");
+  const [isCompactView, setIsCompactView] = useState(false);
+  const [showGraphics, setShowGraphics] = useState(true);
+  const [primaryColor, setPrimaryColor] = useState("#0088CC");
+  const [secondaryColor, setSecondaryColor] = useState("#6C757D");
   
   // Load services and packages from localStorage
   useEffect(() => {
@@ -48,6 +54,10 @@ const Settings = () => {
       title: "Settings Saved",
       description: "Your changes have been successfully saved.",
     });
+  };
+
+  const toggleDarkMode = (checked: boolean) => {
+    setTheme(checked ? 'dark' : 'light');
   };
 
   // Handle adding or updating a service
@@ -469,21 +479,30 @@ const Settings = () => {
                         <p className="font-medium">Dark Mode</p>
                         <p className="text-sm text-muted-foreground">Enable dark mode for the interface</p>
                       </div>
-                      <Switch defaultChecked />
+                      <Switch 
+                        checked={theme === 'dark'} 
+                        onCheckedChange={toggleDarkMode}
+                      />
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">Compact View</p>
                         <p className="text-sm text-muted-foreground">Use a more compact layout</p>
                       </div>
-                      <Switch />
+                      <Switch 
+                        checked={isCompactView}
+                        onCheckedChange={setIsCompactView}
+                      />
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">Show Graphic Elements</p>
                         <p className="text-sm text-muted-foreground">Display decorative graphics in the interface</p>
                       </div>
-                      <Switch defaultChecked />
+                      <Switch 
+                        checked={showGraphics}
+                        onCheckedChange={setShowGraphics}
+                      />
                     </div>
                   </div>
                   
@@ -494,14 +513,24 @@ const Settings = () => {
                         <Label htmlFor="primaryColor">Primary Color</Label>
                         <div className="flex items-center">
                           <div className="h-10 w-10 bg-primary rounded-l-md"></div>
-                          <Input id="primaryColor" defaultValue="#0088CC" className="rounded-l-none" />
+                          <Input 
+                            id="primaryColor" 
+                            value={primaryColor}
+                            onChange={(e) => setPrimaryColor(e.target.value)}
+                            className="rounded-l-none" 
+                          />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="secondaryColor">Secondary Color</Label>
                         <div className="flex items-center">
                           <div className="h-10 w-10 bg-secondary rounded-l-md"></div>
-                          <Input id="secondaryColor" defaultValue="#6C757D" className="rounded-l-none" />
+                          <Input 
+                            id="secondaryColor" 
+                            value={secondaryColor}
+                            onChange={(e) => setSecondaryColor(e.target.value)}
+                            className="rounded-l-none" 
+                          />
                         </div>
                       </div>
                     </div>
