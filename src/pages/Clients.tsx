@@ -696,7 +696,6 @@ const Clients = () => {
         </div>
       </PageTransition>
       
-      
       <Dialog open={clientDetailsOpen} onOpenChange={setClientDetailsOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
@@ -881,7 +880,8 @@ const Clients = () => {
                     className="w-full justify-start"
                     onClick={() => handleExternalUpload('google-drive')}
                   >
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/2295px-Google_Drive_icon_%282020%29.svg.png" 
+                    <img 
+                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/2295px-Google_Drive_icon_%282020%29.svg.png" 
                       alt="Google Drive" 
                       className="mr-2 h-4 w-4" 
                     />
@@ -893,4 +893,5 @@ const Clients = () => {
                     className="w-full justify-start"
                     onClick={() => handleExternalUpload('dropbox')}
                   >
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/
+                    <img 
+                      src="https://upload.wikimedia.org/wikipedia/commons/
