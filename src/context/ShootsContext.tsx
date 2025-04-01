@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ShootData } from '@/types/shoots';
 import { shootsData as initialShootsData } from '@/data/shootsData';
