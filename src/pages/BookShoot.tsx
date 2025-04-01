@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -197,6 +198,34 @@ const BookShoot = () => {
     navigate('/shoots');
   };
 
+  // Create a form data object to match expected props of ClientPropertyForm
+  const clientPropertyFormData = {
+    initialData: {
+      clientId: client,
+      clientName: clients.find(c => c.id === client)?.name || '',
+      clientEmail: clients.find(c => c.id === client)?.email || '',
+      clientPhone: clients.find(c => c.id === client)?.phone || '',
+      clientCompany: clients.find(c => c.id === client)?.company || '',
+      propertyType: 'residential',
+      propertyAddress: address,
+      propertyCity: city,
+      propertyState: state,
+      propertyZip: zip,
+      propertyInfo: notes
+    },
+    onComplete: (data: any) => {
+      // Update local state when form is completed
+      if (data.clientId) setClient(data.clientId);
+      setAddress(data.propertyAddress);
+      setCity(data.propertyCity);
+      setState(data.propertyState);
+      setZip(data.propertyZip);
+      setNotes(data.propertyInfo || '');
+      // Move to next step
+      setStep(2);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -228,20 +257,8 @@ const BookShoot = () => {
                 <AnimatePresence mode="wait">
                   {step === 1 && (
                     <ClientPropertyForm
-                      client={client}
-                      setClient={setClient}
-                      address={address}
-                      setAddress={setAddress}
-                      city={city}
-                      setCity={setCity}
-                      state={state}
-                      setState={setState}
-                      zip={zip}
-                      setZip={setZip}
-                      clients={clients}
-                      selectedPackage={selectedPackage}
-                      setSelectedPackage={setSelectedPackage}
-                      packages={packages}
+                      onComplete={clientPropertyFormData.onComplete}
+                      initialData={clientPropertyFormData.initialData}
                     />
                   )}
                   

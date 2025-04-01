@@ -18,6 +18,7 @@ import { ServicesManagement } from '@/components/settings/ServicesManagement';
 const Settings = () => {
   const { user, role } = useAuth();
   const { toast } = useToast();
+  const [avatar, setAvatar] = React.useState(user?.avatar || '');
   
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +34,10 @@ const Settings = () => {
       title: "Account Updated",
       description: "Your account settings have been saved.",
     });
+  };
+
+  const handleAvatarChange = (url: string) => {
+    setAvatar(url);
   };
   
   return (
@@ -71,7 +76,7 @@ const Settings = () => {
                       <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
                         <div>
                           <Avatar className="h-24 w-24 border-2 border-muted">
-                            <AvatarImage src={user?.avatar} alt={user?.name} />
+                            <AvatarImage src={avatar || user?.avatar} alt={user?.name} />
                             <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
                           </Avatar>
                           <Sheet>
@@ -88,7 +93,7 @@ const Settings = () => {
                                 </SheetDescription>
                               </SheetHeader>
                               <div className="py-6">
-                                <ImageUpload />
+                                <ImageUpload onChange={handleAvatarChange} initialImage={avatar || user?.avatar} />
                               </div>
                             </SheetContent>
                           </Sheet>
