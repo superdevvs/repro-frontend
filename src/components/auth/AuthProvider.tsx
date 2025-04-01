@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "sonner";
@@ -16,6 +15,8 @@ export interface User {
   company?: string;
   createdAt?: string;
   lastLogin?: string;
+  bio?: string;
+  username?: string;
 }
 
 interface AuthContextType {
@@ -40,6 +41,8 @@ const mockUsers = [
     company: 'Real Estate Media Inc.',
     createdAt: '2023-01-15T08:30:00Z',
     lastLogin: '2023-06-12T14:45:00Z',
+    bio: 'Admin User bio',
+    username: 'adminuser'
   },
   {
     id: '2',
@@ -51,6 +54,8 @@ const mockUsers = [
     phone: '+1 (555) 987-6543',
     createdAt: '2023-02-10T10:15:00Z',
     lastLogin: '2023-06-10T09:20:00Z',
+    bio: 'Photographer User bio',
+    username: 'photographeruser'
   },
   {
     id: '3',
@@ -62,6 +67,8 @@ const mockUsers = [
     company: 'Premier Properties',
     createdAt: '2023-03-05T11:45:00Z',
     lastLogin: '2023-06-11T16:30:00Z',
+    bio: 'Client User bio',
+    username: 'clientuser'
   },
 ];
 

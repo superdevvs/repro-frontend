@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -18,6 +19,7 @@ const Settings = () => {
   const { user, role } = useAuth();
   const { toast } = useToast();
   const [avatar, setAvatar] = React.useState(user?.avatar || '');
+  const [bio, setBio] = React.useState(''); // Add a separate state for bio
   
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,8 +130,9 @@ const Settings = () => {
                             <Textarea
                               id="bio"
                               rows={4}
-                              defaultValue={user?.bio || ''}
+                              defaultValue={bio}
                               placeholder="Write a short bio about yourself"
+                              onChange={(e) => setBio(e.target.value)}
                             />
                           </div>
                         </div>
@@ -164,7 +167,7 @@ const Settings = () => {
                           </label>
                           <Input 
                             id="username" 
-                            defaultValue={user?.username || ''} 
+                            defaultValue={''} 
                             placeholder="your-username"
                           />
                         </div>
