@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { TimeRangeFilter } from '@/components/dashboard/TimeRangeFilter';
@@ -16,6 +17,41 @@ import {
   Grid3X3, 
   PlusCircle
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { 
+  format, 
+  addMonths, 
+  subMonths, 
+  isSameDay, 
+  parseISO, 
+  startOfWeek, 
+  endOfWeek, 
+  eachDayOfInterval, 
+  addDays, 
+  getDay,
+  getDate,
+  isToday,
+  isSameMonth,
+  setDate,
+  getMonth,
+  getYear,
+  startOfMonth,
+  endOfMonth,
+  setMonth,
+  setYear
+} from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { useNavigate } from 'react-router-dom';
 
 const ShootCalendar = () => {
   const { shoots } = useShoots();
