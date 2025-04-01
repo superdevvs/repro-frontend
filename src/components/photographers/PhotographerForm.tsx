@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -9,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -246,7 +248,7 @@ export function PhotographerForm({
               <Button type="button" variant="outline" onClick={resetForm}>
                 Cancel
               </Button>
-              <Button type="submit">{isEditMode ? 'Update Photographer' : 'Add Photographer'}</Button>
+              <Button type="submit">{isEditMode ? `Update ${entityType}` : `Add ${entityType}`}</Button>
             </DialogFooter>
           </form>
         </Form>
