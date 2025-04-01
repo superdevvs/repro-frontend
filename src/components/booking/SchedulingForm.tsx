@@ -9,6 +9,7 @@ import { CalendarIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface PackageType {
   id: string;
@@ -55,6 +56,19 @@ export function SchedulingForm({
 
   const selectedPackageDetails = packages.find(p => p.id === selectedPackage);
 
+  // Determine which dates should be marked as available
+  const today = new Date();
+  const nextThirtyDays = Array.from({ length: 30 }, (_, i) => {
+    const date = new Date();
+    date.setDate(today.getDate() + i + 1);
+    return date;
+  });
+  
+  // Removing weekends for this example
+  const availableDates = nextThirtyDays.filter(date => 
+    date.getDay() !== 0 && date.getDay() !== 6
+  );
+
   return (
     <motion.div
       key="step2"
@@ -64,60 +78,55 @@ export function SchedulingForm({
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <div className="mb-4 p-4 bg-muted/30 rounded-lg">
-        <h3 className="font-medium mb-2">Selected Package:</h3>
-        {selectedPackageDetails ? (
-          <div className="flex justify-between">
-            <div>
-              <p className="font-medium">{selectedPackageDetails.name}</p>
-              <p className="text-sm text-muted-foreground">{selectedPackageDetails.description}</p>
-            </div>
-            <p className="font-bold">${selectedPackageDetails.price}</p>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">No package selected</p>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label>Select Date</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full justify-start text-left font-normal"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, 'PPP') : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                initialFocus
-                disabled={(date) => {
-                  return date < new Date(new Date().setHours(0, 0, 0, 0));
-                }}
-                modifiers={{
-                  available: date ? [date] : [],
-                }}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+      <div className="flex flex-col space-y-4">
+        <Label className="text-base">Select a date</Label>
         
-        <div>
-          <Label htmlFor="time">Select Time</Label>
-          <TimeSelect 
-            value={time}
-            onChange={setTime}
-            availableTimes={getAvailableTimes()}
-            disabled={!date}
-            placeholder={!date ? "Select a date first" : "Select a time"}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+          <div className="md:col-span-3 h-full">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              disabled={(date) => date < new Date() || !availableDates.some(d => d.toDateString() === date?.toDateString())}
+              className={cn("rounded-md border shadow-sm p-3 bg-background")}
+              modifiers={{
+                available: availableDates,
+              }}
+              modifiersStyles={{
+                available: {
+                  fontWeight: 'bold'
+                }
+              }}
+            />
+          </div>
+          
+          <div className="md:col-span-4">
+            <div className="border rounded-md h-full shadow-sm p-4 bg-background">
+              <h3 className="font-medium mb-3">Available time slots</h3>
+              {date ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {getAvailableTimes().map((t) => (
+                    <Button
+                      key={t}
+                      type="button"
+                      variant={time === t ? "default" : "outline"}
+                      className={cn(
+                        "w-full justify-center",
+                        time === t && "bg-primary hover:bg-primary/90 text-primary-foreground"
+                      )}
+                      onClick={() => setTime(t)}
+                    >
+                      {t}
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-8 text-muted-foreground text-sm">
+                  Please select a date first
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
       
@@ -128,7 +137,7 @@ export function SchedulingForm({
           placeholder="Enter any special instructions or requirements..."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="h-24"
+          className="h-24 mt-2"
         />
       </div>
     </motion.div>

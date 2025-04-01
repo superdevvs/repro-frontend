@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
 import { BookingHeader } from '@/components/booking/BookingHeader';
 import { BookingStepIndicator } from '@/components/booking/BookingStepIndicator';
@@ -16,6 +17,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { ShootData } from '@/types/shoots';
 import { Client } from '@/types/clients';
 import { initialClientsData } from '@/data/clientsData';
+import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, CalendarIcon, Clock, HomeIcon } from 'lucide-react';
 
 const photographers = [
   { id: '1', name: 'John Doe', avatar: 'https://ui.shadcn.com/avatars/01.png', rate: 150, availability: true },
@@ -223,102 +226,261 @@ const BookShoot = () => {
     }
   };
 
+  // Get the step title and description based on current step
+  const getStepContent = () => {
+    switch(step) {
+      case 1:
+        return {
+          title: 'Client & Property Details',
+          description: 'Select the client and enter property information'
+        };
+      case 2:
+        return {
+          title: 'Choose a Date & Time',
+          description: 'Select a convenient date and time for the photo shoot'
+        };
+      case 3:
+        return {
+          title: 'Review & Confirm',
+          description: 'Review booking details and select a photographer'
+        };
+      default:
+        return {
+          title: '',
+          description: ''
+        };
+    }
+  };
+  
+  const stepContent = getStepContent();
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <BookingHeader 
-          title="Book a Shoot" 
-          description="Schedule a new photography session for a property." 
-        />
-
+      <div className="container max-w-5xl py-6 space-y-8">
+        {/* Back button */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
+          onClick={() => navigate('/shoots')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Shoots
+        </Button>
+        
+        {/* Main Content */}
         <AnimatePresence mode="wait">
           {isComplete ? (
             <BookingComplete date={date} time={time} resetForm={resetForm} />
           ) : (
-            <Card className="glass-card">
-              <CardHeader>
-                <BookingStepIndicator currentStep={step} totalSteps={3} />
-                <CardTitle>
-                  {step === 1 && 'Client, Property & Package'}
-                  {step === 2 && 'Date & Time Selection'}
-                  {step === 3 && 'Photographer & Review'}
-                </CardTitle>
-                <CardDescription>
-                  {step === 1 && 'Enter the client and property information, and select a package'}
-                  {step === 2 && 'Choose a convenient date and time'}
-                  {step === 3 && 'Select a photographer and review booking details'}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent>
-                <AnimatePresence mode="wait">
-                  {step === 1 && (
-                    <ClientPropertyForm
-                      onComplete={clientPropertyFormData.onComplete}
-                      initialData={clientPropertyFormData.initialData}
-                    />
-                  )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Left Column: Steps sidebar */}
+              <div className="md:col-span-1">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="bg-card rounded-lg border shadow-sm p-6 sticky top-20"
+                >
+                  <h2 className="text-xl font-bold mb-4">Book a Photo Shoot</h2>
+                  <p className="text-muted-foreground mb-6 text-sm">Complete the steps to schedule a property photo shoot</p>
                   
-                  {step === 2 && (
-                    <SchedulingForm
-                      date={date}
-                      setDate={setDate}
-                      time={time}
-                      setTime={setTime}
-                      selectedPackage={selectedPackage}
-                      notes={notes}
-                      setNotes={setNotes}
-                      packages={packages}
-                    />
-                  )}
-                  
-                  {step === 3 && (
-                    <ReviewForm
-                      client={client}
-                      address={address}
-                      city={city}
-                      state={state}
-                      zip={zip}
-                      date={date}
-                      time={time}
-                      photographer={photographer}
-                      setPhotographer={setPhotographer}
-                      selectedPackage={selectedPackage}
-                      notes={notes}
-                      bypassPayment={bypassPayment}
-                      setBypassPayment={setBypassPayment}
-                      sendNotification={sendNotification}
-                      setSendNotification={setSendNotification}
-                      getPackagePrice={getPackagePrice}
-                      getPhotographerRate={getPhotographerRate}
-                      getTax={getTax}
-                      getTotal={getTotal}
-                      clients={clients}
-                      photographers={getAvailablePhotographers()}
-                      packages={packages}
-                    />
-                  )}
-                </AnimatePresence>
-              </CardContent>
+                  <div className="space-y-6">
+                    {/* Step 1 */}
+                    <div className={`flex items-start gap-3 ${step >= 1 ? 'text-primary' : 'text-muted-foreground'}`}>
+                      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs mt-0.5 ${
+                        step > 1 ? 'bg-primary text-primary-foreground' : 
+                        step === 1 ? 'border-2 border-primary text-primary' : 
+                        'border border-muted-foreground text-muted-foreground'
+                      }`}>
+                        {step > 1 ? '✓' : '1'}
+                      </div>
+                      <div>
+                        <p className={`font-medium ${step >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          Client & Property
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {client ? clients.find(c => c.id === client)?.name : 'Select client and property'}
+                        </p>
+                        {client && address && (
+                          <div className="mt-1 flex items-center text-xs text-muted-foreground">
+                            <HomeIcon className="h-3 w-3 mr-1" />
+                            <span className="truncate">{address}, {city}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Separator */}
+                    <div className="pl-3">
+                      <div className={`w-[1px] h-4 ml-[11px] ${step > 1 ? 'bg-primary' : 'bg-border'}`}></div>
+                    </div>
+                    
+                    {/* Step 2 */}
+                    <div className={`flex items-start gap-3 ${step >= 2 ? 'text-primary' : 'text-muted-foreground'}`}>
+                      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs mt-0.5 ${
+                        step > 2 ? 'bg-primary text-primary-foreground' : 
+                        step === 2 ? 'border-2 border-primary text-primary' : 
+                        'border border-muted-foreground text-muted-foreground'
+                      }`}>
+                        {step > 2 ? '✓' : '2'}
+                      </div>
+                      <div>
+                        <p className={`font-medium ${step >= 2 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          Date & Time
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {date ? 'Selected date and time' : 'Choose when to shoot'}
+                        </p>
+                        {date && time && (
+                          <div className="mt-1 flex flex-col gap-1">
+                            <div className="flex items-center text-xs text-muted-foreground">
+                              <CalendarIcon className="h-3 w-3 mr-1" />
+                              <span>{date.toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex items-center text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3 mr-1" />
+                              <span>{time}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Separator */}
+                    <div className="pl-3">
+                      <div className={`w-[1px] h-4 ml-[11px] ${step > 2 ? 'bg-primary' : 'bg-border'}`}></div>
+                    </div>
+                    
+                    {/* Step 3 */}
+                    <div className={`flex items-start gap-3 ${step >= 3 ? 'text-primary' : 'text-muted-foreground'}`}>
+                      <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs mt-0.5 ${
+                        step > 3 ? 'bg-primary text-primary-foreground' : 
+                        step === 3 ? 'border-2 border-primary text-primary' : 
+                        'border border-muted-foreground text-muted-foreground'
+                      }`}>
+                        {step > 3 ? '✓' : '3'}
+                      </div>
+                      <div>
+                        <p className={`font-medium ${step >= 3 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          Review & Confirm
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {photographer ? 'Review and complete booking' : 'Final review'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Selected Package */}
+                    {selectedPackage && (
+                      <div className="mt-8 pt-6 border-t border-border">
+                        <h3 className="text-sm font-medium mb-2">Selected Package:</h3>
+                        <div className="bg-primary/5 rounded-md p-3 border border-primary/10">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium">{packages.find(p => p.id === selectedPackage)?.name}</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {packages.find(p => p.id === selectedPackage)?.description}
+                              </p>
+                            </div>
+                            <p className="font-bold">${getPackagePrice()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </div>
               
-              <CardFooter className="flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (step > 1) setStep(step - 1);
-                  }}
-                  disabled={step === 1}
+              {/* Right Column: Current step form */}
+              <div className="md:col-span-2">
+                <motion.div
+                  key={`step-${step}`}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  Back
-                </Button>
-                
-                <Button
-                  onClick={handleSubmit}
-                >
-                  {step === 3 ? 'Confirm Booking' : 'Next'}
-                </Button>
-              </CardFooter>
-            </Card>
+                  <Card className="border shadow-sm">
+                    <CardHeader className="pb-4">
+                      <CardTitle>{stepContent.title}</CardTitle>
+                      <p className="text-muted-foreground text-sm">{stepContent.description}</p>
+                    </CardHeader>
+                    
+                    <CardContent className="pb-0">
+                      <AnimatePresence mode="wait">
+                        {step === 1 && (
+                          <ClientPropertyForm
+                            onComplete={clientPropertyFormData.onComplete}
+                            initialData={clientPropertyFormData.initialData}
+                          />
+                        )}
+                        
+                        {step === 2 && (
+                          <SchedulingForm
+                            date={date}
+                            setDate={setDate}
+                            time={time}
+                            setTime={setTime}
+                            selectedPackage={selectedPackage}
+                            notes={notes}
+                            setNotes={setNotes}
+                            packages={packages}
+                          />
+                        )}
+                        
+                        {step === 3 && (
+                          <ReviewForm
+                            client={client}
+                            address={address}
+                            city={city}
+                            state={state}
+                            zip={zip}
+                            date={date}
+                            time={time}
+                            photographer={photographer}
+                            setPhotographer={setPhotographer}
+                            selectedPackage={selectedPackage}
+                            notes={notes}
+                            bypassPayment={bypassPayment}
+                            setBypassPayment={setBypassPayment}
+                            sendNotification={sendNotification}
+                            setSendNotification={setSendNotification}
+                            getPackagePrice={getPackagePrice}
+                            getPhotographerRate={getPhotographerRate}
+                            getTax={getTax}
+                            getTotal={getTotal}
+                            clients={clients}
+                            photographers={getAvailablePhotographers()}
+                            packages={packages}
+                          />
+                        )}
+                      </AnimatePresence>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Navigation buttons */}
+                  <div className="flex justify-between mt-6">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (step > 1) setStep(step - 1);
+                      }}
+                      disabled={step === 1}
+                    >
+                      Back
+                    </Button>
+                    
+                    <Button
+                      onClick={handleSubmit}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      {step === 3 ? 'Confirm Booking' : 'Continue'}
+                    </Button>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
           )}
         </AnimatePresence>
       </div>
