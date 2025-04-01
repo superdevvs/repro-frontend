@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 interface PhotographerFromShoots {
   id: string;
   name: string;
-  email: string; // Changed from optional to required
+  email: string; // Required field
   avatar?: string;
   location?: string;
   rating?: number | string; // Allow either number or string for rating
@@ -40,6 +39,7 @@ const Photographers = () => {
 
   // Extract photographers from shoots data on component mount
   useEffect(() => {
+    // Create a Map to aggregate photographer data from all shoots
     const photographersMap = new Map<string, PhotographerFromShoots>();
     
     shoots.forEach(shoot => {
@@ -51,6 +51,22 @@ const Photographers = () => {
           s.photographer.name === photographer.name && s.status === 'completed'
         ).length;
         
+        // Get all locations where this photographer has shoots
+        const photographerLocations = shoots
+          .filter(s => s.photographer.name === photographer.name)
+          .map(s => `${s.location.city}, ${s.location.state}`)
+          .filter((loc, index, self) => self.indexOf(loc) === index); // Remove duplicates
+        
+        // Get main location (most frequent)
+        const locationCounts = photographerLocations.reduce((acc, loc) => {
+          acc[loc] = (acc[loc] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        
+        // Get location with highest count
+        const primaryLocation = Object.entries(locationCounts)
+          .sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+        
         photographersMap.set(photographer.name, {
           id: photographer.id || photographer.name.replace(/\s+/g, '-').toLowerCase(),
           name: photographer.name,
@@ -58,22 +74,101 @@ const Photographers = () => {
           email: `${photographer.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
           avatar: photographer.avatar || `https://ui.shadcn.com/avatars/0${Math.floor(Math.random() * 5) + 1}.png`,
           shootsCompleted: completedShoots,
-          // Random status for demonstration - in a real app, this would come from data
-          status: ['available', 'busy', 'offline'][Math.floor(Math.random() * 3)] as 'available' | 'busy' | 'offline',
-          // Random specialties - in a real app, these would come from data
-          specialties: ['Residential', 'Commercial', 'Aerial', 'HDR', 'Virtual Tours', 'Twilight', '3D Tours', 'Drone']
-            .sort(() => 0.5 - Math.random())
-            .slice(0, 3),
-          // Random rating - in a real app, this would come from data
-          rating: (4 + Math.random()).toFixed(1),
-          // Random location - in a real app, this would come from data
-          location: shoot.location.city + ', ' + shoot.location.state,
+          // Determine status based on recent shoots
+          status: determinePhotographerStatus(photographer.name, shoots),
+          // Determine specialties based on services from shoots
+          specialties: determinePhotographerSpecialties(photographer.name, shoots),
+          // Calculate rating based on completed shoots
+          rating: calculatePhotographerRating(completedShoots),
+          // Use the primary location
+          location: primaryLocation,
         });
       }
     });
     
     setPhotographersList(Array.from(photographersMap.values()));
   }, [shoots]);
+
+  // Helper function to determine photographer status based on recent activity
+  const determinePhotographerStatus = (photographerName: string, allShoots: any[]): 'available' | 'busy' | 'offline' => {
+    // Get current date
+    const today = new Date();
+    
+    // Find recent and upcoming shoots for this photographer
+    const recentShoots = allShoots.filter(shoot => 
+      shoot.photographer.name === photographerName && 
+      new Date(shoot.scheduledDate) <= today
+    ).sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
+    
+    const upcomingShoots = allShoots.filter(shoot =>
+      shoot.photographer.name === photographerName &&
+      new Date(shoot.scheduledDate) > today &&
+      new Date(shoot.scheduledDate) < new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) // Next 7 days
+    );
+    
+    // If no recent shoots in the last 30 days, consider offline
+    if (recentShoots.length === 0 || 
+        (recentShoots[0] && new Date(recentShoots[0].scheduledDate).getTime() < today.getTime() - 30 * 24 * 60 * 60 * 1000)) {
+      return 'offline';
+    }
+    
+    // If has upcoming shoots in the next 7 days, consider busy
+    if (upcomingShoots.length > 0) {
+      return 'busy';
+    }
+    
+    // Otherwise available
+    return 'available';
+  };
+  
+  // Helper function to determine photographer specialties based on shoot services
+  const determinePhotographerSpecialties = (photographerName: string, allShoots: any[]): string[] => {
+    // Get all services from shoots by this photographer
+    const services = allShoots
+      .filter(shoot => shoot.photographer.name === photographerName)
+      .flatMap(shoot => shoot.services);
+      
+    // Count occurrences of each service
+    const serviceCounts = services.reduce((acc, service) => {
+      acc[service] = (acc[service] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    // Get top specialties (top 3 most frequent services)
+    const topSpecialties = Object.entries(serviceCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([service]) => service);
+      
+    // If no services found, return some default specialties
+    if (topSpecialties.length === 0) {
+      return ['Residential', 'Commercial', 'HDR'].sort(() => 0.5 - Math.random()).slice(0, 3);
+    }
+    
+    return topSpecialties;
+  };
+  
+  // Helper function to calculate photographer rating based on completed shoots
+  const calculatePhotographerRating = (completedShoots: number): string => {
+    // Base rating on number of completed shoots (simplified example)
+    let baseRating = 3.5; // Start with a middle rating
+    
+    if (completedShoots > 20) {
+      baseRating = 4.9;
+    } else if (completedShoots > 10) {
+      baseRating = 4.5;
+    } else if (completedShoots > 5) {
+      baseRating = 4.2;
+    } else if (completedShoots > 0) {
+      baseRating = 3.8;
+    }
+    
+    // Add a small random variation
+    const variation = (Math.random() * 0.4) - 0.2; // -0.2 to +0.2
+    const finalRating = Math.min(5.0, Math.max(3.0, baseRating + variation));
+    
+    return finalRating.toFixed(1);
+  };
 
   // Filter photographers based on search term and active filter
   const filteredPhotographers = photographersList.filter(photographer => {
