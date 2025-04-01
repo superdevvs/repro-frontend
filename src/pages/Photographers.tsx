@@ -1,174 +1,26 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CameraIcon, MapPinIcon, PlusIcon, SearchIcon, CalendarIcon, InfoIcon } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { PhotographerForm } from '@/components/photographers/PhotographerForm';
 import { PhotographerProfile } from '@/components/photographers/PhotographerProfile';
 import { useToast } from '@/hooks/use-toast';
-import { useShoots } from '@/context/ShootsContext';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
-// Type for photographer from shoots data
-interface PhotographerFromShoots {
-  id: string;
-  name: string;
-  email: string; // Required field
-  avatar?: string;
-  location?: string;
-  rating?: number | string; // Allow either number or string for rating
-  shootsCompleted: number;
-  specialties?: string[];
-  status: 'available' | 'busy' | 'offline';
-}
+import { PhotographerFromShoots } from '@/types/photographers';
+import { usePhotographersData } from '@/components/photographers/usePhotographersData';
+import { PhotographersHeader } from '@/components/photographers/PhotographersHeader';
+import { PhotographerFilter } from '@/components/photographers/PhotographerFilter';
+import { PhotographerCard } from '@/components/photographers/PhotographerCard';
+import { EmptyPhotographerState } from '@/components/photographers/EmptyPhotographerState';
 
 const Photographers = () => {
   const { toast } = useToast();
-  const { shoots } = useShoots();
-  const [photographersList, setPhotographersList] = useState<PhotographerFromShoots[]>([]);
+  const { photographersList, setPhotographersList } = usePhotographersData();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [formOpen, setFormOpen] = useState(false);
   const [selectedPhotographer, setSelectedPhotographer] = useState<PhotographerFromShoots | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-
-  // Extract photographers from shoots data on component mount
-  useEffect(() => {
-    // Create a Map to aggregate photographer data from all shoots
-    const photographersMap = new Map<string, PhotographerFromShoots>();
-    
-    shoots.forEach(shoot => {
-      const { photographer } = shoot;
-      
-      if (!photographersMap.has(photographer.name)) {
-        // Count completed shoots for this photographer
-        const completedShoots = shoots.filter(s => 
-          s.photographer.name === photographer.name && s.status === 'completed'
-        ).length;
-        
-        // Get all locations where this photographer has shoots
-        const photographerLocations = shoots
-          .filter(s => s.photographer.name === photographer.name)
-          .map(s => `${s.location.city}, ${s.location.state}`)
-          .filter((loc, index, self) => self.indexOf(loc) === index); // Remove duplicates
-        
-        // Get main location (most frequent)
-        const locationCounts = photographerLocations.reduce((acc, loc) => {
-          acc[loc] = (acc[loc] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-        
-        // Get location with highest count
-        const primaryLocation = Object.entries(locationCounts)
-          .sort((a, b) => b[1] - a[1])[0]?.[0] || '';
-        
-        photographersMap.set(photographer.name, {
-          id: photographer.id || photographer.name.replace(/\s+/g, '-').toLowerCase(),
-          name: photographer.name,
-          // Generate default email since it's not available in the shoot data
-          email: `${photographer.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-          avatar: photographer.avatar || `https://ui.shadcn.com/avatars/0${Math.floor(Math.random() * 5) + 1}.png`,
-          shootsCompleted: completedShoots,
-          // Determine status based on recent shoots
-          status: determinePhotographerStatus(photographer.name, shoots),
-          // Determine specialties based on services from shoots
-          specialties: determinePhotographerSpecialties(photographer.name, shoots),
-          // Calculate rating based on completed shoots
-          rating: calculatePhotographerRating(completedShoots),
-          // Use the primary location
-          location: primaryLocation,
-        });
-      }
-    });
-    
-    setPhotographersList(Array.from(photographersMap.values()));
-  }, [shoots]);
-
-  // Helper function to determine photographer status based on recent activity
-  const determinePhotographerStatus = (photographerName: string, allShoots: any[]): 'available' | 'busy' | 'offline' => {
-    // Get current date
-    const today = new Date();
-    
-    // Find recent and upcoming shoots for this photographer
-    const recentShoots = allShoots.filter(shoot => 
-      shoot.photographer.name === photographerName && 
-      new Date(shoot.scheduledDate) <= today
-    ).sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
-    
-    const upcomingShoots = allShoots.filter(shoot =>
-      shoot.photographer.name === photographerName &&
-      new Date(shoot.scheduledDate) > today &&
-      new Date(shoot.scheduledDate) < new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) // Next 7 days
-    );
-    
-    // If no recent shoots in the last 30 days, consider offline
-    if (recentShoots.length === 0 || 
-        (recentShoots[0] && new Date(recentShoots[0].scheduledDate).getTime() < today.getTime() - 30 * 24 * 60 * 60 * 1000)) {
-      return 'offline';
-    }
-    
-    // If has upcoming shoots in the next 7 days, consider busy
-    if (upcomingShoots.length > 0) {
-      return 'busy';
-    }
-    
-    // Otherwise available
-    return 'available';
-  };
-  
-  // Helper function to determine photographer specialties based on shoot services
-  const determinePhotographerSpecialties = (photographerName: string, allShoots: any[]): string[] => {
-    // Get all services from shoots by this photographer
-    const services = allShoots
-      .filter(shoot => shoot.photographer.name === photographerName)
-      .flatMap(shoot => shoot.services);
-      
-    // Count occurrences of each service
-    const serviceCounts = services.reduce((acc, service) => {
-      acc[service] = (acc[service] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    // Get top specialties (top 3 most frequent services)
-    const topSpecialties = Object.entries(serviceCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([service]) => service);
-      
-    // If no services found, return some default specialties
-    if (topSpecialties.length === 0) {
-      return ['Residential', 'Commercial', 'HDR'].sort(() => 0.5 - Math.random()).slice(0, 3);
-    }
-    
-    return topSpecialties;
-  };
-  
-  // Helper function to calculate photographer rating based on completed shoots
-  const calculatePhotographerRating = (completedShoots: number): string => {
-    // Base rating on number of completed shoots (simplified example)
-    let baseRating = 3.5; // Start with a middle rating
-    
-    if (completedShoots > 20) {
-      baseRating = 4.9;
-    } else if (completedShoots > 10) {
-      baseRating = 4.5;
-    } else if (completedShoots > 5) {
-      baseRating = 4.2;
-    } else if (completedShoots > 0) {
-      baseRating = 3.8;
-    }
-    
-    // Add a small random variation
-    const variation = (Math.random() * 0.4) - 0.2; // -0.2 to +0.2
-    const finalRating = Math.min(5.0, Math.max(3.0, baseRating + variation));
-    
-    return finalRating.toFixed(1);
-  };
 
   // Filter photographers based on search term and active filter
   const filteredPhotographers = photographersList.filter(photographer => {
@@ -251,196 +103,43 @@ const Photographers = () => {
     });
   };
 
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setActiveFilter('All');
+  };
+
   return (
     <DashboardLayout>
       <PageTransition>
         <div className="space-y-6">
           {/* Enhanced Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
-                Photographers
-              </Badge>
-              <h1 className="text-3xl font-semibold tracking-tight">Photographer Directory</h1>
-              <p className="text-muted-foreground">
-                Manage photographers and their availability
-              </p>
-            </div>
-            
-            <Button className="gap-2 hover:shadow-md transition-shadow" onClick={() => setFormOpen(true)}>
-              <PlusIcon className="h-4 w-4" />
-              Add Photographer
-            </Button>
-          </div>
+          <PhotographersHeader onAddClick={() => setFormOpen(true)} />
           
           {/* Improved Search and filter */}
-          <Card className="glass-card shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                  <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search photographers by name, location or specialty..." 
-                    className="pl-9 h-11"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button 
-                    variant={activeFilter === 'All' ? 'default' : 'outline'} 
-                    size="sm"
-                    className="font-medium transition-colors"
-                    onClick={() => setActiveFilter('All')}
-                  >
-                    All
-                  </Button>
-                  <Button 
-                    variant={activeFilter === 'available' ? 'default' : 'outline'} 
-                    size="sm"
-                    className="font-medium text-green-600 bg-green-50 border-green-200 hover:bg-green-100 hover:text-green-700 transition-colors"
-                    onClick={() => setActiveFilter('available')}
-                  >
-                    Available
-                  </Button>
-                  <Button 
-                    variant={activeFilter === 'busy' ? 'default' : 'outline'} 
-                    size="sm"
-                    className="font-medium text-yellow-600 bg-yellow-50 border-yellow-200 hover:bg-yellow-100 hover:text-yellow-700 transition-colors"
-                    onClick={() => setActiveFilter('busy')}
-                  >
-                    Busy
-                  </Button>
-                  <Button 
-                    variant={activeFilter === 'offline' ? 'default' : 'outline'} 
-                    size="sm"
-                    className="font-medium text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-                    onClick={() => setActiveFilter('offline')}
-                  >
-                    Offline
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <PhotographerFilter 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            activeFilter={activeFilter}
+            setActiveFilter={setActiveFilter}
+          />
           
           {/* Photographers grid with enhanced UI */}
           {filteredPhotographers.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredPhotographers.map((photographer) => (
-                <Card 
-                  key={photographer.id} 
-                  className="glass-card overflow-hidden hover:shadow-md transition-shadow rounded-lg border border-border animate-fadeIn"
-                >
-                  <CardContent className="p-0">
-                    <div className="p-4">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Avatar className="h-12 w-12 ring-2 ring-primary/10">
-                          <AvatarImage src={photographer.avatar} alt={photographer.name} />
-                          <AvatarFallback>{photographer.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-semibold text-base">{photographer.name}</h3>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <MapPinIcon className="h-3 w-3" />
-                            <span>{photographer.location || 'Location not specified'}</span>
-                          </div>
-                        </div>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge 
-                                className={`ml-auto ${
-                                  photographer.status === 'available' 
-                                    ? 'bg-green-500/10 text-green-500 border-green-500/20' 
-                                    : photographer.status === 'busy' 
-                                    ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' 
-                                    : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
-                                }`}
-                              >
-                                {photographer.status === 'available' ? 'Available' : photographer.status === 'busy' ? 'Busy' : 'Offline'}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {photographer.status === 'available' 
-                                ? 'This photographer is available for bookings' 
-                                : photographer.status === 'busy' 
-                                ? 'This photographer is currently booked' 
-                                : 'This photographer is offline'}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                      
-                      <div className="space-y-2 mb-4">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground flex items-center gap-1">
-                            <InfoIcon className="h-3.5 w-3.5" />
-                            Rating
-                          </span>
-                          <span className="font-medium">{photographer.rating || '0'}/5.0</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground flex items-center gap-1">
-                            <CalendarIcon className="h-3.5 w-3.5" />
-                            Shoots
-                          </span>
-                          <span className="font-medium">{photographer.shootsCompleted}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-1">
-                        {photographer.specialties?.map((specialty) => (
-                          <Badge key={specialty} variant="outline" className="text-xs">
-                            {specialty}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 bg-secondary/30 border-t border-border flex justify-between items-center">
-                      <div className="flex items-center gap-2 text-sm">
-                        <CameraIcon className="h-4 w-4 text-primary" />
-                        <span>{photographer.shootsCompleted} shoots</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="hover:bg-accent transition-colors"
-                          onClick={() => handleEditDirectly(photographer)}
-                        >
-                          Edit
-                        </Button>
-                        <Button 
-                          size="sm"
-                          className="hover:bg-primary/90 transition-colors"
-                          onClick={() => handleViewProfile(photographer)}
-                        >
-                          View Profile
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <PhotographerCard 
+                  key={photographer.id}
+                  photographer={photographer}
+                  onEdit={handleEditDirectly}
+                  onViewProfile={handleViewProfile}
+                />
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-10 border border-dashed border-gray-300 rounded-lg bg-gray-50/50">
-              <CameraIcon className="h-16 w-16 text-gray-300 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700">No photographers found</h3>
-              <p className="text-gray-500 mb-4 text-center max-w-md">
-                {searchTerm 
-                  ? `No photographers match your search "${searchTerm}".` 
-                  : "There are no photographers matching your filters."}
-              </p>
-              <Button onClick={() => {
-                setSearchTerm('');
-                setActiveFilter('All');
-              }}>
-                Clear filters
-              </Button>
-            </div>
+            <EmptyPhotographerState 
+              searchTerm={searchTerm}
+              onClearFilters={handleClearFilters}
+            />
           )}
         </div>
       </PageTransition>
