@@ -894,4 +894,121 @@ const Clients = () => {
                     onClick={() => handleExternalUpload('dropbox')}
                   >
                     <img 
-                      src="https://upload.wikimedia.org/wikipedia/commons/
+                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Dropbox_Icon.svg/1200px-Dropbox_Icon.svg.png" 
+                      alt="Dropbox" 
+                      className="mr-2 h-4 w-4" 
+                    />
+                    Upload from Dropbox
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium">
+                    Full Name
+                  </label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={clientFormData.name}
+                    onChange={handleClientFormChange}
+                    placeholder="Enter client name"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="company" className="text-sm font-medium">
+                    Company
+                  </label>
+                  <Input
+                    id="company"
+                    name="company"
+                    value={clientFormData.company}
+                    onChange={handleClientFormChange}
+                    placeholder="Enter company name"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium">
+                    Email
+                  </label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={clientFormData.email}
+                    onChange={handleClientFormChange}
+                    placeholder="Enter email address"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="phone" className="text-sm font-medium">
+                    Phone
+                  </label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    value={clientFormData.phone}
+                    onChange={handleClientFormChange}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="address" className="text-sm font-medium">
+                    Address
+                  </label>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={clientFormData.address}
+                    onChange={handleClientFormChange}
+                    placeholder="Enter address"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Status
+                  </label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={clientFormData.status === 'active' ? 'default' : 'outline'}
+                      onClick={() => handleStatusChange('active')}
+                    >
+                      Active
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={clientFormData.status === 'inactive' ? 'default' : 'outline'}
+                      onClick={() => handleStatusChange('inactive')}
+                    >
+                      Inactive
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setClientFormOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleClientFormSubmit}>
+              {isEditing ? 'Update Client' : 'Add Client'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </DashboardLayout>
+  );
+};
+
+export default Clients;
