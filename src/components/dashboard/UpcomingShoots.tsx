@@ -7,8 +7,9 @@ import { ShootCard } from './ShootCard';
 import { ArrowRightIcon, CameraIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useShoots } from '@/context/ShootsContext';
-import { compareAsc, parseISO } from 'date-fns';
+import { compareAsc, format, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 
 interface UpcomingShootsProps {
   className?: string;
@@ -36,7 +37,7 @@ export function UpcomingShoots({ className }: UpcomingShootsProps) {
       // Sort by date, earliest first
       return compareAsc(parseISO(a.scheduledDate), parseISO(b.scheduledDate));
     })
-    .slice(0, 3); // Only show the first 3 upcoming shoots
+    .slice(0, 6); // Show up to 6 upcoming shoots for better space utilization
 
   return (
     <motion.div
@@ -61,42 +62,52 @@ export function UpcomingShoots({ className }: UpcomingShootsProps) {
           </Button>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="grid gap-4">
-            {upcomingShoots.length > 0 ? (
-              upcomingShoots.map((shoot, index) => (
-                <ShootCard
+          {upcomingShoots.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {upcomingShoots.map((shoot, index) => (
+                <div 
                   key={shoot.id}
-                  id={shoot.id}
-                  address={shoot.location.fullAddress}
-                  date={shoot.scheduledDate}
-                  time="10:00 AM - 12:00 PM" // This should come from actual data in a real app
-                  photographer={{
-                    name: shoot.photographer.name,
-                    avatar: shoot.photographer.avatar || "https://ui.shadcn.com/avatars/01.png",
-                  }}
-                  client={{
-                    name: shoot.client.name,
-                  }}
-                  status={shoot.status}
-                  price={shoot.payment.totalQuote}
-                  delay={index}
+                  className="bg-secondary/10 p-3 rounded-md cursor-pointer hover:bg-secondary/20 transition-colors"
                   onClick={() => navigate(`/shoots?id=${shoot.id}`)}
-                />
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-muted-foreground">No upcoming shoots scheduled.</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4"
-                  onClick={() => navigate('/book-shoot')}
                 >
-                  Book a Shoot
-                </Button>
-              </div>
-            )}
-          </div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium line-clamp-1">{shoot.location.fullAddress}</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {format(parseISO(shoot.scheduledDate), 'MMM d, yyyy')}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs bg-primary/10">
+                          ${shoot.payment.totalQuote}
+                        </Badge>
+                      </div>
+                    </div>
+                    <Badge className="capitalize">
+                      {shoot.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+                    <div className="h-6 w-6 rounded-full bg-secondary flex items-center justify-center text-xs">
+                      {shoot.photographer.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <span>{shoot.photographer.name}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <p className="text-muted-foreground">No upcoming shoots scheduled.</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => navigate('/book-shoot')}
+              >
+                Book a Shoot
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>

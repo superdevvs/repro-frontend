@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -33,7 +34,11 @@ import {
   UserIcon,
   UploadIcon,
   CameraIcon,
-  X
+  X,
+  UsersIcon,
+  CalendarIcon,
+  BarChart3Icon,
+  ClockIcon
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -43,6 +48,14 @@ import { useNavigate } from 'react-router-dom';
 import { Client } from '@/types/clients';
 import { initialClientsData } from '@/data/clientsData';
 import { useShoots } from '@/context/ShootsContext';
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from '@/components/ui/pagination';
 
 const Clients = () => {
   const { role } = useAuth();
@@ -58,6 +71,10 @@ const Clients = () => {
   
   const [clientFormOpen, setClientFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const clientsPerPage = 8;
   
   type ClientFormData = {
     name: string;
@@ -83,6 +100,14 @@ const Clients = () => {
     const storedClients = localStorage.getItem('clientsData');
     return storedClients ? JSON.parse(storedClients) : initialClientsData;
   });
+  
+  // Dashboard statistics
+  const totalClients = clientsData.length;
+  const activeClients = clientsData.filter(client => client.status === 'active').length;
+  const totalShoots = shoots.length;
+  const averageShootsPerClient = totalClients > 0 
+    ? Math.round((totalShoots / totalClients) * 10) / 10 
+    : 0;
   
   useEffect(() => {
     if (shoots.length > 0) {
@@ -150,6 +175,12 @@ const Clients = () => {
     client.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  // Get current clients for pagination
+  const indexOfLastClient = currentPage * clientsPerPage;
+  const indexOfFirstClient = indexOfLastClient - clientsPerPage;
+  const currentClients = filteredClients.slice(indexOfFirstClient, indexOfLastClient);
+  const totalPages = Math.ceil(filteredClients.length / clientsPerPage);
   
   const handleClientSelect = (client: Client) => {
     setSelectedClient(client);
@@ -299,8 +330,6 @@ const Clients = () => {
         avatar: clientFormData.avatar
       });
       
-      console.log("Updated client data:", clientFormData);
-      
       toast({
         title: "Client Updated",
         description: `${clientFormData.name}'s information has been updated successfully.`,
@@ -320,7 +349,6 @@ const Clients = () => {
       };
       
       setClientsData(prevClients => [newClient, ...prevClients]);
-      console.log("New client added:", newClient);
       
       toast({
         title: "Client Added",
@@ -400,6 +428,65 @@ const Clients = () => {
             )}
           </div>
           
+          {/* Client Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total Clients</p>
+                    <h3 className="text-2xl font-bold mt-1">{totalClients}</h3>
+                  </div>
+                  <div className="bg-primary/10 p-3 rounded-full">
+                    <UsersIcon className="h-5 w-5 text-primary" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Active Clients</p>
+                    <h3 className="text-2xl font-bold mt-1">{activeClients}</h3>
+                  </div>
+                  <div className="bg-green-500/10 p-3 rounded-full">
+                    <UserIcon className="h-5 w-5 text-green-500" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total Shoots</p>
+                    <h3 className="text-2xl font-bold mt-1">{totalShoots}</h3>
+                  </div>
+                  <div className="bg-blue-500/10 p-3 rounded-full">
+                    <CameraIcon className="h-5 w-5 text-blue-500" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Avg. Shoots per Client</p>
+                    <h3 className="text-2xl font-bold mt-1">{averageShootsPerClient}</h3>
+                  </div>
+                  <div className="bg-purple-500/10 p-3 rounded-full">
+                    <BarChart3Icon className="h-5 w-5 text-purple-500" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
           <Card className="glass-card">
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row gap-4">
@@ -436,8 +523,8 @@ const Clients = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredClients.length > 0 ? (
-                      filteredClients.map((client) => (
+                    {currentClients.length > 0 ? (
+                      currentClients.map((client) => (
                         <TableRow key={client.id} className="cursor-pointer hover:bg-secondary/10" onClick={() => handleClientSelect(client)}>
                           <TableCell className="font-medium">{client.name}</TableCell>
                           <TableCell>{client.company}</TableCell>
@@ -507,6 +594,40 @@ const Clients = () => {
                   </TableBody>
                 </Table>
               </div>
+              
+              {/* Pagination */}
+              {filteredClients.length > clientsPerPage && (
+                <div className="flex justify-center mt-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            isActive={currentPage === page}
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
