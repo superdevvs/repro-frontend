@@ -139,6 +139,7 @@ const Photographers = () => {
             <EmptyPhotographerState 
               searchTerm={searchTerm}
               onClearFilters={handleClearFilters}
+              onAddPhotographer={() => setFormOpen(true)}
             />
           )}
         </div>
