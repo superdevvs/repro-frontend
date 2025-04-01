@@ -56,7 +56,16 @@ export function ClientPropertyForm({
     
     // Load packages from localStorage or use provided ones
     const storedPackages = loadPackages();
-    setPackages(propPackages || storedPackages);
+    
+    // Ensure all package objects have the required 'services' property
+    const validPackages = (propPackages || storedPackages).map(pkg => {
+      if (!pkg.services) {
+        return { ...pkg, services: [] };
+      }
+      return pkg;
+    });
+    
+    setPackages(validPackages);
   }, [propClients, propPackages]);
   
   // Find the selected client's name for display

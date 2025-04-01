@@ -20,26 +20,24 @@ import ServiceManagement from '@/pages/ServiceManagement';
 
 function App() {
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/shoots" element={<Shoots />} />
-        <Route path="/book-shoot" element={<BookShoot />} />
-        <Route path="/calendar" element={<ShootCalendar />} />
-        <Route path="/clients" element={<Clients />} />
-        <Route path="/photographers" element={<Photographers />} />
-        <Route path="/services" element={<ServiceManagement />} />
-        <Route path="/invoices" element={<Invoices />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/messages" element={<Messages />} />
-        <Route path="/media" element={<Media />} />
-        <Route path="/accounts" element={<Accounts />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/availability" element={<Availability />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/shoots" element={<Shoots />} />
+      <Route path="/book-shoot" element={<BookShoot />} />
+      <Route path="/calendar" element={<ShootCalendar />} />
+      <Route path="/clients" element={<Clients />} />
+      <Route path="/photographers" element={<Photographers />} />
+      <Route path="/services" element={<ServiceManagement />} />
+      <Route path="/invoices" element={<Invoices />} />
+      <Route path="/reports" element={<Reports />} />
+      <Route path="/messages" element={<Messages />} />
+      <Route path="/media" element={<Media />} />
+      <Route path="/accounts" element={<Accounts />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/availability" element={<Availability />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 
