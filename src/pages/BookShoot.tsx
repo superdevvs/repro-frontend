@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -198,7 +197,6 @@ const BookShoot = () => {
     navigate('/shoots');
   };
 
-  // Create a form data object to match expected props of ClientPropertyForm
   const clientPropertyFormData = {
     initialData: {
       clientId: client,
@@ -206,7 +204,7 @@ const BookShoot = () => {
       clientEmail: clients.find(c => c.id === client)?.email || '',
       clientPhone: clients.find(c => c.id === client)?.phone || '',
       clientCompany: clients.find(c => c.id === client)?.company || '',
-      propertyType: 'residential',
+      propertyType: 'residential' as const,
       propertyAddress: address,
       propertyCity: city,
       propertyState: state,
@@ -214,14 +212,13 @@ const BookShoot = () => {
       propertyInfo: notes
     },
     onComplete: (data: any) => {
-      // Update local state when form is completed
       if (data.clientId) setClient(data.clientId);
       setAddress(data.propertyAddress);
       setCity(data.propertyCity);
       setState(data.propertyState);
       setZip(data.propertyZip);
       setNotes(data.propertyInfo || '');
-      // Move to next step
+      setSelectedPackage(data.selectedPackage || '');
       setStep(2);
     }
   };

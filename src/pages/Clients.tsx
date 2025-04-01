@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -38,7 +37,9 @@ import {
   UsersIcon,
   CalendarIcon,
   BarChart3Icon,
-  ClockIcon
+  ClockIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -58,6 +59,7 @@ import {
 } from '@/components/ui/pagination';
 
 const Clients = () => {
+  
   const { role } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,6 +110,7 @@ const Clients = () => {
   const averageShootsPerClient = totalClients > 0 
     ? Math.round((totalShoots / totalClients) * 10) / 10 
     : 0;
+  
   
   useEffect(() => {
     if (shoots.length > 0) {
@@ -405,8 +408,53 @@ const Clients = () => {
     });
   };
 
+  // Function to render page numbers for pagination
+  const renderPageNumbers = () => {
+    const pageNumbers = [];
+    const maxPagesToShow = 5; // Max number of page links to show
+    
+    if (totalPages <= maxPagesToShow) {
+      // If we have fewer pages than the max, show all pages
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      // Otherwise use a smarter algorithm to show pages around the current one
+      let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+      let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+      
+      // Adjust if we're at the end
+      if (endPage - startPage + 1 < maxPagesToShow) {
+        startPage = Math.max(1, endPage - maxPagesToShow + 1);
+      }
+      
+      // Add first page if not included
+      if (startPage > 1) {
+        pageNumbers.push(1);
+        if (startPage > 2) {
+          pageNumbers.push('ellipsis');
+        }
+      }
+      
+      // Add pages in the middle
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+      
+      // Add last page if not included
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          pageNumbers.push('ellipsis');
+        }
+        pageNumbers.push(totalPages);
+      }
+    }
+    
+    return pageNumbers;
+  };
+
   return (
-    <DashboardLayout className="max-w-full">
+    <DashboardLayout>
       <PageTransition>
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -595,34 +643,49 @@ const Clients = () => {
                 </Table>
               </div>
               
-              {/* Pagination */}
+              {/* Improved Pagination */}
               {filteredClients.length > clientsPerPage && (
-                <div className="flex justify-center mt-4">
+                <div className="mt-6 flex justify-center">
                   <Pagination>
-                    <PaginationContent>
+                    <PaginationContent className="bg-background p-1 rounded-lg shadow-sm">
                       <PaginationItem>
                         <PaginationPrevious
                           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        />
+                          className={`${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} flex items-center gap-1`}
+                        >
+                          <ChevronLeftIcon className="h-4 w-4" />
+                          <span className="hidden sm:inline">Previous</span>
+                        </PaginationPrevious>
                       </PaginationItem>
                       
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            isActive={currentPage === page}
-                            onClick={() => setCurrentPage(page)}
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
+                      {renderPageNumbers().map((page, index) => (
+                        page === 'ellipsis' ? (
+                          <PaginationItem key={`ellipsis-${index}`}>
+                            <span className="flex h-9 w-9 items-center justify-center text-sm text-muted-foreground">
+                              …
+                            </span>
+                          </PaginationItem>
+                        ) : (
+                          <PaginationItem key={`page-${page}`}>
+                            <PaginationLink
+                              isActive={currentPage === page}
+                              onClick={() => setCurrentPage(page as number)}
+                              className="h-9 w-9 p-0 font-medium"
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
                       ))}
                       
                       <PaginationItem>
                         <PaginationNext
                           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        />
+                          className={`${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} flex items-center gap-1`}
+                        >
+                          <span className="hidden sm:inline">Next</span>
+                          <ChevronRightIcon className="h-4 w-4" />
+                        </PaginationNext>
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>
@@ -632,6 +695,7 @@ const Clients = () => {
           </Card>
         </div>
       </PageTransition>
+      
       
       <Dialog open={clientDetailsOpen} onOpenChange={setClientDetailsOpen}>
         <DialogContent className="max-w-3xl">
@@ -829,123 +893,4 @@ const Clients = () => {
                     className="w-full justify-start"
                     onClick={() => handleExternalUpload('dropbox')}
                   >
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Dropbox_Icon.svg/2202px-Dropbox_Icon.svg.png" 
-                      alt="Dropbox" 
-                      className="mr-2 h-4 w-4" 
-                    />
-                    Upload from Dropbox
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Full Name
-              </label>
-              <Input
-                id="name"
-                name="name"
-                value={clientFormData.name}
-                onChange={handleClientFormChange}
-                placeholder="Enter client name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="company" className="text-sm font-medium">
-                Company
-              </label>
-              <Input
-                id="company"
-                name="company"
-                value={clientFormData.company}
-                onChange={handleClientFormChange}
-                placeholder="Enter company name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email Address
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={clientFormData.email}
-                onChange={handleClientFormChange}
-                placeholder="Enter email address"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="phone" className="text-sm font-medium">
-                Phone Number
-              </label>
-              <Input
-                id="phone"
-                name="phone"
-                value={clientFormData.phone}
-                onChange={handleClientFormChange}
-                placeholder="Enter phone number"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="address" className="text-sm font-medium">
-                Address
-              </label>
-              <Input
-                id="address"
-                name="address"
-                value={clientFormData.address}
-                onChange={handleClientFormChange}
-                placeholder="Enter address"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
-              <div className="flex gap-4 mt-1">
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="status-active"
-                    name="status"
-                    className="mr-2"
-                    checked={clientFormData.status === 'active'}
-                    onChange={() => handleStatusChange('active')}
-                  />
-                  <label htmlFor="status-active">Active</label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="status-inactive"
-                    name="status"
-                    className="mr-2"
-                    checked={clientFormData.status === 'inactive'}
-                    onChange={() => handleStatusChange('inactive')}
-                  />
-                  <label htmlFor="status-inactive">Inactive</label>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setClientFormOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleClientFormSubmit}>
-              {isEditing ? 'Update Client' : 'Add Client'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </DashboardLayout>
-  );
-};
-
-export default Clients;
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/
