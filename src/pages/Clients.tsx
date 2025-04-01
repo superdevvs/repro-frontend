@@ -20,15 +20,6 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { 
   BuildingIcon, 
   EditIcon, 
@@ -42,9 +33,7 @@ import {
   UserIcon,
   UploadIcon,
   CameraIcon,
-  X,
-  FilterIcon,
-  SlidersHorizontalIcon
+  X
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -54,8 +43,6 @@ import { useNavigate } from 'react-router-dom';
 import { Client } from '@/types/clients';
 import { initialClientsData } from '@/data/clientsData';
 import { useShoots } from '@/context/ShootsContext';
-
-const ITEMS_PER_PAGE = 10;
 
 const Clients = () => {
   const { role } = useAuth();
@@ -68,8 +55,6 @@ const Clients = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [clientDetailsOpen, setClientDetailsOpen] = useState(false);
   const [showUploadOptions, setShowUploadOptions] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   
   const [clientFormOpen, setClientFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -161,19 +146,10 @@ const Clients = () => {
   }, [clientsData]);
   
   const filteredClients = clientsData.filter(client =>
-    (client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     client.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     client.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (statusFilter === 'all' || client.status === statusFilter)
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
-  const totalPages = Math.ceil(filteredClients.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedClients = filteredClients.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
   
   const handleClientSelect = (client: Client) => {
     setSelectedClient(client);
@@ -401,85 +377,10 @@ const Clients = () => {
     });
   };
 
-  const renderPagination = () => {
-    if (totalPages <= 1) return null;
-
-    const pageNumbers = [];
-    const maxVisible = 5;
-    
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-    
-    if (endPage - startPage + 1 < maxVisible) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-      pageNumbers.push(i);
-    }
-    
-    return (
-      <Pagination className="mt-6">
-        <PaginationContent>
-          {currentPage > 1 && (
-            <PaginationItem>
-              <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} />
-            </PaginationItem>
-          )}
-          
-          {startPage > 1 && (
-            <>
-              <PaginationItem>
-                <PaginationLink onClick={() => handlePageChange(1)}>1</PaginationLink>
-              </PaginationItem>
-              {startPage > 2 && (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              )}
-            </>
-          )}
-          
-          {pageNumbers.map(page => (
-            <PaginationItem key={page}>
-              <PaginationLink 
-                isActive={page === currentPage}
-                onClick={() => handlePageChange(page)}
-              >
-                {page}
-              </PaginationLink>
-            </PaginationItem>
-          ))}
-          
-          {endPage < totalPages && (
-            <>
-              {endPage < totalPages - 1 && (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              )}
-              <PaginationItem>
-                <PaginationLink onClick={() => handlePageChange(totalPages)}>
-                  {totalPages}
-                </PaginationLink>
-              </PaginationItem>
-            </>
-          )}
-          
-          {currentPage < totalPages && (
-            <PaginationItem>
-              <PaginationNext onClick={() => handlePageChange(currentPage + 1)} />
-            </PaginationItem>
-          )}
-        </PaginationContent>
-      </Pagination>
-    );
-  };
-
   return (
-    <DashboardLayout>
+    <DashboardLayout className="max-w-full">
       <PageTransition>
-        <div className="space-y-6 px-4 md:px-6">
+        <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
@@ -500,7 +401,7 @@ const Clients = () => {
           </div>
           
           <Card className="glass-card">
-            <CardContent className="p-4 sm:p-6">
+            <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
                   <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -511,40 +412,13 @@ const Clients = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <div className="flex gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="gap-2">
-                        <FilterIcon className="h-4 w-4" />
-                        Status: {statusFilter === 'all' ? 'All' : 
-                                 statusFilter === 'active' ? 'Active' : 'Inactive'}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setStatusFilter('all')}>
-                        All
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setStatusFilter('active')}>
-                        Active
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setStatusFilter('inactive')}>
-                        Inactive
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
               </div>
             </CardContent>
           </Card>
           
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="flex justify-between">
-                <span>Client Directory</span>
-                <span className="text-sm font-normal text-muted-foreground">
-                  {filteredClients.length} {filteredClients.length === 1 ? 'client' : 'clients'} found
-                </span>
-              </CardTitle>
+              <CardTitle>Client Directory</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="rounded-md border">
@@ -553,46 +427,24 @@ const Clients = () => {
                     <TableRow>
                       <TableHead>Client</TableHead>
                       <TableHead>Company</TableHead>
-                      <TableHead className="hidden md:table-cell">Email</TableHead>
-                      <TableHead className="hidden md:table-cell">Phone</TableHead>
-                      <TableHead className="hidden md:table-cell">Shoots</TableHead>
-                      <TableHead className="hidden md:table-cell">Last Activity</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Shoots</TableHead>
+                      <TableHead>Last Activity</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedClients.length > 0 ? (
-                      paginatedClients.map((client) => (
+                    {filteredClients.length > 0 ? (
+                      filteredClients.map((client) => (
                         <TableRow key={client.id} className="cursor-pointer hover:bg-secondary/10" onClick={() => handleClientSelect(client)}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-3">
-                              {client.avatar ? (
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage src={client.avatar} alt={client.name} />
-                                  <AvatarFallback>
-                                    {client.name.split(' ').map((n) => n[0]).join('')}
-                                  </AvatarFallback>
-                                </Avatar>
-                              ) : (
-                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                                  {client.name.split(' ').map((n) => n[0]).join('')}
-                                </div>
-                              )}
-                              {client.name}
-                            </div>
-                          </TableCell>
-                          <TableCell>{client.company || '-'}</TableCell>
-                          <TableCell className="hidden md:table-cell">{client.email}</TableCell>
-                          <TableCell className="hidden md:table-cell">{client.phone || '-'}</TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            <Badge variant="outline">
-                              {client.shootsCount || 0}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {client.lastActivity ? new Date(client.lastActivity).toLocaleDateString() : '-'}
-                          </TableCell>
+                          <TableCell className="font-medium">{client.name}</TableCell>
+                          <TableCell>{client.company}</TableCell>
+                          <TableCell>{client.email}</TableCell>
+                          <TableCell>{client.phone}</TableCell>
+                          <TableCell>{client.shootsCount}</TableCell>
+                          <TableCell>{new Date(client.lastActivity).toLocaleDateString()}</TableCell>
                           <TableCell>
                             <Badge 
                               className={client.status === 'active' 
@@ -647,7 +499,7 @@ const Clients = () => {
                           <div className="flex flex-col items-center justify-center text-muted-foreground">
                             <UserIcon className="h-8 w-8 mb-2 opacity-20" />
                             <p>No clients found</p>
-                            <p className="text-sm">Try adjusting your search or filters</p>
+                            <p className="text-sm">Try adjusting your search</p>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -655,9 +507,6 @@ const Clients = () => {
                   </TableBody>
                 </Table>
               </div>
-              
-              {renderPagination()}
-              
             </CardContent>
           </Card>
         </div>

@@ -8,8 +8,6 @@ import { Card } from '@/components/ui/card';
 import { CheckCircleIcon } from 'lucide-react';
 import { getClientsData } from '@/data/clientsData';
 import { Client } from '@/types/clients';
-import { PackageType } from '@/types/services';
-import { loadPackages } from '@/data/servicesData';
 
 interface ClientPropertyFormProps {
   client: string;
@@ -25,7 +23,7 @@ interface ClientPropertyFormProps {
   clients: Array<{ id: string; name: string; company?: string }>;
   selectedPackage: string;
   setSelectedPackage: (id: string) => void;
-  packages?: PackageType[];
+  packages: Array<{ id: string; name: string; description: string; price: number }>;
 }
 
 export function ClientPropertyForm({
@@ -42,31 +40,16 @@ export function ClientPropertyForm({
   clients: propClients,
   selectedPackage,
   setSelectedPackage,
-  packages: propPackages
+  packages
 }: ClientPropertyFormProps) {
   // Use local state to manage clients list from localStorage
   const [localClients, setLocalClients] = useState<Client[]>([]);
-  // Load packages from localStorage or use provided ones
-  const [packages, setPackages] = useState<PackageType[]>([]);
   
   // Get latest clients data from localStorage on mount and when prop clients change
   useEffect(() => {
     const updatedClients = getClientsData();
     setLocalClients(updatedClients);
-    
-    // Load packages from localStorage or use provided ones
-    const storedPackages = loadPackages();
-    
-    // Ensure all package objects have the required 'services' property
-    const validPackages = (propPackages || storedPackages).map(pkg => {
-      if (!pkg.services) {
-        return { ...pkg, services: [] };
-      }
-      return pkg;
-    });
-    
-    setPackages(validPackages);
-  }, [propClients, propPackages]);
+  }, [propClients]);
   
   // Find the selected client's name for display
   const selectedClient = localClients.find(c => c.id === client) || 
@@ -157,7 +140,7 @@ export function ClientPropertyForm({
       <div>
         <Label>Select Package</Label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-          {packages.filter(pkg => pkg.featured).map((pkg) => (
+          {packages.map((pkg) => (
             <Card
               key={pkg.id}
               className={`cursor-pointer transition-all ${

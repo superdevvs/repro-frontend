@@ -42,14 +42,6 @@ export interface ShootData {
     companyNotes?: string;
     editingNotes?: string;
   };
-  postProduction?: {
-    editor?: string;
-    status?: 'pending' | 'in-progress' | 'completed';
-    assignedDate?: string;
-    completedDate?: string;
-    deliveryDate?: string;
-    deliveryMethod?: string;
-  };
   createdBy?: string;
   status: 'scheduled' | 'completed' | 'pending' | 'hold';
   media?: {
