@@ -9,7 +9,6 @@ interface DashboardLayoutProps {
   children?: React.ReactNode;
 }
 
-// Changed from 'export function' to 'export const' to match import in Settings.tsx
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="h-full flex">
@@ -24,5 +23,4 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   );
 };
 
-// Add default export to support both named and default imports
 export default DashboardLayout;

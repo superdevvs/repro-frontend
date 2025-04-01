@@ -1,4 +1,6 @@
-import { useTheme } from "next-themes"
+
+// Import from our local theme hook instead of next-themes
+import { useTheme } from "../../hooks/useTheme"
 import { Toaster as Sonner } from "sonner"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
