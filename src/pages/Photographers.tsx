@@ -54,7 +54,8 @@ const Photographers = () => {
         photographersMap.set(photographer.name, {
           id: photographer.id || photographer.name.replace(/\s+/g, '-').toLowerCase(),
           name: photographer.name,
-          email: photographer.email || `${photographer.name.toLowerCase().replace(/\s+/g, '.')}@example.com`, // Default email
+          // Generate default email since it's not available in the shoot data
+          email: `${photographer.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
           avatar: photographer.avatar || `https://ui.shadcn.com/avatars/0${Math.floor(Math.random() * 5) + 1}.png`,
           shootsCompleted: completedShoots,
           // Random status for demonstration - in a real app, this would come from data
