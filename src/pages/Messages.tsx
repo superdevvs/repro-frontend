@@ -1,22 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   MessageSquare, 
-  Send, 
-  User, 
-  Users, 
   ChevronLeft,
   ChevronRight,
-  Search,
-  MessageCircle
+  MessageCircle,
+  Phone,
+  Video,
+  Calendar,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -25,189 +20,432 @@ import {
   HoverCardContent, 
   HoverCardTrigger
 } from "@/components/ui/hover-card";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
+import { ConversationList } from '@/components/messaging/ConversationList';
+import { MessageList } from '@/components/messaging/MessageList';
+import { MessageInput } from '@/components/messaging/MessageInput';
+import { ProjectContextBar } from '@/components/messaging/ProjectContextBar';
+import { TaskApprovalPanel } from '@/components/messaging/TaskApprovalPanel';
+import { Conversation, Message, ConversationFilter, MessageTemplate } from '@/types/messages';
 
-interface Message {
-  id: string;
-  sender: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  content: string;
-  timestamp: string;
-  isRead: boolean;
-}
+// Mock data for conversations
+const mockConversations: Conversation[] = [
+  {
+    id: '1',
+    participant: {
+      id: 'p1',
+      name: 'John Photographer',
+      role: 'photographer',
+      avatar: 'https://ui.shadcn.com/avatars/01.png',
+    },
+    lastMessage: 'Can we reschedule the shoot for next week?',
+    timestamp: '2023-09-15T14:30:00',
+    unreadCount: 2,
+    shoot: {
+      id: 'shoot-1',
+      title: '123 Maple Street Listing',
+      address: '123 Maple Street, Austin, TX 78701',
+      scheduledDate: '2023-09-20T10:00:00',
+      status: 'scheduled',
+      serviceTypes: ['photography', 'floorplan'],
+    },
+  },
+  {
+    id: '2',
+    participant: {
+      id: 'c1',
+      name: 'Emma Client',
+      role: 'client',
+      avatar: 'https://ui.shadcn.com/avatars/03.png',
+    },
+    lastMessage: 'Thanks for the quick response!',
+    timestamp: '2023-09-14T10:15:00',
+    unreadCount: 0,
+    shoot: {
+      id: 'shoot-2',
+      title: '456 Oak Avenue Listing',
+      address: '456 Oak Avenue, Austin, TX 78704',
+      scheduledDate: '2023-09-10T14:00:00',
+      status: 'delivered',
+      serviceTypes: ['photography', 'drone', 'staging'],
+    },
+  },
+  {
+    id: '3',
+    participant: {
+      id: 'p2',
+      name: 'Sarah Photographer',
+      role: 'photographer',
+      avatar: 'https://ui.shadcn.com/avatars/05.png',
+    },
+    lastMessage: 'I just sent the edited images for your review.',
+    timestamp: '2023-09-12T18:45:00',
+    unreadCount: 0,
+    shoot: {
+      id: 'shoot-3',
+      title: '789 Pine Boulevard Listing',
+      address: '789 Pine Boulevard, Austin, TX 78745',
+      scheduledDate: '2023-09-08T09:30:00',
+      status: 'revisions',
+      serviceTypes: ['photography'],
+    },
+  },
+  {
+    id: '4',
+    participant: {
+      id: 'e1',
+      name: 'Mark Editor',
+      role: 'editor',
+      avatar: 'https://ui.shadcn.com/avatars/02.png',
+    },
+    lastMessage: 'Virtual staging completed for the living room',
+    timestamp: '2023-09-16T11:20:00',
+    unreadCount: 1,
+    shoot: {
+      id: 'shoot-4',
+      title: '321 Cedar Lane Listing',
+      address: '321 Cedar Lane, Austin, TX 78702',
+      scheduledDate: '2023-09-05T13:00:00',
+      status: 'inProgress',
+      serviceTypes: ['staging', 'floorplan'],
+    },
+  },
+];
 
-interface Conversation {
-  id: string;
-  participant: {
-    id: string;
-    name: string;
-    role: string;
-    avatar?: string;
-  };
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-}
+// Mock data for messages
+const mockMessages: Record<string, Message[]> = {
+  '1': [
+    {
+      id: 'm1',
+      sender: {
+        id: 'p1',
+        name: 'John Photographer',
+        avatar: 'https://ui.shadcn.com/avatars/01.png',
+        role: 'photographer',
+      },
+      content: 'Hi there! I wanted to discuss the upcoming shoot at 123 Maple Street.',
+      timestamp: '2023-09-15T14:15:00',
+      isRead: true,
+    },
+    {
+      id: 'm2',
+      sender: {
+        id: 'me',
+        name: 'Me',
+        avatar: 'https://ui.shadcn.com/avatars/02.png',
+        role: 'admin',
+      },
+      content: 'Sure, what would you like to discuss?',
+      timestamp: '2023-09-15T14:20:00',
+      isRead: true,
+    },
+    {
+      id: 'm3',
+      sender: {
+        id: 'p1',
+        name: 'John Photographer',
+        avatar: 'https://ui.shadcn.com/avatars/01.png',
+        role: 'photographer',
+      },
+      content: 'Can we reschedule the shoot for next week? The homeowner has a conflict.',
+      timestamp: '2023-09-15T14:30:00',
+      isRead: false,
+      attachments: [
+        {
+          id: 'a1',
+          type: 'document',
+          name: 'updated_schedule.pdf',
+          url: '/placeholder.svg',
+          size: '245 KB',
+          status: 'complete',
+        },
+      ],
+    },
+  ],
+  '2': [
+    {
+      id: 'm4',
+      sender: {
+        id: 'me',
+        name: 'Me',
+        avatar: 'https://ui.shadcn.com/avatars/02.png',
+        role: 'admin',
+      },
+      content: "I've reviewed your request and can confirm the booking for 456 Oak Avenue.",
+      timestamp: '2023-09-14T10:00:00',
+      isRead: true,
+    },
+    {
+      id: 'm5',
+      sender: {
+        id: 'c1',
+        name: 'Emma Client',
+        avatar: 'https://ui.shadcn.com/avatars/03.png',
+        role: 'client',
+      },
+      content: 'Thanks for the quick response! Looking forward to the photos.',
+      timestamp: '2023-09-14T10:15:00',
+      isRead: true,
+    },
+    {
+      id: 'm6',
+      sender: {
+        id: 'me',
+        name: 'Me',
+        avatar: 'https://ui.shadcn.com/avatars/02.png',
+        role: 'admin',
+      },
+      content: 'Here are the edited photos from your recent shoot. Please let me know if you need any changes!',
+      timestamp: '2023-09-15T09:30:00',
+      isRead: true,
+      attachments: [
+        {
+          id: 'a2',
+          type: 'image',
+          name: 'living_room_final.jpg',
+          url: '/placeholder.svg',
+          size: '3.2 MB',
+          status: 'final',
+        },
+        {
+          id: 'a3',
+          type: 'image',
+          name: 'kitchen_final.jpg',
+          url: '/placeholder.svg',
+          size: '2.8 MB',
+          status: 'final',
+        },
+      ],
+    },
+  ],
+  '3': [
+    {
+      id: 'm7',
+      sender: {
+        id: 'p2',
+        name: 'Sarah Photographer',
+        avatar: 'https://ui.shadcn.com/avatars/05.png',
+        role: 'photographer',
+      },
+      content: 'I completed the photoshoot at 789 Pine Boulevard today. Everything went well!',
+      timestamp: '2023-09-11T16:00:00',
+      isRead: true,
+    },
+    {
+      id: 'm8',
+      sender: {
+        id: 'me',
+        name: 'Me',
+        avatar: 'https://ui.shadcn.com/avatars/02.png',
+        role: 'admin',
+      },
+      content: 'Great to hear! When can we expect the edited images?',
+      timestamp: '2023-09-11T16:15:00',
+      isRead: true,
+    },
+    {
+      id: 'm9',
+      sender: {
+        id: 'p2',
+        name: 'Sarah Photographer',
+        avatar: 'https://ui.shadcn.com/avatars/05.png',
+        role: 'photographer',
+      },
+      content: 'I just sent the edited images for your review. Let me know what you think!',
+      timestamp: '2023-09-12T18:45:00',
+      isRead: true,
+      attachments: [
+        {
+          id: 'a4',
+          type: 'image',
+          name: 'exterior_front.jpg',
+          url: '/placeholder.svg',
+          size: '4.1 MB',
+          status: 'needsReview',
+        },
+      ],
+    },
+  ],
+  '4': [
+    {
+      id: 'm10',
+      sender: {
+        id: 'e1',
+        name: 'Mark Editor',
+        avatar: 'https://ui.shadcn.com/avatars/02.png',
+        role: 'editor',
+      },
+      content: 'I\'m starting on the virtual staging for 321 Cedar Lane. Do you have any specific requirements?',
+      timestamp: '2023-09-16T09:00:00',
+      isRead: true,
+    },
+    {
+      id: 'm11',
+      sender: {
+        id: 'me',
+        name: 'Me',
+        avatar: 'https://ui.shadcn.com/avatars/02.png',
+        role: 'admin',
+      },
+      content: 'The client wants a modern style with neutral colors. They specifically mentioned they like minimalist furniture.',
+      timestamp: '2023-09-16T09:20:00',
+      isRead: true,
+    },
+    {
+      id: 'm12',
+      sender: {
+        id: 'e1',
+        name: 'Mark Editor',
+        avatar: 'https://ui.shadcn.com/avatars/02.png',
+        role: 'editor',
+      },
+      content: 'Virtual staging completed for the living room. Check it out and let me know what you think!',
+      timestamp: '2023-09-16T11:20:00',
+      isRead: false,
+      attachments: [
+        {
+          id: 'a5',
+          type: 'image',
+          name: 'living_room_staged.jpg',
+          url: '/placeholder.svg',
+          size: '5.7 MB',
+          status: 'needsReview',
+        },
+      ],
+    },
+  ],
+};
+
+// Mock templates
+const mockTemplates: MessageTemplate[] = [
+  {
+    id: 't1',
+    title: 'Shoot Confirmation',
+    content: 'Your photoshoot is confirmed for [DATE] at [TIME]. Please ensure the property is ready 15 minutes before the scheduled time.',
+  },
+  {
+    id: 't2',
+    title: 'Photos Delivered',
+    content: 'Your photos have been delivered! Please review them at your earliest convenience and let us know if you need any adjustments.',
+  },
+  {
+    id: 't3',
+    title: 'Reschedule Request',
+    content: 'We need to reschedule your upcoming shoot. Please let us know which of the following dates works for you: [OPTIONS]',
+  },
+];
+
+// Mock tasks for project 1
+const mockTasks = [
+  { id: 't1', title: 'Photoshoot completed', completed: true },
+  { id: 't2', title: 'Initial editing', completed: true },
+  { id: 't3', title: 'Client review', completed: false },
+  { id: 't4', title: 'Final delivery', completed: false },
+];
 
 const Messages = () => {
   const [activeTab, setActiveTab] = useState('inbox');
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [messageInput, setMessageInput] = useState('');
   const [isConversationsCollapsed, setIsConversationsCollapsed] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  // Mock data
-  const conversations: Conversation[] = [
-    {
-      id: '1',
-      participant: {
-        id: 'p1',
-        name: 'John Photographer',
-        role: 'photographer',
-        avatar: 'https://ui.shadcn.com/avatars/01.png',
-      },
-      lastMessage: 'Can we reschedule the shoot for next week?',
-      timestamp: '2023-09-15T14:30:00',
-      unreadCount: 2,
-    },
-    {
-      id: '2',
-      participant: {
-        id: 'c1',
-        name: 'Emma Client',
-        role: 'client',
-        avatar: 'https://ui.shadcn.com/avatars/03.png',
-      },
-      lastMessage: 'Thanks for the quick response!',
-      timestamp: '2023-09-14T10:15:00',
-      unreadCount: 0,
-    },
-    {
-      id: '3',
-      participant: {
-        id: 'p2',
-        name: 'Sarah Photographer',
-        role: 'photographer',
-        avatar: 'https://ui.shadcn.com/avatars/05.png',
-      },
-      lastMessage: 'I just sent the edited images for your review.',
-      timestamp: '2023-09-12T18:45:00',
-      unreadCount: 0,
-    },
-  ];
+  const [filter, setFilter] = useState<ConversationFilter>({ searchQuery: '' });
+  const [messageInput, setMessageInput] = useState('');
+  const [tasks, setTasks] = useState(mockTasks);
+  const [waitingForApproval, setWaitingForApproval] = useState(false);
   
   // Calculate total unread messages across all conversations
-  const totalUnreadCount = conversations.reduce((total, convo) => total + convo.unreadCount, 0);
+  const totalUnreadCount = useMemo(() => {
+    return mockConversations.reduce((total, convo) => total + convo.unreadCount, 0);
+  }, []);
   
-  const messages: Record<string, Message[]> = {
-    '1': [
-      {
-        id: 'm1',
-        sender: {
-          id: 'p1',
-          name: 'John Photographer',
-          avatar: 'https://ui.shadcn.com/avatars/01.png',
-        },
-        content: 'Hi there! I wanted to discuss the upcoming shoot.',
-        timestamp: '2023-09-15T14:15:00',
-        isRead: true,
-      },
-      {
-        id: 'm2',
-        sender: {
-          id: 'me',
-          name: 'Me',
-          avatar: 'https://ui.shadcn.com/avatars/02.png',
-        },
-        content: 'Sure, what would you like to discuss?',
-        timestamp: '2023-09-15T14:20:00',
-        isRead: true,
-      },
-      {
-        id: 'm3',
-        sender: {
-          id: 'p1',
-          name: 'John Photographer',
-          avatar: 'https://ui.shadcn.com/avatars/01.png',
-        },
-        content: 'Can we reschedule the shoot for next week?',
-        timestamp: '2023-09-15T14:30:00',
-        isRead: false,
-      },
-    ],
-    '2': [
-      {
-        id: 'm4',
-        sender: {
-          id: 'me',
-          name: 'Me',
-          avatar: 'https://ui.shadcn.com/avatars/02.png',
-        },
-        content: "I've reviewed your request and can confirm the booking.",
-        timestamp: '2023-09-14T10:00:00',
-        isRead: true,
-      },
-      {
-        id: 'm5',
-        sender: {
-          id: 'c1',
-          name: 'Emma Client',
-          avatar: 'https://ui.shadcn.com/avatars/03.png',
-        },
-        content: 'Thanks for the quick response!',
-        timestamp: '2023-09-14T10:15:00',
-        isRead: true,
-      },
-    ],
-  };
+  // Current conversation data
+  const currentConversation = useMemo(() => {
+    return selectedConversation 
+      ? mockConversations.find(c => c.id === selectedConversation) 
+      : null;
+  }, [selectedConversation]);
   
-  const filteredConversations = conversations.filter(
-    (convo) => 
-      convo.participant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      convo.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleSendMessage = () => {
-    if (!messageInput.trim() || !selectedConversation) return;
-    
-    // In a real app, this would send the message to the backend
-    console.log('Sending message:', messageInput);
-    setMessageInput('');
-  };
+  // Current messages
+  const currentMessages = useMemo(() => {
+    return selectedConversation && mockMessages[selectedConversation] 
+      ? mockMessages[selectedConversation] 
+      : [];
+  }, [selectedConversation]);
   
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
+  // Calculate project progress
+  const projectProgress = useMemo(() => {
+    const completed = tasks.filter(t => t.completed).length;
+    return Math.round((completed / tasks.length) * 100);
+  }, [tasks]);
+  
+  // Toggle conversations panel
   const toggleConversations = () => {
     setIsConversationsCollapsed(!isConversationsCollapsed);
   };
   
+  // Handle sending a message
+  const handleSendMessage = (content: string, attachments?: File[]) => {
+    console.log('Sending message:', content, attachments);
+    // In a real app, this would send the message to the backend
+    // and then update the UI with the new message
+  };
+  
+  // Handle toggling a task
+  const handleTaskToggle = (taskId: string, completed: boolean) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, completed } : task
+    ));
+  };
+  
+  // Handle requesting approval
+  const handleRequestApproval = () => {
+    setWaitingForApproval(true);
+  };
+  
+  // Handle approving
+  const handleApprove = () => {
+    setWaitingForApproval(false);
+    // Mark appropriate tasks as completed
+    setTasks(tasks.map(task => 
+      task.id === 't3' ? { ...task, completed: true } : task
+    ));
+  };
+  
+  // Handle requesting revisions
+  const handleRequestRevision = () => {
+    setWaitingForApproval(false);
+    // Logic for handling revision request
+  };
+  
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-[calc(100vh-6rem)]">
+      <div className="flex flex-col h-[calc(100vh-4rem)]">
         {/* Header with fixed height */}
-        <div className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
+        <div className="py-3 flex justify-between items-center">
           <div>
-            <Badge className="mb-1 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
-              Messages
-            </Badge>
-            <h1 className="text-2xl font-bold tracking-tight">Messaging Center</h1>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
+                Messages
+              </Badge>
+              <h1 className="text-2xl font-bold tracking-tight">Messaging Center</h1>
+            </div>
             <p className="text-sm text-muted-foreground">
-              Communicate with clients and photographers.
+              Communicate with clients and service providers
             </p>
           </div>
           
-          <div className="flex items-center gap-2 self-end sm:self-auto">
-            {/* All Chat button styled like in the reference image */}
+          <div className="flex items-center gap-2">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={toggleConversations}
-              className="flex items-center gap-1.5 bg-background border-primary/20 text-primary hover:bg-primary/5"
+              className={cn(
+                "flex items-center gap-1.5 border-primary/20 text-primary hover:bg-primary/5",
+                isConversationsCollapsed ? "bg-background" : "bg-primary/5"
+              )}
             >
               {isConversationsCollapsed ? (
                 <ChevronRight className="h-4 w-4" />
@@ -223,7 +461,8 @@ const Messages = () => {
             </Button>
             
             <Button variant="outline" size="sm" className="bg-blue-50 text-blue-500 border-blue-200 hover:bg-blue-100 hover:text-blue-600">
-              <span>Options</span>
+              <Calendar className="mr-1.5 h-4 w-4" />
+              <span>Schedule</span>
             </Button>
             
             <Button className="bg-blue-500 hover:bg-blue-600">
@@ -232,210 +471,165 @@ const Messages = () => {
           </div>
         </div>
         
-        {/* Main content area that takes remaining height */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 overflow-hidden">
-          {/* Conversations Column - Collapsible */}
-          <motion.div 
-            className={cn(
-              "lg:col-span-4 lg:block",
-              isConversationsCollapsed ? "hidden" : ""
-            )}
-            initial={false}
-            animate={{ 
-              width: isConversationsCollapsed ? 0 : "auto",
-              opacity: isConversationsCollapsed ? 0 : 1
-            }}
-            transition={{ duration: 0.2 }}
+        {/* Main content area with resizable panels */}
+        <div className="flex-1 overflow-hidden">
+          <ResizablePanelGroup
+            direction="horizontal"
+            className="min-h-full rounded-lg border"
           >
-            <Card className="glass-card h-full flex flex-col">
-              <CardHeader className="px-4 py-3 border-b border-border flex-shrink-0">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Conversations</CardTitle>
-                  <Tabs defaultValue="inbox" onValueChange={setActiveTab} className="w-[180px]">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="inbox">Inbox</TabsTrigger>
-                      <TabsTrigger value="archived">Archived</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </div>
-                <div className="mt-2 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search conversations..." 
-                    className="pl-9"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </CardHeader>
-              <CardContent className="p-0 flex-1 overflow-hidden">
-                <ScrollArea className="h-full">
-                  <div className="flex flex-col">
-                    {filteredConversations.map((conversation) => (
-                      <motion.div
-                        key={conversation.id}
-                        whileHover={{ backgroundColor: 'rgba(0,0,0,0.05)' }}
-                        className={`cursor-pointer p-3 border-b border-border hover:bg-accent/50 transition-colors ${
-                          selectedConversation === conversation.id ? 'bg-accent/50' : ''
-                        }`}
-                        onClick={() => setSelectedConversation(conversation.id)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Avatar>
-                            <AvatarImage src={conversation.participant.avatar} />
-                            <AvatarFallback>{conversation.participant.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <p className="font-medium truncate">{conversation.participant.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {formatDate(conversation.timestamp)}
-                              </p>
-                            </div>
-                            <p className="text-sm text-muted-foreground truncate">{conversation.lastMessage}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="outline" className="text-xs py-0">
-                                {conversation.participant.role}
-                              </Badge>
-                              {conversation.unreadCount > 0 && (
-                                <Badge className="text-xs">{conversation.unreadCount}</Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </motion.div>
-          
-          {/* Messages Column */}
-          <Card className={cn(
-            "glass-card flex flex-col",
-            isConversationsCollapsed ? "lg:col-span-12" : "lg:col-span-8"
-          )}>
-            {selectedConversation ? (
+            {/* Conversations Panel - Collapsible */}
+            {!isConversationsCollapsed && (
               <>
-                <CardHeader className="px-4 py-3 border-b border-border flex-shrink-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {isConversationsCollapsed && (
-                        <HoverCard>
-                          <HoverCardTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={toggleConversations}
-                              className="lg:block hidden"
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                              {totalUnreadCount > 0 && (
-                                <Badge className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center rounded-full p-0 text-xs font-medium">
-                                  {totalUnreadCount}
-                                </Badge>
-                              )}
-                            </Button>
-                          </HoverCardTrigger>
-                          <HoverCardContent className="w-auto p-2">
-                            <span>Show all conversations</span>
-                          </HoverCardContent>
-                        </HoverCard>
-                      )}
-                      <Avatar>
-                        <AvatarImage 
-                          src={conversations.find(c => c.id === selectedConversation)?.participant.avatar} 
-                        />
-                        <AvatarFallback>
-                          {conversations.find(c => c.id === selectedConversation)?.participant.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <CardTitle className="text-base">
-                          {conversations.find(c => c.id === selectedConversation)?.participant.name}
-                        </CardTitle>
-                        <p className="text-xs text-muted-foreground">
-                          {conversations.find(c => c.id === selectedConversation)?.participant.role}
-                        </p>
+                <ResizablePanel 
+                  defaultSize={25} 
+                  minSize={20}
+                  maxSize={40}
+                  className="bg-card"
+                >
+                  <ConversationList 
+                    conversations={mockConversations}
+                    selectedConversation={selectedConversation}
+                    onSelectConversation={setSelectedConversation}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    filter={filter}
+                    onFilterChange={setFilter}
+                  />
+                </ResizablePanel>
+                
+                <ResizableHandle withHandle />
+              </>
+            )}
+            
+            {/* Messages Panel */}
+            <ResizablePanel 
+              defaultSize={isConversationsCollapsed ? 70 : 45}
+              className="bg-card"
+            >
+              {selectedConversation ? (
+                <div className="flex flex-col h-full">
+                  <div className="px-4 py-3 border-b flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {isConversationsCollapsed && (
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={toggleConversations}
+                                className="lg:block hidden"
+                              >
+                                <MessageCircle className="h-4 w-4" />
+                                {totalUnreadCount > 0 && (
+                                  <Badge className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center rounded-full p-0 text-xs font-medium">
+                                    {totalUnreadCount}
+                                  </Badge>
+                                )}
+                              </Button>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-auto p-2">
+                              <span>Show all conversations</span>
+                            </HoverCardContent>
+                          </HoverCard>
+                        )}
+                        
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-base font-semibold">
+                            {currentConversation?.participant.name}
+                          </h2>
+                          <Badge variant="outline" className="text-xs">
+                            {currentConversation?.participant.role}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Phone className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Video className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon">
-                      <Users className="h-4 w-4" />
+                  </div>
+                  
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    <MessageList 
+                      messages={currentMessages} 
+                      currentUserId="me"
+                    />
+                    
+                    <MessageInput 
+                      onSendMessage={handleSendMessage}
+                      templates={mockTemplates}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full">
+                  {isConversationsCollapsed && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={toggleConversations}
+                      className="absolute top-4 left-4 lg:block hidden"
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      <span>All Chat</span>
+                      {totalUnreadCount > 0 && (
+                        <Badge className="ml-1.5 h-5 min-w-5 flex items-center justify-center rounded-full p-0 text-xs font-medium">
+                          {totalUnreadCount}
+                        </Badge>
+                      )}
                     </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0 flex-1 overflow-hidden flex flex-col">
-                  <ScrollArea className="flex-1 p-4">
-                    <div className="flex flex-col gap-4">
-                      {messages[selectedConversation]?.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex ${
-                            message.sender.id === 'me' ? 'justify-end' : 'justify-start'
-                          }`}
-                        >
-                          <div
-                            className={`max-w-[70%] rounded-lg p-3 ${
-                              message.sender.id === 'me'
-                                ? 'bg-primary/10 text-primary'
-                                : 'bg-accent'
-                            }`}
-                          >
-                            <p className="text-sm">{message.content}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {formatDate(message.timestamp)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                  <div className="p-3 border-t border-border mt-auto">
-                    <div className="flex gap-2">
-                      <Input
-                        value={messageInput}
-                        onChange={(e) => setMessageInput(e.target.value)}
-                        placeholder="Type your message..."
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSendMessage();
-                        }}
+                  )}
+                  <MessageCircle className="h-12 w-12 text-muted-foreground opacity-20" />
+                  <h3 className="mt-4 text-lg font-medium">No conversation selected</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {isConversationsCollapsed 
+                      ? "Click 'All Chat' to view conversations" 
+                      : "Select a conversation from the list to start messaging"}
+                  </p>
+                </div>
+              )}
+            </ResizablePanel>
+            
+            {/* Project Context Panel - Only visible when conversation is selected */}
+            {selectedConversation && currentConversation && (
+              <>
+                <ResizableHandle withHandle />
+                
+                <ResizablePanel 
+                  defaultSize={30}
+                  minSize={20}
+                  maxSize={40}
+                  className="bg-card"
+                >
+                  <div className="h-full flex flex-col">
+                    <ProjectContextBar 
+                      conversation={currentConversation}
+                      className="flex-shrink-0"
+                    />
+                    
+                    <div className="border-t flex-1 overflow-auto">
+                      <TaskApprovalPanel 
+                        projectId={currentConversation.shoot?.id || ''}
+                        tasks={tasks}
+                        progress={projectProgress}
+                        onTaskToggle={handleTaskToggle}
+                        onApprove={handleApprove}
+                        onRequestRevision={handleRequestRevision}
+                        isClient={currentConversation.participant.role === 'client'}
+                        waitingForApproval={waitingForApproval}
                       />
-                      <Button onClick={handleSendMessage}>
-                        <Send className="h-4 w-4" />
-                      </Button>
                     </div>
                   </div>
-                </CardContent>
+                </ResizablePanel>
               </>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full">
-                {isConversationsCollapsed && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={toggleConversations}
-                    className="absolute top-4 left-4 lg:block hidden"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    <span>All Chat</span>
-                    {totalUnreadCount > 0 && (
-                      <Badge className="ml-1.5 h-5 min-w-5 flex items-center justify-center rounded-full p-0 text-xs font-medium">
-                        {totalUnreadCount}
-                      </Badge>
-                    )}
-                  </Button>
-                )}
-                <User className="h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-medium">No conversation selected</h3>
-                <p className="text-sm text-muted-foreground">
-                  {isConversationsCollapsed 
-                    ? "Click 'All Chat' to view conversations" 
-                    : "Select a conversation from the list to start messaging"}
-                </p>
-              </div>
             )}
-          </Card>
+          </ResizablePanelGroup>
         </div>
       </div>
     </DashboardLayout>
