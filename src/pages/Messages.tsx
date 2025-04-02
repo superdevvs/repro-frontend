@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  Search
+  Search,
+  MessageCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,12 @@ import {
   MenubarTrigger,
   MenubarItem,
 } from "@/components/ui/menubar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from "@/components/ui/collapsible";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface Message {
   id: string;
@@ -99,6 +106,9 @@ const Messages = () => {
       unreadCount: 0,
     },
   ];
+  
+  // Calculate total unread messages across all conversations
+  const totalUnreadCount = conversations.reduce((total, convo) => total + convo.unreadCount, 0);
   
   const messages: Record<string, Message[]> = {
     '1': [
@@ -199,10 +209,30 @@ const Messages = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 mt-4 sm:mt-0">
+            {/* All Chat collapse toggle button - positioned at the top */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={toggleConversations}
+              className="flex items-center gap-1.5"
+            >
+              {isConversationsCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+              <span>All Chat</span>
+              {totalUnreadCount > 0 && (
+                <Badge variant="secondary" className="h-5 min-w-5 flex items-center justify-center rounded-full p-0 text-xs font-medium">
+                  {totalUnreadCount}
+                </Badge>
+              )}
+            </Button>
+            
             <Menubar className="border-none p-0">
               <MenubarMenu>
                 <MenubarTrigger className={cn(
-                  "bg-primary text-primary-foreground hover:bg-primary/90 focus:bg-primary/90",
+                  "bg-primary/10 text-primary hover:bg-primary/20",
                   "p-2 rounded-md"
                 )}>
                   <div className="flex items-center gap-2">
@@ -220,12 +250,10 @@ const Messages = () => {
                       View Inbox
                     </MenubarItem>
                   )}
-                  <MenubarItem onClick={toggleConversations}>
-                    {isConversationsCollapsed ? "Show Conversations" : "Hide Conversations"}
-                  </MenubarItem>
                 </MenubarContent>
               </MenubarMenu>
             </Menubar>
+            
             <Button>
               <MessageSquare className="mr-2 h-4 w-4" /> New Message
             </Button>
@@ -250,22 +278,12 @@ const Messages = () => {
               <CardHeader className="px-4 py-3 border-b border-border">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">Conversations</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Tabs defaultValue="inbox" onValueChange={setActiveTab} className="w-[180px]">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="inbox">Inbox</TabsTrigger>
-                        <TabsTrigger value="archived">Archived</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={toggleConversations}
-                      className="lg:block hidden"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Tabs defaultValue="inbox" onValueChange={setActiveTab} className="w-[180px]">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="inbox">Inbox</TabsTrigger>
+                      <TabsTrigger value="archived">Archived</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                 </div>
                 <div className="mt-2 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -331,14 +349,26 @@ const Messages = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {isConversationsCollapsed && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={toggleConversations}
-                          className="lg:block hidden"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
+                        <HoverCard>
+                          <HoverCardTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={toggleConversations}
+                              className="lg:block hidden"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                              {totalUnreadCount > 0 && (
+                                <Badge className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center rounded-full p-0 text-xs font-medium">
+                                  {totalUnreadCount}
+                                </Badge>
+                              )}
+                            </Button>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-auto p-2">
+                            <span>Show all conversations</span>
+                          </HoverCardContent>
+                        </HoverCard>
                       )}
                       <Avatar>
                         <AvatarImage 
@@ -409,19 +439,25 @@ const Messages = () => {
               <div className="flex flex-col items-center justify-center h-[calc(80vh-16rem)]">
                 {isConversationsCollapsed && (
                   <Button 
-                    variant="ghost" 
-                    size="icon" 
+                    variant="outline" 
+                    size="sm" 
                     onClick={toggleConversations}
                     className="absolute top-4 left-4 lg:block hidden"
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    <span>All Chat</span>
+                    {totalUnreadCount > 0 && (
+                      <Badge className="ml-1.5 h-5 min-w-5 flex items-center justify-center rounded-full p-0 text-xs font-medium">
+                        {totalUnreadCount}
+                      </Badge>
+                    )}
                   </Button>
                 )}
                 <User className="h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-medium">No conversation selected</h3>
                 <p className="text-sm text-muted-foreground">
                   {isConversationsCollapsed 
-                    ? "Expand the sidebar to view conversations" 
+                    ? "Click 'All Chat' to view conversations" 
                     : "Select a conversation from the list to start messaging"}
                 </p>
               </div>
