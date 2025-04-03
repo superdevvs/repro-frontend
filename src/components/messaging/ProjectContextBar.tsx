@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { MapPin, Calendar, Clock, CheckCircle, RotateCw, Camera, Drone, Floorplan, PenTool, User } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle, RotateCw, Camera, Image, FileSpreadsheet, PenTool, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -42,8 +42,8 @@ export function ProjectContextBar({ conversation, shoot, className }: ProjectCon
   const getServiceIcon = (service: string) => {
     switch (service) {
       case 'photography': return <Camera className="h-3.5 w-3.5" />;
-      case 'drone': return <Drone className="h-3.5 w-3.5" />;
-      case 'floorplan': return <Floorplan className="h-3.5 w-3.5" />;
+      case 'drone': return <Image className="h-3.5 w-3.5" />;
+      case 'floorplan': return <FileSpreadsheet className="h-3.5 w-3.5" />;
       case 'staging': return <PenTool className="h-3.5 w-3.5" />;
       default: return <Camera className="h-3.5 w-3.5" />;
     }
@@ -81,6 +81,7 @@ export function ProjectContextBar({ conversation, shoot, className }: ProjectCon
 
   // Combine data from conversation and shoot (if available)
   const projectData = shoot || conversation.shoot;
+  if (!projectData) return null;
 
   return (
     <Card className={cn("border-0 shadow-none", className)}>
@@ -90,20 +91,24 @@ export function ProjectContextBar({ conversation, shoot, className }: ProjectCon
             <h3 className="text-sm font-semibold">Project Details</h3>
             <Badge 
               variant="outline" 
-              className={cn("text-xs py-0 px-2 gap-1", getStatusColor(projectData?.status))}
+              className={cn("text-xs py-0 px-2 gap-1", getStatusColor(projectData.status))}
             >
-              {getStatusIcon(projectData?.status)}
-              <span>{projectData?.status}</span>
+              {getStatusIcon(projectData.status)}
+              <span>{projectData.status}</span>
             </Badge>
           </div>
-          <h2 className="text-base font-bold">{projectData?.title}</h2>
+          <h2 className="text-base font-bold">
+            {conversation.shoot?.title || (shoot && 'title' in shoot ? shoot.title : '')}
+          </h2>
         </div>
         
-        {projectData?.address && (
+        {(conversation.shoot?.address || (shoot && 'address' in shoot ? shoot.address : '')) && (
           <div className="flex items-start gap-2">
             <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
             <div>
-              <p className="text-sm">{projectData.address}</p>
+              <p className="text-sm">
+                {conversation.shoot?.address || (shoot && 'address' in shoot ? shoot.address : '')}
+              </p>
               <Button variant="link" size="sm" className="h-auto p-0 text-xs">
                 View on map
               </Button>
@@ -111,7 +116,7 @@ export function ProjectContextBar({ conversation, shoot, className }: ProjectCon
           </div>
         )}
         
-        {projectData?.scheduledDate && (
+        {projectData.scheduledDate && (
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div>
@@ -123,11 +128,11 @@ export function ProjectContextBar({ conversation, shoot, className }: ProjectCon
         )}
         
         {/* Services */}
-        {projectData?.serviceTypes && projectData.serviceTypes.length > 0 && (
+        {(conversation.shoot?.serviceTypes || (shoot && 'serviceTypes' in shoot ? shoot.serviceTypes : [])).length > 0 && (
           <div>
             <p className="text-xs font-medium text-muted-foreground mb-1.5">Services</p>
             <div className="flex flex-wrap gap-1.5">
-              {projectData.serviceTypes.map((service) => (
+              {(conversation.shoot?.serviceTypes || (shoot && 'serviceTypes' in shoot ? shoot.serviceTypes : [])).map((service) => (
                 <Badge 
                   key={service} 
                   variant="outline"

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { Send, Paperclip, SmilePlus, Template } from 'lucide-react';
+import { Send, Paperclip, SmilePlus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -79,7 +79,7 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Template className="h-4 w-4" />
+                  <FileText className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-60 p-0">
