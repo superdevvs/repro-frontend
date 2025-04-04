@@ -48,7 +48,7 @@ const BookShoot = () => {
   });
   
   const [client, setClient] = useState(() => {
-    // Check if user exists, is a client role, and has an associated clientId (assuming it's in metadata)
+    // Check if user exists, is a client role, and has a clientId in metadata
     if (user && user.role === 'client' && user.metadata && user.metadata.clientId) {
       return user.metadata.clientId;
     }

@@ -5,6 +5,11 @@ import { toast } from "sonner";
 // Define types
 export type Role = 'superadmin' | 'admin' | 'photographer' | 'client' | 'editor';
 
+export interface UserMetadata {
+  clientId?: string;
+  [key: string]: any; // Allow for other metadata properties
+}
+
 export interface User {
   id: string;
   name: string;
@@ -17,6 +22,7 @@ export interface User {
   lastLogin?: string;
   bio?: string;
   username?: string;
+  metadata?: UserMetadata;
 }
 
 interface AuthContextType {
@@ -68,7 +74,10 @@ const mockUsers = [
     createdAt: '2023-03-05T11:45:00Z',
     lastLogin: '2023-06-11T16:30:00Z',
     bio: 'Client User bio',
-    username: 'clientuser'
+    username: 'clientuser',
+    metadata: {
+      clientId: '3' // Adding clientId to the metadata for the client user
+    }
   },
 ];
 
