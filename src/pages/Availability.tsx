@@ -438,17 +438,17 @@ export default function Availability() {
                             partiallyBooked: "bg-yellow-100"
                           }}
                         />
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-green-100 rounded-full"></div>
+                        <div className="mt-4 flex flex-wrap gap-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-green-100 rounded"></div>
                             <span className="text-xs">Available</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-yellow-100 rounded-full"></div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-yellow-100 rounded"></div>
                             <span className="text-xs">Partially Booked</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 bg-red-100 rounded-full"></div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-red-100 rounded"></div>
                             <span className="text-xs">Unavailable</span>
                           </div>
                         </div>
