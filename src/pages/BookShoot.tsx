@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,8 +48,9 @@ const BookShoot = () => {
   });
   
   const [client, setClient] = useState(() => {
-    if (user?.role === 'client' && user?.clientId) {
-      return user.clientId;
+    // Check if user exists, is a client role, and has an associated clientId (assuming it's in metadata)
+    if (user && user.role === 'client' && user.metadata && user.metadata.clientId) {
+      return user.metadata.clientId;
     }
     return clientIdFromUrl || '';
   });
@@ -69,6 +71,9 @@ const BookShoot = () => {
   const { toast } = useToast();
   const { addShoot } = useShoots();
   const navigate = useNavigate();
+
+  // Check if the user is a client
+  const isClientAccount = user && user.role === 'client';
 
   useEffect(() => {
     const storedClients = localStorage.getItem('clientsData');
@@ -190,7 +195,7 @@ const BookShoot = () => {
   };
 
   const resetForm = () => {
-    if (!user?.role === 'client') {
+    if (!isClientAccount) {
       setClient('');
     }
     setAddress('');
@@ -224,7 +229,7 @@ const BookShoot = () => {
       propertyInfo: notes
     },
     onComplete: (data: any) => {
-      if (!user?.role === 'client' && data.clientId) {
+      if (!isClientAccount && data.clientId) {
         setClient(data.clientId);
       }
       setAddress(data.propertyAddress);
@@ -235,15 +240,15 @@ const BookShoot = () => {
       setSelectedPackage(data.selectedPackage || '');
       setStep(2);
     },
-    isClientAccount: user?.role === 'client'
+    isClientAccount: isClientAccount
   };
 
   const getStepContent = () => {
     switch(step) {
       case 1:
         return {
-          title: user?.role === 'client' ? 'Property Details' : 'Client & Property Details',
-          description: user?.role === 'client' ? 'Enter property information' : 'Select the client and enter property information'
+          title: isClientAccount ? 'Property Details' : 'Client & Property Details',
+          description: isClientAccount ? 'Enter property information' : 'Select the client and enter property information'
         };
       case 2:
         return {
@@ -304,9 +309,9 @@ const BookShoot = () => {
                       </div>
                       <div>
                         <p className={`font-medium ${step >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {user?.role === 'client' ? 'Property Details' : 'Client & Property'}
+                          {isClientAccount ? 'Property Details' : 'Client & Property'}
                         </p>
-                        {user?.role === 'client' ? (
+                        {isClientAccount ? (
                           <p className="text-xs text-muted-foreground mt-0.5">
                             Enter property information
                           </p>

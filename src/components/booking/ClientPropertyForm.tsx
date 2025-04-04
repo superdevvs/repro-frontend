@@ -65,6 +65,11 @@ const adminPropertyFormSchema = z.object({
   selectedPackage: z.string().min(1, "Please select a package")
 });
 
+// Create a combined type to use in the form
+type ClientFormValues = z.infer<typeof clientAccountPropertyFormSchema>;
+type AdminFormValues = z.infer<typeof adminPropertyFormSchema>;
+type FormValues = ClientFormValues | AdminFormValues;
+
 const packages: PackageOption[] = [
   { id: '1', name: 'Basic', description: 'Photos only', price: 150 },
   { id: '2', name: 'Standard', description: 'Photos + Floor Plans', price: 250 },
@@ -105,18 +110,28 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
   // Use the appropriate schema based on account type
   const formSchema = isClientAccount ? clientAccountPropertyFormSchema : adminPropertyFormSchema;
   
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema as any),
-    defaultValues: {
-      ...(isClientAccount ? {} : { clientId: initialData.clientId || '' }),
-      propertyAddress: initialData.propertyAddress || '',
-      propertyCity: initialData.propertyCity || '',
-      propertyState: initialData.propertyState || '',
-      propertyZip: initialData.propertyZip || '',
-      propertyType: initialData.propertyType || 'residential',
-      propertyInfo: initialData.propertyInfo || '',
-      selectedPackage: initialData.selectedPackage || '',
-    },
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: isClientAccount 
+      ? {
+        propertyAddress: initialData.propertyAddress || '',
+        propertyCity: initialData.propertyCity || '',
+        propertyState: initialData.propertyState || '',
+        propertyZip: initialData.propertyZip || '',
+        propertyType: initialData.propertyType || 'residential',
+        propertyInfo: initialData.propertyInfo || '',
+        selectedPackage: initialData.selectedPackage || '',
+      }
+      : {
+        clientId: initialData.clientId || '',
+        propertyAddress: initialData.propertyAddress || '',
+        propertyCity: initialData.propertyCity || '',
+        propertyState: initialData.propertyState || '',
+        propertyZip: initialData.propertyZip || '',
+        propertyType: initialData.propertyType || 'residential',
+        propertyInfo: initialData.propertyInfo || '',
+        selectedPackage: initialData.selectedPackage || '',
+      },
   });
 
   const filteredClients = clients.filter(client => 
@@ -124,9 +139,10 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
     (client.company && client.company.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const selectedClient = clients.find(client => client.id === form.watch('clientId'));
+  const selectedClientId = !isClientAccount ? (form.getValues() as AdminFormValues).clientId : '';
+  const selectedClient = selectedClientId ? clients.find(client => client.id === selectedClientId) : null;
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: FormValues) => {
     // For client accounts, pass along the existing clientId
     if (isClientAccount) {
       onComplete({
@@ -198,7 +214,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                                 ? "bg-primary/10 border-primary"
                                 : "bg-card hover:bg-accent/50"
                             }`}
-                            onClick={() => form.setValue("clientId", client.id)}
+                            onClick={() => form.setValue("clientId" as any, client.id)}
                           >
                             <div className="flex items-start gap-3">
                               <div
