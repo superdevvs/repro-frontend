@@ -83,6 +83,20 @@ export function ProjectContextBar({ conversation, shoot, className }: ProjectCon
   const projectData = shoot || conversation.shoot;
   if (!projectData) return null;
 
+  // Extract title and address safely with type checking
+  const title = conversation.shoot?.title || 
+    (shoot && typeof shoot === 'object' && 'title' in shoot ? 
+      (typeof shoot.title === 'string' ? shoot.title : '') : '');
+  
+  const address = conversation.shoot?.address || 
+    (shoot && typeof shoot === 'object' && 'address' in shoot ? 
+      (typeof shoot.address === 'string' ? shoot.address : '') : '');
+
+  // Get service types safely with type checking
+  const serviceTypes = conversation.shoot?.serviceTypes || 
+    (shoot && typeof shoot === 'object' && 'serviceTypes' in shoot ? 
+      (Array.isArray(shoot.serviceTypes) ? shoot.serviceTypes : []) : []);
+
   return (
     <Card className={cn("border-0 shadow-none", className)}>
       <CardContent className="p-3 space-y-3">
@@ -98,16 +112,16 @@ export function ProjectContextBar({ conversation, shoot, className }: ProjectCon
             </Badge>
           </div>
           <h2 className="text-base font-bold">
-            {conversation.shoot?.title || (shoot && 'title' in shoot ? shoot.title : '')}
+            {title}
           </h2>
         </div>
         
-        {(conversation.shoot?.address || (shoot && 'address' in shoot ? shoot.address : '')) && (
+        {address && (
           <div className="flex items-start gap-2">
             <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
             <div>
               <p className="text-sm">
-                {conversation.shoot?.address || (shoot && 'address' in shoot ? shoot.address : '')}
+                {address}
               </p>
               <Button variant="link" size="sm" className="h-auto p-0 text-xs">
                 View on map
@@ -128,11 +142,11 @@ export function ProjectContextBar({ conversation, shoot, className }: ProjectCon
         )}
         
         {/* Services */}
-        {(conversation.shoot?.serviceTypes || (shoot && 'serviceTypes' in shoot ? shoot.serviceTypes : [])).length > 0 && (
+        {serviceTypes.length > 0 && (
           <div>
             <p className="text-xs font-medium text-muted-foreground mb-1.5">Services</p>
             <div className="flex flex-wrap gap-1.5">
-              {(conversation.shoot?.serviceTypes || (shoot && 'serviceTypes' in shoot ? shoot.serviceTypes : [])).map((service) => (
+              {serviceTypes.map((service) => (
                 <Badge 
                   key={service} 
                   variant="outline"
