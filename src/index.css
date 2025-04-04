@@ -194,31 +194,41 @@
 
 /* Add custom modifiers for the calendar day picker in dark mode */
 .rdp-day_today:not(.rdp-day_outside) {
-  @apply dark:bg-gray-700 dark:text-gray-100;
+  @apply dark:bg-gray-700/70 dark:text-gray-100;
 }
 
-/* Availability status colors with better dark mode contrast */
+/* Availability status colors with better contrast and lighter colors */
 .dark .bg-green-100 {
-  background-color: rgba(34, 197, 94, 0.2) !important; /* Brighter green with transparency for dark mode */
+  background-color: rgba(74, 222, 128, 0.25) !important; /* Lighter green with transparency for dark mode */
 }
 
 .dark .bg-yellow-100 {
-  background-color: rgba(234, 179, 8, 0.3) !important; /* Brighter yellow with transparency for dark mode */
+  background-color: rgba(250, 204, 21, 0.25) !important; /* Lighter yellow with transparency for dark mode */
 }
 
 .dark .bg-red-100 {
-  background-color: rgba(239, 68, 68, 0.25) !important; /* Brighter red with transparency for dark mode */
+  background-color: rgba(248, 113, 113, 0.25) !important; /* Lighter red with transparency for dark mode */
 }
 
-/* Light mode colors remain the same */
+/* Light mode colors - even lighter and more pastel */
 .bg-green-100 {
-  background-color: rgba(220, 252, 231, 1) !important; /* Original light green */
+  background-color: rgba(240, 253, 244, 1) !important; /* Very light pastel green */
 }
 
 .bg-yellow-100 {
-  background-color: rgba(254, 249, 195, 1) !important; /* Original light yellow */
+  background-color: rgba(254, 252, 232, 1) !important; /* Very light pastel yellow */
 }
 
 .bg-red-100 {
-  background-color: rgba(254, 226, 226, 1) !important; /* Original light red */
+  background-color: rgba(254, 242, 242, 1) !important; /* Very light pastel red */
+}
+
+/* Calendar day hover effect - make it lighter */
+.calendar-day:hover:not(.calendar-day-disabled):not(.calendar-day-selected) {
+  @apply bg-accent/70 text-accent-foreground;
+}
+
+/* Selected day - make it lighter */
+.calendar-day-selected {
+  @apply bg-primary/90 text-primary-foreground;
 }
