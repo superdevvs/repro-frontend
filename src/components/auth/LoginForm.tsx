@@ -10,7 +10,15 @@ import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function LoginForm() {
   // Login state
@@ -221,6 +229,34 @@ export function LoginForm() {
           
           <form onSubmit={handleSignup} className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
             <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
+              <Label htmlFor="account-type">Account Type</Label>
+              <Select
+                value={role}
+                onValueChange={setRole}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select account type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Account Types</SelectLabel>
+                    {availableRoles.map((roleOption) => (
+                      <SelectItem 
+                        key={roleOption.value} 
+                        value={roleOption.value}
+                      >
+                        <div className="flex flex-col">
+                          <span>{roleOption.label}</span>
+                          <span className="text-xs text-muted-foreground">{roleOption.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
               <Label htmlFor="signup-name">Full Name</Label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -304,29 +340,6 @@ export function LoginForm() {
                   }
                 </Button>
               </div>
-            </div>
-            
-            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
-              <Label>Account Type</Label>
-              <RadioGroup 
-                value={role} 
-                onValueChange={setRole}
-                className="grid grid-cols-1 gap-2 pt-1"
-              >
-                {availableRoles.map((roleOption) => (
-                  <div key={roleOption.value} className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-accent">
-                    <RadioGroupItem value={roleOption.value} id={`role-${roleOption.value}`} />
-                    <div className="grid gap-1">
-                      <Label htmlFor={`role-${roleOption.value}`} className="font-medium cursor-pointer">
-                        {roleOption.label}
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        {roleOption.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </RadioGroup>
             </div>
             
             <Button 
