@@ -83,7 +83,7 @@ export function ShootsList({
                   {shoot.status.charAt(0).toUpperCase() + shoot.status.slice(1)}
                 </Badge>
               </TableCell>
-              {showMedia && (
+              {showMedia && shoot.status === 'completed' && (
                 <TableCell>
                   {shoot.media?.photos && shoot.media.photos.length > 0 ? (
                     <div className="flex -space-x-2">
@@ -106,8 +106,13 @@ export function ShootsList({
                   )}
                 </TableCell>
               )}
+              {showMedia && shoot.status !== 'completed' && showMedia && (
+                <TableCell>
+                  <span className="text-muted-foreground text-sm">Not completed</span>
+                </TableCell>
+              )}
               <TableCell className="text-right">
-                {showMedia && onUploadMedia ? (
+                {shoot.status === 'completed' && showMedia && onUploadMedia ? (
                   <Button 
                     variant="outline" 
                     size="sm"

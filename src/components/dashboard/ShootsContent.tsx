@@ -52,9 +52,9 @@ export function ShootsContent({
           <ShootCard 
             shoot={shoot} 
             onClick={() => onShootSelect(shoot)}
-            showMedia={showMedia}
+            showMedia={shoot.status === 'completed' && showMedia}
           />
-          {showMedia && onUploadMedia && (
+          {shoot.status === 'completed' && showMedia && onUploadMedia && (
             <div className="p-3 border-t flex justify-end">
               <Button 
                 variant="outline" 
