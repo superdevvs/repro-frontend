@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { useShoots } from '@/context/ShootsContext';
 import { ShootData } from '@/types/shoots';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, MapPinIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPinIcon, UserIcon, ClockIcon } from 'lucide-react';
 
 interface CalendarProps {
   className?: string;
@@ -115,21 +115,37 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
                 
                 return (
                   <div key={day.toISOString()} className="h-14 px-1 relative">
-                    {eventsAtThisTime.map((event, idx) => (
-                      <div
-                        key={`${event.id}-${idx}`}
-                        className="absolute top-0 left-0 right-0 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-primary p-1.5 text-xs h-full overflow-hidden border border-primary/20 cursor-pointer"
-                      >
-                        <Badge className="absolute top-1 right-1 rounded-full h-4 w-4 text-[8px] p-0 flex items-center justify-center">
-                          {event.status.charAt(0).toUpperCase()}
-                        </Badge>
-                        <p className="font-medium leading-tight truncate">{event.client.name}</p>
-                        <p className="text-muted-foreground flex items-center gap-0.5 truncate text-[9px] mt-0.5">
-                          <MapPinIcon className="h-2.5 w-2.5 flex-shrink-0" />
-                          <span className="truncate">{event.location.city}</span>
-                        </p>
-                      </div>
-                    ))}
+                    {eventsAtThisTime.map((event, idx) => {
+                      // Extract and format the time from the scheduledDate
+                      const shootTime = new Date(event.scheduledDate);
+                      const formattedTime = format(shootTime, 'h:mm a');
+                      
+                      return (
+                        <div
+                          key={`${event.id}-${idx}`}
+                          className="absolute top-0 left-0 right-0 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-primary p-1.5 text-xs h-full overflow-hidden border border-primary/20 cursor-pointer"
+                        >
+                          <Badge className="absolute top-1 right-1 rounded-full h-4 w-4 text-[8px] p-0 flex items-center justify-center">
+                            {event.status.charAt(0).toUpperCase()}
+                          </Badge>
+                          <p className="font-medium leading-tight truncate">{event.client.name}</p>
+                          <div className="flex flex-col gap-0.5 mt-0.5">
+                            <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                              <UserIcon className="h-2.5 w-2.5 flex-shrink-0" />
+                              <span className="truncate">{event.photographer.name}</span>
+                            </div>
+                            <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                              <ClockIcon className="h-2.5 w-2.5 flex-shrink-0" />
+                              <span>{formattedTime}</span>
+                            </div>
+                            <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                              <MapPinIcon className="h-2.5 w-2.5 flex-shrink-0" />
+                              <span className="truncate">{event.location.city}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}
