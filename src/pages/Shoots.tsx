@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { ShootDetail } from '@/components/dashboard/ShootDetail';
@@ -11,6 +10,7 @@ import { FileUploader } from '@/components/media/FileUploader';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from '@/components/ui/pagination';
 import { ShootData } from '@/types/shoots';
 import { useShoots } from '@/context/ShootsContext';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -24,8 +24,16 @@ const Shoots = () => {
   const [currentPage, setCurrentPage] = useState(1);
   
   const { shoots, updateShoot } = useShoots();
+  const { user } = useAuth();
   
-  const filteredShoots = shoots.filter(shoot => {
+  const userFilteredShoots = shoots.filter(shoot => {
+    if (user && user.role === 'client') {
+      return shoot.client.name === user.name;
+    }
+    return true;
+  });
+  
+  const filteredShoots = userFilteredShoots.filter(shoot => {
     const matchesSearch = 
       shoot.location.fullAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
       shoot.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,7 +47,6 @@ const Shoots = () => {
     return false;
   });
   
-  // Pagination
   const totalPages = Math.ceil(filteredShoots.length / ITEMS_PER_PAGE);
   const paginatedShoots = filteredShoots.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -66,12 +73,10 @@ const Shoots = () => {
   const handleUploadComplete = (files: File[]) => {
     if (!selectedShoot) return;
     
-    // Create URLs for the uploaded files (in a real app, these would be hosted URLs)
     const photoUrls = files
       .filter(file => file.type.startsWith('image/'))
       .map(() => '/placeholder.svg');
     
-    // Update the shoot with new media
     updateShoot(selectedShoot.id, {
       media: {
         ...selectedShoot.media,
@@ -79,13 +84,16 @@ const Shoots = () => {
       }
     });
     
-    // Close the dialog after upload is complete
     setIsUploadDialogOpen(false);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedTab, searchTerm, user]);
   
   return (
     <DashboardLayout>
@@ -128,7 +136,6 @@ const Shoots = () => {
                 
                 {[...Array(totalPages)].map((_, index) => {
                   const page = index + 1;
-                  // Show current page, first, last, and pages around current
                   if (
                     page === 1 || 
                     page === totalPages || 
@@ -145,7 +152,6 @@ const Shoots = () => {
                       </PaginationItem>
                     );
                   }
-                  // Show ellipsis for skipped pages
                   if (page === 2 || page === totalPages - 1) {
                     return (
                       <PaginationItem key={`ellipsis-${page}`}>

@@ -10,6 +10,7 @@ import {
   PlusIcon,
   FilterIcon
 } from 'lucide-react';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface ShootsFilterProps {
   searchTerm: string;
@@ -30,6 +31,9 @@ export function ShootsFilter({
   setViewMode,
   onFilterClick
 }: ShootsFilterProps) {
+  const { user } = useAuth();
+  const isClient = user?.role === 'client';
+  
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <div className="relative flex-1">
@@ -64,9 +68,12 @@ export function ShootsFilter({
           </Button>
         )}
         
-        <Button variant="outline" size="icon">
-          <PlusIcon className="h-4 w-4" />
-        </Button>
+        {/* Only show the add button for admins and non-client users */}
+        {!isClient && (
+          <Button variant="outline" size="icon">
+            <PlusIcon className="h-4 w-4" />
+          </Button>
+        )}
         
         <div className="flex border rounded-md overflow-hidden">
           <Button

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ShootData } from '@/types/shoots';
 import { shootsData as initialShootsData } from '@/data/shootsData';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface ShootsContextType {
   shoots: ShootData[];
@@ -13,6 +14,9 @@ interface ShootsContextType {
   getUniquePhotographers: () => { name: string; shootCount: number }[];
   getUniqueEditors: () => { name: string; shootCount: number }[];
   getUniqueClients: () => { name: string; shootCount: number; email?: string; company?: string; phone?: string }[];
+  // New functions for client-specific data
+  getCurrentClientShoots: () => ShootData[];
+  getClientShootsByStatus: (status: ShootData['status']) => ShootData[];
 }
 
 const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
@@ -20,6 +24,7 @@ const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
 export function ShootsProvider({ children }: { children: React.ReactNode }) {
   const [shoots, setShoots] = useState<ShootData[]>(initialShootsData);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Load shoots from localStorage if available
   useEffect(() => {
@@ -73,11 +78,34 @@ export function ShootsProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // New helper functions for Accounts page
+  // New functions for client-specific data
+  const getCurrentClientShoots = () => {
+    if (user && user.role === 'client') {
+      return shoots.filter(shoot => shoot.client.name === user.name);
+    }
+    return []; // Return empty array if not a client
+  };
+
+  const getClientShootsByStatus = (status: ShootData['status']) => {
+    if (user && user.role === 'client') {
+      return shoots.filter(shoot => 
+        shoot.client.name === user.name && 
+        shoot.status === status
+      );
+    }
+    return []; // Return empty array if not a client
+  };
+
+  // Helper functions for Accounts page
   const getUniquePhotographers = () => {
     const photographerMap = new Map<string, number>();
     
-    shoots.forEach(shoot => {
+    // For clients, only count photographers from their shoots
+    const relevantShoots = user?.role === 'client' 
+      ? shoots.filter(shoot => shoot.client.name === user.name)
+      : shoots;
+    
+    relevantShoots.forEach(shoot => {
       if (shoot.photographer && shoot.photographer.name) {
         const name = shoot.photographer.name;
         photographerMap.set(name, (photographerMap.get(name) || 0) + 1);
@@ -97,6 +125,19 @@ export function ShootsProvider({ children }: { children: React.ReactNode }) {
   };
   
   const getUniqueClients = () => {
+    // For clients, only show their own data
+    if (user?.role === 'client') {
+      const clientData = {
+        name: user.name,
+        shootCount: shoots.filter(shoot => shoot.client.name === user.name).length,
+        email: user.email,
+        company: user.company,
+        phone: user.phone
+      };
+      return [clientData];
+    }
+    
+    // For admins, show all clients
     const clientMap = new Map<string, { 
       count: number, 
       email?: string,
@@ -142,7 +183,9 @@ export function ShootsProvider({ children }: { children: React.ReactNode }) {
       deleteShoot,
       getUniquePhotographers,
       getUniqueEditors,
-      getUniqueClients
+      getUniqueClients,
+      getCurrentClientShoots,
+      getClientShootsByStatus
     }}>
       {children}
     </ShootsContext.Provider>
