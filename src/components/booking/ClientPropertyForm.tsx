@@ -43,7 +43,18 @@ interface PackageOption {
   price: number;
 }
 
-const propertyFormSchema = z.object({
+// Create two different schemas based on account type
+const clientAccountPropertyFormSchema = z.object({
+  propertyAddress: z.string().min(1, "Address is required"),
+  propertyCity: z.string().min(1, "City is required"),
+  propertyState: z.string().min(1, "State is required"),
+  propertyZip: z.string().min(1, "ZIP code is required"),
+  propertyType: z.enum(["residential", "commercial"]),
+  propertyInfo: z.string().optional(),
+  selectedPackage: z.string().min(1, "Please select a package")
+});
+
+const adminPropertyFormSchema = z.object({
   clientId: z.string().min(1, "Please select a client"),
   propertyAddress: z.string().min(1, "Address is required"),
   propertyCity: z.string().min(1, "City is required"),
@@ -77,9 +88,10 @@ type ClientPropertyFormProps = {
     propertyInfo: string;
     selectedPackage?: string;
   };
+  isClientAccount?: boolean;
 };
 
-export const ClientPropertyForm = ({ onComplete, initialData }: ClientPropertyFormProps) => {
+export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = false }: ClientPropertyFormProps) => {
   const [clients, setClients] = useState<Client[]>(() => {
     const storedClients = localStorage.getItem('clientsData');
     return storedClients ? JSON.parse(storedClients) : initialClientsData;
@@ -90,10 +102,13 @@ export const ClientPropertyForm = ({ onComplete, initialData }: ClientPropertyFo
 
   const navigate = useNavigate();
   
-  const form = useForm<z.infer<typeof propertyFormSchema>>({
-    resolver: zodResolver(propertyFormSchema),
+  // Use the appropriate schema based on account type
+  const formSchema = isClientAccount ? clientAccountPropertyFormSchema : adminPropertyFormSchema;
+  
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema as any),
     defaultValues: {
-      clientId: initialData.clientId || '',
+      ...(isClientAccount ? {} : { clientId: initialData.clientId || '' }),
       propertyAddress: initialData.propertyAddress || '',
       propertyCity: initialData.propertyCity || '',
       propertyState: initialData.propertyState || '',
@@ -111,14 +126,26 @@ export const ClientPropertyForm = ({ onComplete, initialData }: ClientPropertyFo
 
   const selectedClient = clients.find(client => client.id === form.watch('clientId'));
 
-  const handleSubmit = (data: z.infer<typeof propertyFormSchema>) => {
-    onComplete({
-      ...data,
-      clientName: selectedClient?.name || '',
-      clientEmail: selectedClient?.email || '',
-      clientPhone: selectedClient?.phone || '',
-      clientCompany: selectedClient?.company || '',
-    });
+  const handleSubmit = (data: any) => {
+    // For client accounts, pass along the existing clientId
+    if (isClientAccount) {
+      onComplete({
+        ...data,
+        clientId: initialData.clientId,
+        clientName: initialData.clientName,
+        clientEmail: initialData.clientEmail,
+        clientPhone: initialData.clientPhone,
+        clientCompany: initialData.clientCompany,
+      });
+    } else {
+      onComplete({
+        ...data,
+        clientName: selectedClient?.name || '',
+        clientEmail: selectedClient?.email || '',
+        clientPhone: selectedClient?.phone || '',
+        clientCompany: selectedClient?.company || '',
+      });
+    }
   };
 
   const navigateToNewClient = () => {
@@ -128,92 +155,96 @@ export const ClientPropertyForm = ({ onComplete, initialData }: ClientPropertyFo
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* Client Selection */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Client Information</h3>
-          
-          <div className="relative">
-            <div className="flex mb-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search clients..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+        {/* Client Selection - Only show for admin/non-client accounts */}
+        {!isClientAccount && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Client Information</h3>
+            
+            <div className="relative">
+              <div className="flex mb-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search clients..."
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="ml-2"
+                  onClick={navigateToNewClient}
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  New Client
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="ml-2"
-                onClick={navigateToNewClient}
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                New Client
-              </Button>
-            </div>
 
-            <FormField
-              control={form.control}
-              name="clientId"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 max-h-[200px] overflow-y-auto">
-                    {filteredClients.length > 0 ? (
-                      filteredClients.map((client) => (
-                        <div
-                          key={client.id}
-                          className={`p-3 border rounded-md cursor-pointer transition-colors ${
-                            field.value === client.id
-                              ? "bg-primary/10 border-primary"
-                              : "bg-card hover:bg-accent/50"
-                          }`}
-                          onClick={() => form.setValue("clientId", client.id)}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div
-                              className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                                field.value === client.id
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted text-muted-foreground"
-                              }`}
-                            >
-                              <User className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <div className="font-medium leading-none">
-                                {client.name}
+              <FormField
+                control={form.control}
+                name="clientId"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 max-h-[200px] overflow-y-auto">
+                      {filteredClients.length > 0 ? (
+                        filteredClients.map((client) => (
+                          <div
+                            key={client.id}
+                            className={`p-3 border rounded-md cursor-pointer transition-colors ${
+                              field.value === client.id
+                                ? "bg-primary/10 border-primary"
+                                : "bg-card hover:bg-accent/50"
+                            }`}
+                            onClick={() => form.setValue("clientId", client.id)}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                                  field.value === client.id
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted text-muted-foreground"
+                                }`}
+                              >
+                                <User className="h-4 w-4" />
                               </div>
-                              {client.company && (
-                                <div className="text-sm text-muted-foreground mt-1">
-                                  {client.company}
+                              <div>
+                                <div className="font-medium leading-none">
+                                  {client.name}
                                 </div>
-                              )}
-                              <div className="text-xs text-muted-foreground mt-1.5">
-                                {client.email}
+                                {client.company && (
+                                  <div className="text-sm text-muted-foreground mt-1">
+                                    {client.company}
+                                  </div>
+                                )}
+                                <div className="text-xs text-muted-foreground mt-1.5">
+                                  {client.email}
+                                </div>
                               </div>
                             </div>
                           </div>
+                        ))
+                      ) : (
+                        <div className="col-span-2 p-6 text-center text-muted-foreground">
+                          No clients found. Try a different search or create a new client.
                         </div>
-                      ))
-                    ) : (
-                      <div className="col-span-2 p-6 text-center text-muted-foreground">
-                        No clients found. Try a different search or create a new client.
-                      </div>
-                    )}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <Separator className="my-6" />
           </div>
-        </div>
+        )}
 
         {/* Property Information */}
         <div className="pt-2">
-          <Separator className="my-6" />
+          {!isClientAccount && <Separator className="my-6" />}
           <h3 className="text-lg font-medium mb-4">Property Details</h3>
           
           <div className="space-y-4">

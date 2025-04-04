@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +18,7 @@ import { Client } from '@/types/clients';
 import { initialClientsData } from '@/data/clientsData';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, CalendarIcon, Clock, HomeIcon } from 'lucide-react';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 const photographers = [
   { id: '1', name: 'John Doe', avatar: 'https://ui.shadcn.com/avatars/01.png', rate: 150, availability: true },
@@ -39,13 +39,20 @@ const BookShoot = () => {
   const clientIdFromUrl = queryParams.get('clientId');
   const clientNameFromUrl = queryParams.get('clientName');
   const clientCompanyFromUrl = queryParams.get('clientCompany');
+  const { user } = useAuth();
   
   const [clients, setClients] = useState<Client[]>(() => {
     const storedClients = localStorage.getItem('clientsData');
     return storedClients ? JSON.parse(storedClients) : initialClientsData;
   });
   
-  const [client, setClient] = useState(clientIdFromUrl || '');
+  const [client, setClient] = useState(() => {
+    if (user?.role === 'client' && user?.clientId) {
+      return user.clientId;
+    }
+    return clientIdFromUrl || '';
+  });
+
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -163,7 +170,7 @@ const BookShoot = () => {
       if (step === 1 && (!client || !address || !city || !state || !zip || !selectedPackage)) {
         toast({
           title: "Missing information",
-          description: "Please fill in all client, property details and select a package before proceeding.",
+          description: "Please fill in all property details and select a package before proceeding.",
           variant: "destructive",
         });
         return;
@@ -183,7 +190,9 @@ const BookShoot = () => {
   };
 
   const resetForm = () => {
-    setClient('');
+    if (!user?.role === 'client') {
+      setClient('');
+    }
     setAddress('');
     setCity('');
     setState('');
@@ -215,7 +224,9 @@ const BookShoot = () => {
       propertyInfo: notes
     },
     onComplete: (data: any) => {
-      if (data.clientId) setClient(data.clientId);
+      if (!user?.role === 'client' && data.clientId) {
+        setClient(data.clientId);
+      }
       setAddress(data.propertyAddress);
       setCity(data.propertyCity);
       setState(data.propertyState);
@@ -223,16 +234,16 @@ const BookShoot = () => {
       setNotes(data.propertyInfo || '');
       setSelectedPackage(data.selectedPackage || '');
       setStep(2);
-    }
+    },
+    isClientAccount: user?.role === 'client'
   };
 
-  // Get the step title and description based on current step
   const getStepContent = () => {
     switch(step) {
       case 1:
         return {
-          title: 'Client & Property Details',
-          description: 'Select the client and enter property information'
+          title: user?.role === 'client' ? 'Property Details' : 'Client & Property Details',
+          description: user?.role === 'client' ? 'Enter property information' : 'Select the client and enter property information'
         };
       case 2:
         return {
@@ -257,7 +268,6 @@ const BookShoot = () => {
   return (
     <DashboardLayout>
       <div className="container max-w-5xl py-6 space-y-8">
-        {/* Back button */}
         <Button 
           variant="ghost" 
           size="sm" 
@@ -268,13 +278,11 @@ const BookShoot = () => {
           Back to Shoots
         </Button>
         
-        {/* Main Content */}
         <AnimatePresence mode="wait">
           {isComplete ? (
             <BookingComplete date={date} time={time} resetForm={resetForm} />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Left Column: Steps sidebar */}
               <div className="md:col-span-1">
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -286,7 +294,6 @@ const BookShoot = () => {
                   <p className="text-muted-foreground mb-6 text-sm">Complete the steps to schedule a property photo shoot</p>
                   
                   <div className="space-y-6">
-                    {/* Step 1 */}
                     <div className={`flex items-start gap-3 ${step >= 1 ? 'text-primary' : 'text-muted-foreground'}`}>
                       <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs mt-0.5 ${
                         step > 1 ? 'bg-primary text-primary-foreground' : 
@@ -297,11 +304,17 @@ const BookShoot = () => {
                       </div>
                       <div>
                         <p className={`font-medium ${step >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          Client & Property
+                          {user?.role === 'client' ? 'Property Details' : 'Client & Property'}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {client ? clients.find(c => c.id === client)?.name : 'Select client and property'}
-                        </p>
+                        {user?.role === 'client' ? (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Enter property information
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {client ? clients.find(c => c.id === client)?.name : 'Select client and property'}
+                          </p>
+                        )}
                         {client && address && (
                           <div className="mt-1 flex items-center text-xs text-muted-foreground">
                             <HomeIcon className="h-3 w-3 mr-1" />
@@ -311,12 +324,10 @@ const BookShoot = () => {
                       </div>
                     </div>
                     
-                    {/* Separator */}
                     <div className="pl-3">
                       <div className={`w-[1px] h-4 ml-[11px] ${step > 1 ? 'bg-primary' : 'bg-border'}`}></div>
                     </div>
                     
-                    {/* Step 2 */}
                     <div className={`flex items-start gap-3 ${step >= 2 ? 'text-primary' : 'text-muted-foreground'}`}>
                       <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs mt-0.5 ${
                         step > 2 ? 'bg-primary text-primary-foreground' : 
@@ -347,12 +358,10 @@ const BookShoot = () => {
                       </div>
                     </div>
                     
-                    {/* Separator */}
                     <div className="pl-3">
                       <div className={`w-[1px] h-4 ml-[11px] ${step > 2 ? 'bg-primary' : 'bg-border'}`}></div>
                     </div>
                     
-                    {/* Step 3 */}
                     <div className={`flex items-start gap-3 ${step >= 3 ? 'text-primary' : 'text-muted-foreground'}`}>
                       <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs mt-0.5 ${
                         step > 3 ? 'bg-primary text-primary-foreground' : 
@@ -371,7 +380,6 @@ const BookShoot = () => {
                       </div>
                     </div>
                     
-                    {/* Selected Package */}
                     {selectedPackage && (
                       <div className="mt-8 pt-6 border-t border-border">
                         <h3 className="text-sm font-medium mb-2">Selected Package:</h3>
@@ -392,7 +400,6 @@ const BookShoot = () => {
                 </motion.div>
               </div>
               
-              {/* Right Column: Current step form */}
               <div className="md:col-span-2">
                 <motion.div
                   key={`step-${step}`}
@@ -413,6 +420,7 @@ const BookShoot = () => {
                           <ClientPropertyForm
                             onComplete={clientPropertyFormData.onComplete}
                             initialData={clientPropertyFormData.initialData}
+                            isClientAccount={clientPropertyFormData.isClientAccount}
                           />
                         )}
                         
@@ -459,7 +467,6 @@ const BookShoot = () => {
                     </CardContent>
                   </Card>
                   
-                  {/* Navigation buttons */}
                   <div className="flex justify-between mt-6">
                     <Button
                       variant="outline"
