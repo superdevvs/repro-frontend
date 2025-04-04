@@ -17,6 +17,7 @@ import { useShoots } from '@/context/ShootsContext';
 import { ShootData } from '@/types/shoots';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, MapPinIcon, UserIcon, ClockIcon } from 'lucide-react';
+import { ShootDetail } from './ShootDetail';
 
 interface CalendarProps {
   className?: string;
@@ -26,6 +27,8 @@ interface CalendarProps {
 export function Calendar({ className, height = 400 }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const { shoots } = useShoots();
+  const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const weekStartsOn = 0; // Sunday
   const startDate = startOfWeek(currentDate, { weekStartsOn });
@@ -61,6 +64,15 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
       });
     });
   }, [days, hours, shoots]);
+
+  const handleShowShootDetails = (shoot: ShootData) => {
+    setSelectedShoot(shoot);
+    setIsDetailOpen(true);
+  };
+
+  const handleCloseShootDetails = () => {
+    setIsDetailOpen(false);
+  };
 
   return (
     <div className={cn("w-full h-full", className)}>
@@ -124,13 +136,20 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
                         <div
                           key={`${event.id}-${idx}`}
                           className="absolute top-0 left-0 right-0 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-primary p-1.5 text-xs h-full overflow-hidden border border-primary/20 cursor-pointer"
+                          onClick={() => handleShowShootDetails(event)}
                         >
                           <Badge className="absolute top-1 right-1 rounded-full h-4 w-4 text-[8px] p-0 flex items-center justify-center">
                             {event.status.charAt(0).toUpperCase()}
                           </Badge>
                           <p className="font-medium leading-tight truncate">{event.client.name}</p>
                           <div className="flex flex-col gap-0.5 mt-0.5">
-                            <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                            <div 
+                              className="flex items-center gap-0.5 text-[9px] text-primary cursor-pointer hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShowShootDetails(event);
+                              }}
+                            >
                               <UserIcon className="h-2.5 w-2.5 flex-shrink-0" />
                               <span className="truncate">{event.photographer.name}</span>
                             </div>
@@ -153,6 +172,13 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
           ))}
         </div>
       </ScrollArea>
+      
+      {/* Shoot Detail Dialog */}
+      <ShootDetail 
+        shoot={selectedShoot}
+        isOpen={isDetailOpen}
+        onClose={handleCloseShootDetails}
+      />
     </div>
   );
 }
