@@ -20,6 +20,18 @@ import NotFound from "./pages/NotFound";
 import { ShootsProvider } from './context/ShootsContext';
 import { ThemeProvider } from './hooks/useTheme';
 
+// Declare global type augmentations for User to include metadata
+declare module './components/auth/AuthProvider' {
+  interface User {
+    metadata?: {
+      clientId?: string;
+      company?: string;
+      phone?: string;
+      [key: string]: any;
+    };
+  }
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

@@ -48,7 +48,7 @@ const BookShoot = () => {
   });
   
   const [client, setClient] = useState(() => {
-    // Check if user exists, is a client role, and has a clientId in metadata
+    // Check if user exists, is a client role, and has metadata with clientId
     if (user && user.role === 'client' && user.metadata && user.metadata.clientId) {
       return user.metadata.clientId;
     }
@@ -164,7 +164,7 @@ const BookShoot = () => {
         },
         status: 'hold' as const,
         notes: notes ? { shootNotes: notes } : undefined,
-        createdBy: "Current User"
+        createdBy: user?.name || "Current User"
       };
 
       addShoot(newShoot);
@@ -217,10 +217,10 @@ const BookShoot = () => {
   const clientPropertyFormData = {
     initialData: {
       clientId: client,
-      clientName: clients.find(c => c.id === client)?.name || '',
-      clientEmail: clients.find(c => c.id === client)?.email || '',
-      clientPhone: clients.find(c => c.id === client)?.phone || '',
-      clientCompany: clients.find(c => c.id === client)?.company || '',
+      clientName: isClientAccount ? user?.name || '' : clients.find(c => c.id === client)?.name || '',
+      clientEmail: isClientAccount ? user?.email || '' : clients.find(c => c.id === client)?.email || '',
+      clientPhone: isClientAccount ? (user?.metadata?.phone || '') : clients.find(c => c.id === client)?.phone || '',
+      clientCompany: isClientAccount ? (user?.metadata?.company || '') : clients.find(c => c.id === client)?.company || '',
       propertyType: 'residential' as const,
       propertyAddress: address,
       propertyCity: city,
