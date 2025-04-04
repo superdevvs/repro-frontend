@@ -1,10 +1,9 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./components/auth/AuthProvider";
+import { AuthProvider, useAuth, UserMetadata } from "./components/auth/AuthProvider";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Shoots from "./pages/Shoots";
@@ -23,11 +22,7 @@ import { ThemeProvider } from './hooks/useTheme';
 // Declare global type augmentations for User to include metadata
 declare module './components/auth/AuthProvider' {
   interface User {
-    metadata?: {
-      clientId?: string;
-      company?: string;
-      phone?: string;
-    } & Record<string, any>;
+    metadata?: UserMetadata;
   }
 }
 
