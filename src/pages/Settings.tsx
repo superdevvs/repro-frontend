@@ -13,12 +13,14 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUpload } from '@/components/profile/ImageUpload';
-import { ServicesManagement } from '@/components/settings/ServicesManagement';
+import { BrandingImageUpload } from '@/components/profile/BrandingImageUpload';
 
 const Settings = () => {
   const { user, role } = useAuth();
   const { toast } = useToast();
   const [avatar, setAvatar] = React.useState(user?.avatar || '');
+  const [brandLogo, setBrandLogo] = React.useState('');
+  const [brandBanner, setBrandBanner] = React.useState('');
   const [bio, setBio] = React.useState(''); // Add a separate state for bio
   
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -39,8 +41,25 @@ const Settings = () => {
     });
   };
 
+  const handleSaveBranding = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    toast({
+      title: "Branding Updated",
+      description: "Your branding settings have been saved.",
+    });
+  };
+
   const handleAvatarChange = (url: string) => {
     setAvatar(url);
+  };
+
+  const handleLogoChange = (url: string) => {
+    setBrandLogo(url);
+  };
+
+  const handleBannerChange = (url: string) => {
+    setBrandBanner(url);
   };
   
   return (
@@ -61,7 +80,7 @@ const Settings = () => {
             <TabsList>
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
-              <TabsTrigger value="services">Services</TabsTrigger>
+              <TabsTrigger value="branding">Branding</TabsTrigger>
               <TabsTrigger value="billing">Billing</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
             </TabsList>
@@ -222,9 +241,91 @@ const Settings = () => {
                 </CardContent>
               </Card>
             </TabsContent>
-            
-            <TabsContent value="services" className="space-y-4">
-              <ServicesManagement />
+
+            <TabsContent value="branding" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Branding</CardTitle>
+                  <CardDescription>
+                    Upload your company logo and branding images
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSaveBranding} className="space-y-6">
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Company Logo</h3>
+                        <p className="text-sm text-muted-foreground">
+                          This logo will appear on your invoices and client communications.
+                        </p>
+                        <BrandingImageUpload 
+                          onChange={handleLogoChange} 
+                          initialImage={brandLogo} 
+                          aspectRatio="1/1"
+                          maxWidth={200}
+                          helperText="Recommended size: 200x200px (square)"
+                        />
+                      </div>
+
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Brand Banner</h3>
+                        <p className="text-sm text-muted-foreground">
+                          This banner will be used in client-facing materials.
+                        </p>
+                        <BrandingImageUpload 
+                          onChange={handleBannerChange} 
+                          initialImage={brandBanner}
+                          aspectRatio="16/9"
+                          maxWidth={600}
+                          helperText="Recommended size: 1200x675px (16:9)"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label htmlFor="brand-colors" className="text-sm font-medium">
+                          Brand Colors
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                          <div className="space-y-1">
+                            <span className="text-xs text-muted-foreground">Primary</span>
+                            <Input type="color" defaultValue="#0070f3" className="h-10 p-1" />
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-xs text-muted-foreground">Secondary</span>
+                            <Input type="color" defaultValue="#f5f5f5" className="h-10 p-1" />
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-xs text-muted-foreground">Accent</span>
+                            <Input type="color" defaultValue="#ff4500" className="h-10 p-1" />
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-xs text-muted-foreground">Text</span>
+                            <Input type="color" defaultValue="#333333" className="h-10 p-1" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label htmlFor="tagline" className="text-sm font-medium">
+                          Company Tagline
+                        </label>
+                        <Input 
+                          id="tagline" 
+                          placeholder="Your business tagline" 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end">
+                      <Button type="submit">
+                        Save Branding
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
             </TabsContent>
             
             <TabsContent value="billing" className="space-y-4">

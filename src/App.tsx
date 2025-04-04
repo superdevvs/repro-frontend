@@ -27,8 +27,7 @@ declare module './components/auth/AuthProvider' {
       clientId?: string;
       company?: string;
       phone?: string;
-      [key: string]: any;
-    };
+    } & Record<string, any>;
   }
 }
 
