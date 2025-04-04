@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export function LoginForm() {
   // Login state
@@ -24,6 +25,7 @@ export function LoginForm() {
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [role, setRole] = useState('client'); // Default role
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
@@ -73,7 +75,7 @@ export function LoginForm() {
     }
     
     toast.info("Registration is currently disabled", {
-      description: "Please use one of the demo accounts to login",
+      description: `Please use one of the demo accounts to login. You selected ${role} role.`,
     });
     
     // Clear form
@@ -96,6 +98,14 @@ export function LoginForm() {
     setEmail(demoEmail);
     setPassword(demoPassword);
   };
+  
+  // Available roles for signup
+  const availableRoles = [
+    { value: 'client', label: 'Client', description: 'Hire photographers and manage listings' },
+    { value: 'photographer', label: 'Photographer', description: 'Provide photography services' },
+    { value: 'editor', label: 'Editor', description: 'Edit and process media' },
+    { value: 'rep', label: 'Representative', description: 'Manage client accounts' }
+  ];
   
   return (
     <motion.div
@@ -294,6 +304,29 @@ export function LoginForm() {
                   }
                 </Button>
               </div>
+            </div>
+            
+            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
+              <Label>Account Type</Label>
+              <RadioGroup 
+                value={role} 
+                onValueChange={setRole}
+                className="grid grid-cols-1 gap-2 pt-1"
+              >
+                {availableRoles.map((roleOption) => (
+                  <div key={roleOption.value} className="flex items-center space-x-2 rounded-md border p-3 cursor-pointer hover:bg-accent">
+                    <RadioGroupItem value={roleOption.value} id={`role-${roleOption.value}`} />
+                    <div className="grid gap-1">
+                      <Label htmlFor={`role-${roleOption.value}`} className="font-medium cursor-pointer">
+                        {roleOption.label}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {roleOption.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </RadioGroup>
             </div>
             
             <Button 
