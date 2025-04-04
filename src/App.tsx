@@ -9,15 +9,12 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Shoots from "./pages/Shoots";
 import BookShoot from "./pages/BookShoot";
-import Photographers from "./pages/Photographers";
 import Clients from "./pages/Clients";
-import Media from "./pages/Media";
 import Invoices from "./pages/Invoices";
 import Settings from "./pages/Settings";
 import Accounts from "./pages/Accounts";
 import Availability from "./pages/Availability";
 import Reports from "./pages/Reports";
-import ShootCalendar from "./pages/ShootCalendar";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 import { ShootsProvider } from './context/ShootsContext';
@@ -63,29 +60,14 @@ const AppRoutes = () => {
           <BookShoot />
         </ProtectedRoute>
       } />
-      <Route path="/shoot-calendar" element={
-        <ProtectedRoute>
-          <ShootCalendar />
-        </ProtectedRoute>
-      } />
       <Route path="/messages" element={
         <ProtectedRoute>
           <Messages />
         </ProtectedRoute>
       } />
-      <Route path="/photographers" element={
-        <ProtectedRoute>
-          <Photographers />
-        </ProtectedRoute>
-      } />
       <Route path="/clients" element={
         <ProtectedRoute>
           <Clients />
-        </ProtectedRoute>
-      } />
-      <Route path="/media" element={
-        <ProtectedRoute>
-          <Media />
         </ProtectedRoute>
       } />
       <Route path="/invoices" element={

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
@@ -10,17 +11,14 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { motion } from 'framer-motion';
 import {
   BarChart3Icon,
-  CameraIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ClipboardIcon,
   HomeIcon,
-  ImageIcon,
   LogOutIcon,
   SettingsIcon,
   UsersIcon,
   FileTextIcon,
-  CalendarIcon,
   UserIcon,
   BuildingIcon,
   MenuIcon,
@@ -78,10 +76,10 @@ export function Sidebar({ className }: SidebarProps) {
           )}
         >
           {isCollapsed && !isMobile ? (
-            <CameraIcon className="h-6 w-6 text-primary" />
+            <HomeIcon className="h-6 w-6 text-primary" />
           ) : (
             <>
-              <CameraIcon className="h-6 w-6 text-primary" />
+              <HomeIcon className="h-6 w-6 text-primary" />
               <span>REPro Dashboard</span>
             </>
           )}
@@ -128,25 +126,11 @@ export function Sidebar({ className }: SidebarProps) {
             isActive={pathname === '/shoots'}
           />
           <NavLink
-            to="/shoot-calendar"
-            icon={<CalendarIcon className="h-4 w-4" />}
-            label="Calendar"
-            isCollapsed={isCollapsed && !isMobile}
-            isActive={pathname === '/shoot-calendar'}
-          />
-          <NavLink
             to="/messages"
             icon={<MessageSquareIcon className="h-4 w-4" />}
             label="Messages"
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/messages'}
-          />
-          <NavLink
-            to="/photographers"
-            icon={<UsersIcon className="h-4 w-4" />}
-            label="Photographers"
-            isCollapsed={isCollapsed && !isMobile}
-            isActive={pathname === '/photographers'}
           />
           {role !== 'client' && (
             <NavLink
@@ -167,13 +151,6 @@ export function Sidebar({ className }: SidebarProps) {
             />
           )}
           <NavLink
-            to="/media"
-            icon={<ImageIcon className="h-4 w-4" />}
-            label="Media"
-            isCollapsed={isCollapsed && !isMobile}
-            isActive={pathname === '/media'}
-          />
-          <NavLink
             to="/invoices"
             icon={<FileTextIcon className="h-4 w-4" />}
             label="Invoices"
@@ -192,7 +169,7 @@ export function Sidebar({ className }: SidebarProps) {
           {role === 'admin' && (
             <NavLink
               to="/availability"
-              icon={<CalendarIcon className="h-4 w-4" />}
+              icon={<UsersIcon className="h-4 w-4" />}
               label="Availability"
               isCollapsed={isCollapsed && !isMobile}
               isActive={pathname === '/availability'}
