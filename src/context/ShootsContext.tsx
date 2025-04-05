@@ -17,6 +17,10 @@ interface ShootsContextType {
   // New functions for client-specific data
   getCurrentClientShoots: () => ShootData[];
   getClientShootsByStatus: (status: ShootData['status']) => ShootData[];
+  // Dashboard data helpers
+  getShootsByStatus: (status: ShootData['status']) => ShootData[];
+  getRecentShoots: (limit?: number) => ShootData[];
+  getUpcomingShoots: (limit?: number) => ShootData[];
 }
 
 const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
@@ -74,6 +78,55 @@ export function ShootsProvider({ children }: { children: React.ReactNode }) {
       description: "The shoot has been removed.",
       variant: "destructive",
     });
+  };
+
+  // New functions for dashboard data
+  const getShootsByStatus = (status: ShootData['status']) => {
+    if (user?.role === 'client') {
+      return shoots.filter(shoot => 
+        shoot.client.name === user.name && 
+        shoot.status === status
+      );
+    }
+    return shoots.filter(shoot => shoot.status === status);
+  };
+
+  const getRecentShoots = (limit = 5) => {
+    const sortedShoots = [...shoots].sort((a, b) => {
+      const dateA = new Date(a.scheduledDate);
+      const dateB = new Date(b.scheduledDate);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    if (user?.role === 'client') {
+      return sortedShoots
+        .filter(shoot => shoot.client.name === user.name)
+        .slice(0, limit);
+    }
+    
+    return sortedShoots.slice(0, limit);
+  };
+
+  const getUpcomingShoots = (limit = 5) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const upcomingShoots = [...shoots].filter(shoot => {
+      const shootDate = new Date(shoot.scheduledDate);
+      return shootDate >= today && shoot.status !== 'completed';
+    }).sort((a, b) => {
+      const dateA = new Date(a.scheduledDate);
+      const dateB = new Date(b.scheduledDate);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    if (user?.role === 'client') {
+      return upcomingShoots
+        .filter(shoot => shoot.client.name === user.name)
+        .slice(0, limit);
+    }
+    
+    return upcomingShoots.slice(0, limit);
   };
 
   // New functions for client-specific data
@@ -183,7 +236,10 @@ export function ShootsProvider({ children }: { children: React.ReactNode }) {
       getUniqueEditors,
       getUniqueClients,
       getCurrentClientShoots,
-      getClientShootsByStatus
+      getClientShootsByStatus,
+      getShootsByStatus,
+      getRecentShoots,
+      getUpcomingShoots
     }}>
       {children}
     </ShootsContext.Provider>

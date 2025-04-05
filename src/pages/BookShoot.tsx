@@ -177,7 +177,6 @@ const BookShoot = () => {
     
     if (step === 3) {
       const availablePhotographers = getAvailablePhotographers();
-      const isPhotographerRequired = availablePhotographers.length > 0;
       
       if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
         toast({
@@ -188,15 +187,6 @@ const BookShoot = () => {
         return;
       }
       
-      if (isPhotographerRequired && !photographer) {
-        toast({
-          title: "Missing information",
-          description: "Please select a photographer before confirming the booking.",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const selectedClientData = clients.find(c => c.id === client);
       const selectedPhotographerData = photographers.find(p => p.id === photographer);
       const selectedPackageData = packages.find(p => p.id === selectedPackage);
@@ -232,7 +222,7 @@ const BookShoot = () => {
           totalQuote: getTotal(),
           ...(bypassPayment ? {} : { totalPaid: getTotal(), lastPaymentDate: new Date().toISOString().split('T')[0], lastPaymentType: 'Credit Card' })
         },
-        status: 'hold' as const,
+        status: 'booked' as const,
         notes: notes ? { shootNotes: notes } : undefined,
         createdBy: user?.name || "Current User"
       };
