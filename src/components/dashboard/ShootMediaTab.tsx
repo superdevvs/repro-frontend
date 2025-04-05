@@ -1,486 +1,505 @@
-import React, { useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { UploadCloud, X } from "lucide-react";
-import { v4 as uuidv4 } from 'uuid';
-import { useDropzone } from 'react-dropzone';
-import { useToast } from "@/hooks/use-toast";
-import { ShootData, SlideShowItem } from '@/types/shoots';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { ensureDateString } from '@/utils/formatters';
 
-const handleSlideShowArray = (slideshows: any[] | undefined): SlideShowItem[] => {
-  if (!slideshows) return [];
-  
-  return slideshows.map(item => {
-    if (typeof item === 'string') {
-      return {
-        id: Math.random().toString(36).substring(2, 15),
-        title: 'Slideshow',
-        url: item,
-        visible: true
-      };
-    }
-    return item as SlideShowItem;
-  });
-};
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { useDropzone } from 'react-dropzone';
+import { Eye, Upload, X, Check, AlertCircle, Image, Video, FileText } from 'lucide-react';
+import { ShootData } from '@/types/shoots';
+import { useToast } from '@/hooks/use-toast';
 
 interface ShootMediaTabProps {
-  shoot: ShootData | undefined;
-  setShoot: React.Dispatch<React.SetStateAction<ShootData | undefined>>;
-  isPhotographer?: boolean;
+  shoot: ShootData;
+  setShoot: (shoot: ShootData) => void;
+  isPhotographer: boolean;
 }
 
 export function ShootMediaTab({ shoot, setShoot, isPhotographer }: ShootMediaTabProps) {
   const { toast } = useToast();
-  const [photos, setPhotos] = useState<string[]>(shoot?.media?.photos || []);
-  const [videos, setVideos] = useState<string[]>(shoot?.media?.videos || []);
-  const [floorplans, setFloorplans] = useState<string[]>(shoot?.media?.floorplans || []);
-  const [slideshows, setSlideshows] = useState<SlideShowItem[]>(handleSlideShowArray(shoot?.media?.slideshows) || []);
-  const [newSlideshowURL, setNewSlideshowURL] = useState('');
-  const [newSlideshowTitle, setNewSlideshowTitle] = useState('');
-  const [tourLinks, setTourLinks] = useState({
-    branded: shoot?.tourLinks?.branded || '',
-    mls: shoot?.tourLinks?.mls || '',
-    genericMls: shoot?.tourLinks?.genericMls || ''
-  });
-  
-  const onDropPhotos = useCallback((acceptedFiles: File[]) => {
-    acceptedFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const newPhoto = reader.result as string;
-        setPhotos(prevPhotos => [...prevPhotos, newPhoto]);
-        setShoot(prevShoot => {
-          if (!prevShoot) return prevShoot;
-          return {
-            ...prevShoot,
-            media: {
-              ...prevShoot.media,
-              photos: [...(prevShoot.media?.photos || []), newPhoto]
-            }
-          };
-        });
+  const [activeTab, setActiveTab] = useState('photos');
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [uploadingVideos, setUploadingVideos] = useState(false);
+  const [uploadingDocuments, setUploadingDocuments] = useState(false);
+
+  // Example media data that would come from the backend
+  const mediaData = {
+    photos: shoot.media?.photos || [],
+    videos: shoot.media?.videos || [],
+    documents: shoot.media?.documents || []
+  };
+
+  const handleMediaUpload = (files: File[], mediaType: 'photos' | 'videos' | 'documents') => {
+    // In a real app, you would upload these files to your server
+    console.log(`Uploading ${files.length} ${mediaType}:`, files);
+    
+    const setUploading = {
+      'photos': setUploadingPhotos,
+      'videos': setUploadingVideos,
+      'documents': setUploadingDocuments
+    }[mediaType];
+    
+    setUploading(true);
+    
+    // Simulate upload delay
+    setTimeout(() => {
+      // Create mock media items based on the uploaded files
+      const newMedia = files.map(file => ({
+        id: `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: file.name,
+        url: URL.createObjectURL(file),
+        type: file.type,
+        size: file.size,
+        uploadDate: new Date().toISOString(),
+        approved: false
+      }));
+      
+      // Update the shoot object with the new media
+      const updatedMedia = {
+        ...shoot.media,
+        [mediaType]: [...(shoot.media?.[mediaType] || []), ...newMedia]
       };
-      reader.readAsDataURL(file);
-    });
-  }, [setPhotos, setShoot]);
+      
+      setShoot({
+        ...shoot,
+        media: updatedMedia
+      });
+      
+      setUploading(false);
+      
+      toast({
+        title: `${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} uploaded`,
+        description: `Successfully uploaded ${files.length} ${files.length === 1 ? 'file' : 'files'}`
+      });
+    }, 1500);
+  };
   
-  const onDropVideos = useCallback((acceptedFiles: File[]) => {
-    acceptedFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const newVideo = reader.result as string;
-        setVideos(prevVideos => [...prevVideos, newVideo]);
-        setShoot(prevShoot => {
-          if (!prevShoot) return prevShoot;
-          return {
-            ...prevShoot,
-            media: {
-              ...prevShoot.media,
-              videos: [...(prevShoot.media?.videos || []), newVideo]
-            }
-          };
-        });
-      };
-      reader.readAsDataURL(file);
-    });
-  }, [setVideos, setShoot]);
+  const onPhotosDrop = (acceptedFiles: File[]) => {
+    handleMediaUpload(acceptedFiles, 'photos');
+  };
   
-  const onDropFloorplans = useCallback((acceptedFiles: File[]) => {
-    acceptedFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const newFloorplan = reader.result as string;
-        setFloorplans(prevFloorplans => [...prevFloorplans, newFloorplan]);
-        setShoot(prevShoot => {
-          if (!prevShoot) return prevShoot;
-          return {
-            ...prevShoot,
-            media: {
-              ...prevShoot.media,
-              floorplans: [...(prevShoot.media?.floorplans || []), newFloorplan]
-            }
-          };
-        });
-      };
-      reader.readAsDataURL(file);
-    });
-  }, [setFloorplans, setShoot]);
+  const onVideosDrop = (acceptedFiles: File[]) => {
+    handleMediaUpload(acceptedFiles, 'videos');
+  };
+  
+  const onDocumentsDrop = (acceptedFiles: File[]) => {
+    handleMediaUpload(acceptedFiles, 'documents');
+  };
   
   const {
     getRootProps: getPhotosRootProps,
     getInputProps: getPhotosInputProps,
     isDragActive: isPhotosDragActive
-  } = useDropzone({ onDrop: onDropPhotos, accept: 'image/*' });
+  } = useDropzone({
+    onDrop: onPhotosDrop,
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png', '.gif']
+    },
+    disabled: !isPhotographer || uploadingPhotos
+  });
   
   const {
     getRootProps: getVideosRootProps,
     getInputProps: getVideosInputProps,
     isDragActive: isVideosDragActive
-  } = useDropzone({ onDrop: onDropVideos, accept: 'video/*' });
+  } = useDropzone({
+    onDrop: onVideosDrop,
+    accept: {
+      'video/*': ['.mp4', '.mov', '.avi', '.wmv']
+    },
+    disabled: !isPhotographer || uploadingVideos
+  });
   
   const {
-    getRootProps: getFloorplansRootProps,
-    getInputProps: getFloorplansInputProps,
-    isDragActive: isFloorplansDragActive
-  } = useDropzone({ onDrop: onDropFloorplans, accept: 'image/*' });
-  
-  const handleRemovePhoto = (index: number) => {
-    setPhotos(prevPhotos => {
-      const newPhotos = [...prevPhotos];
-      newPhotos.splice(index, 1);
-      return newPhotos;
-    });
-    setShoot(prevShoot => {
-      if (!prevShoot) return prevShoot;
-      const newPhotos = [...(prevShoot.media?.photos || [])];
-      newPhotos.splice(index, 1);
-      return {
-        ...prevShoot,
-        media: {
-          ...prevShoot.media,
-          photos: newPhotos
-        }
-      };
-    });
-  };
-  
-  const handleRemoveVideo = (index: number) => {
-    setVideos(prevVideos => {
-      const newVideos = [...prevVideos];
-      newVideos.splice(index, 1);
-      return newVideos;
-    });
-    setShoot(prevShoot => {
-      if (!prevShoot) return prevShoot;
-      const newVideos = [...(prevShoot.media?.videos || [])];
-      newVideos.splice(index, 1);
-      return {
-        ...prevShoot,
-        media: {
-          ...prevShoot.media,
-          videos: newVideos
-        }
-      };
-    });
-  };
-  
-  const handleRemoveFloorplan = (index: number) => {
-    setFloorplans(prevFloorplans => {
-      const newFloorplans = [...prevFloorplans];
-      newFloorplans.splice(index, 1);
-      return newFloorplans;
-    });
-    setShoot(prevShoot => {
-      if (!prevShoot) return prevShoot;
-      const newFloorplans = [...(prevShoot.media?.floorplans || [])];
-      newFloorplans.splice(index, 1);
-      return {
-        ...prevShoot,
-        media: {
-          ...prevShoot.media,
-          floorplans: newFloorplans
-        }
-      };
-    });
-  };
-  
-  const handleAddSlideshow = (url: string, title: string) => {
-    const newSlideshow: SlideShowItem = {
-      id: uuidv4(),
-      title,
-      url,
-      visible: true
+    getRootProps: getDocumentsRootProps,
+    getInputProps: getDocumentsInputProps,
+    isDragActive: isDocumentsDragActive
+  } = useDropzone({
+    onDrop: onDocumentsDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+    },
+    disabled: !isPhotographer || uploadingDocuments
+  });
+
+  // Just a placeholder for the actual approval logic
+  const handleApproveMedia = (id: string, mediaType: 'photos' | 'videos' | 'documents') => {
+    const updatedMedia = shoot.media?.[mediaType].map(item => 
+      item.id === id ? { ...item, approved: true } : item
+    );
+    
+    const newMedia = {
+      ...shoot.media,
+      [mediaType]: updatedMedia
     };
     
-    setSlideshows(prevSlideshows => {
-      const typedSlideshows = handleSlideShowArray(prevSlideshows);
-      return [...typedSlideshows, newSlideshow];
+    setShoot({
+      ...shoot,
+      media: newMedia
     });
     
-    setShoot(prevShoot => {
-      if (!prevShoot) return prevShoot;
-      
-      return {
-        ...prevShoot,
-        media: {
-          ...prevShoot.media,
-          slideshows: handleSlideShowArray([
-            ...(prevShoot.media?.slideshows || []),
-            newSlideshow
-          ])
-        }
-      };
+    toast({
+      title: "Media approved",
+      description: "The selected media has been approved"
     });
   };
   
-  const handleRemoveSlideshow = (index: number) => {
-    setSlideshows(prevSlideshows => {
-      const newSlideshows = [...prevSlideshows];
-      newSlideshows.splice(index, 1);
-      return newSlideshows;
+  const handleDeleteMedia = (id: string, mediaType: 'photos' | 'videos' | 'documents') => {
+    const updatedMedia = {
+      ...shoot.media,
+      [mediaType]: shoot.media?.[mediaType].filter(item => item.id !== id)
+    };
+    
+    setShoot({
+      ...shoot,
+      media: updatedMedia
     });
-    setShoot(prevShoot => {
-      if (!prevShoot) return prevShoot;
-      const newSlideshows = [...(prevShoot.media?.slideshows || [])];
-      newSlideshows.splice(index, 1);
-      return {
-        ...prevShoot,
-        media: {
-          ...prevShoot.media,
-          slideshows: newSlideshows
-        }
-      };
-    });
-  };
-  
-  const handleToggleSlideshowVisibility = (index: number) => {
-    setSlideshows(prevSlideshows => {
-      const newSlideshows = [...prevSlideshows];
-      newSlideshows[index].visible = !newSlideshows[index].visible;
-      return newSlideshows;
-    });
-    setShoot(prevShoot => {
-      if (!prevShoot) return prevShoot;
-      const newSlideshows = [...(prevShoot.media?.slideshows || [])];
-      newSlideshows[index] = {
-        ...newSlideshows[index],
-        visible: !newSlideshows[index].visible
-      };
-      return {
-        ...prevShoot,
-        media: {
-          ...prevShoot.media,
-          slideshows: newSlideshows
-        }
-      };
-    });
-  };
-  
-  const handleTourLinkChange = (type: 'branded' | 'mls' | 'genericMls', value: string) => {
-    setTourLinks(prevLinks => ({ ...prevLinks, [type]: value }));
-    setShoot(prevShoot => {
-      if (!prevShoot) return prevShoot;
-      return {
-        ...prevShoot,
-        tourLinks: {
-          ...prevShoot.tourLinks,
-          [type]: value
-        }
-      };
+    
+    toast({
+      title: "Media deleted",
+      description: "The selected media has been deleted"
     });
   };
   
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Photos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div {...getPhotosRootProps()} className="relative border-2 border-dashed rounded-md p-6 cursor-pointer">
-            <input {...getPhotosInputProps()} />
-            {
-              isPhotosDragActive ?
-                <p className="text-center">Drop the photos here ...</p> :
-                <div className="text-center">
-                  <UploadCloud className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">Drag 'n' drop some photos here, or click to select files</p>
-                </div>
-            }
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            {photos.map((photo, index) => (
-              <div key={index} className="relative">
-                <img src={photo} alt={`Uploaded photo ${index}`} className="rounded-md object-cover aspect-square" />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 bg-background/50 hover:bg-background/80"
-                  onClick={() => handleRemovePhoto(index)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+    <div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="photos" className="flex items-center gap-2">
+            <Image className="w-4 h-4" />
+            <span>Photos</span>
+            {mediaData.photos.length > 0 && (
+              <Badge variant="secondary" className="ml-auto">
+                {mediaData.photos.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="videos" className="flex items-center gap-2">
+            <Video className="w-4 h-4" />
+            <span>Videos</span>
+            {mediaData.videos.length > 0 && (
+              <Badge variant="secondary" className="ml-auto">
+                {mediaData.videos.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            <span>Documents</span>
+            {mediaData.documents.length > 0 && (
+              <Badge variant="secondary" className="ml-auto">
+                {mediaData.documents.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="photos" className="mt-4">
+          {isPhotographer && (
+            <div
+              {...getPhotosRootProps()}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer mb-6 transition-colors ${
+                isPhotosDragActive ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'
+              }`}
+            >
+              <input {...getPhotosInputProps()} />
+              <div className="flex flex-col items-center justify-center gap-2">
+                <Upload className="w-8 h-8 text-muted-foreground" />
+                <h3 className="font-medium">Drag & drop photos here</h3>
+                <p className="text-sm text-muted-foreground">
+                  or click to select files
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Supported formats: JPG, PNG, GIF
+                </p>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Videos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div {...getVideosRootProps()} className="relative border-2 border-dashed rounded-md p-6 cursor-pointer">
-            <input {...getVideosInputProps()} />
-            {
-              isVideosDragActive ?
-                <p className="text-center">Drop the videos here ...</p> :
-                <div className="text-center">
-                  <UploadCloud className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">Drag 'n' drop some videos here, or click to select files</p>
-                </div>
-            }
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            {videos.map((video, index) => (
-              <div key={index} className="relative">
-                <video src={video} className="rounded-md object-cover aspect-square" controls />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 bg-background/50 hover:bg-background/80"
-                  onClick={() => handleRemoveVideo(index)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Floorplans</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div {...getFloorplansRootProps()} className="relative border-2 border-dashed rounded-md p-6 cursor-pointer">
-            <input {...getFloorplansInputProps()} />
-            {
-              isFloorplansDragActive ?
-                <p className="text-center">Drop the floorplans here ...</p> :
-                <div className="text-center">
-                  <UploadCloud className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">Drag 'n' drop some floorplans here, or click to select files</p>
-                </div>
-            }
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            {floorplans.map((floorplan, index) => (
-              <div key={index} className="relative">
-                <img src={floorplan} alt={`Uploaded floorplan ${index}`} className="rounded-md object-cover aspect-square" />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 bg-background/50 hover:bg-background/80"
-                  onClick={() => handleRemoveFloorplan(index)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Slideshows</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              type="text"
-              placeholder="Slideshow URL"
-              value={newSlideshowURL}
-              onChange={(e) => setNewSlideshowURL(e.target.value)}
-            />
-            <Input
-              type="text"
-              placeholder="Slideshow Title"
-              value={newSlideshowTitle}
-              onChange={(e) => setNewSlideshowTitle(e.target.value)}
-            />
-            <Button onClick={() => {
-              if (newSlideshowURL.trim() !== '') {
-                handleAddSlideshow(newSlideshowURL, newSlideshowTitle || 'Slideshow');
-                setNewSlideshowURL('');
-                setNewSlideshowTitle('');
-              } else {
-                toast({
-                  title: "Error",
-                  description: "Please enter a slideshow URL.",
-                  variant: "destructive"
-                });
-              }
-            }}>
-              Add Slideshow
-            </Button>
-          </div>
+            </div>
+          )}
           
-          <div className="space-y-2">
-            {slideshows.map((slideshow, index) => (
-              <div key={slideshow.id} className="flex items-center justify-between border rounded-md p-2">
+          {uploadingPhotos && (
+            <Card className="mb-6">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="animate-spin">
+                  <Upload className="h-5 w-5 text-primary" />
+                </div>
                 <div>
-                  <a href={slideshow.url} target="_blank" rel="noopener noreferrer" className="underline">
-                    {slideshow.title}
-                  </a>
+                  <p className="font-medium">Uploading photos...</p>
+                  <p className="text-sm text-muted-foreground">This may take a few moments</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={`slideshow-visible-${index}`} className="text-sm">
-                    Visible
-                  </Label>
-                  <Switch
-                    id={`slideshow-visible-${index}`}
-                    checked={slideshow.visible}
-                    onCheckedChange={() => handleToggleSlideshowVisibility(index)}
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveSlideshow(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {mediaData.photos.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {mediaData.photos.map((photo) => (
+                <Card key={photo.id} className="overflow-hidden">
+                  <div className="relative aspect-video">
+                    <img
+                      src={photo.url}
+                      alt={photo.name || 'Property photo'}
+                      className="w-full h-full object-cover"
+                    />
+                    {photo.approved && (
+                      <Badge className="absolute top-2 right-2 bg-green-600">
+                        <Check className="h-3 w-3 mr-1" /> Approved
+                      </Badge>
+                    )}
+                  </div>
+                  <CardContent className="p-3">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm truncate" title={photo.name}>
+                        {photo.name}
+                      </p>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {!photo.approved && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-green-600" 
+                            onClick={() => handleApproveMedia(photo.id, 'photos')}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-destructive"
+                          onClick={() => handleDeleteMedia(photo.id, 'photos')}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="flex justify-center mb-4">
+                <AlertCircle className="h-12 w-12 text-muted-foreground opacity-20" />
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <h3 className="font-medium text-lg mb-1">No photos uploaded</h3>
+              <p className="text-muted-foreground">
+                {isPhotographer 
+                  ? "Upload photos to share with the client" 
+                  : "The photographer hasn't uploaded any photos yet"}
+              </p>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="videos" className="mt-4">
+          {isPhotographer && (
+            <div
+              {...getVideosRootProps()}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer mb-6 transition-colors ${
+                isVideosDragActive ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'
+              }`}
+            >
+              <input {...getVideosInputProps()} />
+              <div className="flex flex-col items-center justify-center gap-2">
+                <Upload className="w-8 h-8 text-muted-foreground" />
+                <h3 className="font-medium">Drag & drop videos here</h3>
+                <p className="text-sm text-muted-foreground">
+                  or click to select files
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Supported formats: MP4, MOV, AVI
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {uploadingVideos && (
+            <Card className="mb-6">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="animate-spin">
+                  <Upload className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">Uploading videos...</p>
+                  <p className="text-sm text-muted-foreground">This may take a few moments</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {mediaData.videos.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {mediaData.videos.map((video) => (
+                <Card key={video.id} className="overflow-hidden">
+                  <div className="relative aspect-video">
+                    <video 
+                      src={video.url}
+                      className="w-full h-full object-cover" 
+                      controls
+                    ></video>
+                    {video.approved && (
+                      <Badge className="absolute top-2 right-2 bg-green-600">
+                        <Check className="h-3 w-3 mr-1" /> Approved
+                      </Badge>
+                    )}
+                  </div>
+                  <CardContent className="p-3">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm truncate" title={video.name}>
+                        {video.name}
+                      </p>
+                      <div className="flex gap-1">
+                        {!video.approved && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-green-600" 
+                            onClick={() => handleApproveMedia(video.id, 'videos')}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-destructive"
+                          onClick={() => handleDeleteMedia(video.id, 'videos')}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="flex justify-center mb-4">
+                <AlertCircle className="h-12 w-12 text-muted-foreground opacity-20" />
+              </div>
+              <h3 className="font-medium text-lg mb-1">No videos uploaded</h3>
+              <p className="text-muted-foreground">
+                {isPhotographer 
+                  ? "Upload videos to share with the client" 
+                  : "The photographer hasn't uploaded any videos yet"}
+              </p>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="documents" className="mt-4">
+          {isPhotographer && (
+            <div
+              {...getDocumentsRootProps()}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer mb-6 transition-colors ${
+                isDocumentsDragActive ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'
+              }`}
+            >
+              <input {...getDocumentsInputProps()} />
+              <div className="flex flex-col items-center justify-center gap-2">
+                <Upload className="w-8 h-8 text-muted-foreground" />
+                <h3 className="font-medium">Drag & drop documents here</h3>
+                <p className="text-sm text-muted-foreground">
+                  or click to select files
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Supported formats: PDF, DOC, DOCX
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {uploadingDocuments && (
+            <Card className="mb-6">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="animate-spin">
+                  <Upload className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">Uploading documents...</p>
+                  <p className="text-sm text-muted-foreground">This may take a few moments</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {mediaData.documents.length > 0 ? (
+            <div className="space-y-2">
+              {mediaData.documents.map((doc) => (
+                <Card key={doc.id}>
+                  <CardContent className="p-3">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-muted-foreground" />
+                        <p className="text-sm" title={doc.name}>
+                          {doc.name}
+                        </p>
+                        {doc.approved && (
+                          <Badge variant="outline" className="text-green-600 border-green-600 ml-2">
+                            <Check className="h-3 w-3 mr-1" /> Approved
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {!doc.approved && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-green-600" 
+                            onClick={() => handleApproveMedia(doc.id, 'documents')}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-destructive"
+                          onClick={() => handleDeleteMedia(doc.id, 'documents')}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="flex justify-center mb-4">
+                <AlertCircle className="h-12 w-12 text-muted-foreground opacity-20" />
+              </div>
+              <h3 className="font-medium text-lg mb-1">No documents uploaded</h3>
+              <p className="text-muted-foreground">
+                {isPhotographer 
+                  ? "Upload documents to share with the client" 
+                  : "The photographer hasn't uploaded any documents yet"}
+              </p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Tour Links</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="branded-tour-link">Branded Tour Link</Label>
-            <Input
-              type="text"
-              id="branded-tour-link"
-              value={tourLinks.branded}
-              onChange={(e) => handleTourLinkChange('branded', e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="mls-tour-link">MLS Tour Link</Label>
-            <Input
-              type="text"
-              id="mls-tour-link"
-              value={tourLinks.mls}
-              onChange={(e) => handleTourLinkChange('mls', e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="generic-mls-tour-link">Generic MLS Tour Link</Label>
-            <Input
-              type="text"
-              id="generic-mls-tour-link"
-              value={tourLinks.genericMls}
-              onChange={(e) => handleTourLinkChange('genericMls', e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <Separator className="my-6" />
+      
+      <div className="space-y-2">
+        <h3 className="font-semibold text-sm">Delivery Instructions</h3>
+        <p className="text-sm text-muted-foreground">
+          Upload all required media for this shoot. The client will be notified once the media is ready for review.
+          Photos should be edited according to our standard guidelines. Videos should be in 4K resolution.
+        </p>
+      </div>
     </div>
   );
 }

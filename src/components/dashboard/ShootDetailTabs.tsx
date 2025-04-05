@@ -26,6 +26,13 @@ export function ShootDetailTabs({
   // Always show media tab
   const showMediaTab = true;
   
+  // Create a setShoot function that will be passed to ShootMediaTab
+  const setShoot = (updatedShoot: ShootData) => {
+    console.log("Shoot updated:", updatedShoot);
+    // In a real app, you would update the shoot in your state or backend
+    // For now, we just log the updated shoot
+  };
+  
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid w-full grid-cols-3">
@@ -48,11 +55,10 @@ export function ShootDetailTabs({
       </TabsContent>
       
       <TabsContent value="media" className="mt-4">
-        {/* Add the missing setShoot prop */}
         <ShootMediaTab 
           shoot={shoot} 
           isPhotographer={isPhotographer}
-          setShoot={() => {}} // Provide a no-op function if setShoot isn't needed
+          setShoot={setShoot}
         />
       </TabsContent>
     </Tabs>
