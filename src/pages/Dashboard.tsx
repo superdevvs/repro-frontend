@@ -120,7 +120,7 @@ const Dashboard = () => {
                       client={{
                         name: shoot.client.name,
                       }}
-                      status={shoot.status}
+                      status={shoot.status as "scheduled" | "completed" | "pending" | "hold" | "booked"}
                       price={shoot.payment.totalQuote}
                       delay={index}
                       onClick={() => navigate(`/shoots?id=${shoot.id}`)}
