@@ -10,6 +10,7 @@ import { useShoots } from '@/context/ShootsContext';
 import { compareAsc, format, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { ensureDateString } from '@/utils/formatters';
 
 interface UpcomingShootsProps {
   className?: string;
@@ -30,12 +31,15 @@ export function UpcomingShoots({ className }: UpcomingShootsProps) {
       if (shoot.status !== 'scheduled') return false;
       
       // Only include shoots scheduled for today or in the future
-      const shootDate = parseISO(shoot.scheduledDate);
+      const shootDateStr = ensureDateString(shoot.scheduledDate);
+      const shootDate = parseISO(shootDateStr);
       return compareAsc(shootDate, today) >= 0;
     })
     .sort((a, b) => {
       // Sort by date, earliest first
-      return compareAsc(parseISO(a.scheduledDate), parseISO(b.scheduledDate));
+      const aDateStr = ensureDateString(a.scheduledDate);
+      const bDateStr = ensureDateString(b.scheduledDate);
+      return compareAsc(parseISO(aDateStr), parseISO(bDateStr));
     })
     .slice(0, 6); // Show up to 6 upcoming shoots for better space utilization
 
@@ -75,10 +79,10 @@ export function UpcomingShoots({ className }: UpcomingShootsProps) {
                       <p className="font-medium line-clamp-1">{shoot.location.fullAddress}</p>
                       <div className="flex flex-wrap gap-2 mt-1">
                         <Badge variant="outline" className="text-xs">
-                          {format(parseISO(shoot.scheduledDate), 'MMM d, yyyy')}
+                          {format(parseISO(ensureDateString(shoot.scheduledDate)), 'MMM d, yyyy')}
                         </Badge>
                         <Badge variant="outline" className="text-xs bg-primary/10">
-                          ${shoot.payment.totalQuote}
+                          ${shoot.payment?.totalQuote || 0}
                         </Badge>
                       </div>
                     </div>
@@ -88,9 +92,9 @@ export function UpcomingShoots({ className }: UpcomingShootsProps) {
                   </div>
                   <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
                     <div className="h-6 w-6 rounded-full bg-secondary flex items-center justify-center text-xs">
-                      {shoot.photographer.name.split(' ').map(n => n[0]).join('')}
+                      {shoot.photographer?.name ? shoot.photographer.name.split(' ').map(n => n[0]).join('') : '?'}
                     </div>
-                    <span>{shoot.photographer.name}</span>
+                    <span>{shoot.photographer?.name || 'Unassigned'}</span>
                   </div>
                 </div>
               ))}

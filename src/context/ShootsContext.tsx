@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { ShootData, ShootsContextType } from '@/types/shoots';
+import { toStringId } from '@/utils/formatters';
 
 // Create context
 const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
@@ -24,10 +25,13 @@ const sampleShoots: ShootData[] = [
       name: 'John Smith',
       email: 'john@example.com',
       phone: '555-1234',
+      company: 'Company Name',
+      totalShoots: 5,
     },
     photographer: {
       id: '201',
       name: 'Jane Photographer',
+      avatar: '/assets/avatars/photographer1.jpg',
     },
     notes: {
       shootNotes: 'Sample shoot notes',
@@ -43,6 +47,13 @@ const sampleShoots: ShootData[] = [
     media: {
       photos: [],
       videos: [],
+      floorplans: [],
+      slideshows: [],
+    },
+    tourLinks: {
+      branded: '',
+      mls: '',
+      genericMls: '',
     },
   },
   {
@@ -61,10 +72,13 @@ const sampleShoots: ShootData[] = [
       id: '102',
       name: 'Alice Johnson',
       email: 'alice@example.com',
+      company: 'Johnson Properties',
+      totalShoots: 3,
     },
     photographer: {
       id: '202',
       name: 'Bob Photographer',
+      avatar: '/assets/avatars/photographer2.jpg',
     },
     payment: {
       totalPaid: 0,
@@ -72,6 +86,12 @@ const sampleShoots: ShootData[] = [
       totalQuote: 225,
     },
     services: ['Photography'],
+    media: {
+      photos: [],
+      videos: [],
+      floorplans: [],
+      slideshows: [],
+    },
   },
 ];
 
@@ -105,9 +125,17 @@ export const ShootsProvider = ({ children }: ShootsProviderProps) => {
     const photographersMap = new Map();
     shoots.forEach(shoot => {
       if (shoot.photographer && shoot.photographer.id && shoot.photographer.name) {
-        photographersMap.set(shoot.photographer.id, {
-          id: String(shoot.photographer.id),
+        const id = toStringId(shoot.photographer.id);
+        const photographerShoots = shoots.filter(s => 
+          s.photographer && toStringId(s.photographer.id) === id
+        );
+        
+        photographersMap.set(id, {
+          id: id,
           name: shoot.photographer.name,
+          avatar: shoot.photographer.avatar,
+          email: 'photographer@example.com',  // Added for AccountsLayout
+          shootCount: photographerShoots.length
         });
       }
     });
@@ -117,8 +145,8 @@ export const ShootsProvider = ({ children }: ShootsProviderProps) => {
   const getUniqueEditors = useCallback(() => {
     // Mock function - in a real app, you'd extract actual editor data
     return [
-      { id: 'ed1', name: 'Editor One' },
-      { id: 'ed2', name: 'Editor Two' },
+      { id: 'ed1', name: 'Editor One', email: 'editor1@example.com', company: 'Editing Co', phone: '555-1111', shootCount: 12 },
+      { id: 'ed2', name: 'Editor Two', email: 'editor2@example.com', company: 'Post Production', phone: '555-2222', shootCount: 8 },
     ];
   }, []);
   
@@ -126,9 +154,18 @@ export const ShootsProvider = ({ children }: ShootsProviderProps) => {
     const clientsMap = new Map();
     shoots.forEach(shoot => {
       if (shoot.client && shoot.client.id && shoot.client.name) {
-        clientsMap.set(shoot.client.id, {
-          id: String(shoot.client.id),
+        const id = toStringId(shoot.client.id);
+        const clientShoots = shoots.filter(s => 
+          s.client && toStringId(s.client.id) === id
+        );
+        
+        clientsMap.set(id, {
+          id: id,
           name: shoot.client.name,
+          email: shoot.client.email,
+          company: shoot.client.company,
+          phone: shoot.client.phone,
+          shootCount: clientShoots.length
         });
       }
     });

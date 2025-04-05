@@ -9,6 +9,7 @@ import { ShootData } from '@/types/shoots';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { toStringId } from "@/utils/formatters";
 
 interface MessageFormProps {
   shoot: ShootData;
@@ -38,14 +39,14 @@ export function MessageForm({ shoot, onSent }: MessageFormProps) {
     try {
       // Determine recipient (photographer if sender is client or admin, client if sender is photographer)
       const recipientId = role === 'photographer' 
-        ? shoot.client.id || 'client-' + shoot.id 
-        : shoot.photographer.id || 'photographer-' + shoot.id;
+        ? shoot.client.id ? toStringId(shoot.client.id) : 'client-' + toStringId(shoot.id)
+        : shoot.photographer?.id ? toStringId(shoot.photographer.id) : 'photographer-' + toStringId(shoot.id);
       
       const senderId = user?.id || role + '-' + Date.now();
       
       // Insert message into database
       // Convert ID to string to match the database schema
-      const shootIdString = typeof shoot.id === 'number' ? String(shoot.id) : shoot.id;
+      const shootIdString = toStringId(shoot.id);
       
       const { error } = await supabase.from('messages').insert({
         shoot_id: shootIdString,

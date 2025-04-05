@@ -48,6 +48,7 @@ export interface ShootData {
     photos?: string[];
     videos?: string[];
     floorplans?: string[];
+    slideshows?: string[];
   };
   tourLinks?: {
     branded?: string;
@@ -55,6 +56,7 @@ export interface ShootData {
     genericMls?: string;
   };
   createdBy?: string;
+  tourPurchased?: boolean;
 }
 
 export interface ShootsContextType {
@@ -64,14 +66,19 @@ export interface ShootsContextType {
   addShoot: (shoot: ShootData) => void;
   updateShoot: (id: string | number, updates: Partial<ShootData>) => void;
   deleteShoot: (id: string | number) => void;
-  getUniquePhotographers?: () => { id: string; name: string }[];
-  getUniqueEditors?: () => { id: string; name: string }[];
-  getUniqueClients?: () => { id: string; name: string }[];
+  getUniquePhotographers?: () => { id: string; name: string; email?: string; avatar?: string; shootCount?: number }[];
+  getUniqueEditors?: () => { id: string; name: string; email?: string; company?: string; phone?: string; shootCount?: number }[];
+  getUniqueClients?: () => { id: string; name: string; email?: string; company?: string; phone?: string; shootCount?: number }[];
   getClientShootsByStatus?: (status: string) => ShootData[];
 }
 
 export interface PhotographerAvailability {
   photographerId: string;
+  photographerName?: string;
+  id?: string;
+  date?: Date;
+  startTime?: string;
+  endTime?: string;
   slots: Array<{
     date: string;
     times: string[];

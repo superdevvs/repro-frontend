@@ -1,5 +1,5 @@
 
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 
 /**
  * Safely formats a date string or Date object
@@ -17,6 +17,16 @@ export function formatDateSafe(dateInput: string | Date | undefined, formatStr: 
     console.error('Date formatting error:', error);
     return 'Invalid date';
   }
+}
+
+/**
+ * Ensures a date value is a string before parsing
+ * @param dateInput string | Date - The date to format
+ * @returns string - A string representation of the date
+ */
+export function ensureDateString(dateInput: string | Date | undefined): string {
+  if (!dateInput) return '';
+  return typeof dateInput === 'string' ? dateInput : dateInput.toISOString();
 }
 
 /**

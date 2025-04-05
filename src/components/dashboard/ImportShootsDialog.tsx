@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -132,6 +131,7 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
             return [services.trim()];
           };
           
+          // Create new slot object
           const newShoot: ShootData = {
             id: uuidv4(),
             scheduledDate: getValue('scheduled') || new Date().toISOString(),
@@ -160,7 +160,7 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
               taxRate: parseCurrency(getValue('tax')),
               taxAmount: parseCurrency(getValue('tax amount')),
               totalQuote: parseCurrency(getValue('total quote')),
-              totalPaid: parseCurrency(getValue('total paid')),
+              totalPaid: parseCurrency(getValue('total paid')) || 0,
               lastPaymentDate: getValue('last payment date') || undefined,
               lastPaymentType: getValue('last payment type') || undefined,
             },

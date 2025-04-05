@@ -1,782 +1,604 @@
-import { useState, useEffect } from "react";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { PageTransition } from "@/components/layout/PageTransition";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { Separator } from "@/components/ui/separator";
+import React, { useState, useEffect } from 'react';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { CalendarIcon, Clock, Plus, Trash } from 'lucide-react';
+import { format, isSameDay } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import { useToast } from '@/hooks/use-toast';
+import { PhotographerAvailability } from '@/types/shoots';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { TimeSelect } from '@/components/ui/time-select';
+import { Switch } from '@/components/ui/switch';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { 
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import { 
-  PlusCircle, 
-  Clock, 
-  CalendarIcon, 
-  Trash2, 
-  Edit, 
-  CheckCircle2, 
-  XCircle,
-  AlertCircle
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { TimeSelect } from "@/components/ui/time-select";
-import { PhotographerAvailability } from "@/types/shoots";
-import { format, addDays, isSameDay } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+  DialogTitle
+} from '@/components/ui/dialog';
 
-const mockPhotographers = [
-  { id: "1", name: "John Smith" },
-  { id: "2", name: "Sarah Johnson" },
-  { id: "3", name: "Michael Brown" },
-  { id: "4", name: "Jessica Davis" },
-];
+// Define interface for availability slots
+interface AvailabilitySlot {
+  id: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  isRecurring?: boolean;
+}
 
-const mockTimeSlots: PhotographerAvailability[] = [
+interface RecurringSchedule {
+  id: string;
+  dayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
+  startTime: string;
+  endTime: string;
+  isActive: boolean;
+}
+
+// Mock data - this would come from your API in a real app
+const mockAvailabilityData: PhotographerAvailability[] = [
   {
-    id: "1",
     photographerId: "1",
-    photographerName: "John Smith",
-    date: new Date(2024, 4, 15),
-    startTime: "09:00",
-    endTime: "12:00",
+    photographerName: "David Smith",
+    id: "a1",
+    date: new Date(),
+    startTime: "09:00 AM",
+    endTime: "12:00 PM",
+    slots: [{
+      date: new Date().toISOString(),
+      times: ["09:00 AM", "10:00 AM", "11:00 AM"]
+    }]
   },
   {
-    id: "2",
+    photographerId: "1",
+    photographerName: "David Smith",
+    id: "a2",
+    date: new Date(new Date().setDate(new Date().getDate() + 2)),
+    startTime: "01:00 PM",
+    endTime: "05:00 PM",
+    slots: [{
+      date: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(),
+      times: ["01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM"]
+    }]
+  },
+  {
     photographerId: "2",
     photographerName: "Sarah Johnson",
-    date: new Date(2024, 4, 16),
-    startTime: "13:00",
-    endTime: "16:00",
+    id: "a3",
+    date: new Date(new Date().setDate(new Date().getDate() + 1)),
+    startTime: "10:00 AM",
+    endTime: "03:00 PM",
+    slots: [{
+      date: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
+      times: ["10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM"]
+    }]
   },
   {
-    id: "3",
     photographerId: "3",
     photographerName: "Michael Brown",
-    date: new Date(2024, 4, 18),
-    startTime: "10:00",
-    endTime: "15:00",
+    id: "a4",
+    date: new Date(new Date().setDate(new Date().getDate() + 3)),
+    startTime: "08:00 AM",
+    endTime: "11:00 AM",
+    slots: [{
+      date: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(),
+      times: ["08:00 AM", "09:00 AM", "10:00 AM"]
+    }]
   },
   {
-    id: "4",
-    photographerId: "1",
-    photographerName: "John Smith",
-    date: new Date(2024, 4, 17),
-    startTime: "14:00",
-    endTime: "17:00",
-  },
-  {
-    id: "5",
     photographerId: "4",
-    photographerName: "Jessica Davis",
-    date: new Date(2024, 4, 15),
-    startTime: "10:00",
-    endTime: "13:00",
-  },
+    photographerName: "Emma Wilson",
+    id: "a5",
+    date: new Date(new Date().setDate(new Date().getDate() + 4)),
+    startTime: "02:00 PM",
+    endTime: "06:00 PM",
+    slots: [{
+      date: new Date(new Date().setDate(new Date().getDate() + 4)).toISOString(),
+      times: ["02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"]
+    }]
+  }
 ];
 
-const defaultWorkingHours = {
-  "1": { // John Smith
-    monday: { isWorking: true, start: "09:00", end: "17:00" },
-    tuesday: { isWorking: true, start: "09:00", end: "17:00" },
-    wednesday: { isWorking: true, start: "09:00", end: "17:00" },
-    thursday: { isWorking: true, start: "09:00", end: "17:00" },
-    friday: { isWorking: true, start: "09:00", end: "17:00" },
-    saturday: { isWorking: false, start: "", end: "" },
-    sunday: { isWorking: false, start: "", end: "" },
-  },
-  "2": { // Sarah Johnson
-    monday: { isWorking: true, start: "10:00", end: "18:00" },
-    tuesday: { isWorking: true, start: "10:00", end: "18:00" },
-    wednesday: { isWorking: true, start: "10:00", end: "18:00" },
-    thursday: { isWorking: true, start: "10:00", end: "18:00" },
-    friday: { isWorking: true, start: "10:00", end: "18:00" },
-    saturday: { isWorking: true, start: "12:00", end: "16:00" },
-    sunday: { isWorking: false, start: "", end: "" },
-  },
-  "3": { // Michael Brown
-    monday: { isWorking: true, start: "08:00", end: "16:00" },
-    tuesday: { isWorking: true, start: "08:00", end: "16:00" },
-    wednesday: { isWorking: true, start: "08:00", end: "16:00" },
-    thursday: { isWorking: true, start: "08:00", end: "16:00" },
-    friday: { isWorking: true, start: "08:00", end: "16:00" },
-    saturday: { isWorking: false, start: "", end: "" },
-    sunday: { isWorking: false, start: "", end: "" },
-  },
-  "4": { // Jessica Davis
-    monday: { isWorking: true, start: "11:00", end: "19:00" },
-    tuesday: { isWorking: true, start: "11:00", end: "19:00" },
-    wednesday: { isWorking: true, start: "11:00", end: "19:00" },
-    thursday: { isWorking: true, start: "11:00", end: "19:00" },
-    friday: { isWorking: true, start: "11:00", end: "19:00" },
-    saturday: { isWorking: true, start: "10:00", end: "14:00" },
-    sunday: { isWorking: false, start: "", end: "" },
-  },
-};
-
-export default function Availability() {
+const Availability = () => {
   const { toast } = useToast();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedPhotographer, setSelectedPhotographer] = useState<string>("");
-  const [isAddRangeOpen, setIsAddRangeOpen] = useState<boolean>(false);
-  const [isEditWorkingHoursOpen, setIsEditWorkingHoursOpen] = useState<boolean>(false);
-  const [timeSlots, setTimeSlots] = useState<PhotographerAvailability[]>(mockTimeSlots);
-  const [workingHours, setWorkingHours] = useState(defaultWorkingHours);
-  const [newTimeSlot, setNewTimeSlot] = useState<Omit<PhotographerAvailability, 'id' | 'date' | 'photographerName'>>({
-    photographerId: "",
-    startTime: "09:00",
-    endTime: "17:00",
-  });
-  const [isTimeSlotFormValid, setIsTimeSlotFormValid] = useState<boolean>(false);
-  const [editingTimeSlot, setEditingTimeSlot] = useState<PhotographerAvailability | null>(null);
-  const [isEditRangeOpen, setIsEditRangeOpen] = useState<boolean>(false);
-
+  const [activeTab, setActiveTab] = useState("daily");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [availabilityData, setAvailabilityData] = useState<PhotographerAvailability[]>(mockAvailabilityData);
+  const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
+  
+  const [recurringSchedule, setRecurringSchedule] = useState<RecurringSchedule[]>([
+    { id: "1", dayOfWeek: 1, startTime: "9:00 AM", endTime: "5:00 PM", isActive: true },
+    { id: "2", dayOfWeek: 2, startTime: "9:00 AM", endTime: "5:00 PM", isActive: true },
+    { id: "3", dayOfWeek: 3, startTime: "9:00 AM", endTime: "5:00 PM", isActive: true },
+    { id: "4", dayOfWeek: 4, startTime: "9:00 AM", endTime: "5:00 PM", isActive: true },
+    { id: "5", dayOfWeek: 5, startTime: "9:00 AM", endTime: "5:00 PM", isActive: true }
+  ]);
+  
+  // Dialog states
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newAvailability, setNewAvailability] = useState<{startTime?: string; endTime?: string}>({});
+  const [newSlotIsRecurring, setNewSlotIsRecurring] = useState(false);
+  
+  // Map the data to the format needed for AvailabilitySlot
   useEffect(() => {
-    const isValid = 
-      newTimeSlot.photographerId !== "" && 
-      newTimeSlot.startTime !== "" && 
-      newTimeSlot.endTime !== "" &&
-      selectedDate !== undefined &&
-      newTimeSlot.startTime < newTimeSlot.endTime;
-    
-    setIsTimeSlotFormValid(isValid);
-  }, [newTimeSlot, selectedDate]);
-
-  useEffect(() => {
-    if (selectedPhotographer) {
-      setNewTimeSlot(prev => ({
-        ...prev,
-        photographerId: selectedPhotographer
-      }));
+    const slots = availabilityData.map(item => ({
+      id: item.id || '',
+      date: item.date || new Date(),
+      startTime: item.startTime || '',
+      endTime: item.endTime || '',
+      isRecurring: false
+    }));
+    setAvailabilitySlots(slots);
+  }, [availabilityData]);
+  
+  // Find availability slots for selected date
+  const selectedDateSlots = availabilitySlots.filter(slot => 
+    isSameDay(slot.date, selectedDate)
+  );
+  
+  // Helper function to get day name
+  const getDayName = (dayIndex: number) => {
+    return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayIndex];
+  };
+  
+  // Helper function to check if a date has availability
+  const hasAvailability = (date: Date) => {
+    return availabilitySlots.some(slot => isSameDay(slot.date, date));
+  };
+  
+  // Add a new availability slot
+  const addAvailabilitySlot = () => {
+    if (!newAvailability.startTime || !newAvailability.endTime) {
+      toast({
+        title: "Missing information",
+        description: "Please select both start and end times.",
+        variant: "destructive"
+      });
+      return;
     }
-  }, [selectedPhotographer]);
-
-  const filteredTimeSlots = timeSlots.filter(slot => {
-    const sameDate = selectedDate && 
-      isSameDay(slot.date, selectedDate);
     
-    return sameDate && (!selectedPhotographer || slot.photographerId === selectedPhotographer);
-  });
-
-  const handleAddTimeRange = () => {
-    if (!isTimeSlotFormValid || !selectedDate) return;
-
-    const photographerName = mockPhotographers.find(p => p.id === newTimeSlot.photographerId)?.name || "Unknown";
-    
-    const newSlot: PhotographerAvailability = {
-      id: `time-${Date.now()}`,
-      photographerId: newTimeSlot.photographerId,
-      photographerName,
+    // Create new slot object
+    const newSlot: AvailabilitySlot = {
+      id: Date.now().toString(),
       date: selectedDate,
-      startTime: newTimeSlot.startTime,
-      endTime: newTimeSlot.endTime,
+      startTime: newAvailability.startTime,
+      endTime: newAvailability.endTime,
+      isRecurring: newSlotIsRecurring
     };
     
-    setTimeSlots(prev => [...prev, newSlot]);
-    setIsAddRangeOpen(false);
+    // Add to state
+    setAvailabilitySlots([...availabilitySlots, newSlot]);
     
-    toast({
-      title: "Time Range Added",
-      description: `${photographerName} is now available on ${format(selectedDate, 'MMM dd, yyyy')} from ${newTimeSlot.startTime} to ${newTimeSlot.endTime}`,
-    });
-  };
-  
-  const handleEditTimeRange = () => {
-    if (!editingTimeSlot || !selectedDate) return;
-    
-    setTimeSlots(prev => prev.map(slot => 
-      slot.id === editingTimeSlot.id ? editingTimeSlot : slot
-    ));
-    
-    setIsEditRangeOpen(false);
-    setEditingTimeSlot(null);
-    
-    toast({
-      title: "Time Range Updated",
-      description: `${editingTimeSlot.photographerName}'s availability has been updated`,
-    });
-  };
-  
-  const handleDeleteTimeRange = (id: string) => {
-    const slotToDelete = timeSlots.find(slot => slot.id === id);
-    
-    if (!slotToDelete) return;
-    
-    setTimeSlots(prev => prev.filter(slot => slot.id !== id));
-    
-    toast({
-      title: "Time Range Removed",
-      description: `${slotToDelete.photographerName}'s availability on ${format(slotToDelete.date, 'MMM dd, yyyy')} has been removed`,
-      variant: "destructive"
-    });
-  };
-
-  const handleUpdateWorkingHours = () => {
-    setIsEditWorkingHoursOpen(false);
-    
-    toast({
-      title: "Working Hours Updated",
-      description: `Working hours have been updated successfully`,
-    });
-  };
-
-  const getPhotographerAvailabilityStatus = (photographerId: string, date?: Date) => {
-    if (!date) return "unknown";
-    
-    const dayOfWeek = date.getDay();
-    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-    const day = days[dayOfWeek];
-    
-    const photographerHours = workingHours[photographerId as keyof typeof workingHours];
-    if (!photographerHours) return "unknown";
-    
-    const dayHours = photographerHours[day as keyof typeof photographerHours];
-    if (!dayHours || !dayHours.isWorking) return "unavailable";
-    
-    const dateAppointments = timeSlots.filter(slot => 
-      slot.photographerId === photographerId &&
-      isSameDay(slot.date, date)
-    );
-    
-    if (dateAppointments.length > 0) return "partially-booked";
-    return "available";
-  };
-
-  const getCalendarModifiers = () => {
-    if (!selectedPhotographer) return {
-      booked: [] as Date[],
-      available: [] as Date[],
-      partiallyBooked: [] as Date[]
+    // Add to the main data array as well
+    const newAvailabilityItem: PhotographerAvailability = {
+      photographerId: "1", // Current user's photographer ID
+      photographerName: "Current Photographer",
+      id: newSlot.id,
+      date: newSlot.date,
+      startTime: newSlot.startTime, 
+      endTime: newSlot.endTime,
+      slots: [{
+        date: newSlot.date.toISOString(),
+        times: [newSlot.startTime]
+      }]
     };
     
-    const today = new Date();
-    const modifiers: {
-      booked: Date[];
-      available: Date[];
-      partiallyBooked: Date[];
-    } = {
-      booked: [],
-      available: [],
-      partiallyBooked: []
-    };
+    setAvailabilityData([...availabilityData, newAvailabilityItem]);
     
-    for (let i = 0; i < 60; i++) {
-      const date = addDays(today, i);
-      const status = getPhotographerAvailabilityStatus(selectedPhotographer, date);
+    // Reset form and close dialog
+    setNewAvailability({});
+    setAddDialogOpen(false);
+    
+    toast({
+      title: "Availability added",
+      description: `Added availability for ${format(selectedDate, 'EEEE, MMMM d')}`,
+    });
+    
+    // If recurring, create a recurring schedule
+    if (newSlotIsRecurring) {
+      const dayOfWeek = selectedDate.getDay();
       
-      if (status === "unavailable") {
-        modifiers.booked.push(date);
-      } else if (status === "available") {
-        modifiers.available.push(date);
-      } else if (status === "partially-booked") {
-        modifiers.partiallyBooked.push(date);
+      // Check if already exists
+      const existingRecurring = recurringSchedule.find(rs => rs.dayOfWeek === dayOfWeek);
+      
+      if (existingRecurring) {
+        // Update existing
+        setRecurringSchedule(
+          recurringSchedule.map(rs => 
+            rs.dayOfWeek === dayOfWeek
+              ? { ...rs, startTime: newAvailability.startTime || '', endTime: newAvailability.endTime || '', isActive: true }
+              : rs
+          )
+        );
+      } else {
+        // Create new
+        setRecurringSchedule([
+          ...recurringSchedule,
+          {
+            id: Date.now().toString(),
+            dayOfWeek,
+            startTime: newAvailability.startTime || '9:00 AM',
+            endTime: newAvailability.endTime || '5:00 PM',
+            isActive: true
+          }
+        ]);
       }
     }
-    
-    return modifiers;
   };
   
-  const calendarModifiers = getCalendarModifiers();
-
+  // Delete an availability slot
+  const deleteAvailabilitySlot = (slotId: string) => {
+    setAvailabilitySlots(availabilitySlots.filter(slot => slot.id !== slotId));
+    setAvailabilityData(availabilityData.filter(item => item.id !== slotId));
+    
+    toast({
+      title: "Availability removed",
+      description: "The availability slot has been removed from your schedule.",
+    });
+  };
+  
+  // Toggle recurring schedule
+  const toggleRecurringDay = (dayId: string, active: boolean) => {
+    setRecurringSchedule(
+      recurringSchedule.map(day => 
+        day.id === dayId ? { ...day, isActive: active } : day
+      )
+    );
+    
+    toast({
+      title: active ? "Day activated" : "Day deactivated",
+      description: `Recurring schedule has been updated.`,
+    });
+  };
+  
+  // Update recurring schedule time
+  const updateRecurringTime = (dayId: string, field: 'startTime' | 'endTime', value: string) => {
+    setRecurringSchedule(
+      recurringSchedule.map(day => 
+        day.id === dayId ? { ...day, [field]: value } : day
+      )
+    );
+  };
+  
   return (
     <DashboardLayout>
-      <PageTransition>
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold">Photographer Availability</h1>
-              <p className="text-muted-foreground mt-1">
-                Manage photographer schedules and appointments
-              </p>
-            </div>
-            <Dialog open={isAddRangeOpen} onOpenChange={setIsAddRangeOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Time Range
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Availability Time Range</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="photographer">Photographer</Label>
-                    <Select 
-                      value={newTimeSlot.photographerId} 
-                      onValueChange={(value) => setNewTimeSlot({...newTimeSlot, photographerId: value})}
-                    >
-                      <SelectTrigger id="photographer">
-                        <SelectValue placeholder="Select photographer" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockPhotographers.map(photographer => (
-                          <SelectItem key={photographer.id} value={photographer.id}>
-                            {photographer.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Date</Label>
-                    <div className="border rounded-md p-2 bg-background">
-                      {selectedDate ? format(selectedDate, 'MMMM dd, yyyy') : 'No date selected'}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Select a date on the calendar before adding a time range
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="start-time">Start Time</Label>
-                      <TimeSelect
-                        value={newTimeSlot.startTime}
-                        onChange={(time) => setNewTimeSlot({...newTimeSlot, startTime: time})}
-                        startHour={7}
-                        endHour={21}
-                        interval={30}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="end-time">End Time</Label>
-                      <TimeSelect
-                        value={newTimeSlot.endTime}
-                        onChange={(time) => setNewTimeSlot({...newTimeSlot, endTime: time})}
-                        startHour={7}
-                        endHour={21}
-                        interval={30}
-                      />
-                    </div>
-                  </div>
-                  {newTimeSlot.startTime >= newTimeSlot.endTime && (
-                    <div className="text-sm text-destructive flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      End time must be after start time
-                    </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddRangeOpen(false)}>Cancel</Button>
-                  <Button 
-                    onClick={handleAddTimeRange}
-                    disabled={!isTimeSlotFormValid}
-                  >
-                    Add Range
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+      <div className="container max-w-5xl py-6">
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">My Availability</h1>
+            <p className="text-muted-foreground">Manage when you're available for photo shoots</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <Card className="md:col-span-9">
-              <CardHeader>
-                <CardTitle>Manage Availability</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <Label>Select Photographer</Label>
-                    <Select value={selectedPhotographer} onValueChange={setSelectedPhotographer}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="All Photographers" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all-photographers">All Photographers</SelectItem>
-                        {mockPhotographers.map(photographer => (
-                          <SelectItem key={photographer.id} value={photographer.id}>
-                            {photographer.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+        </div>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="daily" className="flex gap-2 items-center">
+              <CalendarIcon className="h-4 w-4" />
+              <span>Daily Availability</span>
+            </TabsTrigger>
+            <TabsTrigger value="recurring" className="flex gap-2 items-center">
+              <Clock className="h-4 w-4" />
+              <span>Recurring Schedule</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="daily" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Calendar picker */}
+              <Card className="lg:col-span-1">
+                <CardHeader>
+                  <CardTitle>Select Date</CardTitle>
+                  <CardDescription>
+                    Choose a date to set your availability
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    className="p-3 pointer-events-auto"
+                    modifiers={{
+                      has_availability: (date) => hasAvailability(date),
+                      today: (date) => isSameDay(date),
+                    }}
+                    modifiersClassNames={{
+                      has_availability: "border-primary border-2",
+                      today: "text-primary font-bold",
+                    }}
+                  />
+                </CardContent>
+              </Card>
+              
+              {/* Availability slots for selected date */}
+              <Card className="lg:col-span-2">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div className="space-y-1">
+                    <CardTitle>
+                      {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                    </CardTitle>
+                    <CardDescription>
+                      {isSameDay(selectedDate, new Date()) ? "Today's" : "Selected day's"} availability slots
+                    </CardDescription>
                   </div>
-                  
-                  {selectedPhotographer && selectedPhotographer !== "all-photographers" && (
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                      <div className="md:col-span-7">
-                        <div className="flex items-center mb-2">
-                          <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
-                          <h3 className="text-lg font-medium">Select Date</h3>
-                        </div>
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          className="rounded-md border pointer-events-auto w-full"
-                          modifiers={{
-                            booked: calendarModifiers.booked || [],
-                            available: calendarModifiers.available || [],
-                            partiallyBooked: calendarModifiers.partiallyBooked || []
-                          }}
-                          modifiersClassNames={{
-                            booked: "bg-red-100",
-                            available: "bg-green-100",
-                            partiallyBooked: "bg-yellow-100"
-                          }}
-                        />
-                        <div className="mt-4 flex flex-wrap gap-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-green-100 rounded"></div>
-                            <span className="text-xs">Available</span>
+                  <Button 
+                    onClick={() => setAddDialogOpen(true)}
+                    size="sm" 
+                    className="h-8"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Slot
+                  </Button>
+                </CardHeader>
+                
+                <CardContent>
+                  {selectedDateSlots.length > 0 ? (
+                    <div className="space-y-3">
+                      {selectedDateSlots.map((slot) => (
+                        <div 
+                          key={slot.id}
+                          className="flex items-center justify-between border p-3 rounded-md"
+                        >
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 text-muted-foreground mr-2" />
+                            <span>
+                              {slot.startTime} - {slot.endTime}
+                            </span>
+                            {slot.isRecurring && (
+                              <Badge variant="outline" className="ml-2 text-xs">
+                                Recurring
+                              </Badge>
+                            )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-yellow-100 rounded"></div>
-                            <span className="text-xs">Partially Booked</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-red-100 rounded"></div>
-                            <span className="text-xs">Unavailable</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="md:col-span-5">
-                        <div className="flex items-center justify-between mb-2">
-                          <Label>Working Hours</Label>
-                          <Button variant="ghost" size="sm" onClick={() => setIsEditWorkingHoursOpen(true)}>
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
+                          <Button 
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteAvailabilitySlot(slot.id)}
+                          >
+                            <Trash className="h-4 w-4 text-muted-foreground" />
                           </Button>
                         </div>
-                        <div className="text-sm">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Day</TableHead>
-                                <TableHead>Hours</TableHead>
-                                <TableHead className="w-[80px]">Status</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {workingHours[selectedPhotographer as keyof typeof workingHours] ? (
-                                Object.entries(workingHours[selectedPhotographer as keyof typeof workingHours]).map(([day, hours]) => (
-                                  <TableRow key={day}>
-                                    <TableCell className="capitalize">{day}</TableCell>
-                                    <TableCell>
-                                      {hours.isWorking ? `${hours.start} - ${hours.end}` : 'Not Working'}
-                                    </TableCell>
-                                    <TableCell>
-                                      {hours.isWorking ? (
-                                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
-                                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                                          On
-                                        </Badge>
-                                      ) : (
-                                        <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-200">
-                                          <XCircle className="h-3 w-3 mr-1" />
-                                          Off
-                                        </Badge>
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                ))
-                              ) : (
-                                <TableRow>
-                                  <TableCell colSpan={3} className="text-center">No working hours set</TableCell>
-                                </TableRow>
-                              )}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-12 text-center">
+                      <p className="text-muted-foreground mb-4">No availability slots set for this date</p>
+                      <Button onClick={() => setAddDialogOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Availability
+                      </Button>
                     </div>
                   )}
-                  
-                  {(!selectedPhotographer || selectedPhotographer === "all-photographers") && (
-                    <>
-                      <Separator className="my-4" />
-                      
-                      <div>
-                        <div className="flex items-center mb-4">
-                          <CalendarIcon className="mr-2 h-5 w-5 text-muted-foreground" />
-                          <h3 className="text-lg font-medium">Select Date</h3>
-                        </div>
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          className="rounded-md border pointer-events-auto w-full"
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="md:col-span-3">
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Card>
               <CardHeader>
-                <CardTitle>
-                  {selectedDate 
-                    ? `Availability for ${format(selectedDate, 'EEEE, MMMM dd, yyyy')}`
-                    : 'Please select a date'}
-                </CardTitle>
+                <CardTitle>Upcoming Availability</CardTitle>
+                <CardDescription>Overview of your scheduled availability</CardDescription>
               </CardHeader>
               <CardContent>
-                {filteredTimeSlots.length > 0 ? (
-                  <div className="space-y-4">
-                    {filteredTimeSlots.map((slot) => (
-                      <div key={slot.id} className="flex items-center p-3 border rounded-md bg-background">
-                        <div className="mr-4 bg-primary/10 p-2 rounded-full">
-                          <Clock className="h-5 w-5 text-primary" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {availabilitySlots
+                    .sort((a, b) => a.date.getTime() - b.date.getTime())
+                    .map((slot) => (
+                      <div 
+                        key={slot.id}
+                        className="p-3 border rounded-md"
+                      >
+                        <div className="flex justify-between mb-2">
+                          <p className="font-medium">{format(slot.date, 'EEEE, MMM d')}</p>
+                          {isSameDay(slot.date, new Date()) && (
+                            <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                              Today
+                            </Badge>
+                          )}
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium">{slot.photographerName}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {slot.startTime} - {slot.endTime}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 text-muted-foreground mr-2" />
+                            <span>
+                              {slot.startTime} - {slot.endTime}
+                            </span>
+                          </div>
                           <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => {
-                              setEditingTimeSlot(slot);
-                              setIsEditRangeOpen(true);
-                            }}
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteAvailabilitySlot(slot.id)}
                           >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-red-500"
-                            onClick={() => handleDeleteTimeRange(slot.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash className="h-4 w-4 text-muted-foreground" />
                           </Button>
                         </div>
                       </div>
                     ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <Clock className="h-10 w-10 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium">No Time Slots Available</h3>
-                    <p className="text-muted-foreground mt-1">
-                      {selectedDate ? 'There are no scheduled time slots for this date.' : 'Please select a date to view availability.'}
-                    </p>
-                    {selectedDate && selectedPhotographer && selectedPhotographer !== "all-photographers" && (
-                      <Button 
-                        variant="outline" 
-                        className="mt-4"
-                        onClick={() => setIsAddRangeOpen(true)}
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Time Slot
-                      </Button>
-                    )}
-                  </div>
-                )}
+                </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
-
-        <Dialog open={isEditWorkingHoursOpen} onOpenChange={setIsEditWorkingHoursOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit Working Hours</DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => {
-                  const dayHours = workingHours[selectedPhotographer as keyof typeof workingHours]?.[day as keyof typeof workingHours[keyof typeof workingHours]];
-                  return (
-                    <div key={day} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="capitalize">{day}</Label>
-                        <Badge 
-                          variant="outline" 
-                          className={dayHours?.isWorking 
-                            ? "bg-green-500/10 text-green-600 border-green-200 cursor-pointer" 
-                            : "bg-red-500/10 text-red-600 border-red-200 cursor-pointer"}
-                          onClick={() => {
-                            if (selectedPhotographer && selectedPhotographer !== "all-photographers") {
-                              const newWorkingHours = {...workingHours};
-                              const photographer = newWorkingHours[selectedPhotographer as keyof typeof newWorkingHours];
-                              if (photographer && day in photographer) {
-                                const updatedDay = {...photographer[day as keyof typeof photographer]};
-                                updatedDay.isWorking = !updatedDay.isWorking;
-                                
-                                if (updatedDay.isWorking && !updatedDay.start) {
-                                  updatedDay.start = "09:00";
-                                  updatedDay.end = "17:00";
+          </TabsContent>
+          
+          <TabsContent value="recurring" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Weekly Schedule</CardTitle>
+                <CardDescription>Set your recurring availability for each day of the week</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5, 6, 0].map((dayIndex) => {
+                    const day = recurringSchedule.find(d => d.dayOfWeek === dayIndex);
+                    const isWeekend = dayIndex === 0 || dayIndex === 6;
+                    
+                    return (
+                      <div key={dayIndex} className={`p-4 border rounded-md ${isWeekend ? 'bg-gray-50' : ''}`}>
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex items-center min-w-[100px]">
+                            <Switch
+                              checked={day?.isActive || false}
+                              onCheckedChange={(checked) => {
+                                if (day) {
+                                  toggleRecurringDay(day.id, checked);
+                                } else {
+                                  // Create default schedule for this day
+                                  const newDay: RecurringSchedule = {
+                                    id: Date.now().toString(),
+                                    dayOfWeek: dayIndex,
+                                    startTime: "9:00 AM",
+                                    endTime: "5:00 PM",
+                                    isActive: true
+                                  };
+                                  setRecurringSchedule([...recurringSchedule, newDay]);
                                 }
-                                
-                                photographer[day as keyof typeof photographer] = updatedDay;
-                                setWorkingHours(newWorkingHours);
-                              }
-                            }
-                          }}
-                        >
-                          {dayHours?.isWorking ? (
-                            <>
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Working
-                            </>
+                              }}
+                              className="mr-3"
+                            />
+                            <Label className={`font-medium ${isWeekend ? 'text-orange-700' : ''}`}>
+                              {getDayName(dayIndex)}
+                            </Label>
+                          </div>
+                          
+                          {(day?.isActive || false) ? (
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
+                              <div className="flex flex-col gap-1 w-full sm:w-auto">
+                                <Label className="text-sm text-muted-foreground">Start Time</Label>
+                                <TimeSelect
+                                  value={day?.startTime}
+                                  onChange={(time) => {
+                                    if (day) updateRecurringTime(day.id, 'startTime', time);
+                                  }}
+                                  className="w-full"
+                                />
+                              </div>
+                              
+                              <div className="w-4 mt-6 text-center hidden sm:block">to</div>
+                              
+                              <div className="flex flex-col gap-1 w-full sm:w-auto">
+                                <Label className="text-sm text-muted-foreground">End Time</Label>
+                                <TimeSelect
+                                  value={day?.endTime}
+                                  onChange={(time) => {
+                                    if (day) updateRecurringTime(day.id, 'endTime', time);
+                                  }}
+                                  className="w-full"
+                                />
+                              </div>
+                              
+                              <div className="text-xs text-muted-foreground mt-1 sm:ml-4">
+                                {day && (
+                                  <span>
+                                    {/* Calculate hours */}
+                                    Available {day.startTime} - {day.endTime}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           ) : (
-                            <>
-                              <XCircle className="h-3 w-3 mr-1" />
-                              Off
-                            </>
+                            <div className="text-muted-foreground italic ml-4">Not available</div>
                           )}
-                        </Badge>
-                      </div>
-                      {dayHours?.isWorking && (
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label htmlFor={`${day}-start`}>Start Time</Label>
-                            <TimeSelect
-                              value={dayHours.start}
-                              onChange={(time) => {
-                                if (selectedPhotographer && selectedPhotographer !== "all-photographers") {
-                                  const newWorkingHours = {...workingHours};
-                                  const photographer = newWorkingHours[selectedPhotographer as keyof typeof newWorkingHours];
-                                  if (photographer && day in photographer) {
-                                    const updatedDay = {...photographer[day as keyof typeof photographer]};
-                                    updatedDay.start = time;
-                                    photographer[day as keyof typeof photographer] = updatedDay;
-                                    setWorkingHours(newWorkingHours);
-                                  }
-                                }
-                              }}
-                              startHour={7}
-                              endHour={21}
-                              interval={30}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor={`${day}-end`}>End Time</Label>
-                            <TimeSelect
-                              value={dayHours.end}
-                              onChange={(time) => {
-                                if (selectedPhotographer && selectedPhotographer !== "all-photographers") {
-                                  const newWorkingHours = {...workingHours};
-                                  const photographer = newWorkingHours[selectedPhotographer as keyof typeof newWorkingHours];
-                                  if (photographer && day in photographer) {
-                                    const updatedDay = {...photographer[day as keyof typeof photographer]};
-                                    updatedDay.end = time;
-                                    photographer[day as keyof typeof photographer] = updatedDay;
-                                    setWorkingHours(newWorkingHours);
-                                  }
-                                }
-                              }}
-                              startHour={7}
-                              endHour={21}
-                              interval={30}
-                            />
-                          </div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditWorkingHoursOpen(false)}>Cancel</Button>
-              <Button onClick={handleUpdateWorkingHours}>Save Changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isEditRangeOpen} onOpenChange={setIsEditRangeOpen}>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                <div className="mt-6">
+                  <Button className="w-full" onClick={() => {
+                    toast({
+                      title: "Schedule updated",
+                      description: "Your recurring weekly schedule has been saved.",
+                    });
+                  }}>
+                    Save Weekly Schedule
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Blackout Dates</CardTitle>
+                <CardDescription>
+                  Set dates when you're not available regardless of your weekly schedule
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground mb-4">
+                    Set dates when you'll be unavailable for shoots
+                  </p>
+                  <Button variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Blackout Date
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+        
+        {/* Add new availability dialog */}
+        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit Time Range</DialogTitle>
+              <DialogTitle>Add Availability</DialogTitle>
+              <DialogDescription>
+                Set your availability for {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+              </DialogDescription>
             </DialogHeader>
-            {editingTimeSlot && (
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label>Photographer</Label>
-                  <div className="p-2 border rounded-md bg-muted/30">
-                    {editingTimeSlot.photographerName}
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Date</Label>
-                  <div className="p-2 border rounded-md bg-muted/30">
-                    {format(editingTimeSlot.date, 'MMMM dd, yyyy')}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label>Start Time</Label>
-                    <TimeSelect
-                      value={editingTimeSlot.startTime}
-                      onChange={(time) => setEditingTimeSlot({
-                        ...editingTimeSlot,
-                        startTime: time
-                      })}
-                      startHour={7}
-                      endHour={21}
-                      interval={30}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>End Time</Label>
-                    <TimeSelect
-                      value={editingTimeSlot.endTime}
-                      onChange={(time) => setEditingTimeSlot({
-                        ...editingTimeSlot,
-                        endTime: time
-                      })}
-                      startHour={7}
-                      endHour={21}
-                      interval={30}
-                    />
-                  </div>
-                </div>
-                {editingTimeSlot.startTime >= editingTimeSlot.endTime && (
-                  <div className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-4 w-4" />
-                    End time must be after start time
-                  </div>
-                )}
+            
+            <div className="grid gap-6 py-4">
+              <div className="grid gap-2">
+                <Label>Start Time</Label>
+                <TimeSelect
+                  value={newAvailability.startTime}
+                  onChange={(time) => setNewAvailability({...newAvailability, startTime: time})}
+                  placeholder="Select start time"
+                />
               </div>
-            )}
+              
+              <div className="grid gap-2">
+                <Label>End Time</Label>
+                <TimeSelect
+                  value={newAvailability.endTime}
+                  onChange={(time) => setNewAvailability({...newAvailability, endTime: time})}
+                  placeholder="Select end time"
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="recurring"
+                  checked={newSlotIsRecurring}
+                  onCheckedChange={setNewSlotIsRecurring}
+                />
+                <Label htmlFor="recurring">
+                  Make this a recurring weekly slot
+                </Label>
+              </div>
+              
+              {newSlotIsRecurring && (
+                <div className="text-sm text-muted-foreground">
+                  This availability will be added to your recurring schedule for every {format(selectedDate, 'EEEE')}
+                </div>
+              )}
+            </div>
+            
             <DialogFooter>
-              <Button variant="outline" onClick={() => {
-                setIsEditRangeOpen(false);
-                setEditingTimeSlot(null);
-              }}>
+              <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button 
-                onClick={handleEditTimeRange}
-                disabled={!editingTimeSlot || editingTimeSlot.startTime >= editingTimeSlot.endTime}
-              >
-                Save Changes
+              <Button onClick={addAvailabilitySlot}>
+                Add Availability
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </PageTransition>
+      </div>
     </DashboardLayout>
   );
-}
+};
+
+export default Availability;

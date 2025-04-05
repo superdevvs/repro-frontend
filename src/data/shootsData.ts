@@ -1,4 +1,3 @@
-
 import { ShootData } from "@/types/shoots";
 
 export const shootsData: ShootData[] = [
@@ -87,7 +86,8 @@ export const shootsData: ShootData[] = [
       baseQuote: 700.00,
       taxRate: 0.00,
       taxAmount: 0,
-      totalQuote: 700.00
+      totalQuote: 700.00,
+      totalPaid: 0
     },
     status: "scheduled",
     createdBy: "Bill Hang"
@@ -118,7 +118,8 @@ export const shootsData: ShootData[] = [
       baseQuote: 145.00,
       taxRate: 6.00,
       taxAmount: 8.70,
-      totalQuote: 153.70
+      totalQuote: 153.70,
+      totalPaid: 0
     },
     status: "completed",
     createdBy: "Michael Bereson"
@@ -148,7 +149,8 @@ export const shootsData: ShootData[] = [
       baseQuote: 150.00,
       taxRate: 6.00,
       taxAmount: 9.00,
-      totalQuote: 159.00
+      totalQuote: 159.00,
+      totalPaid: 0
     },
     status: "completed",
     createdBy: "Michael Bereson"
@@ -211,7 +213,8 @@ export const shootsData: ShootData[] = [
       baseQuote: 0,
       taxRate: 6.00,
       taxAmount: 0,
-      totalQuote: 0
+      totalQuote: 0,
+      totalPaid: 0
     },
     status: "pending",
     createdBy: "Super Admin"

@@ -1,6 +1,7 @@
 
 import { ShootData } from "@/types/shoots";
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO, isValid } from "date-fns";
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO, isValid, isSameDay } from "date-fns";
+import { ensureDateString } from "./formatters";
 
 export type TimeRange = 'day' | 'week' | 'month' | 'year' | 'all';
 
@@ -73,7 +74,7 @@ export const filterShootsByDateRange = (shoots: ShootData[], range: TimeRange): 
   }
   
   return shoots.filter(shoot => {
-    const shootDate = new Date(shoot.scheduledDate);
+    const shootDate = new Date(ensureDateString(shoot.scheduledDate));
     return shootDate >= dateRange.start && shootDate <= dateRange.end;
   });
 };
@@ -92,7 +93,7 @@ export const filterCompletedShootsByDateRange = (shoots: ShootData[], range: Tim
     // For completed shoots, use the completed date if available
     const dateToCheck = shoot.completedDate 
       ? new Date(shoot.completedDate)
-      : new Date(shoot.scheduledDate);
+      : new Date(ensureDateString(shoot.scheduledDate));
       
     return dateToCheck >= dateRange.start && dateToCheck <= dateRange.end;
   });
@@ -107,4 +108,66 @@ export const getMediaCountForShoots = (shoots: ShootData[]): { photos: number, v
     }
     return counts;
   }, { photos: 0, videos: 0, floorplans: 0 });
+};
+
+// Add the missing utility functions needed by StatsCardGrid
+export const getActiveShootsCount = (shoots: ShootData[]): number => {
+  return shoots.filter(shoot => 
+    shoot.status === 'scheduled' || 
+    shoot.status === 'pending' || 
+    shoot.status === 'booked'
+  ).length;
+};
+
+export const getScheduledTodayShoots = (shoots: ShootData[]): ShootData[] => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  return shoots.filter(shoot => {
+    const shootDate = new Date(ensureDateString(shoot.scheduledDate));
+    shootDate.setHours(0, 0, 0, 0);
+    return isSameDay(shootDate, today) && shoot.status === 'scheduled';
+  });
+};
+
+export const getTotalPaidAmount = (shoots: ShootData[]): number => {
+  return shoots.reduce((total, shoot) => {
+    return total + (shoot.payment?.totalPaid || 0);
+  }, 0);
+};
+
+export const getEstimatedTaxAmount = (shoots: ShootData[]): number => {
+  // Calculate 15% of total revenue as estimated tax
+  return getTotalPaidAmount(shoots) * 0.15;
+};
+
+export const getUniqueClientsCount = (shoots: ShootData[]): number => {
+  const uniqueClients = new Set();
+  
+  shoots.forEach(shoot => {
+    if (shoot.client?.id) {
+      uniqueClients.add(shoot.client.id.toString());
+    } else if (shoot.client?.email) {
+      uniqueClients.add(shoot.client.email);
+    }
+  });
+  
+  return uniqueClients.size;
+};
+
+export const getTotalMediaAssetsCount = (shoots: ShootData[]): number => {
+  return shoots.reduce((total, shoot) => {
+    if (!shoot.media) return total;
+    
+    const photosCount = shoot.media.photos?.length || 0;
+    const videosCount = shoot.media.videos?.length || 0;
+    const floorplansCount = shoot.media.floorplans?.length || 0;
+    const slideshowsCount = shoot.media.slideshows?.length || 0;
+    
+    return total + photosCount + videosCount + floorplansCount + slideshowsCount;
+  }, 0);
+};
+
+export const getCompletedShootsCount = (shoots: ShootData[]): number => {
+  return shoots.filter(shoot => shoot.status === 'completed').length;
 };
