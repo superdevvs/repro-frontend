@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -35,6 +34,8 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Info, Star } from 'lucide-react';
 
 interface PackageOption {
   id: string;
@@ -43,7 +44,6 @@ interface PackageOption {
   price: number;
 }
 
-// Create two different schemas based on account type
 const clientAccountPropertyFormSchema = z.object({
   propertyAddress: z.string().min(1, "Address is required"),
   propertyCity: z.string().min(1, "City is required"),
@@ -65,7 +65,6 @@ const adminPropertyFormSchema = z.object({
   selectedPackage: z.string().min(1, "Please select a package")
 });
 
-// Create a combined type to use in the form
 type ClientFormValues = z.infer<typeof clientAccountPropertyFormSchema>;
 type AdminFormValues = z.infer<typeof adminPropertyFormSchema>;
 type FormValues = ClientFormValues | AdminFormValues;
@@ -107,7 +106,6 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
 
   const navigate = useNavigate();
   
-  // Use the appropriate schema based on account type
   const formSchema = isClientAccount ? clientAccountPropertyFormSchema : adminPropertyFormSchema;
   
   const form = useForm<FormValues>({
@@ -143,7 +141,6 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
   const selectedClient = selectedClientId ? clients.find(client => client.id === selectedClientId) : null;
 
   const handleSubmit = (data: FormValues) => {
-    // For client accounts, pass along the existing clientId
     if (isClientAccount) {
       onComplete({
         ...data,
@@ -168,10 +165,74 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
     navigate('/clients/new?returnToBooking=true');
   };
 
+  const getPackageHighlight = (pkg: { id: string; name: string }) => {
+    if (pkg.name === 'Premium') return { icon: <Star className="h-4 w-4 text-amber-500" />, label: 'Most Popular' };
+    if (pkg.name === 'Standard') return { icon: <Star className="h-4 w-4 text-blue-500" />, label: 'Best Value' };
+    return null;
+  };
+
+  const renderPackageSelection = () => (
+    <div className="pt-2">
+      <Separator className="my-6" />
+      <div className="flex items-center gap-2 mb-4">
+        <h3 className="text-lg font-medium">Package Selection</h3>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-sm">
+              <p>Choose the package that best fits your needs. Each package includes different services and deliverables.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+      
+      <FormField
+        control={form.control}
+        name="selectedPackage"
+        render={({ field }) => (
+          <FormItem>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {packages.map((pkg) => {
+                const highlight = getPackageHighlight(pkg);
+                return (
+                  <div
+                    key={pkg.id}
+                    className={`p-4 border rounded-md cursor-pointer transition-all hover:shadow-md ${
+                      field.value === pkg.id
+                        ? "bg-primary/10 border-primary transform scale-[1.02]"
+                        : "bg-card hover:bg-accent/50 hover:border-primary/30"
+                    }`}
+                    onClick={() => form.setValue("selectedPackage", pkg.id)}
+                  >
+                    {highlight && (
+                      <div className="flex items-center gap-1 text-xs font-medium text-primary mb-1.5">
+                        {highlight.icon}
+                        <span>{highlight.label}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <div className="font-medium">{pkg.name}</div>
+                      <div className="font-bold">${pkg.price}</div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {pkg.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* Client Selection - Only show for admin/non-client accounts */}
         {!isClientAccount && (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Client Information</h3>
@@ -258,7 +319,6 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
           </div>
         )}
 
-        {/* Property Information */}
         <div className="pt-2">
           {!isClientAccount && <Separator className="my-6" />}
           <h3 className="text-lg font-medium mb-4">Property Details</h3>
@@ -377,42 +437,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
           </div>
         </div>
 
-        {/* Package Selection */}
-        <div className="pt-2">
-          <Separator className="my-6" />
-          <h3 className="text-lg font-medium mb-4">Package Selection</h3>
-          
-          <FormField
-            control={form.control}
-            name="selectedPackage"
-            render={({ field }) => (
-              <FormItem>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {packages.map((pkg) => (
-                    <div
-                      key={pkg.id}
-                      className={`p-4 border rounded-md cursor-pointer transition-colors ${
-                        field.value === pkg.id
-                          ? "bg-primary/10 border-primary"
-                          : "bg-card hover:bg-accent/50"
-                      }`}
-                      onClick={() => form.setValue("selectedPackage", pkg.id)}
-                    >
-                      <div className="flex justify-between">
-                        <div className="font-medium">{pkg.name}</div>
-                        <div className="font-bold">${pkg.price}</div>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {pkg.description}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        {renderPackageSelection()}
 
         <div className="mt-6 flex justify-end">
           <Button type="submit">Continue</Button>
