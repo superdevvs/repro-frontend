@@ -420,14 +420,16 @@ const Messages = () => {
   };
   
   const handleMarkAsTask = (message: Message) => {
+    const isCurrentlyTask = messageTasks[message.id];
+    
     setMessageTasks(prev => ({
       ...prev,
       [message.id]: !prev[message.id]
     }));
     
     toast({
-      title: prev => !prev[message.id] ? "Added to tasks" : "Removed from tasks",
-      description: prev => !prev[message.id] 
+      title: !isCurrentlyTask ? "Added to tasks" : "Removed from tasks",
+      description: !isCurrentlyTask 
         ? "Message has been added to your tasks" 
         : "Message has been removed from tasks",
     });
