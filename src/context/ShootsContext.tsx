@@ -44,10 +44,10 @@ export function ShootsProvider({ children }: { children: React.ReactNode }) {
   }, [shoots]);
 
   const addShoot = (shoot: ShootData) => {
-    // Ensure new shoots are set to 'hold' status by default
+    // Ensure new shoots are set to 'booked' status by default
     const shootWithDefaultStatus = {
       ...shoot,
-      status: shoot.status || 'hold' as const
+      status: shoot.status || 'booked' as const
     };
     
     setShoots(prevShoots => [...prevShoots, shootWithDefaultStatus]);

@@ -26,6 +26,7 @@ const statusColors = {
   'completed': 'bg-green-500',
   'pending': 'bg-yellow-500',
   'hold': 'bg-purple-500',
+  'booked': 'bg-orange-500',
 };
 
 const ShootHistory = () => {
@@ -54,7 +55,11 @@ const ShootHistory = () => {
   // Get client shoots by status
   const scheduledShoots = getClientShootsByStatus('scheduled');
   const completedShoots = getClientShootsByStatus('completed');
-  const holdShoots = getClientShootsByStatus('hold');
+  // Include both 'hold' and 'booked' status for Hold-On tab
+  const holdShoots = [
+    ...getClientShootsByStatus('hold'),
+    ...getClientShootsByStatus('pending')
+  ];
 
   // Apply filters to scheduled shoots
   const filteredScheduledShoots = scheduledShoots.filter(shoot => {

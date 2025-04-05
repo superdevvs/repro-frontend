@@ -43,7 +43,7 @@ export interface ShootData {
     editingNotes?: string;
   };
   createdBy?: string;
-  status: 'scheduled' | 'completed' | 'pending' | 'hold';
+  status: 'scheduled' | 'completed' | 'pending' | 'hold' | 'booked';
   media?: {
     photos?: string[];
     videos?: string[];
