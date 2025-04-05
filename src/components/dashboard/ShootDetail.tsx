@@ -1,169 +1,126 @@
 
-import React, { useState } from 'react';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  CalendarIcon,
-  MessageSquare,
-  PenLine,
-  DollarSignIcon,
-  CheckCircle,
-} from "lucide-react";
+import React from 'react';
+import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { ShootData } from '@/types/shoots';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { ShootDetailTabs } from './ShootDetailTabs';
-import { MessageDialog } from './MessageDialog';
-import { ShootActionsDialog } from './ShootActionsDialog';
-import { useShoots } from '@/context/ShootsContext';
+import { Badge } from '@/components/ui/badge';
+import { 
+  MapPin,
+  CalendarIcon,
+  Clock,
+  User,
+  Camera,
+  CheckCircle,
+  AlertCircle,
+  Clock3
+} from 'lucide-react';
 
 interface ShootDetailProps {
-  shoot: ShootData | null;
+  shoot: ShootData;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function ShootDetail({ shoot, isOpen, onClose }: ShootDetailProps) {
-  const { role } = useAuth();
-  const { updateShoot } = useShoots();
-  const [activeTab, setActiveTab] = useState("details");
-  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  
-  const isAdmin = ['admin', 'superadmin'].includes(role);
-  const isPhotographer = role === 'photographer';
-  
-  if (!shoot) return null;
-  
-  const getStatusBadge = (status: ShootData['status']) => {
-    switch (status) {
+export const ShootDetail = ({ shoot, isOpen, onClose }: ShootDetailProps) => {
+  // Format the shoot date
+  const formattedDate = shoot.scheduledDate 
+    ? format(new Date(shoot.scheduledDate), 'MMMM d, yyyy')
+    : 'Not scheduled';
+
+  // Get status badge color
+  const getStatusColor = () => {
+    switch (shoot.status) {
       case 'scheduled':
-        return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">Scheduled</Badge>;
-      case 'completed':
-        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Completed</Badge>;
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
       case 'pending':
-        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending</Badge>;
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
       case 'hold':
-        return <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20">Hold</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
     }
   };
-  
-  const getPaymentStatus = () => {
-    if (!shoot.payment.totalPaid) return <Badge variant="outline">Unpaid</Badge>;
-    if (shoot.payment.totalPaid < shoot.payment.totalQuote) {
-      return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Partial</Badge>;
-    }
-    return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Paid</Badge>;
-  };
 
-  const handleOpenMessageDialog = () => {
-    setIsMessageDialogOpen(true);
-  };
-
-  const handleCloseMessageDialog = () => {
-    setIsMessageDialogOpen(false);
-  };
-
-  const handleOpenEditDialog = () => {
-    setIsEditDialogOpen(true);
-  };
-
-  const handleCloseEditDialog = () => {
-    setIsEditDialogOpen(false);
-  };
-  
-  const handleMarkAsCompleted = () => {
-    if (shoot && shoot.status === 'scheduled') {
-      const now = new Date().toISOString().split('T')[0];
-      updateShoot(shoot.id, {
-        status: 'completed',
-        completedDate: now
-      });
+  const getStatusIcon = () => {
+    switch (shoot.status) {
+      case 'scheduled':
+        return <CalendarIcon className="h-4 w-4" />;
+      case 'pending':
+        return <Clock3 className="h-4 w-4" />;
+      case 'completed':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'hold':
+      default:
+        return <AlertCircle className="h-4 w-4" />;
     }
   };
-  
+
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl">Shoot Details</DialogTitle>
-              <div className="flex items-center gap-2">
-                {getStatusBadge(shoot.status)}
-                {isAdmin && getPaymentStatus()}
-              </div>
-            </div>
-            <DialogDescription>
-              ID: #{shoot.id} • Created by: {shoot.createdBy || 'Unknown'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <ShootDetailTabs 
-            shoot={shoot} 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
-            isAdmin={isAdmin} 
-            isPhotographer={isPhotographer}
-            role={role}
-          />
-          
-          <DialogFooter className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={onClose}>Close</Button>
-            
-            <Button variant="outline" onClick={handleOpenMessageDialog}>
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Send Message
-            </Button>
-            
-            {(isAdmin || isPhotographer) && (
-              <Button onClick={handleOpenEditDialog}>
-                <PenLine className="h-4 w-4 mr-2" />
-                Edit Shoot
-              </Button>
-            )}
-            
-            {isPhotographer && shoot.status === 'scheduled' && (
-              <Button onClick={handleMarkAsCompleted}>
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Mark as Completed
-              </Button>
-            )}
-            
-            {role === 'superadmin' && (
-              <Button variant="default">
-                <DollarSignIcon className="h-4 w-4 mr-2" />
-                Process Payment
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Shoot Details</DialogTitle>
+        </DialogHeader>
 
-      {shoot && (
-        <>
-          <MessageDialog
-            shoot={shoot}
-            isOpen={isMessageDialogOpen}
-            onClose={handleCloseMessageDialog}
-          />
-          
-          <ShootActionsDialog
-            shoot={shoot}
-            isOpen={isEditDialogOpen}
-            onClose={handleCloseEditDialog}
-          />
-        </>
-      )}
-    </>
+        <div className="space-y-4 py-2">
+          <div className="flex justify-between items-start">
+            <Badge variant="outline" className={getStatusColor()}>
+              <span className="flex items-center">
+                {getStatusIcon()}
+                <span className="ml-1 capitalize">{shoot.status}</span>
+              </span>
+            </Badge>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => window.open(`/shoots/${shoot.id}`, '_blank')}
+            >
+              View Full Details
+            </Button>
+          </div>
+
+          <div className="grid gap-2">
+            <div className="flex items-center gap-2 text-sm">
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+              <span>{formattedDate}</span>
+            </div>
+
+            {shoot.time && (
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span>{shoot.time}</span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">{shoot.location.fullAddress || 'No address provided'}</span>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span>{shoot.client.name || 'No client name'}</span>
+            </div>
+
+            {shoot.photographer && shoot.photographer.name && (
+              <div className="flex items-center gap-2 text-sm">
+                <Camera className="h-4 w-4 text-muted-foreground" />
+                <span>{shoot.photographer.name}</span>
+              </div>
+            )}
+          </div>
+
+          {shoot.notes && shoot.notes.shootNotes && (
+            <div className="mt-4 bg-muted/50 p-3 rounded-md">
+              <h3 className="text-sm font-medium mb-1">Notes:</h3>
+              <p className="text-sm">{shoot.notes.shootNotes}</p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
-}
+};

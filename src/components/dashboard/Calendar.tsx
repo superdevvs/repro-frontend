@@ -138,29 +138,16 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
                           className="absolute top-0 left-0 right-0 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-primary p-1.5 text-xs h-full overflow-hidden border border-primary/20 cursor-pointer"
                           onClick={() => handleShowShootDetails(event)}
                         >
-                          <Badge className="absolute top-1 right-1 rounded-full h-4 w-4 text-[8px] p-0 flex items-center justify-center">
-                            {event.status.charAt(0).toUpperCase()}
-                          </Badge>
-                          <p className="font-medium leading-tight truncate">{event.client.name}</p>
-                          <div className="flex flex-col gap-0.5 mt-0.5">
-                            <div 
-                              className="flex items-center gap-0.5 text-[9px] text-primary cursor-pointer hover:underline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleShowShootDetails(event);
-                              }}
-                            >
-                              <UserIcon className="h-2.5 w-2.5 flex-shrink-0" />
-                              <span className="truncate">{event.photographer.name}</span>
-                            </div>
-                            <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
-                              <ClockIcon className="h-2.5 w-2.5 flex-shrink-0" />
-                              <span>{formattedTime}</span>
-                            </div>
-                            <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
-                              <MapPinIcon className="h-2.5 w-2.5 flex-shrink-0" />
-                              <span className="truncate">{event.location.city}</span>
-                            </div>
+                          <div className="flex items-center gap-1">
+                            <ClockIcon className="h-3 w-3" />
+                            <span>{formattedTime}</span>
+                          </div>
+                          <div className="font-medium truncate">
+                            {event.location.address || 'No address'}
+                          </div>
+                          <div className="flex items-center text-xs text-primary/80 truncate">
+                            <UserIcon className="h-3 w-3 mr-1" />
+                            {event.client.name || 'No client'}
                           </div>
                         </div>
                       );
@@ -173,12 +160,13 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
         </div>
       </ScrollArea>
       
-      {/* Shoot Detail Dialog */}
-      <ShootDetail 
-        shoot={selectedShoot}
-        isOpen={isDetailOpen}
-        onClose={handleCloseShootDetails}
-      />
+      {selectedShoot && isDetailOpen && (
+        <ShootDetail 
+          shoot={selectedShoot} 
+          isOpen={isDetailOpen} 
+          onClose={handleCloseShootDetails} 
+        />
+      )}
     </div>
   );
 }

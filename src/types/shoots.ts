@@ -1,72 +1,45 @@
 
 export interface ShootData {
-  id: string;
-  scheduledDate: string;
-  completedDate?: string;
+  id: string | number;
+  scheduledDate: string | Date;
   time?: string;
-  client: {
-    id?: string;
-    name: string;
-    email: string;
-    phone?: string;
-    company?: string;
-    totalShoots?: number;
-  };
+  status: 'scheduled' | 'pending' | 'completed' | 'hold';
   location: {
-    address: string;
-    address2?: string;
-    city: string;
-    state: string;
-    zip: string;
-    fullAddress: string;
+    address?: string;
+    fullAddress?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
   };
-  photographer: {
-    id?: string;
-    name: string;
-    avatar?: string;
+  client: {
+    id?: string | number;
+    name?: string;
+    email?: string;
+    phone?: string;
   };
-  services: string[];
-  payment: {
-    baseQuote: number;
-    taxRate: number;
-    taxAmount: number;
-    totalQuote: number;
-    totalPaid?: number;
-    lastPaymentDate?: string;
-    lastPaymentType?: string;
+  photographer?: {
+    id?: string | number;
+    name?: string;
   };
-  tourPurchased?: boolean;
   notes?: {
     shootNotes?: string;
     photographerNotes?: string;
     companyNotes?: string;
     editingNotes?: string;
   };
-  createdBy?: string;
-  status: 'scheduled' | 'completed' | 'pending' | 'hold' | 'booked';
-  media?: {
-    photos?: string[];
-    videos?: string[];
-    floorplans?: string[];
-    slideshows?: {
-      id: string;
-      title: string;
-      url: string;
-      visible: boolean;
-    }[];
+  payment?: {
+    totalPaid: number;
+    status?: string;
   };
-  tourLinks?: {
-    branded?: string;
-    mls?: string;
-    genericMls?: string;
-  };
+  completedDate?: string;
+  services?: string[];
 }
 
-export interface PhotographerAvailability {
-  id: string;
-  photographerId: string;
-  photographerName: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
+export interface ShootsContextType {
+  shoots: ShootData[];
+  loading: boolean;
+  error: Error | null;
+  addShoot: (shoot: ShootData) => void;
+  updateShoot: (id: string | number, updates: Partial<ShootData>) => void;
+  deleteShoot: (id: string | number) => void;
 }
