@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { BookingSummary } from '@/components/booking/BookingSummary';
 import { BookingContentArea } from '@/components/booking/BookingContentArea';
 import { packages, photographers } from '@/constants/bookingSteps';
+import { ShootData } from '@/types/shoots';
 
 const BookShoot = () => {
   const location = useLocation();
@@ -158,9 +159,13 @@ const BookShoot = () => {
       const selectedPhotographerData = photographers.find(p => p.id === photographer);
       const selectedPackageData = packages.find(p => p.id === selectedPackage);
       
-      const newShoot = {
+      // Fix the status type by explicitly setting it to a valid literal type
+      const bookingStatus: ShootData['status'] = 'booked';
+      
+      const newShoot: ShootData = {
         id: uuidv4(),
         scheduledDate: date.toISOString().split('T')[0],
+        time: time,
         client: {
           name: selectedClientData?.name || 'Unknown Client',
           email: selectedClientData?.email || `client${client}@example.com`,
@@ -169,12 +174,14 @@ const BookShoot = () => {
         },
         location: {
           address: address,
+          address2: '',
           city: city,
           state: state,
           zip: zip,
           fullAddress: `${address}, ${city}, ${state} ${zip}`
         },
         photographer: selectedPhotographerData ? {
+          id: selectedPhotographerData.id,
           name: selectedPhotographerData.name,
           avatar: selectedPhotographerData.avatar
         } : {
@@ -189,7 +196,7 @@ const BookShoot = () => {
           totalQuote: getTotal(),
           ...(bypassPayment ? {} : { totalPaid: getTotal(), lastPaymentDate: new Date().toISOString().split('T')[0], lastPaymentType: 'Credit Card' })
         },
-        status: 'booked',
+        status: bookingStatus,
         notes: notes ? { shootNotes: notes } : undefined,
         createdBy: user?.name || "Current User"
       };
