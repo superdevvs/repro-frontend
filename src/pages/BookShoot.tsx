@@ -409,8 +409,8 @@ const BookShoot = () => {
                   >
                     <Card className="border shadow-sm">
                       <CardHeader className="pb-4">
-                        <CardTitle>{stepContent.title}</CardTitle>
-                        <p className="text-muted-foreground text-sm">{stepContent.description}</p>
+                        <CardTitle>{stepContent[step as keyof typeof stepContent]?.title}</CardTitle>
+                        <p className="text-muted-foreground text-sm">{stepContent[step as keyof typeof stepContent]?.description}</p>
                       </CardHeader>
                       
                       <CardContent className="pb-8">
