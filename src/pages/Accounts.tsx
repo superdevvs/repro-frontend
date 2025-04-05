@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from "react";
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { User, Role, useAuth } from "@/components/auth/AuthProvider";
 import { AccountsHeader } from "@/components/accounts/AccountsHeader";
 import { AccountCard } from "@/components/accounts/AccountCard";
@@ -12,6 +12,11 @@ import { ResetPasswordDialog } from "@/components/accounts/ResetPasswordDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { downloadCSV } from "@/utils/downloadUtils";
+import { useShoots } from "@/context/ShootsContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 const mockUsers = [
   {
@@ -101,6 +106,8 @@ export default function Accounts() {
   const [filteredUsers, setFilteredUsers] = useState<User[]>(mockUsers);
   const [selectedFilter, setSelectedFilter] = useState<Role | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const { getUniqueClients } = useShoots();
+  const clients = getUniqueClients();
   
   // State for all dialogs
   const [addEditDialogOpen, setAddEditDialogOpen] = useState(false);
@@ -113,14 +120,12 @@ export default function Accounts() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [currentTab, setCurrentTab] = useState('user-accounts');
   
-  // Check for permission to access this page
   useEffect(() => {
     if (!hasPermission(['admin', 'superadmin'])) {
       toast.error("You don't have permission to access account management");
     }
   }, [hasPermission]);
   
-  // Filter users based on search query and role filter
   useEffect(() => {
     let filtered = users;
     
@@ -274,114 +279,148 @@ export default function Accounts() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
-      <AccountsHeader
-        onAddAccount={handleAddAccount}
-        onExport={handleExport}
-        onSearch={handleSearch}
-        onFilterChange={setSelectedFilter}
-        selectedFilter={selectedFilter}
-      />
-      
-      <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-        <TabsList className="grid grid-cols-2 w-full max-w-md mb-6">
-          <TabsTrigger value="user-accounts">User Accounts</TabsTrigger>
-          <TabsTrigger value="client-branding">Client & Branding</TabsTrigger>
-        </TabsList>
+    <DashboardLayout>
+      <div className="container mx-auto py-6 max-w-7xl">
+        <AccountsHeader
+          onAddAccount={handleAddAccount}
+          onExport={handleExport}
+          onSearch={handleSearch}
+          onFilterChange={setSelectedFilter}
+          selectedFilter={selectedFilter}
+        />
         
-        <TabsContent value="user-accounts">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => (
-                <AccountCard
-                  key={user.id}
-                  user={user}
-                  onEdit={() => handleEditAccount(user)}
-                  onChangeRole={() => handleChangeRole(user)}
-                  onToggleStatus={() => handleToggleStatus(user)}
-                  onResetPassword={() => handleResetPassword(user)}
-                  onImpersonate={() => handleImpersonate(user)}
-                  onManageNotifications={() => handleManageNotifications(user)}
-                  onLinkClientBranding={() => handleLinkClientBranding(user)}
-                  onViewProfile={() => handleViewProfile(user)}
-                  isActive={user.isActive}
-                />
-              ))
-            ) : (
-              <div className="col-span-3 py-10 text-center">
-                <p className="text-muted-foreground">No users found matching your criteria</p>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="client-branding">
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
-            <h2 className="text-2xl font-bold mb-4">Client & Branding Management</h2>
-            <p className="text-muted-foreground mb-6">
-              Manage client associations and customize branding settings for your property tours.
-              Select a user account first to edit their client links and branding preferences.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="col-span-1 md:col-span-3 text-center py-12">
-                <p className="text-muted-foreground">
-                  Select a user from the User Accounts tab to manage their client associations and branding settings
-                </p>
+        <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+          <TabsList className="grid grid-cols-2 w-full max-w-md mb-6">
+            <TabsTrigger value="user-accounts">User Accounts</TabsTrigger>
+            <TabsTrigger value="client-branding">Client & Branding</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="user-accounts">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <AccountCard
+                    key={user.id}
+                    user={user}
+                    onEdit={() => handleEditAccount(user)}
+                    onChangeRole={() => handleChangeRole(user)}
+                    onToggleStatus={() => handleToggleStatus(user)}
+                    onResetPassword={() => handleResetPassword(user)}
+                    onImpersonate={() => handleImpersonate(user)}
+                    onManageNotifications={() => handleManageNotifications(user)}
+                    onLinkClientBranding={() => handleLinkClientBranding(user)}
+                    onViewProfile={() => handleViewProfile(user)}
+                    isActive={user.isActive}
+                  />
+                ))
+              ) : (
+                <div className="col-span-3 py-10 text-center">
+                  <p className="text-muted-foreground">No users found matching your criteria</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="client-branding">
+            <div className="bg-card rounded-lg border shadow-sm p-6">
+              <h2 className="text-2xl font-bold mb-4">Client & Branding Management</h2>
+              <p className="text-muted-foreground mb-6">
+                Manage client associations and customize branding settings for your property tours.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {clients.length > 0 ? (
+                  clients.map((client, index) => (
+                    <Card key={index} className="overflow-hidden">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg font-semibold">{client.name}</CardTitle>
+                          <Badge>{client.shootCount} shoots</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {client.email && (
+                            <div>
+                              <p className="text-sm font-medium text-muted-foreground">Email</p>
+                              <p className="text-sm">{client.email}</p>
+                            </div>
+                          )}
+                          
+                          {client.company && (
+                            <div>
+                              <p className="text-sm font-medium text-muted-foreground">Company</p>
+                              <p className="text-sm">{client.company}</p>
+                            </div>
+                          )}
+                          
+                          <div className="pt-3 flex justify-end">
+                            <Button size="sm" variant="outline">Edit Branding</Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="col-span-3 text-center py-12">
+                    <p className="text-muted-foreground">
+                      No client data available. Add clients to see them here.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-      
-      {/* Dialogs */}
-      <AccountForm
-        open={addEditDialogOpen}
-        onOpenChange={setAddEditDialogOpen}
-        onSubmit={handleSubmitAccount}
-        initialData={selectedUser}
-      />
-      
-      <RoleChangeDialog
-        open={roleDialogOpen}
-        onOpenChange={setRoleDialogOpen}
-        user={selectedUser}
-        onSubmit={handleSubmitRoleChange}
-      />
-      
-      <NotificationSettingsDialog
-        open={notificationDialogOpen}
-        onOpenChange={setNotificationDialogOpen}
-        user={selectedUser}
-        onSubmit={handleSubmitNotificationSettings}
-      />
-      
-      <LinkClientBrandingDialog
-        open={linkClientBrandingDialogOpen}
-        onOpenChange={setLinkClientBrandingDialogOpen}
-        user={selectedUser}
-        onSubmit={handleSubmitLinkClientBranding}
-      />
-      
-      <UserProfileDialog
-        open={userProfileDialogOpen}
-        onOpenChange={setUserProfileDialogOpen}
-        user={selectedUser}
-        onEdit={() => {
-          setUserProfileDialogOpen(false);
-          setTimeout(() => {
-            if (selectedUser) handleEditAccount(selectedUser);
-          }, 100);
-        }}
-      />
-      
-      <ResetPasswordDialog
-        open={resetPasswordDialogOpen}
-        onOpenChange={setResetPasswordDialogOpen}
-        user={selectedUser}
-        onSendResetLink={handleSendResetLink}
-        onUpdatePassword={handleUpdatePassword}
-      />
-    </div>
+          </TabsContent>
+        </Tabs>
+        
+        <AccountForm
+          open={addEditDialogOpen}
+          onOpenChange={setAddEditDialogOpen}
+          onSubmit={handleSubmitAccount}
+          initialData={selectedUser}
+        />
+        
+        <RoleChangeDialog
+          open={roleDialogOpen}
+          onOpenChange={setRoleDialogOpen}
+          user={selectedUser}
+          onSubmit={handleSubmitRoleChange}
+        />
+        
+        <NotificationSettingsDialog
+          open={notificationDialogOpen}
+          onOpenChange={setNotificationDialogOpen}
+          user={selectedUser}
+          onSubmit={handleSubmitNotificationSettings}
+        />
+        
+        <LinkClientBrandingDialog
+          open={linkClientBrandingDialogOpen}
+          onOpenChange={setLinkClientBrandingDialogOpen}
+          user={selectedUser}
+          onSubmit={handleSubmitLinkClientBranding}
+        />
+        
+        <UserProfileDialog
+          open={userProfileDialogOpen}
+          onOpenChange={setUserProfileDialogOpen}
+          user={selectedUser}
+          onEdit={() => {
+            setUserProfileDialogOpen(false);
+            setTimeout(() => {
+              if (selectedUser) handleEditAccount(selectedUser);
+            }, 100);
+          }}
+        />
+        
+        <ResetPasswordDialog
+          open={resetPasswordDialogOpen}
+          onOpenChange={setResetPasswordDialogOpen}
+          user={selectedUser}
+          onSendResetLink={handleSendResetLink}
+          onUpdatePassword={handleUpdatePassword}
+        />
+      </div>
+    </DashboardLayout>
   );
 }

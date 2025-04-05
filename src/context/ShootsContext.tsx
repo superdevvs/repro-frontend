@@ -22,21 +22,13 @@ interface ShootsContextType {
 const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
 
 export function ShootsProvider({ children }: { children: React.ReactNode }) {
-  const [shoots, setShoots] = useState<ShootData[]>(initialShootsData);
+  const [shoots, setShoots] = useState<ShootData[]>(() => {
+    const storedShoots = localStorage.getItem('shoots');
+    return storedShoots ? JSON.parse(storedShoots) : initialShootsData;
+  });
+  
   const { toast } = useToast();
   const { user } = useAuth();
-
-  // Load shoots from localStorage if available
-  useEffect(() => {
-    const storedShoots = localStorage.getItem('shoots');
-    if (storedShoots) {
-      try {
-        setShoots(JSON.parse(storedShoots));
-      } catch (error) {
-        console.error('Failed to parse stored shoots:', error);
-      }
-    }
-  }, []);
 
   // Save shoots to localStorage whenever they change
   useEffect(() => {
@@ -44,9 +36,15 @@ export function ShootsProvider({ children }: { children: React.ReactNode }) {
   }, [shoots]);
 
   const addShoot = (shoot: ShootData) => {
+    // Add default time from the time string if available
+    const shootWithTime = shoot.time ? {
+      ...shoot,
+      time: shoot.time
+    } : shoot;
+    
     // Ensure new shoots are set to 'booked' status by default
     const shootWithDefaultStatus = {
-      ...shoot,
+      ...shootWithTime,
       status: shoot.status || 'booked' as const
     };
     
@@ -128,11 +126,11 @@ export function ShootsProvider({ children }: { children: React.ReactNode }) {
     // For clients, only show their own data
     if (user?.role === 'client') {
       const clientData = {
-        name: user.name,
+        name: user.name || '',
         shootCount: shoots.filter(shoot => shoot.client.name === user.name).length,
         email: user.email,
-        company: user.company,
-        phone: user.phone
+        company: user.metadata?.company,
+        phone: user.metadata?.phone
       };
       return [clientData];
     }

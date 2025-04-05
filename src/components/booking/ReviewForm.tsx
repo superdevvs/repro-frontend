@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircleIcon } from 'lucide-react';
+import { CheckCircleIcon, AlertTriangle } from 'lucide-react';
 
 interface ReviewFormProps {
   client: string;
@@ -110,9 +110,16 @@ export function ReviewForm({
               </Card>
             ))
           ) : (
-            <div className="col-span-3 text-center p-6 bg-muted/30 rounded-lg">
-              <p className="text-muted-foreground">No photographers available for the selected date and time.</p>
-              <p className="text-sm mt-1">Consider selecting a different date or time.</p>
+            <div className="col-span-3 p-6 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="shrink-0">
+                  <AlertTriangle className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm mb-1">No photographers available</h4>
+                  <p className="text-sm text-muted-foreground">A photographer will be assigned to you after booking confirmation.</p>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -146,7 +153,9 @@ export function ReviewForm({
           
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Photographer:</span>
-            <span className="text-sm font-medium">{selectedPhotographer?.name || "No photographer selected"}</span>
+            <span className="text-sm font-medium">
+              {selectedPhotographer?.name || (photographers.length === 0 ? "To be assigned" : "No photographer selected")}
+            </span>
           </div>
           
           {notes && (

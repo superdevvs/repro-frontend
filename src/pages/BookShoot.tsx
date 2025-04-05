@@ -176,10 +176,22 @@ const BookShoot = () => {
     setFormErrors({});
     
     if (step === 3) {
-      if (!client || !address || !city || !state || !zip || !date || !time || !photographer || !selectedPackage) {
+      const availablePhotographers = getAvailablePhotographers();
+      const isPhotographerRequired = availablePhotographers.length > 0;
+      
+      if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
         toast({
           title: "Missing information",
           description: "Please fill in all required fields before confirming the booking.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (isPhotographerRequired && !photographer) {
+        toast({
+          title: "Missing information",
+          description: "Please select a photographer before confirming the booking.",
           variant: "destructive",
         });
         return;
@@ -205,9 +217,12 @@ const BookShoot = () => {
           zip: zip,
           fullAddress: `${address}, ${city}, ${state} ${zip}`
         },
-        photographer: {
-          name: selectedPhotographerData?.name || 'Unknown Photographer',
-          avatar: selectedPhotographerData?.avatar
+        photographer: selectedPhotographerData ? {
+          name: selectedPhotographerData.name,
+          avatar: selectedPhotographerData.avatar
+        } : {
+          name: "To Be Assigned",
+          avatar: ""
         },
         services: selectedPackageData ? [selectedPackageData.name] : [],
         payment: {
