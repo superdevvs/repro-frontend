@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2, Play, Pause } from "lucide-react";
@@ -19,6 +18,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { v4 as uuidv4 } from 'uuid';
 import { useShoots } from '@/context/ShootsContext';
 import { SlideshowViewer } from './SlideshowViewer';
+import { VirtualTourSection } from '../tours/VirtualTourSection';
 
 const examplePhotos = [
   "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200&auto=format",
@@ -303,10 +303,11 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
         )}
         
         <Tabs defaultValue="photos" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-5 mb-4">
             <TabsTrigger value="photos">Photos</TabsTrigger>
             <TabsTrigger value="services">Services</TabsTrigger>
             <TabsTrigger value="tours">Tours & Slideshow</TabsTrigger>
+            <TabsTrigger value="virtualTours">Virtual Tours</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           
@@ -549,6 +550,10 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                 </Button>
               </CardFooter>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="virtualTours" className="space-y-6">
+            <VirtualTourSection propertyId={shoot.id.toString()} />
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-6">

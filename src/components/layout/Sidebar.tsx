@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
@@ -25,6 +24,7 @@ import {
   MessageSquareIcon,
   HistoryIcon,
   CalendarIcon,
+  MapIcon,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -138,6 +138,15 @@ export function Sidebar({ className }: SidebarProps) {
               isActive={pathname === '/shoots'}
             />
           )}
+          
+          {/* Add Virtual Tours link - available for all users */}
+          <NavLink
+            to="/virtual-tours"
+            icon={<MapIcon className="h-4 w-4" />}
+            label="Virtual Tours"
+            isCollapsed={isCollapsed && !isMobile}
+            isActive={pathname === '/virtual-tours'}
+          />
           
           <NavLink
             to="/messages"

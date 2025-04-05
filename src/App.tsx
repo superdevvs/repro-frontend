@@ -1,148 +1,206 @@
+import React, { useState, useEffect } from 'react';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Outlet,
+  useNavigate,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from './components/auth/AuthProvider';
+import { DashboardLayout } from './components/layout/DashboardLayout';
+import { Home } from './pages/Home';
+import { Dashboard } from './pages/Dashboard';
+import { BookShoot } from './pages/BookShoot';
+import { Shoots } from './pages/Shoots';
+import { Clients } from './pages/Clients';
+import { Accounts } from './pages/Accounts';
+import { Invoices } from './pages/Invoices';
+import { Reports } from './pages/Reports';
+import { Availability } from './pages/Availability';
+import { Settings } from './pages/Settings';
+import { Login } from './pages/Login';
+import { Signup } from './pages/Signup';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
+import { VerifyEmail } from './pages/VerifyEmail';
+import { Toast } from '@/components/ui/toast';
+import { Toaster } from 'sonner';
+import { ThemeProvider } from './components/theme-provider';
+import { ShootDetail } from './pages/ShootDetail';
+import { Messages } from './pages/Messages';
+import { ShootHistory } from './pages/ShootHistory';
+import VirtualTours from './pages/VirtualTours';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth, UserMetadata } from "./components/auth/AuthProvider";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import Shoots from "./pages/Shoots";
-import BookShoot from "./pages/BookShoot";
-import Clients from "./pages/Clients";
-import Invoices from "./pages/Invoices";
-import Settings from "./pages/Settings";
-import Accounts from "./pages/Accounts";
-import Availability from "./pages/Availability";
-import Reports from "./pages/Reports";
-import Messages from "./pages/Messages";
-import NotFound from "./pages/NotFound";
-import ShootHistory from "./pages/ShootHistory";
-import PhotographerShootHistory from "./pages/PhotographerShootHistory";
-import PhotographerAccount from "./pages/PhotographerAccount";
-import PhotographerAvailability from "./pages/PhotographerAvailability";
-import { ShootsProvider } from './context/ShootsContext';
-import { ThemeProvider } from './hooks/useTheme';
-import Profile from "./pages/Profile";
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-// Declare global type augmentations for User to include metadata
-declare module './components/auth/AuthProvider' {
-  interface User {
-    metadata?: UserMetadata;
-  }
-}
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
-
-// Protected route component
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated } = useAuth();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-  
-  return children;
+  return user ? <>{children}</> : null;
 };
 
-// Routes wrapper with auth provider
-const AppRoutes = () => {
+const App = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/shoots" element={
-        <ProtectedRoute>
-          <Shoots />
-        </ProtectedRoute>
-      } />
-      <Route path="/book-shoot" element={
-        <ProtectedRoute>
-          <BookShoot />
-        </ProtectedRoute>
-      } />
-      <Route path="/shoot-history" element={
-        <ProtectedRoute>
-          <ShootHistory />
-        </ProtectedRoute>
-      } />
-      <Route path="/messages" element={
-        <ProtectedRoute>
-          <Messages />
-        </ProtectedRoute>
-      } />
-      <Route path="/clients" element={
-        <ProtectedRoute>
-          <Clients />
-        </ProtectedRoute>
-      } />
-      <Route path="/invoices" element={
-        <ProtectedRoute>
-          <Invoices />
-        </ProtectedRoute>
-      } />
-      <Route path="/accounts" element={
-        <ProtectedRoute>
-          <Accounts />
-        </ProtectedRoute>
-      } />
-      <Route path="/availability" element={
-        <ProtectedRoute>
-          <Availability />
-        </ProtectedRoute>
-      } />
-      <Route path="/reports" element={
-        <ProtectedRoute>
-          <Reports />
-        </ProtectedRoute>
-      } />
-      <Route path="/settings" element={
-        <ProtectedRoute>
-          <Settings />
-        </ProtectedRoute>
-      } />
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Profile />
-        </ProtectedRoute>
-      } />
-      <Route path="/photographer-history" element={<PhotographerShootHistory />} />
-      <Route path="/photographer-account" element={<PhotographerAccount />} />
-      <Route path="/photographer-availability" element={<PhotographerAvailability />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
-
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner position="top-right" closeButton richColors />
-          <BrowserRouter>
-            <AuthProvider>
-              <ShootsProvider>
-                <AppRoutes />
-              </ShootsProvider>
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
+    <AuthProvider>
+      <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
+        <Toaster />
+        <RouterProvider router={createBrowserRouter([
+          {
+            path: "/",
+            element: <Home />,
+          },
+          {
+            path: "/login",
+            element: <Login />,
+          },
+          {
+            path: "/signup",
+            element: <Signup />,
+          },
+          {
+            path: "/forgot-password",
+            element: <ForgotPassword />,
+          },
+          {
+            path: "/reset-password/:token",
+            element: <ResetPassword />,
+          },
+          {
+            path: "/verify-email/:token",
+            element: <VerifyEmail />,
+          },
+          {
+            path: "/dashboard",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/book-shoot",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <BookShoot />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/shoots",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Shoots />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/shoot-history",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ShootHistory />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/shoots/:shootId",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ShootDetail />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/clients",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Clients />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/accounts",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Accounts />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/invoices",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Invoices />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/reports",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Reports />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/availability",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Availability />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/settings",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Settings />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/messages",
+            element: (
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Messages />
+                </DashboardLayout>
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "/virtual-tours",
+            element: <DashboardLayout><VirtualTours /></DashboardLayout>,
+          },
+        ])} />
       </ThemeProvider>
-    </QueryClientProvider>
+    </AuthProvider>
   );
-}
+};
 
 export default App;
