@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -108,6 +107,9 @@ const AppRoutes = () => {
           <Settings />
         </ProtectedRoute>
       } />
+      <Route path="/photographer-history" element={<PhotographerShootHistory />} />
+      <Route path="/photographer-account" element={<PhotographerAccount />} />
+      <Route path="/photographer-availability" element={<PhotographerAvailability />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
