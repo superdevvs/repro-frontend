@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   createBrowserRouter,
@@ -7,27 +8,27 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from './components/auth/AuthProvider';
 import { DashboardLayout } from './components/layout/DashboardLayout';
-import { Home } from './pages/Home';
-import { Dashboard } from './pages/Dashboard';
-import { BookShoot } from './pages/BookShoot';
-import { Shoots } from './pages/Shoots';
-import { Clients } from './pages/Clients';
-import { Accounts } from './pages/Accounts';
-import { Invoices } from './pages/Invoices';
-import { Reports } from './pages/Reports';
-import { Availability } from './pages/Availability';
-import { Settings } from './pages/Settings';
-import { Login } from './pages/Login';
-import { Signup } from './pages/Signup';
-import { ForgotPassword } from './pages/ForgotPassword';
-import { ResetPassword } from './pages/ResetPassword';
-import { VerifyEmail } from './pages/VerifyEmail';
+import Home from './pages/Home';
+import Dashboard from './pages/Dashboard';
+import BookShoot from './pages/BookShoot';
+import Shoots from './pages/Shoots';
+import Clients from './pages/Clients';
+import Accounts from './pages/Accounts';
+import Invoices from './pages/Invoices';
+import Reports from './pages/Reports';
+import Availability from './pages/Availability';
+import Settings from './pages/Settings';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
 import { Toast } from '@/components/ui/toast';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './components/theme-provider';
-import { ShootDetail } from './pages/ShootDetail';
-import { Messages } from './pages/Messages';
-import { ShootHistory } from './pages/ShootHistory';
+import ShootDetail from './pages/ShootDetail';
+import Messages from './pages/Messages';
+import ShootHistory from './pages/ShootHistory';
 import VirtualTours from './pages/VirtualTours';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
