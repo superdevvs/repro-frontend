@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { TaskManager } from '@/components/dashboard/TaskManager';
@@ -120,7 +119,7 @@ const Dashboard = () => {
                       client={{
                         name: shoot.client.name,
                       }}
-                      status={shoot.status as "scheduled" | "completed" | "pending" | "hold" | "booked"}
+                      status={shoot.status}
                       price={shoot.payment.totalQuote}
                       delay={index}
                       onClick={() => navigate(`/shoots?id=${shoot.id}`)}

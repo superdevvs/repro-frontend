@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,7 +39,7 @@ interface LegacyShootCardProps {
   client: {
     name: string;
   };
-  status: 'scheduled' | 'completed' | 'pending' | 'hold';
+  status: 'scheduled' | 'completed' | 'pending' | 'hold' | 'booked';
   price: number;
   delay?: number;
 }
@@ -67,7 +66,8 @@ export function ShootCard(props: ShootCardProps) {
     'completed': 'bg-green-500',
     'scheduled': 'bg-blue-500',
     'pending': 'bg-amber-500',
-    'hold': 'bg-purple-500'
+    'hold': 'bg-purple-500',
+    'booked': 'bg-indigo-500'
   };
   
   const formatDate = (dateString: string) => {
