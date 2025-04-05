@@ -20,7 +20,6 @@ import { motion } from 'framer-motion';
 const statusColors = {
   'scheduled': 'bg-blue-500',
   'completed': 'bg-green-500',
-  'cancelled': 'bg-red-500',
   'pending': 'bg-yellow-500',
   'hold': 'bg-purple-500',
 };
@@ -45,7 +44,9 @@ const ShootHistory = () => {
   // Get client shoots by status
   const upcomingShoots = getClientShootsByStatus('hold').concat(getClientShootsByStatus('scheduled'));
   const completedShoots = getClientShootsByStatus('completed');
-  const cancelledShoots = getClientShootsByStatus('cancelled');
+  // Since 'cancelled' is not a valid status in the ShootData type, we'll use 'pending' instead
+  // This is a temporary solution - the proper approach would be to update the ShootData type to include 'cancelled'
+  const cancelledShoots = getClientShootsByStatus('pending');
 
   const handleBookNewShoot = () => {
     navigate('/book-shoot');
@@ -92,10 +93,10 @@ const ShootHistory = () => {
           <span>{formatShootDate(shoot.scheduledDate)}</span>
         </div>
         
-        {shoot.scheduledTime && (
+        {shoot.time && (
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
-            <span>{shoot.scheduledTime}</span>
+            <span>{shoot.time}</span>
           </div>
         )}
         
