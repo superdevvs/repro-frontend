@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -131,8 +132,12 @@ export function ShootHistory() {
                   <TableRow key={shoot.id}>
                     <TableCell className="font-medium">{shoot.id}</TableCell>
                     <TableCell>{shoot.client.name}</TableCell>
-                    <TableCell>{format(parseISO(shoot.scheduledDate), 'PPP')}</TableCell>
-                    <TableCell>{shoot.property.address}</TableCell>
+                    <TableCell>
+                      {typeof shoot.scheduledDate === 'string' 
+                        ? format(parseISO(shoot.scheduledDate), 'PPP')
+                        : format(shoot.scheduledDate, 'PPP')}
+                    </TableCell>
+                    <TableCell>{shoot.location?.address || 'No address'}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{shoot.status}</Badge>
                     </TableCell>
@@ -160,4 +165,4 @@ export function ShootHistory() {
   );
 }
 
-// Export the ShootHistory component (no longer a default export)
+export default ShootHistory;

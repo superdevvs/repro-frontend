@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { Calendar } from '@/components/dashboard/Calendar';
@@ -34,13 +35,16 @@ const ShootCalendar = () => {
       <div className="flex flex-col md:flex-row items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
           <Button variant="outline">Add Shoot</Button>
-          <ShootsFilter onTimeRangeChange={handleTimeRangeChange} />
+          <ShootsFilter 
+            selectedRange={timeRange}
+            onChange={handleTimeRangeChange} 
+          />
         </div>
       </div>
 
       <Calendar
-        onDateSelect={handleDateSelect}
         shoots={filteredShoots}
+        className="w-full"
       />
     </Shell>
   );

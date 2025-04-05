@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
@@ -20,7 +21,11 @@ const Dashboard = () => {
 
   return (
     <Shell>
-      <DashboardHeader setTimeRange={setTimeRange} />
+      <DashboardHeader 
+        isAdmin={true} 
+        timeRange={timeRange} 
+        onTimeRangeChange={setTimeRange} 
+      />
       
       <Tabs defaultValue="analytics" className="w-full mt-6">
         <TabsList>
@@ -37,15 +42,24 @@ const Dashboard = () => {
             shoots={filteredShoots}
             timeRange={timeRange}
           />
-          <UpcomingShoots shoots={filteredShoots} />
+          <UpcomingShoots 
+            shoots={filteredShoots} 
+            timeRange={timeRange}
+          />
         </TabsContent>
         
         <TabsContent value="revenue" className="space-y-4">
-          <RevenueOverview shoots={filteredShoots} />
+          <RevenueOverview 
+            shoots={filteredShoots} 
+            timeRange={timeRange} 
+          />
         </TabsContent>
         
         <TabsContent value="calendar" className="space-y-4">
-          <CalendarSection shoots={filteredShoots} />
+          <CalendarSection 
+            shoots={filteredShoots}
+            timeRange={timeRange}
+          />
         </TabsContent>
       </Tabs>
     </Shell>

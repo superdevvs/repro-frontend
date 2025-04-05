@@ -1,104 +1,130 @@
 
-export interface ShootData {
-  id: string | number;
-  scheduledDate: string | Date;
-  time?: string;
-  status: 'scheduled' | 'pending' | 'completed' | 'hold' | 'booked';
-  location: {
-    address?: string;
-    address2?: string;
-    fullAddress?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    zip?: string; // For backward compatibility
-  };
-  client: {
-    id?: string | number;
-    name?: string;
-    email?: string;
-    phone?: string;
-    company?: string;
-    totalShoots?: number;
-  };
-  photographer?: {
-    id?: string | number;
-    name?: string;
-    avatar?: string;
-  };
-  notes?: {
-    shootNotes?: string;
-    photographerNotes?: string;
-    companyNotes?: string;
-    editingNotes?: string;
-  };
-  payment?: {
-    totalPaid: number;
-    status?: string;
-    baseQuote?: number;
-    taxRate?: number;
-    taxAmount?: number;
-    totalQuote?: number;
-    lastPaymentDate?: string;
-    lastPaymentType?: string;
-  };
-  completedDate?: string;
-  services?: string[];
-  media?: {
-    photos?: MediaItem[];
-    videos?: MediaItem[];
-    floorplans?: MediaItem[];
-    documents?: MediaItem[];
-    slideshows?: SlideShowItem[];
-  };
-  tourLinks?: {
-    branded?: string;
-    mls?: string;
-    genericMls?: string;
-  };
-  createdBy?: string;
-  tourPurchased?: boolean;
-}
+import { ReactNode } from 'react';
+
+export type ShootStatus = 'scheduled' | 'completed' | 'in-progress' | 'cancelled';
+export type TimeRange = 'today' | 'day' | 'week' | 'month' | 'year' | 'all';
 
 export interface MediaItem {
   id: string;
-  name: string;
   url: string;
+  name?: string;
   type?: string;
-  size?: number;
-  uploadDate?: string;
   approved?: boolean;
 }
 
-export interface SlideShowItem {
+export interface Client {
   id: string;
-  title: string;
-  url: string;
-  visible: boolean;
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
 }
 
-export interface ShootsContextType {
+export interface Photographer {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  phone?: string;
+  rate?: number;
+}
+
+export interface Location {
+  address: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+}
+
+export interface Payment {
+  totalPaid: number;
+  invoiceId?: string;
+  status?: 'paid' | 'pending' | 'overdue';
+  date?: string;
+}
+
+export interface ShootMedia {
+  photos?: MediaItem[];
+  videos?: MediaItem[];
+  floorplans?: MediaItem[];
+  slideshows?: MediaItem[];
+}
+
+export interface ShootData {
+  id: string;
+  client: Client;
+  photographer?: Photographer;
+  scheduledDate: string | Date;
+  status: ShootStatus;
+  location?: Location;
+  payment: Payment;
+  media?: ShootMedia;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Component Props Types
+export interface DashboardHeaderProps {
+  isAdmin: boolean;
+  timeRange: TimeRange;
+  onTimeRangeChange: (range: TimeRange) => void;
+}
+
+export interface StatsCardGridProps {
+  showRevenue: boolean;
+  showClientStats: boolean;
+  showPhotographerInterface: boolean;
   shoots: ShootData[];
-  loading: boolean;
-  error: Error | null;
-  addShoot: (shoot: ShootData) => void;
-  updateShoot: (id: string | number, updates: Partial<ShootData>) => void;
-  deleteShoot: (id: string | number) => void;
-  getUniquePhotographers?: () => { id: string; name: string; email?: string; avatar?: string; shootCount?: number }[];
-  getUniqueEditors?: () => { id: string; name: string; email?: string; company?: string; phone?: string; shootCount?: number }[];
-  getUniqueClients?: () => { id: string; name: string; email?: string; company?: string; phone?: string; shootCount?: number }[];
-  getClientShootsByStatus?: (status: string) => ShootData[];
+  timeRange: TimeRange;
+}
+
+export interface UpcomingShootsProps {
+  shoots: ShootData[];
+  timeRange?: TimeRange;
+}
+
+export interface RevenueOverviewProps {
+  shoots: ShootData[];
+  timeRange: TimeRange;
+}
+
+export interface CalendarSectionProps {
+  shoots: ShootData[];
+  timeRange?: TimeRange;
+}
+
+export interface CalendarProps {
+  shoots: ShootData[];
+  className?: string;
+  height?: number;
+}
+
+export interface ShootsFilterProps {
+  selectedRange: TimeRange;
+  onChange: (range: TimeRange) => void;
 }
 
 export interface PhotographerAvailability {
-  photographerId: string;
-  photographerName?: string;
   id?: string;
-  date?: string | Date;
+  photographerId: string;
+  photographerName: string;
+  date: Date;
   startTime?: string;
   endTime?: string;
-  slots: Array<{
+  slots?: {
     date: string;
     times: string[];
-  }>;
+  }[];
+}
+
+export interface ClientStatsProps {
+  totalClients: number;
+  activeClients: number;
+  inactiveClients: number;
+  totalShoots: number;
 }
