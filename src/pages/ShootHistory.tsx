@@ -10,12 +10,16 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useShoots } from '@/context/ShootsContext';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Calendar, Clock, MapPin, ChevronRight, ArrowRight, Building } from 'lucide-react';
+import { Eye, Calendar, Clock, MapPin, ChevronRight, ArrowRight, Building, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShootData } from '@/types/shoots';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const statusColors = {
   'scheduled': 'bg-blue-500',
@@ -25,12 +29,18 @@ const statusColors = {
 };
 
 const ShootHistory = () => {
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState('scheduled');
   const [isLoading, setIsLoading] = useState(true);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filterAddress, setFilterAddress] = useState('');
+  const [filterPhotographer, setFilterPhotographer] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { getClientShootsByStatus } = useShoots();
+  const { getClientShootsByStatus, getUniquePhotographers } = useShoots();
   const { user } = useAuth();
+
+  // Get all photographers for filter dropdown
+  const photographers = getUniquePhotographers();
 
   useEffect(() => {
     // Simulate loading for smoother UX
@@ -42,11 +52,20 @@ const ShootHistory = () => {
   }, []);
 
   // Get client shoots by status
-  const upcomingShoots = getClientShootsByStatus('hold').concat(getClientShootsByStatus('scheduled'));
+  const scheduledShoots = getClientShootsByStatus('scheduled');
   const completedShoots = getClientShootsByStatus('completed');
-  // Since 'cancelled' is not a valid status in the ShootData type, we'll use 'pending' instead
-  // This is a temporary solution - the proper approach would be to update the ShootData type to include 'cancelled'
-  const cancelledShoots = getClientShootsByStatus('pending');
+  const holdShoots = getClientShootsByStatus('hold');
+
+  // Apply filters to scheduled shoots
+  const filteredScheduledShoots = scheduledShoots.filter(shoot => {
+    const matchesAddress = !filterAddress || 
+      shoot.location.fullAddress.toLowerCase().includes(filterAddress.toLowerCase());
+    
+    const matchesPhotographer = !filterPhotographer || 
+      shoot.photographer.name === filterPhotographer;
+    
+    return matchesAddress && matchesPhotographer;
+  });
 
   const handleBookNewShoot = () => {
     navigate('/book-shoot');
@@ -75,7 +94,7 @@ const ShootHistory = () => {
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="font-medium">{shoot.location.address}</h3>
-          <p className="text-sm text-muted-foreground">{shoot.location.city}, {shoot.location.state}</p>
+          <p className="text-sm text-muted-foreground">{shoot.location.city}, {shoot.location.state} {shoot.location.zip}</p>
         </div>
         <Badge 
           variant="outline" 
@@ -106,6 +125,19 @@ const ShootHistory = () => {
             <span className="truncate">Photographer: {shoot.photographer.name}</span>
           </div>
         )}
+        
+        {shoot.services && shoot.services.length > 0 && (
+          <div className="col-span-2 mt-2">
+            <p className="text-xs text-muted-foreground mb-1">Services:</p>
+            <div className="flex flex-wrap gap-1">
+              {shoot.services.map((service, i) => (
+                <Badge key={i} variant="secondary" className="text-xs">
+                  {service}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="flex justify-end">
@@ -115,6 +147,52 @@ const ShootHistory = () => {
         </Button>
       </div>
     </motion.div>
+  );
+
+  // Render table for scheduled shoots
+  const renderScheduledShootsTable = () => (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Time</TableHead>
+            <TableHead>Address</TableHead>
+            <TableHead>Services</TableHead>
+            <TableHead>Photographer</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredScheduledShoots.length > 0 ? (
+            filteredScheduledShoots.map((shoot) => (
+              <TableRow key={shoot.id}>
+                <TableCell>{formatShootDate(shoot.scheduledDate)}</TableCell>
+                <TableCell>{shoot.time || 'Not set'}</TableCell>
+                <TableCell className="max-w-xs truncate">{shoot.location.fullAddress}</TableCell>
+                <TableCell>{shoot.services.join(', ')}</TableCell>
+                <TableCell>{shoot.photographer.name}</TableCell>
+                <TableCell>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => navigate(`/shoots?id=${shoot.id}`)}
+                    className="flex items-center gap-1"
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span>View</span>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center p-4">No scheduled shoots found</TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 
   // Render empty state when no shoots are available
@@ -158,7 +236,7 @@ const ShootHistory = () => {
       <div className="container max-w-5xl py-6">
         <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Shoot History</h1>
+            <h1 className="text-3xl font-bold tracking-tight">My Shoots</h1>
             <p className="text-muted-foreground">View and manage your property photo shoots</p>
           </div>
           <Button onClick={handleBookNewShoot}>Book New Shoot</Button>
@@ -166,17 +244,17 @@ const ShootHistory = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-6">
-            <TabsTrigger value="upcoming" className="flex gap-2 items-center">
+            <TabsTrigger value="scheduled" className="flex gap-2 items-center">
               <Calendar className="h-4 w-4" />
-              <span>Upcoming ({upcomingShoots.length})</span>
+              <span>Scheduled ({scheduledShoots.length})</span>
             </TabsTrigger>
             <TabsTrigger value="completed" className="flex gap-2 items-center">
               <Eye className="h-4 w-4" />
               <span>Completed ({completedShoots.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="cancelled" className="flex gap-2 items-center">
+            <TabsTrigger value="hold" className="flex gap-2 items-center">
               <Calendar className="h-4 w-4" />
-              <span>Cancelled ({cancelledShoots.length})</span>
+              <span>Hold-On ({holdShoots.length})</span>
             </TabsTrigger>
           </TabsList>
 
@@ -184,13 +262,77 @@ const ShootHistory = () => {
             renderLoadingState()
           ) : (
             <>
-              <TabsContent value="upcoming" className="mt-0">
-                {upcomingShoots.length > 0 ? (
-                  <div className="grid gap-4">
-                    {upcomingShoots.map(renderShootCard)}
-                  </div>
+              <TabsContent value="scheduled" className="mt-0">
+                {scheduledShoots.length > 0 ? (
+                  <>
+                    <Collapsible 
+                      open={isFilterOpen} 
+                      onOpenChange={setIsFilterOpen}
+                      className="mb-6 border rounded-lg p-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-medium">Filter Shoots</h3>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <Filter className="h-4 w-4 mr-2" />
+                            {isFilterOpen ? "Hide Filters" : "Show Filters"}
+                          </Button>
+                        </CollapsibleTrigger>
+                      </div>
+                      <CollapsibleContent className="mt-4 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="address-filter">Address</Label>
+                            <Input 
+                              id="address-filter" 
+                              placeholder="Filter by address" 
+                              value={filterAddress}
+                              onChange={(e) => setFilterAddress(e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="photographer-filter">Photographer</Label>
+                            <Select 
+                              value={filterPhotographer} 
+                              onValueChange={setFilterPhotographer}
+                            >
+                              <SelectTrigger id="photographer-filter">
+                                <SelectValue placeholder="Select photographer" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">All Photographers</SelectItem>
+                                {photographers.map((photographer) => (
+                                  <SelectItem key={photographer.name} value={photographer.name}>
+                                    {photographer.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        {(filterAddress || filterPhotographer) && (
+                          <div className="flex justify-between items-center">
+                            <p className="text-sm text-muted-foreground">
+                              Showing {filteredScheduledShoots.length} of {scheduledShoots.length} shoots
+                            </p>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setFilterAddress('');
+                                setFilterPhotographer('');
+                              }}
+                            >
+                              Clear Filters
+                            </Button>
+                          </div>
+                        )}
+                      </CollapsibleContent>
+                    </Collapsible>
+                    {renderScheduledShootsTable()}
+                  </>
                 ) : (
-                  renderEmptyState("You don't have any upcoming shoots scheduled. Book your first shoot now!")
+                  renderEmptyState("You don't have any scheduled shoots. Book your first shoot now!")
                 )}
               </TabsContent>
               
@@ -200,17 +342,17 @@ const ShootHistory = () => {
                     {completedShoots.map(renderShootCard)}
                   </div>
                 ) : (
-                  renderEmptyState("No completed shoots found.")
+                  renderEmptyState("You don't have any completed shoots yet.")
                 )}
               </TabsContent>
               
-              <TabsContent value="cancelled" className="mt-0">
-                {cancelledShoots.length > 0 ? (
+              <TabsContent value="hold" className="mt-0">
+                {holdShoots.length > 0 ? (
                   <div className="grid gap-4">
-                    {cancelledShoots.map(renderShootCard)}
+                    {holdShoots.map(renderShootCard)}
                   </div>
                 ) : (
-                  renderEmptyState("No cancelled shoots found.")
+                  renderEmptyState("You don't have any shoots on hold.")
                 )}
               </TabsContent>
             </>
