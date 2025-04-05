@@ -48,10 +48,14 @@ export function RescheduleDialog({ shoot, isOpen, onClose }: RescheduleDialogPro
     try {
       const originalDate = new Date(shoot.scheduledDate);
       
+      // Convert shoot ID to string to match the database schema
+      const shootIdString = typeof shoot.id === 'number' ? String(shoot.id) : shoot.id;
+      const requestedById = typeof user?.id === 'number' ? String(user.id) : (user?.id || role + '-' + Date.now());
+      
       // Store the reschedule request in the database
       const { error } = await supabase.from('shoot_reschedule_requests').insert({
-        shoot_id: shoot.id,
-        requested_by: user?.id || role + '-' + Date.now(),
+        shoot_id: shootIdString,
+        requested_by: requestedById,
         original_date: originalDate.toISOString(),
         requested_date: date.toISOString(),
         reason: reason,

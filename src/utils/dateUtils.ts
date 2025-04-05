@@ -1,80 +1,110 @@
 
 import { ShootData } from "@/types/shoots";
-import { addDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, isBefore, isAfter, isSameDay, parseISO } from "date-fns";
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO, isValid } from "date-fns";
 
-export type TimeRange = 'day' | 'week' | 'month' | 'year';
+export type TimeRange = 'day' | 'week' | 'month' | 'year' | 'all';
 
-export const getDateRangeFromTimeRange = (timeRange: TimeRange): [Date, Date] => {
-  const now = new Date();
-  
-  switch (timeRange) {
-    case 'day':
-      return [startOfDay(now), endOfDay(now)];
-    case 'week':
-      return [startOfWeek(now, { weekStartsOn: 1 }), endOfWeek(now, { weekStartsOn: 1 })];
-    case 'month':
-      return [startOfMonth(now), endOfMonth(now)];
-    case 'year':
-      return [startOfYear(now), endOfYear(now)];
-    default:
-      return [startOfMonth(now), endOfMonth(now)];
+export const formatDate = (dateString: string | Date): string => {
+  try {
+    const date = typeof dateString === 'string' ? parseISO(dateString) : dateString;
+    if (!isValid(date)) return 'Invalid date';
+    return format(date, 'MMM dd, yyyy');
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid date';
   }
 };
 
-export const filterShootsByDateRange = (shoots: ShootData[], timeRange: TimeRange): ShootData[] => {
-  const [startDate, endDate] = getDateRangeFromTimeRange(timeRange);
+export const getDateRangeLabel = (range: TimeRange): string => {
+  const today = new Date();
+  
+  switch (range) {
+    case 'day':
+      return `Today, ${format(today, 'MMM dd')}`;
+    case 'week':
+      return `This Week, ${format(startOfWeek(today), 'MMM dd')} - ${format(endOfWeek(today), 'MMM dd')}`;
+    case 'month':
+      return `This Month, ${format(today, 'MMMM yyyy')}`;
+    case 'year':
+      return `This Year, ${format(today, 'yyyy')}`;
+    case 'all':
+      return 'All Time';
+    default:
+      return '';
+  }
+};
+
+export const getDateRangeForFilter = (range: TimeRange): { start: Date, end: Date } | null => {
+  const today = new Date();
+  
+  switch (range) {
+    case 'day':
+      return {
+        start: startOfDay(today),
+        end: endOfDay(today),
+      };
+    case 'week':
+      return {
+        start: startOfWeek(today),
+        end: endOfWeek(today),
+      };
+    case 'month':
+      return {
+        start: startOfMonth(today),
+        end: endOfMonth(today),
+      };
+    case 'year':
+      return {
+        start: startOfYear(today),
+        end: endOfYear(today),
+      };
+    case 'all':
+      return null; // No date filtering for 'all'
+    default:
+      return null;
+  }
+};
+
+export const filterShootsByDateRange = (shoots: ShootData[], range: TimeRange): ShootData[] => {
+  const dateRange = getDateRangeForFilter(range);
+  
+  if (!dateRange) {
+    return shoots; // Return all shoots if no date range
+  }
   
   return shoots.filter(shoot => {
-    // Ensure we're working with a valid date
-    const shootDate = typeof shoot.scheduledDate === 'string'
-      ? parseISO(shoot.scheduledDate)
-      : new Date(shoot.scheduledDate);
-    
-    return !isBefore(shootDate, startDate) && !isAfter(shootDate, endDate);
+    const shootDate = new Date(shoot.scheduledDate);
+    return shootDate >= dateRange.start && shootDate <= dateRange.end;
   });
 };
 
-export const getScheduledTodayShoots = (shoots: ShootData[]): ShootData[] => {
-  const today = new Date();
+export const filterCompletedShootsByDateRange = (shoots: ShootData[], range: TimeRange): ShootData[] => {
+  const dateRange = getDateRangeForFilter(range);
+  
+  if (!dateRange) {
+    return shoots.filter(shoot => shoot.status === 'completed');
+  }
+  
   return shoots.filter(shoot => {
-    const shootDate = typeof shoot.scheduledDate === 'string'
-      ? parseISO(shoot.scheduledDate)
+    const isCompleted = shoot.status === 'completed';
+    if (!isCompleted) return false;
+    
+    // For completed shoots, use the completed date if available
+    const dateToCheck = shoot.completedDate 
+      ? new Date(shoot.completedDate)
       : new Date(shoot.scheduledDate);
-    return isSameDay(shootDate, today);
+      
+    return dateToCheck >= dateRange.start && dateToCheck <= dateRange.end;
   });
 };
 
-export const getActiveShootsCount = (shoots: ShootData[]): number => {
-  return shoots.filter(shoot => shoot.status === 'scheduled').length;
-};
-
-export const getCompletedShootsCount = (shoots: ShootData[]): number => {
-  return shoots.filter(shoot => shoot.status === 'completed').length;
-};
-
-export const getTotalPaidAmount = (shoots: ShootData[]): number => {
-  return shoots.reduce((total, shoot) => {
-    const paidAmount = shoot.payment?.totalPaid || 0;
-    return total + paidAmount;
-  }, 0);
-};
-
-export const getEstimatedTaxAmount = (shoots: ShootData[], taxRate: number = 0.15): number => {
-  const totalRevenue = getTotalPaidAmount(shoots);
-  return totalRevenue * taxRate;
-};
-
-export const getUniqueClientsCount = (shoots: ShootData[]): number => {
-  const clientNames = new Set(shoots.map(shoot => shoot.client.name));
-  return clientNames.size;
-};
-
-export const getTotalMediaAssetsCount = (shoots: ShootData[]): number => {
-  let count = 0;
-  shoots.forEach(shoot => {
-    if (shoot.media && shoot.media.photos) {
-      count += shoot.media.photos.length;
+export const getMediaCountForShoots = (shoots: ShootData[]): { photos: number, videos: number, floorplans: number } => {
+  return shoots.reduce((counts, shoot) => {
+    if (shoot.media) {
+      counts.photos += shoot.media.photos?.length || 0;
+      counts.videos += shoot.media.videos?.length || 0;
+      counts.floorplans += shoot.media.floorplans?.length || 0;
     }
-  });
-  return count;
+    return counts;
+  }, { photos: 0, videos: 0, floorplans: 0 });
 };

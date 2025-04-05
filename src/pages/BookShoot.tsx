@@ -1,361 +1,394 @@
-
 import React, { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { AnimatePresence } from 'framer-motion';
-import { useToast } from "@/hooks/use-toast";
-import { BookingStepIndicator } from '@/components/booking/BookingStepIndicator';
-import { BookingComplete } from '@/components/booking/BookingComplete';
-import { useShoots } from '@/context/ShootsContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { Client } from '@/types/clients';
-import { initialClientsData } from '@/data/clientsData';
-import { ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { format } from 'date-fns';
-import { BookingSummary } from '@/components/booking/BookingSummary';
-import { BookingContentArea } from '@/components/booking/BookingContentArea';
-import { packages, photographers } from '@/constants/bookingSteps';
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { useShoots } from '@/context/ShootsContext';
 import { ShootData } from '@/types/shoots';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Info } from "lucide-react";
+
+const TAX_RATE = 0.08; // 8% tax rate
 
 const BookShoot = () => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const clientIdFromUrl = queryParams.get('clientId');
-  const clientNameFromUrl = queryParams.get('clientName');
-  const clientCompanyFromUrl = queryParams.get('clientCompany');
-  const { user } = useAuth();
-  
-  const [clients, setClients] = useState<Client[]>(() => {
-    const storedClients = localStorage.getItem('clientsData');
-    return storedClients ? JSON.parse(storedClients) : initialClientsData;
-  });
-  
-  const [client, setClient] = useState(() => {
-    if (user && user.role === 'client' && user.metadata && user.metadata.clientId) {
-      return user.metadata.clientId;
-    }
-    return clientIdFromUrl || '';
-  });
-
-  const [address, setAddress] = useState('');
+  const [clientName, setClientName] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+	const [clientCompany, setClientCompany] = useState('');
+  const [propertyAddress, setPropertyAddress] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
-  const [zip, setZip] = useState('');
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const [time, setTime] = useState('');
-  const [photographer, setPhotographer] = useState('');
-  const [selectedPackage, setSelectedPackage] = useState('');
-  const [notes, setNotes] = useState('');
-  const [bypassPayment, setBypassPayment] = useState(false);
-  const [sendNotification, setSendNotification] = useState(true);
-  const [step, setStep] = useState(1);
-  const [isComplete, setIsComplete] = useState(false);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [zipCode, setZipCode] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('10:00 AM');
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [specialInstructions, setSpecialInstructions] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPhotographer, setSelectedPhotographer] = useState<{ id: string; name: string } | { name: string; avatar: string } | null>(null);
+  
+  const { addShoot, shoots } = useShoots();
   const { toast } = useToast();
-  const { addShoot } = useShoots();
   const navigate = useNavigate();
-
-  const isClientAccount = user && user.role === 'client';
-
-  useEffect(() => {
-    const storedClients = localStorage.getItem('clientsData');
-    if (storedClients) {
-      setClients(JSON.parse(storedClients));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (clientIdFromUrl && clientNameFromUrl) {
-      setClient(clientIdFromUrl);
-      
-      toast({
-        title: "Client Selected",
-        description: `${decodeURIComponent(clientNameFromUrl)}${clientCompanyFromUrl ? ` (${decodeURIComponent(clientCompanyFromUrl)})` : ''} has been selected for this shoot.`,
-        variant: "default",
-      });
-    }
-  }, [clientIdFromUrl, clientNameFromUrl, clientCompanyFromUrl, toast]);
-
-  const getPackagePrice = () => {
-    const pkg = packages.find(p => p.id === selectedPackage);
-    return pkg ? pkg.price : 0;
-  };
-
-  const getPhotographerRate = () => {
-    const photog = photographers.find(p => p.id === photographer);
-    return photog ? photog.rate : 0;
-  };
-
-  const getTax = () => {
-    const subtotal = getPackagePrice() + getPhotographerRate();
-    return Math.round(subtotal * 0.06);
-  };
-
-  const getTotal = () => {
-    return getPackagePrice() + getPhotographerRate() + getTax();
-  };
-
-  const getAvailablePhotographers = () => {
-    if (!date || !time || !selectedPackage) return [];
-
-    return photographers.filter(p => p.availability);
-  };
-
-  const validateCurrentStep = () => {
-    if (step === 1) {
-      if (!client && !isClientAccount) {
-        toast({
-          title: "Missing information",
-          description: "Please select a client before proceeding.",
-          variant: "destructive",
-        });
-        return false;
+  
+  // Mock photographer data
+  const photographers = [
+    { id: '1', name: 'John Doe', avatar: 'https://ui.shadcn.com/avatars/01.png' },
+    { id: '2', name: 'Jane Smith', avatar: 'https://ui.shadcn.com/avatars/02.png' },
+  ];
+  
+  // Mock service data
+  const services = [
+    'Photography',
+    '3D Virtual Tour',
+    'Drone Photography',
+    'Floor Plans',
+  ];
+  
+  // Mock time slots
+  const timeSlots = [
+    '9:00 AM',
+    '10:00 AM',
+    '11:00 AM',
+    '1:00 PM',
+    '2:00 PM',
+    '3:00 PM',
+  ];
+  
+  // Calculate base price based on selected services
+  const calculateBasePrice = () => {
+    let basePrice = 100; // Default base price
+    selectedServices.forEach(service => {
+      switch (service) {
+        case '3D Virtual Tour':
+          basePrice += 75;
+          break;
+        case 'Drone Photography':
+          basePrice += 125;
+          break;
+        case 'Floor Plans':
+          basePrice += 50;
+          break;
+        default:
+          break;
       }
-      
-      if (!address || !city || !state || !zip || !selectedPackage) {
-        toast({
-          title: "Missing information",
-          description: "Please fill in all property details and select a package before proceeding.",
-          variant: "destructive",
-        });
-        return false;
-      }
-      return true;
-    }
-    
-    if (step === 2) {
-      const errors = {};
-      if (!date) errors['date'] = "Please select a date";
-      if (!time) errors['time'] = "Please select a time";
-      
-      if (Object.keys(errors).length > 0) {
-        setFormErrors(errors);
-        return false;
-      }
-      return true;
-    }
-    
-    return true;
+    });
+    return basePrice;
   };
-
-  const handleSubmit = () => {
-    setFormErrors({});
-    
-    if (step === 3) {
-      const availablePhotographers = getAvailablePhotographers();
-      
-      if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
-        toast({
-          title: "Missing information",
-          description: "Please fill in all required fields before confirming the booking.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const selectedClientData = clients.find(c => c.id === client);
-      const selectedPhotographerData = photographers.find(p => p.id === photographer);
-      const selectedPackageData = packages.find(p => p.id === selectedPackage);
-      
-      // Fix the status type by explicitly setting it to a valid literal type
-      const bookingStatus: ShootData['status'] = 'booked';
-      
-      const newShoot: ShootData = {
-        id: uuidv4(),
-        scheduledDate: date.toISOString().split('T')[0],
-        time: time,
-        client: {
-          name: selectedClientData?.name || 'Unknown Client',
-          email: selectedClientData?.email || `client${client}@example.com`,
-          company: selectedClientData?.company,
-          totalShoots: 1
-        },
-        location: {
-          address: address,
-          address2: '',
-          city: city,
-          state: state,
-          zip: zip,
-          fullAddress: `${address}, ${city}, ${state} ${zip}`
-        },
-        photographer: selectedPhotographerData ? {
-          id: selectedPhotographerData.id,
-          name: selectedPhotographerData.name,
-          avatar: selectedPhotographerData.avatar
-        } : {
-          name: "To Be Assigned",
-          avatar: ""
-        },
-        services: selectedPackageData ? [selectedPackageData.name] : [],
-        payment: {
-          baseQuote: getPackagePrice(),
-          taxRate: 6.00,
-          taxAmount: getTax(),
-          totalQuote: getTotal(),
-          ...(bypassPayment ? {} : { totalPaid: getTotal(), lastPaymentDate: new Date().toISOString().split('T')[0], lastPaymentType: 'Credit Card' })
-        },
-        status: bookingStatus,
-        notes: notes ? { shootNotes: notes } : undefined,
-        createdBy: user?.name || "Current User"
-      };
-
-      addShoot(newShoot);
-      setIsComplete(true);
-
-      console.log("New shoot created:", newShoot);
-    } else {
-      if (!validateCurrentStep()) {
-        return;
-      }
-      
-      setStep(step + 1);
-    }
+  
+  // Calculate tax amount
+  const calculateTaxAmount = () => {
+    return calculateBasePrice() * TAX_RATE;
   };
-
-  const goBack = () => {
-    if (step > 1) {
-      setFormErrors({});
-      setStep(step - 1);
-    }
+  
+  // Calculate total price
+  const calculateTotalPrice = () => {
+    return calculateBasePrice() + calculateTaxAmount();
   };
-
+  
+  // Reset form fields
   const resetForm = () => {
-    if (!isClientAccount) {
-      setClient('');
-    }
-    setAddress('');
+    setClientName('');
+    setClientEmail('');
+    setClientPhone('');
+		setClientCompany('');
+    setPropertyAddress('');
     setCity('');
     setState('');
-    setZip('');
-    setDate(undefined);
-    setTime('');
-    setPhotographer('');
-    setSelectedPackage('');
-    setNotes('');
-    setBypassPayment(false);
-    setSendNotification(true);
-    setStep(1);
-    setIsComplete(false);
-    navigate('/shoots');
+    setZipCode('');
+    setSelectedDate(undefined);
+    setSelectedTimeSlot('10:00 AM');
+    setSelectedServices([]);
+    setSpecialInstructions('');
+    setSelectedPhotographer(null);
   };
-
-  const clientPropertyFormData = {
-    initialData: {
-      clientId: client,
-      clientName: isClientAccount ? user?.name || '' : clients.find(c => c.id === client)?.name || '',
-      clientEmail: isClientAccount ? user?.email || '' : clients.find(c => c.id === client)?.email || '',
-      clientPhone: isClientAccount ? (user?.metadata?.phone || '') : clients.find(c => c.id === client)?.phone || '',
-      clientCompany: isClientAccount ? (user?.metadata?.company || '') : clients.find(c => c.id === client)?.company || '',
-      propertyType: 'residential' as const,
-      propertyAddress: address,
-      propertyCity: city,
-      propertyState: state,
-      propertyZip: zip,
-      propertyInfo: notes
-    },
-    onComplete: (data: any) => {
-      if (!isClientAccount && data.clientId) {
-        setClient(data.clientId);
-      }
-      setAddress(data.propertyAddress);
-      setCity(data.propertyCity);
-      setState(data.propertyState);
-      setZip(data.propertyZip);
-      setNotes(data.propertyInfo || '');
-      setSelectedPackage(data.selectedPackage || '');
-      setStep(2);
-    },
-    isClientAccount: isClientAccount
-  };
-
-  const getSummaryInfo = () => {
-    const selectedClientData = clients.find(c => c.id === client);
-    const selectedPackageData = packages.find(p => p.id === selectedPackage);
+  
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
     
-    return {
-      client: selectedClientData?.name || (isClientAccount ? user?.name : ''),
-      package: selectedPackageData?.name || '',
-      packagePrice: getPackagePrice(),
-      address: address ? `${address}, ${city}, ${state} ${zip}` : '',
-      date: date ? format(date, 'PPP') : '',
-      time: time || '',
-    };
+    // Form validation
+    if (!clientName || !propertyAddress || !selectedDate) {
+      toast.error("Please fill out all required fields");
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Check if a photographer is selected for the shoot
+    if (!selectedPhotographer) {
+      toast.error("Please select a photographer");
+      setIsSubmitting(false);
+      return;
+    }
+    
+    try {
+      // Generate unique ID for the shoot
+      const shootId = uuidv4();
+      
+      // Format date for storing
+      const formattedDate = selectedDate.toISOString();
+      
+      // Photographer object
+      const photographer = selectedPhotographer.id 
+        ? { 
+            id: selectedPhotographer.id,
+            name: selectedPhotographer.name,
+          }
+        : { 
+            id: uuidv4(), // Generate an ID if one doesn't exist
+            name: selectedPhotographer.name,
+          };
+      
+      // Create a new shoot object
+      const newShoot: ShootData = {
+        id: shootId,
+        scheduledDate: formattedDate,
+        time: selectedTimeSlot,
+        status: 'scheduled' as const, // Using as const to ensure type compatibility
+        client: {
+          name: clientName,
+          email: clientEmail,
+          phone: clientPhone,
+					company: clientCompany,
+        },
+        location: {
+          address: propertyAddress,
+          fullAddress: `${propertyAddress}, ${city}, ${state} ${zipCode}`,
+          city,
+          state,
+          zipCode,
+        },
+        photographer: photographer,
+        notes: {
+          shootNotes: specialInstructions,
+        },
+        payment: {
+          totalPaid: 0,
+          status: 'unpaid',
+          baseQuote: calculateBasePrice(),
+          taxAmount: calculateTaxAmount(),
+          taxRate: TAX_RATE,
+          totalQuote: calculateTotalPrice(),
+        },
+        services: selectedServices,
+        completedDate: undefined,
+      };
+      
+      // Add the shoot to the context
+      addShoot(newShoot);
+      
+      // Show success message
+      toast.success("Shoot scheduled successfully!");
+      
+      // Reset form
+      resetForm();
+      
+      // Redirect to the shoots page after a short delay
+      setTimeout(() => {
+        navigate('/shoots');
+      }, 1500);
+      
+    } catch (error) {
+      console.error("Error booking shoot:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-  const summaryInfo = getSummaryInfo();
 
   return (
-    <DashboardLayout>
-      <div className="container max-w-5xl py-6 space-y-8">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
-          onClick={() => navigate('/shoots')}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Shoots
-        </Button>
-        
-        <AnimatePresence mode="wait">
-          {isComplete ? (
-            <BookingComplete date={date} time={time} resetForm={resetForm} />
-          ) : (
-            <>
-              <BookingStepIndicator currentStep={step} totalSteps={3} />
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="md:col-span-1 order-2 md:order-1">
-                  <BookingSummary 
-                    summaryInfo={summaryInfo} 
-                    selectedPackage={selectedPackage}
-                    packages={packages}
-                  />
-                </div>
-                
-                <div className="md:col-span-2 order-1 md:order-2">
-                  <BookingContentArea
-                    step={step}
-                    formErrors={formErrors}
-                    setFormErrors={setFormErrors}
-                    clientPropertyFormData={clientPropertyFormData}
-                    date={date}
-                    setDate={setDate}
-                    time={time}
-                    setTime={setTime}
-                    selectedPackage={selectedPackage}
-                    notes={notes}
-                    setNotes={setNotes}
-                    packages={packages}
-                    client={client}
-                    address={address}
-                    city={city}
-                    state={state}
-                    zip={zip}
-                    photographer={photographer}
-                    setPhotographer={setPhotographer}
-                    bypassPayment={bypassPayment}
-                    setBypassPayment={setBypassPayment}
-                    sendNotification={sendNotification}
-                    setSendNotification={setSendNotification}
-                    getPackagePrice={getPackagePrice}
-                    getPhotographerRate={getPhotographerRate}
-                    getTax={getTax}
-                    getTotal={getTotal}
-                    clients={clients}
-                    photographers={getAvailablePhotographers()}
-                    handleSubmit={handleSubmit}
-                    goBack={goBack}
-                  />
-                </div>
+    <div className="container py-12">
+      <Card className="max-w-3xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl">Book a Photoshoot</CardTitle>
+          <CardDescription>
+            Fill out the form below to schedule a photoshoot for your property.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="clientName">Client Name</Label>
+              <Input
+                type="text"
+                id="clientName"
+                placeholder="Enter client name"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="clientEmail">Client Email</Label>
+              <Input
+                type="email"
+                id="clientEmail"
+                placeholder="Enter client email"
+                value={clientEmail}
+                onChange={(e) => setClientEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="clientPhone">Client Phone</Label>
+              <Input
+                type="tel"
+                id="clientPhone"
+                placeholder="Enter client phone"
+                value={clientPhone}
+                onChange={(e) => setClientPhone(e.target.value)}
+              />
+            </div>
+						<div>
+              <Label htmlFor="clientCompany">Client Company</Label>
+              <Input
+                type="text"
+                id="clientCompany"
+                placeholder="Enter client company"
+                value={clientCompany}
+                onChange={(e) => setClientCompany(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="propertyAddress">Property Address</Label>
+              <Input
+                type="text"
+                id="propertyAddress"
+                placeholder="Enter property address"
+                value={propertyAddress}
+                onChange={(e) => setPropertyAddress(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="city">City</Label>
+                <Input
+                  type="text"
+                  id="city"
+                  placeholder="City"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  required
+                />
               </div>
-            </>
-          )}
-        </AnimatePresence>
-      </div>
-    </DashboardLayout>
+              <div>
+                <Label htmlFor="state">State</Label>
+                <Input
+                  type="text"
+                  id="state"
+                  placeholder="State"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="zipCode">Zip Code</Label>
+                <Input
+                  type="text"
+                  id="zipCode"
+                  placeholder="Zip Code"
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="date">Select Date</Label>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="rounded-md border"
+              />
+            </div>
+            <div>
+              <Label htmlFor="time">Select Time</Label>
+              <Select value={selectedTimeSlot} onValueChange={setSelectedTimeSlot}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeSlots.map((time) => (
+                    <SelectItem key={time} value={time}>{time}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Select Services</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {services.map((service) => (
+                  <div key={service} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={service}
+                      checked={selectedServices.includes(service)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedServices([...selectedServices, service]);
+                        } else {
+                          setSelectedServices(selectedServices.filter((s) => s !== service));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={service}>{service}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="specialInstructions">Special Instructions</Label>
+              <Textarea
+                id="specialInstructions"
+                placeholder="Enter any special instructions"
+                value={specialInstructions}
+                onChange={(e) => setSpecialInstructions(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="photographer">Select Photographer</Label>
+              <Select 
+                onValueChange={(value) => {
+                  const photographer = photographers.find(p => p.id === value);
+                  if (photographer) {
+                    setSelectedPhotographer({
+                      id: photographer.id,
+                      name: photographer.name,
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a photographer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {photographers.map((photographer) => (
+                    <SelectItem key={photographer.id} value={photographer.id}>
+                      {photographer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting ? 'Submitting...' : 'Book Photoshoot'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
