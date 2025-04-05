@@ -107,7 +107,7 @@ const ShootHistory = () => {
       <div className="grid grid-cols-2 gap-4 text-sm mb-4">
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span>{formatShootDate(shoot.scheduledDate)}</span>
+          <span>{formatDateSafe(shoot.scheduledDate)}</span>
         </div>
         
         {shoot.time && (
@@ -164,7 +164,7 @@ const ShootHistory = () => {
           {filteredScheduledShoots.length > 0 ? (
             filteredScheduledShoots.map((shoot) => (
               <TableRow key={shoot.id}>
-                <TableCell>{formatShootDate(shoot.scheduledDate)}</TableCell>
+                <TableCell>{formatDateSafe(shoot.scheduledDate)}</TableCell>
                 <TableCell>{shoot.time || 'Not set'}</TableCell>
                 <TableCell className="max-w-xs truncate">{shoot.location.fullAddress}</TableCell>
                 <TableCell>{shoot.services.join(', ')}</TableCell>

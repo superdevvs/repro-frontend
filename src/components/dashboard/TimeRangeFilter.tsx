@@ -17,15 +17,17 @@ export function TimeRangeFilter({ selectedRange, onChange, className }: TimeRang
         <Calendar className="h-3.5 w-3.5" />
         <span>
           {selectedRange === 'day' && 'Today'}
+          {selectedRange === 'today' && 'Today'}
           {selectedRange === 'week' && 'This Week'}
           {selectedRange === 'month' && 'This Month'}
           {selectedRange === 'year' && 'This Year'}
+          {selectedRange === 'all' && 'All Time'}
         </span>
       </div>
       
       <div className="bg-muted/20 p-1 rounded-lg flex items-center">
         <Button
-          variant={selectedRange === 'day' ? 'default' : 'ghost'}
+          variant={selectedRange === 'day' || selectedRange === 'today' ? 'default' : 'ghost'}
           size="sm"
           onClick={() => onChange('day')}
           className="text-xs h-8"

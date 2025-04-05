@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useDropzone } from 'react-dropzone';
 import { Eye, Upload, X, Check, AlertCircle, Image, Video, FileText } from 'lucide-react';
-import { ShootData } from '@/types/shoots';
+import { ShootData, MediaItem } from '@/types/shoots';
 import { useToast } from '@/hooks/use-toast';
 
 interface ShootMediaTabProps {
@@ -23,7 +23,7 @@ export function ShootMediaTab({ shoot, setShoot, isPhotographer }: ShootMediaTab
   const [uploadingVideos, setUploadingVideos] = useState(false);
   const [uploadingDocuments, setUploadingDocuments] = useState(false);
 
-  // Example media data that would come from the backend
+  // Initialize media data from shoot or create empty arrays
   const mediaData = {
     photos: shoot.media?.photos || [],
     videos: shoot.media?.videos || [],
@@ -127,7 +127,7 @@ export function ShootMediaTab({ shoot, setShoot, isPhotographer }: ShootMediaTab
 
   // Just a placeholder for the actual approval logic
   const handleApproveMedia = (id: string, mediaType: 'photos' | 'videos' | 'documents') => {
-    const updatedMedia = shoot.media?.[mediaType].map(item => 
+    const updatedMedia = shoot.media?.[mediaType]?.map(item => 
       item.id === id ? { ...item, approved: true } : item
     );
     
@@ -150,7 +150,7 @@ export function ShootMediaTab({ shoot, setShoot, isPhotographer }: ShootMediaTab
   const handleDeleteMedia = (id: string, mediaType: 'photos' | 'videos' | 'documents') => {
     const updatedMedia = {
       ...shoot.media,
-      [mediaType]: shoot.media?.[mediaType].filter(item => item.id !== id)
+      [mediaType]: shoot.media?.[mediaType]?.filter(item => item.id !== id)
     };
     
     setShoot({

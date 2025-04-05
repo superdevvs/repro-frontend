@@ -45,9 +45,10 @@ export interface ShootData {
   completedDate?: string;
   services?: string[];
   media?: {
-    photos?: string[];
-    videos?: string[];
-    floorplans?: string[];
+    photos?: MediaItem[];
+    videos?: MediaItem[];
+    floorplans?: MediaItem[];
+    documents?: MediaItem[];
     slideshows?: SlideShowItem[];
   };
   tourLinks?: {
@@ -57,6 +58,16 @@ export interface ShootData {
   };
   createdBy?: string;
   tourPurchased?: boolean;
+}
+
+export interface MediaItem {
+  id: string;
+  name: string;
+  url: string;
+  type?: string;
+  size?: number;
+  uploadDate?: string;
+  approved?: boolean;
 }
 
 export interface SlideShowItem {
