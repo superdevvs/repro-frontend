@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +18,9 @@ import Reports from "./pages/Reports";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 import ShootHistory from "./pages/ShootHistory";
+import PhotographerShootHistory from "./pages/PhotographerShootHistory";
+import PhotographerAccount from "./pages/PhotographerAccount";
+import PhotographerAvailability from "./pages/PhotographerAvailability";
 import { ShootsProvider } from './context/ShootsContext';
 import { ThemeProvider } from './hooks/useTheme';
 
