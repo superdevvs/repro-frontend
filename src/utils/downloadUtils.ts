@@ -1,3 +1,4 @@
+
 /**
  * Convert data to CSV and trigger download
  * @param data Array of objects to convert to CSV
@@ -39,9 +40,9 @@ export const downloadCSV = (data: Record<string, any>[], filename: string) => {
   const link = document.createElement('a');
   
   // Set up download
-  if (navigator.msSaveBlob) {
+  if (navigator.hasOwnProperty('msSaveBlob')) {
     // IE 10+
-    navigator.msSaveBlob(blob, filename);
+    (navigator as any).msSaveBlob(blob, filename);
   } else {
     // Other browsers
     const url = URL.createObjectURL(blob);

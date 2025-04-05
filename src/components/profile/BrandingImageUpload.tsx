@@ -13,6 +13,7 @@ interface BrandingImageUploadProps {
   aspectRatio?: string;
   maxWidth?: number;
   helperText?: string;
+  className?: string;
 }
 
 export function BrandingImageUpload({ 
@@ -20,7 +21,8 @@ export function BrandingImageUpload({
   initialImage, 
   aspectRatio = '16/9',
   maxWidth = 400,
-  helperText
+  helperText,
+  className
 }: BrandingImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(initialImage || null);
   const [uploading, setUploading] = useState(false);
@@ -143,7 +145,7 @@ export function BrandingImageUpload({
   return (
     <div className="space-y-4">
       <div 
-        className="relative cursor-pointer group border-2 border-dashed border-border rounded-md overflow-hidden"
+        className={`relative cursor-pointer group border-2 border-dashed border-border rounded-md overflow-hidden ${className}`}
         style={{ maxWidth: `${maxWidth}px` }}
         onClick={handleButtonClick}
       >

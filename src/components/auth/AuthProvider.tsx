@@ -23,6 +23,7 @@ export interface User {
   bio?: string;
   username?: string;
   metadata?: UserMetadata;
+  isActive?: boolean; // Add isActive property
 }
 
 interface AuthContextType {

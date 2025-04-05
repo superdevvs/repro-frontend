@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { User } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BrandingImageUpload } from "@/components/profile/BrandingImageUpload";
 
-// Mock data for clients and branding
 const mockClients = [
   { id: "1", name: "Acme Real Estate" },
   { id: "2", name: "Pacific Properties" },
@@ -101,7 +99,7 @@ export function LinkClientBrandingDialog({
         <DialogHeader>
           <DialogTitle>Link Client & Branding</DialogTitle>
           <DialogDescription>
-            Associate {user.name} with clients and customize branding settings
+            Associate {user?.name} with clients and customize branding settings
           </DialogDescription>
         </DialogHeader>
 
@@ -159,7 +157,7 @@ export function LinkClientBrandingDialog({
               <div>
                 <Label>Logo</Label>
                 <BrandingImageUpload
-                  value={brandingSettings.logo}
+                  initialImage={brandingSettings.logo}
                   onChange={(url) => handleBrandingChange("logo", url)}
                   className="h-24 w-full"
                 />

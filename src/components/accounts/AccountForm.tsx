@@ -33,6 +33,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ImageUpload } from "@/components/profile/ImageUpload";
 
+// Define allowed roles for the form
+type FormRole = 'admin' | 'photographer' | 'client' | 'editor';
+
 const accountFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
@@ -67,7 +70,7 @@ export function AccountForm({
     defaultValues: {
       name: "",
       email: "",
-      role: "client" as Role,
+      role: "client" as FormRole,
       phone: "",
       company: "",
       avatar: "",
@@ -79,16 +82,22 @@ export function AccountForm({
 
   useEffect(() => {
     if (initialData) {
+      // Convert Role to FormRole if needed
+      const role: FormRole = initialData.role === 'superadmin' 
+        ? 'admin' 
+        : (initialData.role as FormRole);
+        
       form.reset({
         name: initialData.name,
         email: initialData.email,
-        role: initialData.role,
+        role,
         phone: initialData.phone || "",
         company: initialData.company || "",
         avatar: initialData.avatar || "",
         bio: initialData.bio || "",
         username: initialData.username || "",
-        isActive: true, // Assuming all users are active by default
+        // Use initialData.isActive if it exists, otherwise default to true
+        isActive: (initialData as any).isActive !== undefined ? (initialData as any).isActive : true,
       });
       setAvatarUrl(initialData.avatar || "");
     } else {
@@ -131,7 +140,7 @@ export function AccountForm({
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="flex justify-center mb-4">
               <ImageUpload
-                value={avatarUrl}
+                initialImage={avatarUrl}
                 onChange={(url) => {
                   setAvatarUrl(url);
                   form.setValue("avatar", url);

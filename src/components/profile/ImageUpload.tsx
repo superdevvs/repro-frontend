@@ -10,9 +10,10 @@ import { supabase } from '@/integrations/supabase/client';
 interface ImageUploadProps {
   onChange: (url: string) => void;
   initialImage?: string;
+  className?: string;
 }
 
-export function ImageUpload({ onChange, initialImage }: ImageUploadProps) {
+export function ImageUpload({ onChange, initialImage, className }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(initialImage || null);
   const [isHovering, setIsHovering] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -135,7 +136,7 @@ export function ImageUpload({ onChange, initialImage }: ImageUploadProps) {
         onMouseLeave={() => setIsHovering(false)}
       >
         <Avatar 
-          className="h-24 w-24 cursor-pointer" 
+          className={`h-24 w-24 cursor-pointer ${className}`}
           onClick={handleButtonClick}
         >
           <AvatarImage src={preview || user?.avatar} />
