@@ -23,6 +23,7 @@ import PhotographerAccount from "./pages/PhotographerAccount";
 import PhotographerAvailability from "./pages/PhotographerAvailability";
 import { ShootsProvider } from './context/ShootsContext';
 import { ThemeProvider } from './hooks/useTheme';
+import Profile from "./pages/Profile";
 
 // Declare global type augmentations for User to include metadata
 declare module './components/auth/AuthProvider' {
@@ -109,6 +110,11 @@ const AppRoutes = () => {
       <Route path="/settings" element={
         <ProtectedRoute>
           <Settings />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Profile />
         </ProtectedRoute>
       } />
       <Route path="/photographer-history" element={<PhotographerShootHistory />} />

@@ -151,10 +151,10 @@ export function Navbar() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => window.location.href = '/profile'}>
+            <DropdownMenuItem onClick={() => navigate('/profile')}>
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => window.location.href = '/settings'}>
+            <DropdownMenuItem onClick={() => navigate('/settings')}>
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
