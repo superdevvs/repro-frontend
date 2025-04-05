@@ -1,6 +1,6 @@
 
-import React, { useState, useRef } from 'react';
-import { Send, Paperclip, SmilePlus, FileText } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Paperclip, SmilePlus, FileText, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -8,7 +8,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { toast } from 'sonner';
 import { MessageTemplate } from '@/types/messages';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MessageInputProps {
   onSendMessage: (content: string, attachments?: File[]) => void;
@@ -19,14 +22,38 @@ interface MessageInputProps {
 export function MessageInput({ onSendMessage, isLoading = false, templates = [] }: MessageInputProps) {
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isMobile = useIsMobile();
+  
+  // Handle textarea auto-resize
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      const newHeight = Math.min(textarea.scrollHeight, 150); // Max height of 150px
+      textarea.style.height = `${newHeight}px`;
+    }
+  }, [content]);
+
   const handleSend = () => {
     if (!content.trim() && attachments.length === 0) return;
     
     onSendMessage(content, attachments);
     setContent('');
     setAttachments([]);
+    
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+    
+    // Show toast on send
+    toast.success('Message sent');
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -38,7 +65,17 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setAttachments(Array.from(e.target.files));
+      const newFiles = Array.from(e.target.files);
+      // Validate file types and sizes
+      const validFiles = newFiles.filter(file => {
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+          toast.error(`File ${file.name} exceeds 10MB limit`);
+          return false;
+        }
+        return true;
+      });
+      
+      setAttachments(validFiles);
     }
   };
   
@@ -46,10 +83,91 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
     setContent(template.content);
   };
   
+  // Voice recording functionality
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      
+      setAudioChunks([]);
+      setIsRecording(true);
+      setMediaRecorder(recorder);
+      
+      recorder.addEventListener('dataavailable', (event) => {
+        if (event.data.size > 0) {
+          setAudioChunks(prev => [...prev, event.data]);
+        }
+      });
+      
+      recorder.addEventListener('stop', async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        
+        // Convert to base64 for processing
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = async () => {
+          const base64Audio = reader.result?.toString().split(',')[1];
+          
+          if (base64Audio) {
+            // In real app, send to Supabase Edge Function for processing
+            try {
+              toast.loading('Transcribing your message...');
+              
+              // Mock response for demo
+              // In production, would call Supabase Edge Function:
+              // const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+              //   body: { audio: base64Audio }
+              // });
+              
+              // Simulate API call delay
+              await new Promise(resolve => setTimeout(resolve, 1500));
+              
+              // Mock response
+              const mockTranscription = "This is a transcribed message from voice input.";
+              setContent(prev => prev + (prev ? ' ' : '') + mockTranscription);
+              toast.dismiss();
+              toast.success('Voice message transcribed');
+            } catch (error) {
+              console.error('Transcription error:', error);
+              toast.dismiss();
+              toast.error('Failed to transcribe audio');
+            }
+          }
+        };
+        
+        // Clean up recording state
+        setIsRecording(false);
+        setMediaRecorder(null);
+      });
+      
+      recorder.start();
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast.error('Could not access microphone');
+    }
+  };
+  
+  const stopRecording = () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      
+      // Stop all tracks of the stream
+      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    }
+  };
+  
+  const handleVoiceInput = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+  
   return (
-    <div className="p-3 border-t border-border">
+    <div className="p-2 md:p-3 border-t border-border">
       {attachments.length > 0 && (
-        <div className="mb-3 flex items-center gap-2">
+        <div className="mb-2 md:mb-3 flex items-center gap-2 px-2">
           <Paperclip className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm">
             {attachments.length} file{attachments.length > 1 ? 's' : ''} selected
@@ -67,14 +185,27 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
       
       <div className="relative">
         <Textarea
+          ref={textareaRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type your message..."
-          className="min-h-[80px] pr-20 resize-none"
+          className="min-h-[40px] max-h-[150px] pr-20 resize-none overflow-auto"
         />
         
         <div className="absolute bottom-2 right-2 flex items-center gap-1">
+          {isMobile && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={`h-8 w-8 ${isRecording ? 'text-red-500' : ''}`}
+              onClick={handleVoiceInput}
+              aria-label={isRecording ? 'Stop recording' : 'Voice input'}
+            >
+              <Mic className={`h-4 w-4 ${isRecording ? 'animate-pulse' : ''}`} />
+            </Button>
+          )}
+          
           {templates.length > 0 && (
             <Popover>
               <PopoverTrigger asChild>

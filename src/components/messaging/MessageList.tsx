@@ -1,19 +1,23 @@
 
 import React, { useRef, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Paperclip, Download, CheckCircle, AlertCircle } from 'lucide-react';
+import { Paperclip, Download, CheckCircle, AlertCircle, CheckSquare } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Message, Attachment } from '@/types/messages';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface MessageListProps {
   messages: Message[];
   currentUserId: string;
+  onMarkAsTask?: (message: Message) => void;
 }
 
-export function MessageList({ messages, currentUserId }: MessageListProps) {
+export function MessageList({ messages, currentUserId, onMarkAsTask }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -73,7 +77,7 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
         className="mt-2 rounded-md border overflow-hidden flex flex-col"
       >
         {attachment.type === 'image' && (
-          <div className="relative h-32 bg-muted flex items-center justify-center">
+          <div className="relative h-24 md:h-32 bg-muted flex items-center justify-center">
             <img 
               src={attachment.url} 
               alt={attachment.name}
@@ -102,10 +106,10 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
   
   return (
     <ScrollArea className="h-full pr-1">
-      <div className="p-4 space-y-6">
+      <div className="p-2 md:p-4 space-y-4 md:space-y-6">
         {Object.keys(groupedMessages).map((date) => (
-          <div key={date} className="space-y-4">
-            <div className="relative flex items-center py-2">
+          <div key={date} className="space-y-3 md:space-y-4">
+            <div className="relative flex items-center py-1 md:py-2">
               <div className="grow border-t border-border"></div>
               <span className="mx-2 flex-shrink-0 text-xs font-medium text-muted-foreground">
                 {formatDateHeader(date)}
@@ -113,52 +117,75 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
               <div className="grow border-t border-border"></div>
             </div>
             
-            {groupedMessages[date].map((message) => (
-              <div
-                key={message.id}
-                className={cn(
-                  "flex",
-                  message.sender.id === currentUserId ? "justify-end" : "justify-start"
-                )}
-              >
+            {groupedMessages[date].map((message) => {
+              const isSender = message.sender.id === currentUserId;
+              
+              return (
                 <div
+                  key={message.id}
                   className={cn(
-                    "max-w-[75%] space-y-1.5",
-                    message.sender.id === currentUserId ? "items-end" : "items-start"
+                    "flex",
+                    isSender ? "justify-end" : "justify-start"
                   )}
                 >
-                  {message.sender.id !== currentUserId && (
-                    <p className="text-xs font-medium">
-                      {message.sender.name} ({message.sender.role})
-                    </p>
-                  )}
-                  
                   <div
                     className={cn(
-                      "rounded-lg p-3",
-                      message.sender.id === currentUserId
-                        ? "bg-primary/10 text-primary ml-auto"
-                        : "bg-accent"
+                      "max-w-[85%] md:max-w-[75%] space-y-1",
+                      isSender ? "items-end" : "items-start"
                     )}
                   >
-                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                    {!isSender && (
+                      <p className="text-xs font-medium">
+                        {message.sender.name} 
+                        <span className="text-muted-foreground">({message.sender.role})</span>
+                      </p>
+                    )}
                     
-                    {message.attachments && message.attachments.length > 0 && (
-                      <div className="space-y-2">
-                        {message.attachments.map(renderAttachment)}
-                      </div>
-                    )}
+                    <div
+                      className={cn(
+                        "rounded-2xl p-3",
+                        isSender
+                          ? "bg-primary text-primary-foreground rounded-tr-sm ml-auto"
+                          : "bg-secondary rounded-tl-sm"
+                      )}
+                    >
+                      <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                      
+                      {message.attachments && message.attachments.length > 0 && (
+                        <div className="space-y-1 md:space-y-2 mt-1">
+                          {message.attachments.map(renderAttachment)}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        {formatMessageDate(message.timestamp)}
+                        {!message.isRead && isSender && (
+                          <span className="ml-1.5 text-primary">• Delivered</span>
+                        )}
+                      </p>
+                      
+                      {!isMobile && onMarkAsTask && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => onMarkAsTask(message)}
+                            >
+                              <CheckSquare className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">Mark as task</TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
                   </div>
-                  
-                  <p className="text-xs text-muted-foreground">
-                    {formatMessageDate(message.timestamp)}
-                    {!message.isRead && message.sender.id === currentUserId && (
-                      <span className="ml-1.5 text-primary">• Delivered</span>
-                    )}
-                  </p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ))}
         <div ref={scrollRef} />
