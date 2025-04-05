@@ -1,194 +1,163 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Shell } from '@/components/layout/Shell';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CalendarIcon, FilterIcon, SlidersHorizontal, DownloadIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShootsList } from '@/components/dashboard/ShootsList';
-import { useShoots } from '@/context/ShootsContext';
-import { CalendarIcon, FilterIcon, SearchIcon } from 'lucide-react';
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationNext, 
-  PaginationPrevious 
-} from '@/components/ui/pagination';
-import { formatDateSafe } from '@/utils/formatters';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format, parseISO } from 'date-fns';
+import { shootsData } from '@/data/shootsData';
+import { ShootData } from '@/types/shoots';
+import { cn } from '@/lib/utils';
 
 export function ShootHistory() {
-  const { shoots } = useShoots();
-  const [currentPage, setCurrentPage] = useState(1);
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
   const [filter, setFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const itemsPerPage = 10;
+  const [sortOrder, setSortOrder] = useState('date');
+  const [filteredShoots, setFilteredShoots] = useState<ShootData[]>(shootsData);
 
-  const filteredShoots = shoots.filter(shoot => {
-    // Filter by status
-    if (filter !== 'all' && shoot.status !== filter) return false;
-    
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        shoot.location.fullAddress?.toLowerCase().includes(query) ||
-        shoot.client.name?.toLowerCase().includes(query) ||
-        shoot.photographer.name?.toLowerCase().includes(query) ||
-        formatDateSafe(shoot.scheduledDate).toLowerCase().includes(query)
-      );
+  useEffect(() => {
+    // Apply filtering logic based on selected filter
+    let newFilteredShoots = [...shootsData];
+
+    if (filter !== 'all') {
+      newFilteredShoots = shootsData.filter(shoot => shoot.status === filter);
     }
-    
-    return true;
-  });
 
-  const indexOfLastShoot = currentPage * itemsPerPage;
-  const indexOfFirstShoot = indexOfLastShoot - itemsPerPage;
-  const currentShoots = filteredShoots.slice(indexOfFirstShoot, indexOfLastShoot);
-  const totalPages = Math.ceil(filteredShoots.length / itemsPerPage);
+    // Apply sorting logic based on selected sort order
+    if (sortOrder === 'date') {
+      newFilteredShoots.sort((a, b) => {
+        const dateA = new Date(a.scheduledDate).getTime();
+        const dateB = new Date(b.scheduledDate).getTime();
+        return dateB - dateA; // Sort by most recent date
+      });
+    } else if (sortOrder === 'client') {
+      newFilteredShoots.sort((a, b) => a.client.name.localeCompare(b.client.name));
+    }
 
-  const handlePageChange = (pageNumber: number) => {
-    if (pageNumber < 1 || pageNumber > totalPages) return;
-    setCurrentPage(pageNumber);
-  };
-
-  const handleShootSelect = (shoot: any) => {
-    console.log('Selected shoot:', shoot);
-    // Navigate to ShootDetail or open a modal
-  };
-
-  const handleUploadMedia = (shoot: any) => {
-    console.log('Upload media for shoot:', shoot);
-    // Open media upload dialog
-  };
+    setFilteredShoots(newFilteredShoots);
+  }, [filter, sortOrder]);
 
   return (
-    <div className="container mx-auto py-10">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Shoot History</CardTitle>
-            <CardDescription>View all past and upcoming property shoots</CardDescription>
-          </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm">
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              Calendar View
-            </Button>
-            <Button variant="outline" size="sm">
-              <FilterIcon className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <div className="relative">
-              <SearchIcon className="absolute left-2.5 top-3 h-4 w-4 text-gray-500" />
-              <Input
-                type="search"
-                placeholder="Search by address, client, photographer, or date..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+    <Shell>
+      <div className="md:flex items-center justify-between space-y-4 md:space-y-0">
+        <div>
+          <h1 className="text-2xl font-bold">Shoot History</h1>
+          <p className="text-muted-foreground">
+            Review and manage past photography sessions.
+          </p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                disabled={(date) =>
+                  date > new Date() || date < new Date('2023-01-01')
+                }
+                initialFocus
               />
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={filter === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('all')}
-              >
-                All
-              </Button>
-              <Button
-                variant={filter === 'completed' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('completed')}
-              >
-                Completed
-              </Button>
-              <Button
-                variant={filter === 'scheduled' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('scheduled')}
-              >
-                Scheduled
-              </Button>
-              <Button
-                variant={filter === 'pending' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('pending')}
-              >
-                Pending
-              </Button>
-              <Button
-                variant={filter === 'hold' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('hold')}
-              >
-                On Hold
-              </Button>
-            </div>
-            
-            <ShootsList 
-              shoots={currentShoots} 
-              onSelect={handleShootSelect}
-              onUploadMedia={handleUploadMedia}
-              showMedia={true}
-            />
-            
-            <div className="flex justify-center mt-4">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                  </PaginationItem>
-                  
-                  {/* Display up to 5 page numbers */}
-                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                    // Adjust which 5 pages to show based on current page
-                    let pageNum = i + 1;
-                    if (currentPage > 3 && totalPages > 5) {
-                      pageNum = currentPage - 3 + i;
-                      if (pageNum > totalPages) pageNum = totalPages - (5 - i - 1);
-                    }
-                    
-                    return (
-                      <PaginationItem key={i}>
-                        <Button
-                          variant={currentPage === pageNum ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => handlePageChange(pageNum)}
-                        >
-                          {pageNum}
-                        </Button>
-                      </PaginationItem>
-                    );
-                  })}
-                  
-                  <PaginationItem>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                    >
-                      Next
-                    </Button>
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
+            </PopoverContent>
+          </Popover>
+          <Select onValueChange={setFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="scheduled">Scheduled</SelectItem>
+              <SelectItem value="in-progress">In Progress</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select onValueChange={setSortOrder}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date">Date</SelectItem>
+              <SelectItem value="client">Client</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button>
+            <DownloadIcon className="mr-2 h-4 w-4" />
+            Download
+          </Button>
+        </div>
+      </div>
+
+      <Tabs defaultValue="all" className="mt-8">
+        <TabsList>
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="completed">Completed</TabsTrigger>
+          <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
+          <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+          <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+        </TabsList>
+        <TabsContent value="all" className="mt-4">
+          <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Shoot ID</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredShoots.map((shoot) => (
+                  <TableRow key={shoot.id}>
+                    <TableCell className="font-medium">{shoot.id}</TableCell>
+                    <TableCell>{shoot.client.name}</TableCell>
+                    <TableCell>{format(parseISO(shoot.scheduledDate), 'PPP')}</TableCell>
+                    <TableCell>{shoot.property.address}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{shoot.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">${shoot.payment.totalPaid}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </TabsContent>
+        <TabsContent value="completed" className="mt-4">
+          <div>Completed shoots content</div>
+        </TabsContent>
+        <TabsContent value="scheduled" className="mt-4">
+          <div>Scheduled shoots content</div>
+        </TabsContent>
+        <TabsContent value="in-progress" className="mt-4">
+          <div>In progress shoots content</div>
+        </TabsContent>
+        <TabsContent value="cancelled" className="mt-4">
+          <div>Cancelled shoots content</div>
+        </TabsContent>
+      </Tabs>
+    </Shell>
   );
 }
+
+// Export the ShootHistory component (no longer a default export)

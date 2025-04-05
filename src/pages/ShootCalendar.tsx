@@ -1,82 +1,49 @@
-import React, { useState, useCallback } from 'react';
-import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useShoots } from '@/context/ShootsContext';
-import { formatDateSafe, ensureDateString } from '@/utils/formatters';
-import { filterShootsByDateRange, TimeRange } from '@/utils/dateUtils';
+import React, { useState, useEffect } from 'react';
+import { Shell } from '@/components/layout/Shell';
+import { Calendar } from '@/components/dashboard/Calendar';
+import { ShootsFilter } from '@/components/dashboard/ShootsFilter';
+import { Button } from '@/components/ui/button';
+import { shootsData } from '@/data/shootsData';
+import { filterShootsByDateRange } from '@/utils/dateUtils';
+import { TimeRange } from '@/utils/dateUtils';
 
-export function ShootCalendar() {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+const ShootCalendar = () => {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
-  const { shoots } = useShoots();
+  const [filteredShoots, setFilteredShoots] = useState(shootsData);
 
-  const handleTimeRangeChange = useCallback((range: TimeRange) => {
+  useEffect(() => {
+    setFilteredShoots(filterShootsByDateRange(shootsData, timeRange));
+  }, [timeRange]);
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date || null);
+  };
+
+  const handleTimeRangeChange = (range: TimeRange) => {
     setTimeRange(range);
-  }, []);
-
-  const filteredShoots = filterShootsByDateRange(shoots, timeRange);
-
-  const events = filteredShoots.map(event => ({
-    title: `Shoot at ${event.location.city}`,
-    date: new Date(ensureDateString(event.scheduledDate)),
-  }));
+  };
 
   return (
-    <DashboardLayout>
-      <div className="container max-w-5xl py-6">
-        <div className="flex flex-col gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Shoot Calendar</CardTitle>
-            </CardHeader>
-            <CardContent className="pl-2">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="rounded-md border"
-                // Add event indicators
-                modifiers={{
-                  scheduled: (date: Date) =>
-                    events.some(event =>
-                      event.date.getFullYear() === date.getFullYear() &&
-                      event.date.getMonth() === date.getMonth() &&
-                      event.date.getDate() === date.getDate()
-                    ),
-                }}
-                modifiersClassNames={{
-                  scheduled: "bg-secondary text-secondary-foreground",
-                }}
-              />
-            </CardContent>
-          </Card>
+    <Shell>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold">Shoot Calendar</h1>
+        <p className="text-muted-foreground">View and manage your scheduled shoots.</p>
+      </div>
 
-          {date && (
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  {formatDateSafe(date, 'MMM dd, yyyy')} - Shoots
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {events
-                  .filter(event =>
-                    event.date.getFullYear() === date.getFullYear() &&
-                    event.date.getMonth() === date.getMonth() &&
-                    event.date.getDate() === date.getDate()
-                  )
-                  .map((event, index) => (
-                    <div key={index} className="py-2">
-                      {/* Use the utility functions for date formatting */}
-                      {event.title} - {formatDateSafe(event.date)}
-                    </div>
-                  ))}
-              </CardContent>
-            </Card>
-          )}
+      <div className="flex flex-col md:flex-row items-center justify-between mb-4">
+        <div className="flex items-center space-x-2">
+          <Button variant="outline">Add Shoot</Button>
+          <ShootsFilter onTimeRangeChange={handleTimeRangeChange} />
         </div>
       </div>
-    </DashboardLayout>
+
+      <Calendar
+        onDateSelect={handleDateSelect}
+        shoots={filteredShoots}
+      />
+    </Shell>
   );
-}
+};
+
+export default ShootCalendar;
