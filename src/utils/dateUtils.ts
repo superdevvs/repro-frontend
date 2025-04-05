@@ -12,7 +12,8 @@ import {
   endOfYear, 
   parseISO, 
   isValid, 
-  isSameDay 
+  isSameDay,
+  isWithinInterval
 } from "date-fns";
 import { ensureDateString } from "./formatters";
 
@@ -77,6 +78,27 @@ export const getDateRangeForFilter = (range: TimeRange): { start: Date, end: Dat
     default:
       return null;
   }
+};
+
+// Add the filterShootsByDateRange function
+export const filterShootsByDateRange = (shoots: ShootData[], range: TimeRange): ShootData[] => {
+  const dateRange = getDateRangeForFilter(range);
+  
+  if (!dateRange) return shoots; // Return all shoots for 'all' range
+  
+  return shoots.filter(shoot => {
+    try {
+      const shootDate = new Date(ensureDateString(shoot.scheduledDate));
+      if (!isValid(shootDate)) return false;
+      
+      return isWithinInterval(shootDate, {
+        start: dateRange.start,
+        end: dateRange.end
+      });
+    } catch {
+      return false;
+    }
+  });
 };
 
 // Add the missing functions for StatsCardGrid

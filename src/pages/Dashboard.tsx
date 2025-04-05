@@ -18,6 +18,7 @@ import { ShootCard } from '@/components/dashboard/ShootCard';
 import { compareAsc, parseISO } from 'date-fns';
 import { Pagination } from '@/components/ui/pagination';
 import { useNavigate } from 'react-router-dom';
+import { ensureDateString, toStringId } from '@/utils/formatters';
 
 const Dashboard = () => {
   const { role } = useAuth();
@@ -26,7 +27,6 @@ const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   const navigate = useNavigate();
   
-  // Pagination state for upcoming shoots
   const [currentPage, setCurrentPage] = useState(1);
   const shootsPerPage = 3;
   
@@ -36,24 +36,24 @@ const Dashboard = () => {
   const showClientInterface = role === 'client';
   const isAdmin = ['admin', 'superadmin'].includes(role);
   
-  // Filter shoots based on selected time range
   const filteredShoots = filterShootsByDateRange(shoots, timeRange);
   
-  // Get upcoming shoots
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
   const upcomingShoots = shoots
     .filter(shoot => {
       if (shoot.status !== 'scheduled') return false;
-      const shootDate = parseISO(shoot.scheduledDate);
+      const shootDateStr = ensureDateString(shoot.scheduledDate);
+      const shootDate = parseISO(shootDateStr);
       return compareAsc(shootDate, today) >= 0;
     })
     .sort((a, b) => {
-      return compareAsc(parseISO(a.scheduledDate), parseISO(b.scheduledDate));
+      const dateA = parseISO(ensureDateString(a.scheduledDate));
+      const dateB = parseISO(ensureDateString(b.scheduledDate));
+      return compareAsc(dateA, dateB);
     });
   
-  // Calculate pagination
   const totalPages = Math.ceil(upcomingShoots.length / shootsPerPage);
   const indexOfLastShoot = currentPage * shootsPerPage;
   const indexOfFirstShoot = indexOfLastShoot - shootsPerPage;
@@ -108,10 +108,10 @@ const Dashboard = () => {
                   {currentShoots.map((shoot, index) => (
                     <ShootCard
                       key={shoot.id}
-                      id={shoot.id}
+                      id={toStringId(shoot.id)}
                       address={shoot.location.fullAddress}
-                      date={shoot.scheduledDate}
-                      time="10:00 AM - 12:00 PM" // This should come from actual data in a real app
+                      date={ensureDateString(shoot.scheduledDate)}
+                      time="10:00 AM - 12:00 PM"
                       photographer={{
                         name: shoot.photographer.name,
                         avatar: shoot.photographer.avatar || "https://ui.shadcn.com/avatars/01.png",
@@ -122,7 +122,7 @@ const Dashboard = () => {
                       status={shoot.status}
                       price={shoot.payment.totalQuote}
                       delay={index}
-                      onClick={() => navigate(`/shoots?id=${shoot.id}`)}
+                      onClick={() => navigate(`/shoots?id=${toStringId(shoot.id)}`)}
                     />
                   ))}
                   

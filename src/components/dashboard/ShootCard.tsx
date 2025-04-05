@@ -17,8 +17,9 @@ import {
   CloudRainIcon,
   CloudSnowIcon
 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { ShootData } from '@/types/shoots';
+import { ensureDateString } from '@/utils/formatters';
 
 interface WeatherInfo {
   temp: number;
@@ -70,7 +71,8 @@ export function ShootCard(props: ShootCardProps) {
   
   const formatDate = (dateString: string | Date): string => {
     try {
-      const date = typeof dateString === 'string' ? parseISO(dateString) : dateString;
+      const dateStr = ensureDateString(dateString);
+      const date = parseISO(dateStr);
       return isValid(date) ? format(date, 'MMM dd, yyyy') : 'Invalid date';
     } catch (error) {
       console.error('Error formatting date:', error);

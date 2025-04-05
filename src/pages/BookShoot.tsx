@@ -1,390 +1,256 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { v4 as uuid } from 'uuid';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { addDays, format } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from '@/components/auth/AuthProvider';
-import { useShoots } from '@/context/ShootsContext';
-import { Photographer } from '@/components/photographers/usePhotographersData';
-import { TimeSelect } from "@/components/ui/time-select";
-import { v4 as uuidv4 } from 'uuid';
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { ShootData } from '@/types/shoots';
+import { useShoots } from '@/context/ShootsContext';
+import { useToast } from "@/hooks/use-toast";
+import { TimeSelect } from '@/components/ui/time-select';
 
-interface FormData {
-  date: string;
-  time: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  clientName: string;
-  clientEmail: string;
-  clientPhone: string;
-  clientCompany: string;
-  serviceType: string;
-  photographerId: string;
+interface Photographer {
+  id: string;
+  name: string;
+  avatar?: string;
 }
 
 export function BookShoot() {
-  const router = useRouter();
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [time, setTime] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zipCode, setZipCode] = useState("");
-  const [clientName, setClientName] = useState("");
-  const [clientEmail, setClientEmail] = useState("");
-  const [clientPhone, setClientPhone] = useState("");
-  const [clientCompany, setClientCompany] = useState("");
-  const [serviceType, setServiceType] = useState("Photography");
-  const [fee, setFee] = useState(200);
-  const [taxRate, setTaxRate] = useState(6);
-  const [taxAmount, setTaxAmount] = useState(fee * (taxRate / 100));
-  const [totalWithTax, setTotalWithTax] = useState(fee + taxAmount);
-  const [selectedPhotographer, setSelectedPhotographer] = useState<Photographer | null>(null);
-  const [isPhotographerAvailable, setIsPhotographerAvailable] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const { addShoot, getUniquePhotographers } = useShoots();
   const { toast } = useToast();
-  const { user } = useAuth();
-  const { addShoot } = useShoots();
-  const [photographers, setPhotographers] = useState<Photographer[]>([]);
-
-  useEffect(() => {
-    // Mock photographer data
-    const mockPhotographers: Photographer[] = [
-      {
-        id: "1",
-        name: "David Smith",
-        email: "david@example.com",
-        phone: "(555) 123-4567",
-        address: "123 Main St, New York, NY 10001",
-        avatar: "/assets/avatar/photographer1.jpg",
-        bio: "Professional photographer with 10+ years of experience in architectural and real estate photography.",
-        rating: 4.8,
-        specialty: ["Real Estate", "Architecture", "Interior"],
-        availability: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        completedShoots: 357,
-        upcomingShoots: 5
-      },
-      {
-        id: "2",
-        name: "Sarah Johnson",
-        email: "sarah@example.com",
-        phone: "(555) 987-6543",
-        address: "456 Oak Ave, Los Angeles, CA 90001",
-        avatar: "/assets/avatar/photographer2.jpg",
-        bio: "Specializing in luxury real estate photography and videography. Drone certified.",
-        rating: 4.9,
-        specialty: ["Luxury Estates", "Drone Photography", "Twilight Shots"],
-        availability: ["Monday", "Wednesday", "Friday", "Saturday"],
-        completedShoots: 215,
-        upcomingShoots: 3
-      }
-    ];
-
-    setPhotographers(mockPhotographers);
-  }, []);
-
-  useEffect(() => {
-    const newTaxAmount = fee * (taxRate / 100);
-    setTaxAmount(newTaxAmount);
-    setTotalWithTax(fee + newTaxAmount);
-  }, [fee, taxRate]);
-
-  const handleBookShoot = async (data: FormData) => {
-    setIsSubmitting(true);
-
-    try {
-      // Check photographer availability
-      if (selectedPhotographer) {
-        // Mock availability check
-        const isAvailable = Math.random() < 0.8; // 80% chance of being available
-        setIsPhotographerAvailable(isAvailable);
-
-        if (!isAvailable) {
-          toast({
-            title: "Photographer Not Available",
-            description: "The selected photographer is not available on this date and time.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-      
-      // Create shoot object
-      const newShoot: ShootData = {
-        id: uuidv4(),
-        scheduledDate: data.date,
-        time: data.time,
-        status: 'booked' as const,  // Use 'as const' to ensure proper typing
-        location: {
-          address: data.address,
-          city: data.city,
-          state: data.state,
-          zipCode: data.zipCode,
-          fullAddress: `${data.address}, ${data.city}, ${data.state} ${data.zipCode}`
-        },
-        client: {
-          name: data.clientName,
-          email: data.clientEmail,
-          phone: data.clientPhone,
-          company: data.clientCompany
-        },
-        photographer: selectedPhotographer ? {
-          id: selectedPhotographer.id,
-          name: selectedPhotographer.name,
-          avatar: selectedPhotographer.avatar
-        } : {
-          name: "To be assigned",
-        },
-        payment: {
-          baseQuote: fee,
-          taxRate: taxRate,
-          taxAmount: taxAmount,
-          totalQuote: totalWithTax,
-          totalPaid: 0
-        },
-        services: [data.serviceType],
-        createdBy: user?.id || "guest",
-        media: {
-          photos: []
-        }
-      };
-      
-      addShoot(newShoot);
-
-      toast({
-        title: "Shoot Booked Successfully",
-        description: `A shoot has been booked for ${data.date} at ${data.time}.`,
-      });
-
-      router.push('/Dashboard');
-    } catch (error) {
-      console.error("Error booking shoot:", error);
-      toast({
-        title: "Error Booking Shoot",
-        description: "There was an error booking the shoot. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
   
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [basePrice, setBasePrice] = useState<number>(200);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedPhotographer, setSelectedPhotographer] = useState<Photographer | null>(null);
+  
+  const photographers = getUniquePhotographers ? getUniquePhotographers() : [];
+  
+  const services = [
+    "HDR Photography",
+    "Drone Photography",
+    "3D Virtual Tour",
+    "Floor Plans",
+    "Video Walkthrough"
+  ];
+
+  const handleFormSubmit = (formData) => {
+    if (!selectedDate || !selectedTime) {
+      toast({
+        title: "Missing Information",
+        description: "Please select both a date and a time for the shoot.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const newShoot: ShootData = {
+      id: uuid(),
+      scheduledDate: selectedDate,
+      time: selectedTime,
+      status: "booked" as const,
+      location: {
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        fullAddress: `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`
+      },
+      client: {
+        name: formData.clientName,
+        email: formData.clientEmail,
+        phone: formData.clientPhone,
+        company: formData.clientCompany
+      },
+      photographer: selectedPhotographer ? {
+        id: selectedPhotographer.id,
+        name: selectedPhotographer.name,
+        avatar: selectedPhotographer.avatar
+      } : undefined,
+      payment: {
+        baseQuote: basePrice,
+        taxRate: 0.08,
+        taxAmount: basePrice * 0.08,
+        totalQuote: basePrice * 1.08,
+        totalPaid: 0
+      },
+      services: selectedServices,
+      notes: {
+        shootNotes: formData.notes || "",
+      },
+      media: {
+        photos: [],
+        videos: [],
+        floorplans: []
+      },
+      createdBy: "Admin user"
+    };
+
+    addShoot(newShoot);
+    toast({
+      title: "Shoot Booked",
+      description: "Your shoot has been successfully booked!",
+    });
+    navigate('/shoots');
+  };
+
   return (
-    <div className="container mx-auto py-10">
-      <Card className="max-w-2xl mx-auto">
+    <div className="container max-w-3xl py-6">
+      <Card>
         <CardHeader>
           <CardTitle>Book a Shoot</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData: FormData = {
-                date: format(date || new Date(), 'yyyy-MM-dd'),
-                time: time,
-                address: address,
-                city: city,
-                state: state,
-                zipCode: zipCode,
-                clientName: clientName,
-                clientEmail: clientEmail,
-                clientPhone: clientPhone,
-                clientCompany: clientCompany,
-                serviceType: serviceType,
-                photographerId: selectedPhotographer?.id || ""
-              };
-              handleBookShoot(formData);
-            }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="date">Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !date && "text-muted-foreground"
-                      )}
-                    >
-                      {date ? format(date, "PPP") : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      disabled={(date) =>
-                        date < new Date() || date > addDays(new Date(), 365)
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div>
-                <Label htmlFor="time">Time</Label>
-                <TimeSelect
-                  value={time}
-                  onChange={setTime}
-                  placeholder="Select a time"
+        <CardContent className="grid gap-6">
+          <div className="grid gap-2">
+            <Label htmlFor="clientName">Client Name</Label>
+            <Input id="clientName" placeholder="Client Name" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="clientEmail">Client Email</Label>
+            <Input id="clientEmail" type="email" placeholder="Client Email" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="clientPhone">Client Phone</Label>
+            <Input id="clientPhone" type="tel" placeholder="Client Phone" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="clientCompany">Client Company</Label>
+            <Input id="clientCompany" placeholder="Client Company" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="address">Address</Label>
+            <Input id="address" placeholder="Address" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="city">City</Label>
+            <Input id="city" placeholder="City" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="state">State</Label>
+            <Input id="state" placeholder="State" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="zipCode">Zip Code</Label>
+            <Input id="zipCode" placeholder="Zip Code" />
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Select Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[240px] justify-start text-left font-normal",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  {selectedDate ? (
+                    format(selectedDate, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="border-0 rounded-md"
                 />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Input
-                type="text"
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="city">City</Label>
-                <Input
-                  type="text"
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="state">State</Label>
-                <Input
-                  type="text"
-                  id="state"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="zipCode">Zip Code</Label>
-                <Input
-                  type="text"
-                  id="zipCode"
-                  value={zipCode}
-                  onChange={(e) => setZipCode(e.target.value)}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="clientName">Client Name</Label>
-              <Input
-                type="text"
-                id="clientName"
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="clientEmail">Client Email</Label>
-              <Input
-                type="email"
-                id="clientEmail"
-                value={clientEmail}
-                onChange={(e) => setClientEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="clientPhone">Client Phone</Label>
-              <Input
-                type="tel"
-                id="clientPhone"
-                value={clientPhone}
-                onChange={(e) => setClientPhone(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="clientCompany">Client Company</Label>
-              <Input
-                type="text"
-                id="clientCompany"
-                value={clientCompany}
-                onChange={(e) => setClientCompany(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="serviceType">Service Type</Label>
-              <Select onValueChange={setServiceType}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a service" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Photography">Photography</SelectItem>
-                  <SelectItem value="Videography">Videography</SelectItem>
-                  <SelectItem value="Drone Services">Drone Services</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="fee">Fee</Label>
-              <Input
-                type="number"
-                id="fee"
-                value={fee}
-                onChange={(e) => setFee(Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="taxRate">Tax Rate (%)</Label>
-              <Input
-                type="number"
-                id="taxRate"
-                value={taxRate}
-                onChange={(e) => setTaxRate(Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="totalWithTax">Total (with Tax)</Label>
-              <Input
-                type="text"
-                id="totalWithTax"
-                value={totalWithTax.toFixed(2)}
-                readOnly
-              />
-            </div>
-            <div>
-              <Label htmlFor="photographer">Photographer</Label>
-              <Select onValueChange={(value) => {
-                const photographer = photographers.find(p => p.id === value);
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Select Time</Label>
+            <TimeSelect 
+              value={selectedTime}
+              onChange={setSelectedTime}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Select Photographer</Label>
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              onChange={(e) => {
+                const photographer = photographers.find(p => p.id === e.target.value);
                 setSelectedPhotographer(photographer || null);
-              }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a photographer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {photographers.map((photographer) => (
-                    <SelectItem key={photographer.id} value={photographer.id}>
-                      {photographer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Book Shoot"}
-            </Button>
-          </form>
+              }}
+            >
+              <option value="">Select a photographer</option>
+              {photographers.map((photographer) => (
+                <option key={photographer.id} value={photographer.id}>
+                  {photographer.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Select Services</Label>
+            <ScrollArea className="h-[120px] w-full rounded-md border">
+              {services.map((service) => (
+                <div key={service} className="flex items-center space-x-2 p-3">
+                  <Checkbox
+                    id={service}
+                    checked={selectedServices.includes(service)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedServices([...selectedServices, service]);
+                      } else {
+                        setSelectedServices(selectedServices.filter((s) => s !== service));
+                      }
+                    }}
+                  />
+                  <Label htmlFor={service} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    {service}
+                  </Label>
+                </div>
+              ))}
+            </ScrollArea>
+          </div>
+
+          <Separator />
+
+          <div className="grid gap-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea id="notes" placeholder="Additional notes for the shoot" />
+          </div>
+
+          <Button onClick={() => {
+            const formData = {
+              clientName: (document.getElementById('clientName') as HTMLInputElement).value,
+              clientEmail: (document.getElementById('clientEmail') as HTMLInputElement).value,
+              clientPhone: (document.getElementById('clientPhone') as HTMLInputElement).value,
+              clientCompany: (document.getElementById('clientCompany') as HTMLInputElement).value,
+              address: (document.getElementById('address') as HTMLInputElement).value,
+              city: (document.getElementById('city') as HTMLInputElement).value,
+              state: (document.getElementById('state') as HTMLInputElement).value,
+              zipCode: (document.getElementById('zipCode') as HTMLInputElement).value,
+              notes: (document.getElementById('notes') as HTMLTextAreaElement).value,
+            };
+            handleFormSubmit(formData);
+          }}>
+            Book Shoot
+          </Button>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+export default BookShoot;

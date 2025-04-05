@@ -57,6 +57,7 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from '@/components/ui/pagination';
+import { ensureDateString } from '@/utils/formatters';
 
 const Clients = () => {
   
@@ -111,6 +112,14 @@ const Clients = () => {
     ? Math.round((totalShoots / totalClients) * 10) / 10 
     : 0;
   
+  const formatDate = (date: string | Date) => {
+    try {
+      const dateStr = ensureDateString(date);
+      return format(parseISO(dateStr), 'MMM dd, yyyy');
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
   
   useEffect(() => {
     if (shoots.length > 0) {
@@ -790,7 +799,7 @@ const Clients = () => {
                         
                         <div className="bg-secondary/20 rounded-md p-3">
                           <p className="text-sm text-muted-foreground">Last Activity</p>
-                          <p className="text-2xl font-bold">{new Date(selectedClient.lastActivity).toLocaleDateString()}</p>
+                          <p className="text-2xl font-bold">{formatDate(selectedClient.lastActivity)}</p>
                         </div>
                       </div>
                     </CardContent>

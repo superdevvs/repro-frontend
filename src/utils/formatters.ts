@@ -11,7 +11,8 @@ export function formatDateSafe(dateInput: string | Date | undefined, formatStr: 
   if (!dateInput) return 'Not set';
   
   try {
-    const date = typeof dateInput === 'string' ? parseISO(dateInput) : dateInput;
+    const dateStr = ensureDateString(dateInput);
+    const date = parseISO(dateStr);
     return isValid(date) ? format(date, formatStr) : 'Invalid date';
   } catch (error) {
     console.error('Date formatting error:', error);
@@ -52,4 +53,16 @@ export function formatCurrency(value: number | undefined): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
+}
+
+/**
+ * Safely converts dates for use in components that expect strings
+ * For use with components that don't accept Date objects
+ * @param value string | Date | undefined
+ * @returns string - The string representation or empty string
+ */
+export function dateToString(value: string | Date | undefined): string {
+  if (!value) return '';
+  const dateStr = ensureDateString(value);
+  return dateStr;
 }

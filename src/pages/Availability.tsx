@@ -1,30 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, Clock, Plus, Trash } from 'lucide-react';
-import { format, isSameDay } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
-import { PhotographerAvailability } from '@/types/shoots';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
 import { TimeSelect } from '@/components/ui/time-select';
-import { Switch } from '@/components/ui/switch';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
+import { CalendarIcon, Clock, Plus, Trash } from 'lucide-react';
+import { format, isSameDay, isToday, parseISO } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
 } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-// Define interface for availability slots
+// Types - Fix the AvailabilitySlot interface to accept string or Date
 interface AvailabilitySlot {
   id: string;
-  date: Date;
+  date: Date | string;  // Accept both Date and string
   startTime: string;
   endTime: string;
   isRecurring?: boolean;
@@ -38,75 +39,11 @@ interface RecurringSchedule {
   isActive: boolean;
 }
 
-// Mock data - this would come from your API in a real app
-const mockAvailabilityData: PhotographerAvailability[] = [
-  {
-    photographerId: "1",
-    photographerName: "David Smith",
-    id: "a1",
-    date: new Date(),
-    startTime: "09:00 AM",
-    endTime: "12:00 PM",
-    slots: [{
-      date: new Date().toISOString(),
-      times: ["09:00 AM", "10:00 AM", "11:00 AM"]
-    }]
-  },
-  {
-    photographerId: "1",
-    photographerName: "David Smith",
-    id: "a2",
-    date: new Date(new Date().setDate(new Date().getDate() + 2)),
-    startTime: "01:00 PM",
-    endTime: "05:00 PM",
-    slots: [{
-      date: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(),
-      times: ["01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM"]
-    }]
-  },
-  {
-    photographerId: "2",
-    photographerName: "Sarah Johnson",
-    id: "a3",
-    date: new Date(new Date().setDate(new Date().getDate() + 1)),
-    startTime: "10:00 AM",
-    endTime: "03:00 PM",
-    slots: [{
-      date: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
-      times: ["10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM"]
-    }]
-  },
-  {
-    photographerId: "3",
-    photographerName: "Michael Brown",
-    id: "a4",
-    date: new Date(new Date().setDate(new Date().getDate() + 3)),
-    startTime: "08:00 AM",
-    endTime: "11:00 AM",
-    slots: [{
-      date: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(),
-      times: ["08:00 AM", "09:00 AM", "10:00 AM"]
-    }]
-  },
-  {
-    photographerId: "4",
-    photographerName: "Emma Wilson",
-    id: "a5",
-    date: new Date(new Date().setDate(new Date().getDate() + 4)),
-    startTime: "02:00 PM",
-    endTime: "06:00 PM",
-    slots: [{
-      date: new Date(new Date().setDate(new Date().getDate() + 4)).toISOString(),
-      times: ["02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"]
-    }]
-  }
-];
-
-const Availability = () => {
+const PhotographerAvailability = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("daily");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [availabilityData, setAvailabilityData] = useState<PhotographerAvailability[]>(mockAvailabilityData);
+  const [availabilityData, setAvailabilityData] = useState<PhotographerAvailability[]>([]);
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   
   const [recurringSchedule, setRecurringSchedule] = useState<RecurringSchedule[]>([
@@ -119,7 +56,8 @@ const Availability = () => {
   
   // Dialog states
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [newAvailability, setNewAvailability] = useState<{startTime?: string; endTime?: string}>({});
+  const [newSlotStartTime, setNewSlotStartTime] = useState<string>('');
+  const [newSlotEndTime, setNewSlotEndTime] = useState<string>('');
   const [newSlotIsRecurring, setNewSlotIsRecurring] = useState(false);
   
   // Map the data to the format needed for AvailabilitySlot
@@ -146,12 +84,15 @@ const Availability = () => {
   
   // Helper function to check if a date has availability
   const hasAvailability = (date: Date) => {
-    return availabilitySlots.some(slot => isSameDay(slot.date, date));
+    return availabilitySlots.some(slot => {
+      const slotDate = typeof slot.date === 'string' ? parseISO(slot.date) : slot.date;
+      return isSameDay(slotDate, date);
+    });
   };
   
   // Add a new availability slot
   const addAvailabilitySlot = () => {
-    if (!newAvailability.startTime || !newAvailability.endTime) {
+    if (!newSlotStartTime || !newSlotEndTime) {
       toast({
         title: "Missing information",
         description: "Please select both start and end times.",
@@ -164,8 +105,8 @@ const Availability = () => {
     const newSlot: AvailabilitySlot = {
       id: Date.now().toString(),
       date: selectedDate,
-      startTime: newAvailability.startTime,
-      endTime: newAvailability.endTime,
+      startTime: newSlotStartTime,
+      endTime: newSlotEndTime,
       isRecurring: newSlotIsRecurring
     };
     
@@ -189,7 +130,8 @@ const Availability = () => {
     setAvailabilityData([...availabilityData, newAvailabilityItem]);
     
     // Reset form and close dialog
-    setNewAvailability({});
+    setNewSlotStartTime('');
+    setNewSlotEndTime('');
     setAddDialogOpen(false);
     
     toast({
@@ -209,7 +151,7 @@ const Availability = () => {
         setRecurringSchedule(
           recurringSchedule.map(rs => 
             rs.dayOfWeek === dayOfWeek
-              ? { ...rs, startTime: newAvailability.startTime || '', endTime: newAvailability.endTime || '', isActive: true }
+              ? { ...rs, startTime: newSlotStartTime || '', endTime: newSlotEndTime || '', isActive: true }
               : rs
           )
         );
@@ -220,8 +162,8 @@ const Availability = () => {
           {
             id: Date.now().toString(),
             dayOfWeek,
-            startTime: newAvailability.startTime || '9:00 AM',
-            endTime: newAvailability.endTime || '5:00 PM',
+            startTime: newSlotStartTime || '9:00 AM',
+            endTime: newSlotEndTime || '5:00 PM',
             isActive: true
           }
         ]);
@@ -553,8 +495,8 @@ const Availability = () => {
               <div className="grid gap-2">
                 <Label>Start Time</Label>
                 <TimeSelect
-                  value={newAvailability.startTime}
-                  onChange={(time) => setNewAvailability({...newAvailability, startTime: time})}
+                  value={newSlotStartTime}
+                  onChange={(time) => setNewSlotStartTime(time)}
                   placeholder="Select start time"
                 />
               </div>
@@ -562,8 +504,8 @@ const Availability = () => {
               <div className="grid gap-2">
                 <Label>End Time</Label>
                 <TimeSelect
-                  value={newAvailability.endTime}
-                  onChange={(time) => setNewAvailability({...newAvailability, endTime: time})}
+                  value={newSlotEndTime}
+                  onChange={(time) => setNewSlotEndTime(time)}
                   placeholder="Select end time"
                 />
               </div>
@@ -601,4 +543,4 @@ const Availability = () => {
   );
 };
 
-export default Availability;
+export default PhotographerAvailability;

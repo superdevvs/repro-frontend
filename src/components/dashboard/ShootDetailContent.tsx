@@ -3,7 +3,8 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link2, ExternalLink, PaperclipIcon, Share2Icon } from "lucide-react";
-import { format } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
+import { ensureDateString } from '@/utils/formatters';
 import { ShootData } from '@/types/shoots';
 import { toast } from "sonner";
 import {

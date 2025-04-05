@@ -1,11 +1,10 @@
-
 import React, { useEffect } from 'react';
 import { createBrowserRouter, RouterProvider, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from './components/auth/AuthProvider';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
-import BookShoot from './pages/BookShoot';
+import BookShoot from './pages/BookShoot'; // Fix import to use default export
 import Shoots from './pages/Shoots';
 import Clients from './pages/Clients';
 import Accounts from './pages/Accounts';

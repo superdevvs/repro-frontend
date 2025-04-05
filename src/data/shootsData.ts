@@ -45,7 +45,7 @@ export const shootsData: ShootData[] = [
       address: "4 Salthill Court",
       city: "Timonium",
       state: "MD",
-      zip: "21093",
+      zipCode: "21093",
       fullAddress: "4 Salthill Court, Timonium, MD 21093"
     },
     photographer: {
@@ -56,7 +56,8 @@ export const shootsData: ShootData[] = [
       baseQuote: 250.00,
       taxRate: 6.00,
       taxAmount: 15.00,
-      totalQuote: 265.00
+      totalQuote: 265.00,
+      totalPaid: 0
     },
     status: "scheduled",
     createdBy: "Michael Bereson"
@@ -75,7 +76,7 @@ export const shootsData: ShootData[] = [
       address: "869 High Mountain Road",
       city: "Franklin Lakes",
       state: "NJ",
-      zip: "7417",
+      zipCode: "7417",
       fullAddress: "869 High Mountain Road, Franklin Lakes, NJ 07417"
     },
     photographer: {
