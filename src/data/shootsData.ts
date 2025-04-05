@@ -1,3 +1,4 @@
+
 import { ShootData } from "@/types/shoots";
 
 export const shootsData: ShootData[] = [
@@ -253,11 +254,41 @@ export const shootsData: ShootData[] = [
     status: "completed",
     media: {
       photos: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg"
+        {
+          id: "photo1",
+          name: "Front View",
+          url: "/placeholder.svg",
+          type: "image/svg+xml",
+          approved: true
+        },
+        {
+          id: "photo2",
+          name: "Living Room",
+          url: "/placeholder.svg",
+          type: "image/svg+xml",
+          approved: true
+        },
+        {
+          id: "photo3",
+          name: "Kitchen",
+          url: "/placeholder.svg",
+          type: "image/svg+xml",
+          approved: true
+        },
+        {
+          id: "photo4",
+          name: "Master Bedroom",
+          url: "/placeholder.svg",
+          type: "image/svg+xml",
+          approved: true
+        },
+        {
+          id: "photo5",
+          name: "Bathroom",
+          url: "/placeholder.svg",
+          type: "image/svg+xml",
+          approved: true
+        }
       ]
     },
     tourLinks: {

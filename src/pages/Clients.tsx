@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { format, parseISO } from 'date-fns'; // Import the needed date functions
+import { format } from 'date-fns'; 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClientDetail } from '@/components/clients/ClientDetail';
 import { ClientStats } from '@/components/clients/ClientStats';
-import { formatDateSafe, ensureDateString } from '@/utils/formatters'; // Import our date formatter helpers
+import { formatDateSafe, ensureDateString } from '@/utils/formatters';
 
 export function Clients() {
   const { shoots } = useShoots();
@@ -48,6 +49,12 @@ export function Clients() {
     if (!dateString) return 'Not available';
     return formatDateSafe(dateString);
   };
+
+  // Calculate client statistics
+  const totalClients = filteredClients.length;
+  const activeClients = Math.round(totalClients * 0.7); // Example: 70% of clients are active
+  const inactiveClients = totalClients - activeClients;
+  const totalClientShoots = shoots.length;
 
   return (
     <div className="container mx-auto py-10">
@@ -120,7 +127,12 @@ export function Clients() {
                   </Table>
                 </TabsContent>
                 <TabsContent value="stats" className="mt-4">
-                  <ClientStats clients={filteredClients} shoots={shoots} />
+                  <ClientStats 
+                    totalClients={totalClients}
+                    activeClients={activeClients}
+                    inactiveClients={inactiveClients}
+                    totalShoots={totalClientShoots}
+                  />
                 </TabsContent>
               </Tabs>
             </>

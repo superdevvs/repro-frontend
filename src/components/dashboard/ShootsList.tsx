@@ -89,7 +89,7 @@ export function ShootsList({
                     <div className="flex -space-x-2">
                       {shoot.media.photos.slice(0, 3).map((photo, index) => (
                         <Avatar key={index} className="border-2 border-background w-8 h-8">
-                          <AvatarImage src={photo} alt="Media" />
+                          <AvatarImage src={photo.url} alt={photo.name} />
                           <AvatarFallback>
                             <ImageIcon className="h-4 w-4" />
                           </AvatarFallback>

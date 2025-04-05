@@ -1,361 +1,194 @@
-import React, { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { format } from 'date-fns';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { useShoots } from '@/context/ShootsContext';
-import { useNavigate } from 'react-router-dom';
-import { Eye, Calendar, Clock, MapPin, ChevronRight, ArrowRight, Building, Search, Filter } from 'lucide-react';
+
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ShootData } from '@/types/shoots';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { Skeleton } from '@/components/ui/skeleton';
-import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { formatDateSafe, ensureDateString } from '@/utils/formatters';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ShootsList } from '@/components/dashboard/ShootsList';
+import { useShoots } from '@/context/ShootsContext';
+import { CalendarIcon, FilterIcon, SearchIcon } from 'lucide-react';
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationNext, 
+  PaginationPrevious 
+} from '@/components/ui/pagination';
+import { formatDateSafe } from '@/utils/formatters';
 
-const statusColors = {
-  'scheduled': 'bg-blue-500',
-  'completed': 'bg-green-500',
-  'pending': 'bg-yellow-500',
-  'hold': 'bg-purple-500',
-  'booked': 'bg-orange-500',
-};
+export function ShootHistory() {
+  const { shoots } = useShoots();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const itemsPerPage = 10;
 
-const ShootHistory = () => {
-  const [activeTab, setActiveTab] = useState('scheduled');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filterAddress, setFilterAddress] = useState('');
-  const [filterPhotographer, setFilterPhotographer] = useState('');
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { getClientShootsByStatus, getUniquePhotographers } = useShoots();
-  const { user } = useAuth();
-
-  const photographers = getUniquePhotographers();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const scheduledShoots = getClientShootsByStatus('scheduled');
-  const completedShoots = getClientShootsByStatus('completed');
-  const holdShoots = [
-    ...getClientShootsByStatus('hold'),
-    ...getClientShootsByStatus('pending')
-  ];
-
-  const filteredScheduledShoots = scheduledShoots.filter(shoot => {
-    const matchesAddress = !filterAddress || 
-      shoot.location.fullAddress.toLowerCase().includes(filterAddress.toLowerCase());
+  const filteredShoots = shoots.filter(shoot => {
+    // Filter by status
+    if (filter !== 'all' && shoot.status !== filter) return false;
     
-    const matchesPhotographer = !filterPhotographer || 
-      shoot.photographer.name === filterPhotographer;
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        shoot.location.fullAddress?.toLowerCase().includes(query) ||
+        shoot.client.name?.toLowerCase().includes(query) ||
+        shoot.photographer.name?.toLowerCase().includes(query) ||
+        formatDateSafe(shoot.scheduledDate).toLowerCase().includes(query)
+      );
+    }
     
-    return matchesAddress && matchesPhotographer;
+    return true;
   });
 
-  const handleBookNewShoot = () => {
-    navigate('/book-shoot');
+  const indexOfLastShoot = currentPage * itemsPerPage;
+  const indexOfFirstShoot = indexOfLastShoot - itemsPerPage;
+  const currentShoots = filteredShoots.slice(indexOfFirstShoot, indexOfLastShoot);
+  const totalPages = Math.ceil(filteredShoots.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    if (pageNumber < 1 || pageNumber > totalPages) return;
+    setCurrentPage(pageNumber);
   };
 
-  const formatShootDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return format(date, 'MMM dd, yyyy');
-    } catch (e) {
-      return 'Invalid date';
-    }
+  const handleShootSelect = (shoot: any) => {
+    console.log('Selected shoot:', shoot);
+    // Navigate to ShootDetail or open a modal
   };
 
-  const renderShootCard = (shoot: ShootData) => (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      key={shoot.id}
-      className="p-4 border border-border rounded-lg hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer"
-      onClick={() => navigate(`/shoots?id=${shoot.id}`)}
-    >
-      <div className="flex justify-between items-start mb-3">
-        <div>
-          <h3 className="font-medium">{shoot.location.address}</h3>
-          <p className="text-sm text-muted-foreground">{shoot.location.city}, {shoot.location.state} {shoot.location.zip}</p>
-        </div>
-        <Badge 
-          variant="outline" 
-          className={`${
-            statusColors[shoot.status as keyof typeof statusColors] || 'bg-gray-500'
-          } text-white`}
-        >
-          {shoot.status.charAt(0).toUpperCase() + shoot.status.slice(1)}
-        </Badge>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span>{formatDateSafe(shoot.scheduledDate)}</span>
-        </div>
-        
-        {shoot.time && (
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span>{shoot.time}</span>
-          </div>
-        )}
-        
-        {shoot.photographer && (
-          <div className="flex items-center gap-2 col-span-2">
-            <Building className="h-4 w-4 text-muted-foreground" />
-            <span className="truncate">Photographer: {shoot.photographer.name}</span>
-          </div>
-        )}
-        
-        {shoot.services && shoot.services.length > 0 && (
-          <div className="col-span-2 mt-2">
-            <p className="text-xs text-muted-foreground mb-1">Services:</p>
-            <div className="flex flex-wrap gap-1">
-              {shoot.services.map((service, i) => (
-                <Badge key={i} variant="secondary" className="text-xs">
-                  {service}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      
-      <div className="flex justify-end">
-        <Button variant="ghost" size="sm" className="gap-1">
-          <span>View Details</span>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </motion.div>
-  );
-
-  const renderScheduledShootsTable = () => (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Time</TableHead>
-            <TableHead>Address</TableHead>
-            <TableHead>Services</TableHead>
-            <TableHead>Photographer</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredScheduledShoots.length > 0 ? (
-            filteredScheduledShoots.map((shoot) => (
-              <TableRow key={shoot.id}>
-                <TableCell>{formatDateSafe(shoot.scheduledDate)}</TableCell>
-                <TableCell>{shoot.time || 'Not set'}</TableCell>
-                <TableCell className="max-w-xs truncate">{shoot.location.fullAddress}</TableCell>
-                <TableCell>{shoot.services.join(', ')}</TableCell>
-                <TableCell>{shoot.photographer.name}</TableCell>
-                <TableCell>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => navigate(`/shoots?id=${shoot.id}`)}
-                    className="flex items-center gap-1"
-                  >
-                    <Eye className="h-4 w-4" />
-                    <span>View</span>
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center p-4">No scheduled shoots found</TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
-  );
-
-  const renderEmptyState = (message: string) => (
-    <div className="flex flex-col items-center justify-center p-8 text-center">
-      <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-      <h3 className="text-xl font-medium mb-2">No shoots to display</h3>
-      <p className="text-muted-foreground mb-6">{message}</p>
-      <Button onClick={handleBookNewShoot}>Book a New Shoot</Button>
-    </div>
-  );
-
-  const renderLoadingState = () => (
-    <div className="space-y-4">
-      {[1, 2, 3].map((i) => (
-        <Card key={i}>
-          <CardContent className="p-6">
-            <div className="flex justify-between">
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-4 w-32" />
-              </div>
-              <Skeleton className="h-6 w-16" />
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-4 w-20" />
-            </div>
-            <div className="flex justify-end mt-4">
-              <Skeleton className="h-8 w-24" />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
+  const handleUploadMedia = (shoot: any) => {
+    console.log('Upload media for shoot:', shoot);
+    // Open media upload dialog
+  };
 
   return (
-    <DashboardLayout>
-      <div className="container max-w-5xl py-6">
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6">
+    <div className="container mx-auto py-10">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Shoots</h1>
-            <p className="text-muted-foreground">View and manage your property photo shoots</p>
+            <CardTitle>Shoot History</CardTitle>
+            <CardDescription>View all past and upcoming property shoots</CardDescription>
           </div>
-          <Button onClick={handleBookNewShoot}>Book New Shoot</Button>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="scheduled" className="flex gap-2 items-center">
-              <Calendar className="h-4 w-4" />
-              <span>Scheduled ({scheduledShoots.length})</span>
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="flex gap-2 items-center">
-              <Eye className="h-4 w-4" />
-              <span>Completed ({completedShoots.length})</span>
-            </TabsTrigger>
-            <TabsTrigger value="hold" className="flex gap-2 items-center">
-              <Calendar className="h-4 w-4" />
-              <span>Hold-On ({holdShoots.length})</span>
-            </TabsTrigger>
-          </TabsList>
-
-          {isLoading ? (
-            renderLoadingState()
-          ) : (
-            <>
-              <TabsContent value="scheduled" className="mt-0">
-                {scheduledShoots.length > 0 ? (
-                  <>
-                    <Collapsible 
-                      open={isFilterOpen} 
-                      onOpenChange={setIsFilterOpen}
-                      className="mb-6 border rounded-lg p-4"
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm">
+              <CalendarIcon className="h-4 w-4 mr-2" />
+              Calendar View
+            </Button>
+            <Button variant="outline" size="sm">
+              <FilterIcon className="h-4 w-4 mr-2" />
+              Filter
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4">
+            <div className="relative">
+              <SearchIcon className="absolute left-2.5 top-3 h-4 w-4 text-gray-500" />
+              <Input
+                type="search"
+                placeholder="Search by address, client, photographer, or date..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={filter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('all')}
+              >
+                All
+              </Button>
+              <Button
+                variant={filter === 'completed' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('completed')}
+              >
+                Completed
+              </Button>
+              <Button
+                variant={filter === 'scheduled' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('scheduled')}
+              >
+                Scheduled
+              </Button>
+              <Button
+                variant={filter === 'pending' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('pending')}
+              >
+                Pending
+              </Button>
+              <Button
+                variant={filter === 'hold' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('hold')}
+              >
+                On Hold
+              </Button>
+            </div>
+            
+            <ShootsList 
+              shoots={currentShoots} 
+              onSelect={handleShootSelect}
+              onUploadMedia={handleUploadMedia}
+              showMedia={true}
+            />
+            
+            <div className="flex justify-center mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
                     >
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium">Filter Shoots</h3>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <Filter className="h-4 w-4 mr-2" />
-                            {isFilterOpen ? "Hide Filters" : "Show Filters"}
-                          </Button>
-                        </CollapsibleTrigger>
-                      </div>
-                      <CollapsibleContent className="mt-4 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="address-filter">Address</Label>
-                            <Input 
-                              id="address-filter" 
-                              placeholder="Filter by address" 
-                              value={filterAddress}
-                              onChange={(e) => setFilterAddress(e.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="photographer-filter">Photographer</Label>
-                            <Select 
-                              value={filterPhotographer} 
-                              onValueChange={setFilterPhotographer}
-                            >
-                              <SelectTrigger id="photographer-filter">
-                                <SelectValue placeholder="Select photographer" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">All Photographers</SelectItem>
-                                {photographers.map((photographer) => (
-                                  <SelectItem key={photographer.name} value={photographer.name}>
-                                    {photographer.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        {(filterAddress || filterPhotographer) && (
-                          <div className="flex justify-between items-center">
-                            <p className="text-sm text-muted-foreground">
-                              Showing {filteredScheduledShoots.length} of {scheduledShoots.length} shoots
-                            </p>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                setFilterAddress('');
-                                setFilterPhotographer('');
-                              }}
-                            >
-                              Clear Filters
-                            </Button>
-                          </div>
-                        )}
-                      </CollapsibleContent>
-                    </Collapsible>
-                    {renderScheduledShootsTable()}
-                  </>
-                ) : (
-                  renderEmptyState("You don't have any scheduled shoots. Book your first shoot now!")
-                )}
-              </TabsContent>
-              
-              <TabsContent value="completed" className="mt-0">
-                {completedShoots.length > 0 ? (
-                  <div className="grid gap-4">
-                    {completedShoots.map(renderShootCard)}
-                  </div>
-                ) : (
-                  renderEmptyState("You don't have any completed shoots yet.")
-                )}
-              </TabsContent>
-              
-              <TabsContent value="hold" className="mt-0">
-                {holdShoots.length > 0 ? (
-                  <div className="grid gap-4">
-                    {holdShoots.map(renderShootCard)}
-                  </div>
-                ) : (
-                  renderEmptyState("You don't have any shoots on hold.")
-                )}
-              </TabsContent>
-            </>
-          )}
-        </Tabs>
-      </div>
-    </DashboardLayout>
+                      Previous
+                    </Button>
+                  </PaginationItem>
+                  
+                  {/* Display up to 5 page numbers */}
+                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                    // Adjust which 5 pages to show based on current page
+                    let pageNum = i + 1;
+                    if (currentPage > 3 && totalPages > 5) {
+                      pageNum = currentPage - 3 + i;
+                      if (pageNum > totalPages) pageNum = totalPages - (5 - i - 1);
+                    }
+                    
+                    return (
+                      <PaginationItem key={i}>
+                        <Button
+                          variant={currentPage === pageNum ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                        >
+                          {pageNum}
+                        </Button>
+                      </PaginationItem>
+                    );
+                  })}
+                  
+                  <PaginationItem>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
-};
-
-export default ShootHistory;
+}

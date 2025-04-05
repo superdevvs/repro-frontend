@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircleUser, Briefcase, Building, CameraIcon } from 'lucide-react';
+import { ShootData } from '@/types/shoots';
 
 interface ClientStatsProps {
   totalClients: number;

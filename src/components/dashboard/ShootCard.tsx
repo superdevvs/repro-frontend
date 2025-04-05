@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +19,7 @@ import {
   CloudSnowIcon
 } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
-import { ShootData } from '@/types/shoots';
+import { ShootData, MediaItem } from '@/types/shoots';
 import { ensureDateString } from '@/utils/formatters';
 
 interface WeatherInfo {
@@ -130,8 +131,8 @@ export function ShootCard(props: ShootCardProps) {
         {showMedia && shoot.media?.photos && shoot.media.photos.length > 0 && (
           <div className="relative h-40 w-full overflow-hidden">
             <img 
-              src={shoot.media.photos[0]}
-              alt={shoot.location.address}
+              src={shoot.media.photos[0].url}
+              alt={shoot.media.photos[0].name || shoot.location.address || "Property"}
               className="h-full w-full object-cover"
             />
             <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs font-medium">
