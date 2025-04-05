@@ -22,6 +22,21 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 
+const stepContent = {
+  1: {
+    title: "Property Details",
+    description: "Enter details about the property and select your package"
+  },
+  2: {
+    title: "Schedule Your Shoot",
+    description: "Choose a date and time that works for you"
+  },
+  3: {
+    title: "Review & Confirm",
+    description: "Review all details and confirm your booking"
+  }
+};
+
 const photographers = [
   { id: '1', name: 'John Doe', avatar: 'https://ui.shadcn.com/avatars/01.png', rate: 150, availability: true },
   { id: '2', name: 'Jane Smith', avatar: 'https://ui.shadcn.com/avatars/02.png', rate: 175, availability: true },
