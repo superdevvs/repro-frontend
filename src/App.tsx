@@ -22,7 +22,7 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from './components/theme-provider';
 import ShootDetail from './pages/ShootDetail';
 import Messages from './pages/Messages';
-import ShootHistory from './pages/ShootHistory';
+import { ShootHistory } from './pages/ShootHistory';
 import VirtualTours from './pages/VirtualTours';
 import ErrorBoundary from './components/ErrorBoundary';
 
