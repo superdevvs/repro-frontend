@@ -24,6 +24,7 @@ import {
   MenuIcon,
   MessageSquareIcon,
   HistoryIcon,
+  CalendarIcon,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -109,22 +110,35 @@ export function Sidebar({ className }: SidebarProps) {
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/dashboard'}
           />
-          {['admin', 'superadmin'].includes(role) && (
+          
+          {/* Show Book Shoot for both admins and clients */}
+          <NavLink
+            to="/book-shoot"
+            icon={<ClipboardIcon className="h-4 w-4" />}
+            label="Book Shoot"
+            isCollapsed={isCollapsed && !isMobile}
+            isActive={pathname === '/book-shoot'}
+          />
+          
+          {/* Show appropriate shoots history based on user role */}
+          {role === 'client' ? (
             <NavLink
-              to="/book-shoot"
-              icon={<ClipboardIcon className="h-4 w-4" />}
-              label="Book Shoot"
+              to="/shoot-history"
+              icon={<HistoryIcon className="h-4 w-4" />}
+              label="My Shoots"
               isCollapsed={isCollapsed && !isMobile}
-              isActive={pathname === '/book-shoot'}
+              isActive={pathname === '/shoot-history'}
+            />
+          ) : (
+            <NavLink
+              to="/shoots"
+              icon={<CalendarIcon className="h-4 w-4" />}
+              label="Shoots History"
+              isCollapsed={isCollapsed && !isMobile}
+              isActive={pathname === '/shoots'}
             />
           )}
-          <NavLink
-            to="/shoots"
-            icon={<HistoryIcon className="h-4 w-4" />}
-            label="Shoots History"
-            isCollapsed={isCollapsed && !isMobile}
-            isActive={pathname === '/shoots'}
-          />
+          
           <NavLink
             to="/messages"
             icon={<MessageSquareIcon className="h-4 w-4" />}
@@ -132,6 +146,7 @@ export function Sidebar({ className }: SidebarProps) {
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/messages'}
           />
+          
           {role !== 'client' && (
             <NavLink
               to="/clients"
@@ -141,6 +156,7 @@ export function Sidebar({ className }: SidebarProps) {
               isActive={pathname === '/clients'}
             />
           )}
+          
           {['admin', 'superadmin'].includes(role) && (
             <NavLink
               to="/accounts"
@@ -150,6 +166,7 @@ export function Sidebar({ className }: SidebarProps) {
               isActive={pathname === '/accounts'}
             />
           )}
+          
           <NavLink
             to="/invoices"
             icon={<FileTextIcon className="h-4 w-4" />}
@@ -157,6 +174,7 @@ export function Sidebar({ className }: SidebarProps) {
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/invoices'}
           />
+          
           {role === 'superadmin' && (
             <NavLink
               to="/reports"
@@ -166,6 +184,7 @@ export function Sidebar({ className }: SidebarProps) {
               isActive={pathname === '/reports'}
             />
           )}
+          
           {role === 'admin' && (
             <NavLink
               to="/availability"

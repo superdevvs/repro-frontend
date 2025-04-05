@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,7 @@ import Availability from "./pages/Availability";
 import Reports from "./pages/Reports";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
+import ShootHistory from "./pages/ShootHistory";
 import { ShootsProvider } from './context/ShootsContext';
 import { ThemeProvider } from './hooks/useTheme';
 
@@ -64,6 +66,11 @@ const AppRoutes = () => {
       <Route path="/book-shoot" element={
         <ProtectedRoute>
           <BookShoot />
+        </ProtectedRoute>
+      } />
+      <Route path="/shoot-history" element={
+        <ProtectedRoute>
+          <ShootHistory />
         </ProtectedRoute>
       } />
       <Route path="/messages" element={
