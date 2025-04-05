@@ -44,14 +44,13 @@ export function MessageForm({ shoot, onSent }: MessageFormProps) {
       
       const senderId = user?.id || role + '-' + Date.now();
       
-      // Insert message into database
       // Convert ID to string to match the database schema
       const shootIdString = toStringId(shoot.id);
       
       const { error } = await supabase.from('messages').insert({
         shoot_id: shootIdString,
-        sender_id: senderId,
-        recipient_id: recipientId,
+        sender_id: toStringId(senderId),
+        recipient_id: toStringId(recipientId),
         message: values.message,
       });
       

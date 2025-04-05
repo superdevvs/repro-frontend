@@ -12,7 +12,7 @@ export function formatDateSafe(dateInput: string | Date | undefined, formatStr: 
   
   try {
     const date = typeof dateInput === 'string' ? parseISO(dateInput) : dateInput;
-    return format(date, formatStr);
+    return isValid(date) ? format(date, formatStr) : 'Invalid date';
   } catch (error) {
     console.error('Date formatting error:', error);
     return 'Invalid date';

@@ -1,267 +1,390 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { useRouter } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useShoots } from '@/context/ShootsContext';
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { addDays, format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/components/auth/AuthProvider';
-import { useNavigate } from 'react-router-dom';
-import { CalendarIcon, CheckCircle, User, Users2, MapPin, Clock, Check, Loader2 } from 'lucide-react';
-import { formatDateSafe } from '@/utils/formatters';
+import { useShoots } from '@/context/ShootsContext';
+import { Photographer } from '@/components/photographers/usePhotographersData';
 import { TimeSelect } from "@/components/ui/time-select";
-import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
+import { ShootData } from '@/types/shoots';
 
-const BookShoot = () => {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
-  const [time, setTime] = useState<string | undefined>('');
-  const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [zip, setZip] = useState('');
-  const [clientName, setClientName] = useState('');
-  const [clientEmail, setClientEmail] = useState('');
-  const [notes, setNotes] = useState('');
-  const [photographerId, setPhotographerId] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
-  const { addShoot, getUniquePhotographers } = useShoots();
+interface FormData {
+  date: string;
+  time: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  clientCompany: string;
+  serviceType: string;
+  photographerId: string;
+}
+
+export function BookShoot() {
+  const router = useRouter();
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [time, setTime] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [clientCompany, setClientCompany] = useState("");
+  const [serviceType, setServiceType] = useState("Photography");
+  const [fee, setFee] = useState(200);
+  const [taxRate, setTaxRate] = useState(6);
+  const [taxAmount, setTaxAmount] = useState(fee * (taxRate / 100));
+  const [totalWithTax, setTotalWithTax] = useState(fee + taxAmount);
+  const [selectedPhotographer, setSelectedPhotographer] = useState<Photographer | null>(null);
+  const [isPhotographerAvailable, setIsPhotographerAvailable] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   const { user } = useAuth();
-  const navigate = useNavigate();
-  
-  const photographers = getUniquePhotographers();
-  
-  useEffect(() => {
-    if (photographers && photographers.length > 0) {
-      setPhotographerId(photographers[0].id);
-    }
-  }, [photographers]);
+  const { addShoot } = useShoots();
+  const [photographers, setPhotographers] = useState<Photographer[]>([]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    if (!date || !time || !address || !city || !state || !zip || !clientName || !clientEmail || !photographerId) {
-      toast.error("Please fill in all fields.");
-      setLoading(false);
-      return;
-    }
-    
+  useEffect(() => {
+    // Mock photographer data
+    const mockPhotographers: Photographer[] = [
+      {
+        id: "1",
+        name: "David Smith",
+        email: "david@example.com",
+        phone: "(555) 123-4567",
+        address: "123 Main St, New York, NY 10001",
+        avatar: "/assets/avatar/photographer1.jpg",
+        bio: "Professional photographer with 10+ years of experience in architectural and real estate photography.",
+        rating: 4.8,
+        specialty: ["Real Estate", "Architecture", "Interior"],
+        availability: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        completedShoots: 357,
+        upcomingShoots: 5
+      },
+      {
+        id: "2",
+        name: "Sarah Johnson",
+        email: "sarah@example.com",
+        phone: "(555) 987-6543",
+        address: "456 Oak Ave, Los Angeles, CA 90001",
+        avatar: "/assets/avatar/photographer2.jpg",
+        bio: "Specializing in luxury real estate photography and videography. Drone certified.",
+        rating: 4.9,
+        specialty: ["Luxury Estates", "Drone Photography", "Twilight Shots"],
+        availability: ["Monday", "Wednesday", "Friday", "Saturday"],
+        completedShoots: 215,
+        upcomingShoots: 3
+      }
+    ];
+
+    setPhotographers(mockPhotographers);
+  }, []);
+
+  useEffect(() => {
+    const newTaxAmount = fee * (taxRate / 100);
+    setTaxAmount(newTaxAmount);
+    setTotalWithTax(fee + newTaxAmount);
+  }, [fee, taxRate]);
+
+  const handleBookShoot = async (data: FormData) => {
+    setIsSubmitting(true);
+
     try {
-      const newShoot = {
-        id: Date.now().toString(),
-        scheduledDate: date.toISOString(),
-        time: time,
-        status: 'scheduled',
+      // Check photographer availability
+      if (selectedPhotographer) {
+        // Mock availability check
+        const isAvailable = Math.random() < 0.8; // 80% chance of being available
+        setIsPhotographerAvailable(isAvailable);
+
+        if (!isAvailable) {
+          toast({
+            title: "Photographer Not Available",
+            description: "The selected photographer is not available on this date and time.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+      
+      // Create shoot object
+      const newShoot: ShootData = {
+        id: uuidv4(),
+        scheduledDate: data.date,
+        time: data.time,
+        status: 'booked' as const,  // Use 'as const' to ensure proper typing
         location: {
-          address: address,
-          city: city,
-          state: state,
-          zipCode: zip,
-          fullAddress: `${address}, ${city}, ${state} ${zip}`,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          zipCode: data.zipCode,
+          fullAddress: `${data.address}, ${data.city}, ${data.state} ${data.zipCode}`
         },
         client: {
-          name: clientName,
-          email: clientEmail,
+          name: data.clientName,
+          email: data.clientEmail,
+          phone: data.clientPhone,
+          company: data.clientCompany
         },
-        photographer: {
-          id: photographerId,
-          name: photographers.find(p => p.id === photographerId)?.name || 'Unknown Photographer',
-        },
-        notes: {
-          shootNotes: notes,
+        photographer: selectedPhotographer ? {
+          id: selectedPhotographer.id,
+          name: selectedPhotographer.name,
+          avatar: selectedPhotographer.avatar
+        } : {
+          name: "To be assigned",
         },
         payment: {
-          totalPaid: 0,
-          baseQuote: 200,
-          taxRate: 0,
-          taxAmount: 0,
-          totalQuote: 200,
+          baseQuote: fee,
+          taxRate: taxRate,
+          taxAmount: taxAmount,
+          totalQuote: totalWithTax,
+          totalPaid: 0
         },
-        services: [],
+        services: [data.serviceType],
+        createdBy: user?.id || "guest",
         media: {
-          photos: [],
-          videos: [],
-        },
+          photos: []
+        }
       };
       
       addShoot(newShoot);
-      toast.success("Shoot booked successfully!");
-      navigate('/shoots');
+
+      toast({
+        title: "Shoot Booked Successfully",
+        description: `A shoot has been booked for ${data.date} at ${data.time}.`,
+      });
+
+      router.push('/Dashboard');
     } catch (error) {
       console.error("Error booking shoot:", error);
-      toast.error("Failed to book shoot. Please try again.");
+      toast({
+        title: "Error Booking Shoot",
+        description: "There was an error booking the shoot. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
-
+  
   return (
-    <div className="container max-w-3xl py-6">
-      <Card>
+    <div className="container mx-auto py-10">
+      <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl">Book a Shoot</CardTitle>
+          <CardTitle>Book a Shoot</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-6">
-          <form onSubmit={handleSubmit} className="grid gap-4">
+        <CardContent className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData: FormData = {
+                date: format(date || new Date(), 'yyyy-MM-dd'),
+                time: time,
+                address: address,
+                city: city,
+                state: state,
+                zipCode: zipCode,
+                clientName: clientName,
+                clientEmail: clientEmail,
+                clientPhone: clientPhone,
+                clientCompany: clientCompany,
+                serviceType: serviceType,
+                photographerId: selectedPhotographer?.id || ""
+              };
+              handleBookShoot(formData);
+            }}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="grid gap-2">
+              <div>
                 <Label htmlFor="date">Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
-                      className={
-                        "w-full justify-start text-left font-normal" +
-                        (date ? "" : " text-muted-foreground")
-                      }
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !date && "text-muted-foreground"
+                      )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? formatDateSafe(date, 'PPP') : <span>Pick a date</span>}
+                      {date ? format(date, "PPP") : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start" side="bottom">
+                  <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
                       selected={date}
                       onSelect={setDate}
                       disabled={(date) =>
-                        date < new Date()
+                        date < new Date() || date > addDays(new Date(), 365)
                       }
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
               </div>
-              
-              <div className="grid gap-2">
+              <div>
                 <Label htmlFor="time">Time</Label>
                 <TimeSelect
                   value={time}
                   onChange={setTime}
-                  placeholder="Select time"
+                  placeholder="Select a time"
                 />
               </div>
             </div>
-            
+            <div>
+              <Label htmlFor="address">Address</Label>
+              <Input
+                type="text"
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  type="text"
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="123 Main St"
-                />
-              </div>
-              
-              <div className="grid gap-2">
+              <div>
                 <Label htmlFor="city">City</Label>
                 <Input
                   type="text"
                   id="city"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="New York"
                 />
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="state">State</Label>
-                  <Input
-                    type="text"
-                    id="state"
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    placeholder="NY"
-                  />
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="zip">Zip Code</Label>
-                  <Input
-                    type="text"
-                    id="zip"
-                    value={zip}
-                    onChange={(e) => setZip(e.target.value)}
-                    placeholder="10001"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="clientName">Client Name</Label>
+              <div>
+                <Label htmlFor="state">State</Label>
                 <Input
                   type="text"
-                  id="clientName"
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  placeholder="John Doe"
+                  id="state"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
                 />
               </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="clientEmail">Client Email</Label>
+              <div>
+                <Label htmlFor="zipCode">Zip Code</Label>
                 <Input
-                  type="email"
-                  id="clientEmail"
-                  value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
-                  placeholder="john.doe@example.com"
+                  type="text"
+                  id="zipCode"
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
                 />
               </div>
             </div>
-            
-            <div className="grid gap-2">
+            <div>
+              <Label htmlFor="clientName">Client Name</Label>
+              <Input
+                type="text"
+                id="clientName"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="clientEmail">Client Email</Label>
+              <Input
+                type="email"
+                id="clientEmail"
+                value={clientEmail}
+                onChange={(e) => setClientEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="clientPhone">Client Phone</Label>
+              <Input
+                type="tel"
+                id="clientPhone"
+                value={clientPhone}
+                onChange={(e) => setClientPhone(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="clientCompany">Client Company</Label>
+              <Input
+                type="text"
+                id="clientCompany"
+                value={clientCompany}
+                onChange={(e) => setClientCompany(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="serviceType">Service Type</Label>
+              <Select onValueChange={setServiceType}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a service" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Photography">Photography</SelectItem>
+                  <SelectItem value="Videography">Videography</SelectItem>
+                  <SelectItem value="Drone Services">Drone Services</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="fee">Fee</Label>
+              <Input
+                type="number"
+                id="fee"
+                value={fee}
+                onChange={(e) => setFee(Number(e.target.value))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="taxRate">Tax Rate (%)</Label>
+              <Input
+                type="number"
+                id="taxRate"
+                value={taxRate}
+                onChange={(e) => setTaxRate(Number(e.target.value))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="totalWithTax">Total (with Tax)</Label>
+              <Input
+                type="text"
+                id="totalWithTax"
+                value={totalWithTax.toFixed(2)}
+                readOnly
+              />
+            </div>
+            <div>
               <Label htmlFor="photographer">Photographer</Label>
-              <Select onValueChange={setPhotographerId}>
+              <Select onValueChange={(value) => {
+                const photographer = photographers.find(p => p.id === value);
+                setSelectedPhotographer(photographer || null);
+              }}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a photographer" />
                 </SelectTrigger>
                 <SelectContent>
-                  {photographers && photographers.map((photographer) => (
+                  {photographers.map((photographer) => (
                     <SelectItem key={photographer.id} value={photographer.id}>
-                      <div className="flex items-center gap-2">
-                        {photographer.name}
-                        {photographerId === photographer.id && (
-                          <Check className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
+                      {photographer.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Additional notes for the shoot"
-              />
-            </div>
-            
-            <Button disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Book Shoot
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Book Shoot"}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
   );
-};
-
-export default BookShoot;
+}

@@ -54,10 +54,8 @@ type ShootCardProps = (LegacyShootCardProps | NewShootCardProps) & {
 };
 
 export function ShootCard(props: ShootCardProps) {
-  // Check if using the new props structure
   const isNewProps = 'shoot' in props;
   
-  // Setup all needed variables whether using new or legacy props
   const status = isNewProps ? props.shoot.status : props.status;
   const showMedia = isNewProps ? props.showMedia : false;
   const onClick = props.onClick;
@@ -70,10 +68,12 @@ export function ShootCard(props: ShootCardProps) {
     'booked': 'bg-indigo-500'
   };
   
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date): string => {
     try {
-      return format(new Date(dateString), 'MMM dd, yyyy');
+      const date = typeof dateString === 'string' ? parseISO(dateString) : dateString;
+      return isValid(date) ? format(date, 'MMM dd, yyyy') : 'Invalid date';
     } catch (error) {
+      console.error('Error formatting date:', error);
       return 'Invalid date';
     }
   };
@@ -83,7 +83,6 @@ export function ShootCard(props: ShootCardProps) {
     return timeString;
   };
 
-  // Get mock weather data for the shoot date
   const [weather, setWeather] = useState<WeatherInfo | null>(null);
   
   const getWeatherIcon = (condition: string) => {
@@ -102,8 +101,6 @@ export function ShootCard(props: ShootCardProps) {
   };
 
   useEffect(() => {
-    // Mock weather API call
-    // In a real app, you would fetch from a weather API using the shoot date and location
     const getRandomWeather = () => {
       const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Snow'];
       const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
@@ -112,7 +109,7 @@ export function ShootCard(props: ShootCardProps) {
       return {
         temp: randomTemp,
         condition: randomCondition,
-        icon: '🌤️', // This would be the icon URL from the API
+        icon: '🌤️',
         iconComponent: getWeatherIcon(randomCondition)
       };
     };
@@ -120,7 +117,6 @@ export function ShootCard(props: ShootCardProps) {
     setWeather(getRandomWeather());
   }, []);
 
-  // If using new props structure
   if (isNewProps) {
     const { shoot } = props;
     
@@ -216,7 +212,6 @@ export function ShootCard(props: ShootCardProps) {
     );
   }
   
-  // Using legacy props structure
   const { address, date, time, photographer, client, price } = props;
   
   return (

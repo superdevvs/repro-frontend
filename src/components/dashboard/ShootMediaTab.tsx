@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, ImageIcon, Upload, Copy, QrCode, Eye, EyeOff, Edit, Image, Link2, Play, Pause } from "lucide-react";
-import { ShootData } from '@/types/shoots';
+import { ShootData, SlideShowItem } from '@/types/shoots';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { FileUploader } from '@/components/media/FileUploader';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -19,6 +19,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useShoots } from '@/context/ShootsContext';
 import { SlideshowViewer } from './SlideshowViewer';
 import { VirtualTourSection } from '../tours/VirtualTourSection';
+import { ensureDateString } from '@/utils/formatters';
 
 const examplePhotos = [
   "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200&auto=format",
@@ -31,7 +32,7 @@ const examplePhotos = [
   "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?q=80&w=1200&auto=format",
 ];
 
-const sampleSlideshows = [
+const sampleSlideshows: SlideShowItem[] = [
   {
     id: "slide-1",
     title: "Modern Interior Showcase",
@@ -61,31 +62,41 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const [slideshowOrientation, setSlideshowOrientation] = useState<'portrait' | 'landscape'>('landscape');
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [editSlideshowDialogOpen, setEditSlideshowDialogOpen] = useState(false);
-  const [currentSlideshow, setCurrentSlideshow] = useState<{id: string, title: string, url: string, visible: boolean} | null>(null);
+  const [currentSlideshow, setCurrentSlideshow] = useState<SlideShowItem | null>(null);
   const [slideshowTitle, setSlideshowTitle] = useState("New Slideshow");
   const [viewSlideshowDialogOpen, setViewSlideshowDialogOpen] = useState(false);
   const [viewingSlideshowUrl, setViewingSlideshowUrl] = useState<string | null>(null);
   const [photoCarouselOpen, setPhotoCarouselOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const [displaySlideshows, setDisplaySlideshows] = useState(
+  const [displaySlideshows, setDisplaySlideshows] = useState<SlideShowItem[]>(
     shoot.media?.slideshows || sampleSlideshows
   );
   
   const isAdmin = ['admin', 'superadmin'].includes(role);
-  const isPaid = shoot.payment.totalPaid && shoot.payment.totalPaid >= shoot.payment.totalQuote;
+  const isPaid = shoot.payment?.totalPaid && shoot.payment?.totalQuote && shoot.payment.totalPaid >= shoot.payment.totalQuote;
 
   const displayPhotos = shoot.media?.photos && shoot.media.photos.length > 0 
     ? shoot.media.photos 
     : examplePhotos;
   
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString?: string | Date): string => {
     if (!dateString) return 'N/A';
-    return format(new Date(dateString), 'MMMM d, yyyy');
+    try {
+      const date = typeof dateString === 'string' ? parseISO(dateString) : dateString;
+      return isValid(date) ? format(date, 'MMMM d, yyyy') : 'Invalid date';
+    } catch (error) {
+      return 'N/A';
+    }
   };
 
-  const formatTime = (dateString?: string) => {
+  const formatTime = (dateString?: string | Date): string => {
     if (!dateString) return '';
-    return format(new Date(dateString), 'h:mm a');
+    try {
+      const date = typeof dateString === 'string' ? parseISO(dateString) : dateString;
+      return isValid(date) ? format(date, 'h:mm a') : '';
+    } catch (error) {
+      return '';
+    }
   };
   
   const handleUploadComplete = (files: File[]) => {
@@ -144,30 +155,25 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       return;
     }
     
-    const newSlideshow = {
+    const newSlideshow: SlideShowItem = {
       id: `slide-${uuidv4().slice(0, 8)}`,
       title: slideshowTitle || `${shoot.location.city} ${slideshowOrientation} Slideshow`,
       url: `https://example.com/slideshows/${shoot.id}-${uuidv4().slice(0, 6)}`,
       visible: true
     };
     
-    setDisplaySlideshows(prevSlideshows => [...prevSlideshows, newSlideshow]);
+    setDisplaySlideshows(prevSlideshows => [...prevSlideshows]);
     
     const updatedSlideshows = shoot.media?.slideshows ? 
       [...shoot.media.slideshows, newSlideshow] : 
       [newSlideshow];
     
-    const updatedShoot = {
-      ...shoot,
+    updateShoot(shoot.id, {
       media: {
         ...shoot.media,
         slideshows: updatedSlideshows,
         photos: shoot.media?.photos || []
       }
-    };
-    
-    updateShoot(shoot.id, {
-      media: updatedShoot.media
     });
     
     toast({
@@ -191,7 +197,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
     }
   };
 
-  const handleEditSlideshow = (slideshow: {id: string, title: string, url: string, visible: boolean}) => {
+  const handleEditSlideshow = (slideshow: SlideShowItem) => {
     setCurrentSlideshow(slideshow);
     setEditSlideshowDialogOpen(true);
   };
@@ -293,7 +299,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-xl font-semibold">{shoot.location.fullAddress}</h2>
-              <p className="text-muted-foreground">Photographer: {shoot.photographer.name}</p>
+              <p className="text-muted-foreground">Photographer: {shoot.photographer?.name}</p>
             </div>
             <div className="text-right">
               <p className="font-medium">{formatDate(shoot.completedDate || shoot.scheduledDate)}</p>

@@ -48,7 +48,7 @@ export interface ShootData {
     photos?: string[];
     videos?: string[];
     floorplans?: string[];
-    slideshows?: string[];
+    slideshows?: SlideShowItem[];
   };
   tourLinks?: {
     branded?: string;
@@ -57,6 +57,13 @@ export interface ShootData {
   };
   createdBy?: string;
   tourPurchased?: boolean;
+}
+
+export interface SlideShowItem {
+  id: string;
+  title: string;
+  url: string;
+  visible: boolean;
 }
 
 export interface ShootsContextType {
@@ -76,7 +83,7 @@ export interface PhotographerAvailability {
   photographerId: string;
   photographerName?: string;
   id?: string;
-  date?: Date;
+  date?: string | Date;
   startTime?: string;
   endTime?: string;
   slots: Array<{

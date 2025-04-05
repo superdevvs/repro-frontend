@@ -28,9 +28,14 @@ interface ShootDetailContentProps {
 }
 
 export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) {
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString?: string | Date): string => {
     if (!dateString) return 'Not set';
-    return format(new Date(dateString), 'MMMM d, yyyy');
+    try {
+      const date = typeof dateString === 'string' ? parseISO(dateString) : dateString;
+      return isValid(date) ? format(date, 'MMMM d, yyyy') : 'Not set';
+    } catch (error) {
+      return 'Not set';
+    }
   };
 
   const openTourLink = (url?: string) => {
