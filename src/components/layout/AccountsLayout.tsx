@@ -7,7 +7,7 @@ import { useShoots } from '@/context/ShootsContext';
 import { useAuth } from '@/components/auth/AuthProvider';
 
 interface AccountsLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   activeTab?: string;
 }
 
@@ -91,6 +91,14 @@ export function AccountsLayout({ children, activeTab = "photographers" }: Accoun
                           Phone: {client.phone}
                         </div>
                       )}
+                      <div className="mt-2">
+                        <button className="text-sm text-blue-600 hover:text-blue-800 mr-3">
+                          Edit Branding
+                        </button>
+                        <button className="text-sm text-blue-600 hover:text-blue-800">
+                          View Profile
+                        </button>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -100,6 +108,7 @@ export function AccountsLayout({ children, activeTab = "photographers" }: Accoun
             </Card>
           </TabsContent>
         </Tabs>
+        {children}
       </div>
     </DashboardLayout>
   );

@@ -170,9 +170,12 @@ export function ShootsProvider({ children }: { children: React.ReactNode }) {
   };
   
   const getUniqueEditors = () => {
-    // Since there's no editor field in ShootData, we'll return an empty array
-    // In the future, if editor data is added to ShootData, this can be updated
-    return [];
+    // Since there's no editor field in ShootData, create mock data for demonstration
+    return [
+      { name: "Sarah Johnson", shootCount: 24 },
+      { name: "Mike Reynolds", shootCount: 18 },
+      { name: "Alicia Rodriguez", shootCount: 32 }
+    ];
   };
   
   const getUniqueClients = () => {
