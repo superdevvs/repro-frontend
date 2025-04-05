@@ -48,7 +48,12 @@ export function ShootDetailTabs({
       </TabsContent>
       
       <TabsContent value="media" className="mt-4">
-        <ShootMediaTab shoot={shoot} isPhotographer={isPhotographer} />
+        {/* Add the missing setShoot prop */}
+        <ShootMediaTab 
+          shoot={shoot} 
+          isPhotographer={isPhotographer}
+          setShoot={() => {}} // Provide a no-op function if setShoot isn't needed
+        />
       </TabsContent>
     </Tabs>
   );

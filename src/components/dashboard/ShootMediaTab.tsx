@@ -14,13 +14,11 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ensureDateString } from '@/utils/formatters';
 
-// Add a helper function at the top of the file to handle slideshow types
 const handleSlideShowArray = (slideshows: any[] | undefined): SlideShowItem[] => {
   if (!slideshows) return [];
   
   return slideshows.map(item => {
     if (typeof item === 'string') {
-      // Convert string items to proper SlideShowItem objects
       return {
         id: Math.random().toString(36).substring(2, 15),
         title: 'Slideshow',
@@ -35,9 +33,10 @@ const handleSlideShowArray = (slideshows: any[] | undefined): SlideShowItem[] =>
 interface ShootMediaTabProps {
   shoot: ShootData | undefined;
   setShoot: React.Dispatch<React.SetStateAction<ShootData | undefined>>;
+  isPhotographer?: boolean;
 }
 
-export function ShootMediaTab({ shoot, setShoot }: ShootMediaTabProps) {
+export function ShootMediaTab({ shoot, setShoot, isPhotographer }: ShootMediaTabProps) {
   const { toast } = useToast();
   const [photos, setPhotos] = useState<string[]>(shoot?.media?.photos || []);
   const [videos, setVideos] = useState<string[]>(shoot?.media?.videos || []);
@@ -205,7 +204,6 @@ export function ShootMediaTab({ shoot, setShoot }: ShootMediaTabProps) {
       return [...typedSlideshows, newSlideshow];
     });
     
-    // When updating shoot media
     setShoot(prevShoot => {
       if (!prevShoot) return prevShoot;
       
@@ -334,7 +332,7 @@ export function ShootMediaTab({ shoot, setShoot }: ShootMediaTabProps) {
           <div className="mt-4 grid grid-cols-3 gap-4">
             {videos.map((video, index) => (
               <div key={index} className="relative">
-                <video src={video} alt={`Uploaded video ${index}`} className="rounded-md object-cover aspect-square" controls />
+                <video src={video} className="rounded-md object-cover aspect-square" controls />
                 <Button
                   variant="ghost"
                   size="icon"

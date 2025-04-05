@@ -1,31 +1,15 @@
-import React, { useState } from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import React, { useState, useEffect } from 'react';
+import { format, parseISO } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 import { Calendar } from '@/components/ui/calendar';
-import { TimeSelect } from '@/components/ui/time-select';
-import { CalendarIcon, Clock, Plus, Trash } from 'lucide-react';
-import { format, isSameDay, isToday, parseISO } from 'date-fns';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useToast } from '@/hooks/use-toast';
+import { ensureDate, ensureDateString, getTimeFromDate } from '@/utils/formatters';
+import { PhotographerAvailability as PhotographerAvailabilityType } from '@/types/shoots';
 
-// Types - Fix the AvailabilitySlot interface to accept string or Date
 interface AvailabilitySlot {
   id: string;
-  date: Date | string;  // Accept both Date and string
+  date: Date;
   startTime: string;
   endTime: string;
   isRecurring?: boolean;
@@ -33,7 +17,7 @@ interface AvailabilitySlot {
 
 interface RecurringSchedule {
   id: string;
-  dayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
+  dayOfWeek: number;
   startTime: string;
   endTime: string;
   isActive: boolean;
@@ -43,7 +27,7 @@ const PhotographerAvailability = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("daily");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [availabilityData, setAvailabilityData] = useState<PhotographerAvailability[]>([]);
+  const [availabilityData, setAvailabilityData] = useState<PhotographerAvailabilityType[]>([]);
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   
   const [recurringSchedule, setRecurringSchedule] = useState<RecurringSchedule[]>([
@@ -54,13 +38,11 @@ const PhotographerAvailability = () => {
     { id: "5", dayOfWeek: 5, startTime: "9:00 AM", endTime: "5:00 PM", isActive: true }
   ]);
   
-  // Dialog states
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newSlotStartTime, setNewSlotStartTime] = useState<string>('');
   const [newSlotEndTime, setNewSlotEndTime] = useState<string>('');
   const [newSlotIsRecurring, setNewSlotIsRecurring] = useState(false);
   
-  // Map the data to the format needed for AvailabilitySlot
   useEffect(() => {
     const slots = availabilityData.map(item => ({
       id: item.id || '',
@@ -72,17 +54,14 @@ const PhotographerAvailability = () => {
     setAvailabilitySlots(slots);
   }, [availabilityData]);
   
-  // Find availability slots for selected date
   const selectedDateSlots = availabilitySlots.filter(slot => 
     isSameDay(slot.date, selectedDate)
   );
   
-  // Helper function to get day name
   const getDayName = (dayIndex: number) => {
     return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayIndex];
   };
   
-  // Helper function to check if a date has availability
   const hasAvailability = (date: Date) => {
     return availabilitySlots.some(slot => {
       const slotDate = typeof slot.date === 'string' ? parseISO(slot.date) : slot.date;
@@ -90,7 +69,6 @@ const PhotographerAvailability = () => {
     });
   };
   
-  // Add a new availability slot
   const addAvailabilitySlot = () => {
     if (!newSlotStartTime || !newSlotEndTime) {
       toast({
@@ -101,7 +79,6 @@ const PhotographerAvailability = () => {
       return;
     }
     
-    // Create new slot object
     const newSlot: AvailabilitySlot = {
       id: Date.now().toString(),
       date: selectedDate,
@@ -110,12 +87,10 @@ const PhotographerAvailability = () => {
       isRecurring: newSlotIsRecurring
     };
     
-    // Add to state
     setAvailabilitySlots([...availabilitySlots, newSlot]);
     
-    // Add to the main data array as well
-    const newAvailabilityItem: PhotographerAvailability = {
-      photographerId: "1", // Current user's photographer ID
+    const newAvailabilityItem: PhotographerAvailabilityType = {
+      photographerId: "1",
       photographerName: "Current Photographer",
       id: newSlot.id,
       date: newSlot.date,
@@ -129,7 +104,6 @@ const PhotographerAvailability = () => {
     
     setAvailabilityData([...availabilityData, newAvailabilityItem]);
     
-    // Reset form and close dialog
     setNewSlotStartTime('');
     setNewSlotEndTime('');
     setAddDialogOpen(false);
@@ -139,15 +113,12 @@ const PhotographerAvailability = () => {
       description: `Added availability for ${format(selectedDate, 'EEEE, MMMM d')}`,
     });
     
-    // If recurring, create a recurring schedule
     if (newSlotIsRecurring) {
       const dayOfWeek = selectedDate.getDay();
       
-      // Check if already exists
       const existingRecurring = recurringSchedule.find(rs => rs.dayOfWeek === dayOfWeek);
       
       if (existingRecurring) {
-        // Update existing
         setRecurringSchedule(
           recurringSchedule.map(rs => 
             rs.dayOfWeek === dayOfWeek
@@ -156,7 +127,6 @@ const PhotographerAvailability = () => {
           )
         );
       } else {
-        // Create new
         setRecurringSchedule([
           ...recurringSchedule,
           {
@@ -171,7 +141,6 @@ const PhotographerAvailability = () => {
     }
   };
   
-  // Delete an availability slot
   const deleteAvailabilitySlot = (slotId: string) => {
     setAvailabilitySlots(availabilitySlots.filter(slot => slot.id !== slotId));
     setAvailabilityData(availabilityData.filter(item => item.id !== slotId));
@@ -182,7 +151,6 @@ const PhotographerAvailability = () => {
     });
   };
   
-  // Toggle recurring schedule
   const toggleRecurringDay = (dayId: string, active: boolean) => {
     setRecurringSchedule(
       recurringSchedule.map(day => 
@@ -196,7 +164,6 @@ const PhotographerAvailability = () => {
     });
   };
   
-  // Update recurring schedule time
   const updateRecurringTime = (dayId: string, field: 'startTime' | 'endTime', value: string) => {
     setRecurringSchedule(
       recurringSchedule.map(day => 
@@ -229,7 +196,6 @@ const PhotographerAvailability = () => {
           
           <TabsContent value="daily" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Calendar picker */}
               <Card className="lg:col-span-1">
                 <CardHeader>
                   <CardTitle>Select Date</CardTitle>
@@ -255,7 +221,6 @@ const PhotographerAvailability = () => {
                 </CardContent>
               </Card>
               
-              {/* Availability slots for selected date */}
               <Card className="lg:col-span-2">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <div className="space-y-1">
@@ -326,7 +291,11 @@ const PhotographerAvailability = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {availabilitySlots
-                    .sort((a, b) => a.date.getTime() - b.date.getTime())
+                    .sort((a, b) => {
+                      const dateA = ensureDate(a.date);
+                      const dateB = ensureDate(b.date);
+                      return (dateA?.getTime() || 0) - (dateB?.getTime() || 0);
+                    })
                     .map((slot) => (
                       <div 
                         key={slot.id}
@@ -384,7 +353,6 @@ const PhotographerAvailability = () => {
                                 if (day) {
                                   toggleRecurringDay(day.id, checked);
                                 } else {
-                                  // Create default schedule for this day
                                   const newDay: RecurringSchedule = {
                                     id: Date.now().toString(),
                                     dayOfWeek: dayIndex,
@@ -431,7 +399,6 @@ const PhotographerAvailability = () => {
                               <div className="text-xs text-muted-foreground mt-1 sm:ml-4">
                                 {day && (
                                   <span>
-                                    {/* Calculate hours */}
                                     Available {day.startTime} - {day.endTime}
                                   </span>
                                 )}
@@ -481,7 +448,6 @@ const PhotographerAvailability = () => {
           </TabsContent>
         </Tabs>
         
-        {/* Add new availability dialog */}
         <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
           <DialogContent>
             <DialogHeader>

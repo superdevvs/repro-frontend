@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -20,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { formatDateSafe, ensureDateString } from '@/utils/formatters';
 
 const statusColors = {
   'scheduled': 'bg-blue-500',
@@ -40,11 +40,9 @@ const ShootHistory = () => {
   const { getClientShootsByStatus, getUniquePhotographers } = useShoots();
   const { user } = useAuth();
 
-  // Get all photographers for filter dropdown
   const photographers = getUniquePhotographers();
 
   useEffect(() => {
-    // Simulate loading for smoother UX
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 500);
@@ -52,16 +50,13 @@ const ShootHistory = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Get client shoots by status
   const scheduledShoots = getClientShootsByStatus('scheduled');
   const completedShoots = getClientShootsByStatus('completed');
-  // Include both 'hold' and 'booked' status for Hold-On tab
   const holdShoots = [
     ...getClientShootsByStatus('hold'),
     ...getClientShootsByStatus('pending')
   ];
 
-  // Apply filters to scheduled shoots
   const filteredScheduledShoots = scheduledShoots.filter(shoot => {
     const matchesAddress = !filterAddress || 
       shoot.location.fullAddress.toLowerCase().includes(filterAddress.toLowerCase());
@@ -76,7 +71,6 @@ const ShootHistory = () => {
     navigate('/book-shoot');
   };
 
-  // Format date for display
   const formatShootDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -86,7 +80,6 @@ const ShootHistory = () => {
     }
   };
 
-  // Render shoot card for a single shoot
   const renderShootCard = (shoot: ShootData) => (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -154,7 +147,6 @@ const ShootHistory = () => {
     </motion.div>
   );
 
-  // Render table for scheduled shoots
   const renderScheduledShootsTable = () => (
     <div className="rounded-md border">
       <Table>
@@ -200,7 +192,6 @@ const ShootHistory = () => {
     </div>
   );
 
-  // Render empty state when no shoots are available
   const renderEmptyState = (message: string) => (
     <div className="flex flex-col items-center justify-center p-8 text-center">
       <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
@@ -210,7 +201,6 @@ const ShootHistory = () => {
     </div>
   );
 
-  // Render loading state
   const renderLoadingState = () => (
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (

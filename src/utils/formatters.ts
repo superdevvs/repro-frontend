@@ -66,3 +66,33 @@ export function dateToString(value: string | Date | undefined): string {
   const dateStr = ensureDateString(value);
   return dateStr;
 }
+
+/**
+ * Ensures a date-like value is a Date object
+ * @param dateInput string | Date | undefined
+ * @returns Date | null
+ */
+export function ensureDate(dateInput: string | Date | undefined): Date | null {
+  if (!dateInput) return null;
+  
+  if (dateInput instanceof Date) {
+    return dateInput;
+  }
+  
+  try {
+    const date = parseISO(dateInput);
+    return isValid(date) ? date : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get timestamp from a date for comparison purposes
+ * @param dateInput string | Date | undefined
+ * @returns number
+ */
+export function getTimeFromDate(dateInput: string | Date | undefined): number {
+  const date = ensureDate(dateInput);
+  return date ? date.getTime() : 0;
+}
