@@ -25,7 +25,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full mb-6">
-      <div>
+      <div className="pl-10">
         <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 px-3 py-0.5">
           Dashboard
         </Badge>
