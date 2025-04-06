@@ -24,7 +24,8 @@ import {
   Square,
   AlertCircle,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  RotateCcw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -110,6 +111,7 @@ export function TaskManager({
   const [priorityFilter, setPriorityFilter] = useState<'all' | TaskPriority>('all');
   const [sortBy, setSortBy] = useState<'dueDate' | 'priority'>('dueDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // New task form state
   const [title, setTitle] = useState('');
@@ -270,6 +272,19 @@ export function TaskManager({
     setNewTaskOpen(true);
   };
 
+  // Handle refresh button click
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    // Simulate refresh
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast({
+        title: "Refreshed",
+        description: "Task list has been refreshed"
+      });
+    }, 800);
+  };
+
   // Get color for priority badge
   const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
@@ -345,7 +360,7 @@ export function TaskManager({
         <CardHeader className="flex flex-row items-center justify-between pb-2 bg-card border-b">
           <div className="flex items-center gap-2">
             <ListChecks className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg font-semibold">Tasks & To-Do</CardTitle>
+            <CardTitle className="text-lg">Tasks & To-Do</CardTitle>
           </div>
           
           <div className="flex items-center gap-2">
@@ -366,7 +381,7 @@ export function TaskManager({
             )}
             
             {showAllTasks && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 {!isMobile && (
                   <ToggleGroup 
                     type="single" 
@@ -430,6 +445,21 @@ export function TaskManager({
                     </SelectContent>
                   </Select>
                 )}
+                
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                >
+                  <RotateCcw 
+                    className={cn(
+                      "h-4 w-4", 
+                      isRefreshing && "animate-spin"
+                    )}
+                  />
+                </Button>
               </div>
             )}
           </div>
