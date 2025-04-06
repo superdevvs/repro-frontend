@@ -1,7 +1,7 @@
 
-
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 const Pagination = ({
   className,
@@ -40,7 +40,7 @@ const PaginationLink = ({
   <a
     aria-current={isActive ? "page" : undefined}
     className={cn(
-      "flex h-9 min-w-9 items-center justify-center rounded-md border border-input bg-background px-3 text-sm text-muted-foreground transition-colors hover:text-foreground",
+      "flex h-9 min-w-9 items-center justify-center rounded-md border border-input bg-background px-3 text-sm transition-colors hover:text-foreground",
       isActive &&
         "border-primary bg-primary font-medium text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
       className
@@ -55,7 +55,7 @@ const PaginationPrevious = ({
 }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
   <a
     aria-label="Go to previous page"
-    className={cn("flex h-9 items-center justify-center gap-1 rounded-md border border-input bg-background px-3 text-sm text-muted-foreground transition-colors hover:text-foreground", className)}
+    className={cn("flex h-9 items-center justify-center gap-1 rounded-md border border-input bg-background px-3 text-sm transition-colors hover:text-foreground", className)}
     {...props}
   />
 );
@@ -66,7 +66,7 @@ const PaginationNext = ({
 }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
   <a
     aria-label="Go to next page"
-    className={cn("flex h-9 items-center justify-center gap-1 rounded-md border border-input bg-background px-3 text-sm text-muted-foreground transition-colors hover:text-foreground", className)}
+    className={cn("flex h-9 items-center justify-center gap-1 rounded-md border border-input bg-background px-3 text-sm transition-colors hover:text-foreground", className)}
     {...props}
   />
 );
@@ -84,27 +84,32 @@ const PaginationEllipsis = ({
   </span>
 );
 
-// New mobile pagination dots component
+// Enhanced mobile pagination dots component
 const PaginationDots = ({
   className,
   currentPage,
   totalPages,
+  onPageChange,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & {
   currentPage: number;
   totalPages: number;
+  onPageChange?: (page: number) => void;
 }) => (
   <div
     className={cn("pagination-indicator", className)}
     {...props}
   >
     {Array.from({ length: totalPages }).map((_, i) => (
-      <div
+      <motion.button
         key={i}
         className={cn(
           "pagination-dot",
           currentPage === i + 1 && "active"
         )}
+        onClick={() => onPageChange?.(i + 1)}
+        whileTap={{ scale: 0.9 }}
+        aria-label={`Go to page ${i + 1}`}
       />
     ))}
   </div>
@@ -120,4 +125,3 @@ export {
   PaginationEllipsis,
   PaginationDots
 };
-

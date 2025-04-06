@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { SearchIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { SearchIcon, FilterIcon, SlidersHorizontal } from 'lucide-react';
 
 interface ClientSearchProps {
   searchTerm: string;
@@ -11,17 +12,25 @@ interface ClientSearchProps {
 
 export const ClientSearch: React.FC<ClientSearchProps> = ({ searchTerm, setSearchTerm }) => {
   return (
-    <Card className="glass-card">
-      <CardContent className="p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+    <Card className="glass-card shadow-sm border-none bg-background/70 backdrop-blur-sm">
+      <CardContent className="p-3">
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="Search clients..." 
+              placeholder="Search by name, email or company..." 
               className="pl-9"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
+              <FilterIcon className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
+              <SlidersHorizontal className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </CardContent>

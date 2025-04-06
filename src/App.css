@@ -124,14 +124,14 @@
   
   /* Client Card Styles for Mobile */
   .client-card {
-    @apply rounded-lg overflow-hidden border shadow-sm transition-all hover:shadow-md;
+    @apply rounded-xl overflow-hidden border shadow-sm transition-all;
     transform: translateZ(0);
     backface-visibility: hidden;
   }
   
   .client-card-header {
-    @apply relative p-3 bg-gradient-to-r from-primary/5 to-secondary/20;
-    height: 70px;
+    @apply relative p-3 bg-gradient-to-r from-primary/10 to-secondary/30;
+    height: 80px;
   }
   
   .client-card-content {
@@ -139,11 +139,11 @@
   }
   
   .client-card-footer {
-    @apply flex justify-between items-center p-3 bg-muted/20 border-t;
+    @apply flex justify-between items-center p-3 bg-background border-t;
   }
   
   .client-info-row {
-    @apply flex items-center gap-2 text-sm;
+    @apply flex items-center gap-2.5 text-sm py-0.5;
   }
   
   .client-info-icon {
@@ -152,14 +152,48 @@
   
   /* Pagination button styles for client cards */
   .pagination-indicator {
-    @apply inline-flex gap-1 justify-center items-center mt-4 mb-6;
+    @apply inline-flex gap-1.5 justify-center items-center;
   }
   
   .pagination-dot {
-    @apply h-2 w-2 rounded-full bg-muted transition-all;
+    @apply h-2 w-2 rounded-full bg-muted transition-all cursor-pointer border-0 p-0;
   }
   
   .pagination-dot.active {
-    @apply bg-primary w-4;
+    @apply bg-primary w-6;
+  }
+
+  /* Enhanced empty state */
+  .empty-clients-state {
+    @apply flex flex-col items-center justify-center py-16 text-center;
+  }
+  
+  .empty-clients-icon {
+    @apply bg-muted/20 p-8 rounded-full mb-4;
+  }
+
+  /* Card hover effects */
+  .client-card:active {
+    @apply bg-muted/5;
+  }
+
+  /* Added bottom padding to account for pagination controls */
+  .client-cards-container {
+    @apply pb-16;
+  }
+
+  /* Enhanced stats cards for mobile */
+  .stats-card-mobile {
+    @apply p-3 rounded-lg border-none shadow-sm bg-gradient-to-br from-card to-background;
+  }
+
+  /* Better scaling for mobile forms */
+  .mobile-form-container {
+    @apply px-2 py-1;
+  }
+
+  /* Improved mobile buttons */
+  .mobile-action-button {
+    @apply h-9 text-sm font-medium;
   }
 }

@@ -9,6 +9,7 @@ import {
   PaginationPrevious 
 } from '@/components/ui/pagination';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ClientPaginationProps {
   currentPage: number;
@@ -64,15 +65,18 @@ export const ClientPagination: React.FC<ClientPaginationProps> = ({
   return (
     <div className="mt-6 flex justify-center">
       <Pagination>
-        <PaginationContent className="bg-background p-1 rounded-lg shadow-sm">
+        <PaginationContent className="bg-background p-1 rounded-lg shadow-sm border">
           <PaginationItem>
-            <PaginationPrevious
+            <Button 
+              variant="ghost"
+              size="sm"
+              className={`h-9 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
-              className={`${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} flex items-center gap-1`}
+              disabled={currentPage === 1}
             >
-              <ChevronLeftIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">Previous</span>
-            </PaginationPrevious>
+              <ChevronLeftIcon className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline text-sm font-normal">Previous</span>
+            </Button>
           </PaginationItem>
           
           {renderPageNumbers().map((page, index) => (
@@ -87,7 +91,11 @@ export const ClientPagination: React.FC<ClientPaginationProps> = ({
                 <PaginationLink
                   isActive={currentPage === page}
                   onClick={() => setCurrentPage(page as number)}
-                  className="h-9 w-9 p-0 font-medium"
+                  className={`h-9 w-9 p-0 font-medium ${
+                    currentPage === page
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'hover:bg-muted'
+                  }`}
                 >
                   {page}
                 </PaginationLink>
@@ -96,13 +104,16 @@ export const ClientPagination: React.FC<ClientPaginationProps> = ({
           ))}
           
           <PaginationItem>
-            <PaginationNext
+            <Button 
+              variant="ghost"
+              size="sm"
+              className={`h-9 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
-              className={`${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} flex items-center gap-1`}
+              disabled={currentPage === totalPages}
             >
-              <span className="hidden sm:inline">Next</span>
-              <ChevronRightIcon className="h-4 w-4" />
-            </PaginationNext>
+              <span className="hidden sm:inline text-sm font-normal">Next</span>
+              <ChevronRightIcon className="h-4 w-4 ml-1" />
+            </Button>
           </PaginationItem>
         </PaginationContent>
       </Pagination>
