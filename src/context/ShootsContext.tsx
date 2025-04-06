@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { ShootData, ShootsContextType } from '@/types/shoots';
 import { toStringId } from '@/utils/formatters';
@@ -31,6 +30,7 @@ const sampleShoots: ShootData[] = [
     photographer: {
       id: '201',
       name: 'Jane Photographer',
+      email: 'jane@example.com',
       avatar: '/assets/avatars/photographer1.jpg',
     },
     notes: {
@@ -78,6 +78,7 @@ const sampleShoots: ShootData[] = [
     photographer: {
       id: '202',
       name: 'Bob Photographer',
+      email: 'bob@example.com',
       avatar: '/assets/avatars/photographer2.jpg',
     },
     payment: {

@@ -68,15 +68,17 @@ export function BookShoot() {
         fullAddress: `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`
       },
       client: {
+        id: uuid(),
         name: formData.clientName,
-        email: formData.clientEmail,
+        email: formData.clientEmail || 'unknown@example.com',
         phone: formData.clientPhone,
         company: formData.clientCompany
       },
       photographer: selectedPhotographer ? {
         id: selectedPhotographer.id,
         name: selectedPhotographer.name,
-        avatar: selectedPhotographer.avatar
+        avatar: selectedPhotographer.avatar,
+        email: 'photographer@example.com'
       } : undefined,
       payment: {
         baseQuote: basePrice,

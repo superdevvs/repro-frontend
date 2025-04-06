@@ -137,8 +137,9 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
             scheduledDate: getValue('scheduled') || new Date().toISOString(),
             completedDate: getValue('completed') || undefined,
             client: {
+              id: uuidv4(),
               name: getValue('client') || 'Unknown Client',
-              email: getValue('client email') || '',
+              email: getValue('client email') || 'unknown@example.com',
               phone: getValue('client phone') || undefined,
               company: getValue('client company') || undefined,
               totalShoots: parseInt(getValue('total shoots')) || 1,
@@ -152,7 +153,9 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
               fullAddress: getValue('full address') || getValue('address') || '',
             },
             photographer: {
+              id: uuidv4(),
               name: getValue('photographer') || 'Unassigned',
+              email: 'photographer@example.com',
             },
             services: parseServices(getValue('services')),
             payment: {

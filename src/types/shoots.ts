@@ -13,7 +13,7 @@ export interface MediaItem {
 }
 
 export interface Client {
-  id: string;
+  id?: string; // Make id optional to fix existing data
   name: string;
   email: string;
   phone?: string;
@@ -22,9 +22,9 @@ export interface Client {
 }
 
 export interface Photographer {
-  id: string;
+  id?: string; // Make id optional to fix existing data
   name: string;
-  email: string;
+  email?: string; // Make email optional to fix existing data
   avatar?: string;
   phone?: string;
   rate?: number;
@@ -146,7 +146,7 @@ export interface CalendarProps {
   shoots: ShootData[];
   className?: string;
   height?: number;
-  onDateSelect?: (date: Date) => void;
+  onDateSelect?: (date: Date | undefined) => void;
 }
 
 export interface ShootsFilterProps {
@@ -172,4 +172,12 @@ export interface ClientStatsProps {
   activeClients: number;
   inactiveClients: number;
   totalShoots: number;
+}
+
+// Helper function to ensure Notes object from string
+export function ensureNotesObject(notes: Notes | string | undefined): Notes {
+  if (typeof notes === 'string') {
+    return { shootNotes: notes };
+  }
+  return notes || {};
 }

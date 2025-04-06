@@ -1,126 +1,201 @@
-
 import React from 'react';
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { MoreVertical, MapPin, Calendar, User, Mail, Phone, Link } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ShootData, ShootStatus, Client, Photographer } from '@/types/shoots';
 import { format } from 'date-fns';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { ShootData } from '@/types/shoots';
-import { Badge } from '@/components/ui/badge';
-import { 
-  MapPin,
-  CalendarIcon,
-  Clock,
-  User,
-  Camera,
-  CheckCircle,
-  AlertCircle,
-  Clock3
-} from 'lucide-react';
 
 interface ShootDetailProps {
   shoot: ShootData;
-  isOpen: boolean;
-  onClose: () => void;
+  isAdmin: boolean;
+  isPhotographer: boolean;
+  role: string;
 }
 
-export const ShootDetail = ({ shoot, isOpen, onClose }: ShootDetailProps) => {
-  // Format the shoot date
-  const formattedDate = shoot.scheduledDate 
-    ? format(new Date(shoot.scheduledDate), 'MMMM d, yyyy')
-    : 'Not scheduled';
+export function ShootDetail({ shoot, isAdmin, isPhotographer, role }: ShootDetailProps) {
 
-  // Get status badge color
-  const getStatusColor = () => {
-    switch (shoot.status) {
-      case 'scheduled':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'completed':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'hold':
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
+  // Add this helper function inside the component
+  const getNotesObject = (notes: any): any => {
+    if (typeof notes === 'string') {
+      return { shootNotes: notes };
     }
+    return notes || {};
   };
 
-  const getStatusIcon = () => {
-    switch (shoot.status) {
-      case 'scheduled':
-        return <CalendarIcon className="h-4 w-4" />;
-      case 'pending':
-        return <Clock3 className="h-4 w-4" />;
-      case 'completed':
-        return <CheckCircle className="h-4 w-4" />;
-      case 'hold':
-      default:
-        return <AlertCircle className="h-4 w-4" />;
+  const renderClientInfo = (client: Client) => (
+    <div className="space-y-1">
+      <div className="font-semibold">{client.name}</div>
+      {client.company && <div className="text-sm text-muted-foreground">{client.company}</div>}
+      <div className="text-sm text-muted-foreground">
+        <Mail className="h-4 w-4 mr-1 inline-block align-middle" />
+        {client.email}
+      </div>
+      {client.phone && (
+        <div className="text-sm text-muted-foreground">
+          <Phone className="h-4 w-4 mr-1 inline-block align-middle" />
+          {client.phone}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderPhotographerInfo = (photographer: Photographer) => (
+    <div className="flex items-center space-x-4">
+      <Avatar>
+        <AvatarImage src={photographer.avatar} alt={photographer.name} />
+        <AvatarFallback>{photographer.name.substring(0, 2)}</AvatarFallback>
+      </Avatar>
+      <div className="space-y-1">
+        <div className="font-semibold">{photographer.name}</div>
+        <div className="text-sm text-muted-foreground">{photographer.email}</div>
+        {photographer.phone && <div className="text-sm text-muted-foreground">{photographer.phone}</div>}
+      </div>
+    </div>
+  );
+
+  const formatDate = (date: string | Date) => {
+    try {
+      return format(new Date(date), 'PPP');
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return 'Invalid Date';
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Shoot Details</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 py-2">
-          <div className="flex justify-between items-start">
-            <Badge variant="outline" className={getStatusColor()}>
-              <span className="flex items-center">
-                {getStatusIcon()}
-                <span className="ml-1 capitalize">{shoot.status}</span>
-              </span>
-            </Badge>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => window.open(`/shoots/${shoot.id}`, '_blank')}
-            >
-              View Full Details
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">{shoot.location.address}</h2>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreVertical className="h-4 w-4" />
             </Button>
-          </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem>Edit Shoot</DropdownMenuItem>
+            <DropdownMenuItem>Cancel Shoot</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>View Invoice</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-          <div className="grid gap-2">
-            <div className="flex items-center gap-2 text-sm">
-              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-              <span>{formattedDate}</span>
-            </div>
-
-            {shoot.time && (
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span>{shoot.time}</span>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2 text-sm">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{shoot.location.fullAddress || 'No address provided'}</span>
-            </div>
-
-            <div className="flex items-center gap-2 text-sm">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span>{shoot.client.name || 'No client name'}</span>
-            </div>
-
-            {shoot.photographer && shoot.photographer.name && (
-              <div className="flex items-center gap-2 text-sm">
-                <Camera className="h-4 w-4 text-muted-foreground" />
-                <span>{shoot.photographer.name}</span>
-              </div>
-            )}
-          </div>
-
-          {shoot.notes && shoot.notes.shootNotes && (
-            <div className="mt-4 bg-muted/50 p-3 rounded-md">
-              <h3 className="text-sm font-medium mb-1">Notes:</h3>
-              <p className="text-sm">{shoot.notes.shootNotes}</p>
-            </div>
-          )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <div className="font-semibold">Status</div>
+          <Badge>{shoot.status}</Badge>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        <div className="space-y-2">
+          <div className="font-semibold">Scheduled Date</div>
+          <div className="text-muted-foreground">
+            <Calendar className="h-4 w-4 mr-2 inline-block align-middle" />
+            {formatDate(shoot.scheduledDate)}
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <div className="font-semibold">Client Information</div>
+          {renderClientInfo(shoot.client)}
+        </div>
+
+        <div className="space-y-2">
+          <div className="font-semibold">Location</div>
+          <div className="text-muted-foreground">
+            <MapPin className="h-4 w-4 mr-2 inline-block align-middle" />
+            {shoot.location.fullAddress}
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      {shoot.photographer && (
+        <>
+          <div className="space-y-2">
+            <div className="font-semibold">Photographer</div>
+            {renderPhotographerInfo(shoot.photographer)}
+          </div>
+          <Separator />
+        </>
+      )}
+
+      <div className="space-y-2">
+        <div className="font-semibold">Services</div>
+        <ul className="list-disc list-inside text-muted-foreground">
+          {shoot.services && shoot.services.length > 0 ? (
+            shoot.services.map((service, index) => (
+              <li key={index}>{service}</li>
+            ))
+          ) : (
+            <li>No services listed</li>
+          )}
+        </ul>
+      </div>
+
+      <Separator />
+
+      <div className="space-y-2">
+        <div className="font-semibold">Shoot Notes</div>
+        {shoot.notes && (
+          <p className="text-muted-foreground text-sm">
+            {getNotesObject(shoot.notes).shootNotes || 'No notes available'}
+          </p>
+        )}
+      </div>
+
+      <Separator />
+
+      <div className="space-y-2">
+        <div className="font-semibold">Tour Links</div>
+        {shoot.tourLinks ? (
+          <div className="space-y-1">
+            {shoot.tourLinks.branded && (
+              <div className="text-sm text-muted-foreground">
+                Branded: <Link className="underline" href={shoot.tourLinks.branded} target="_blank" rel="noopener noreferrer">
+                  {shoot.tourLinks.branded}
+                </Link>
+              </div>
+            )}
+            {shoot.tourLinks.mls && (
+              <div className="text-sm text-muted-foreground">
+                MLS: <Link className="underline" href={shoot.tourLinks.mls} target="_blank" rel="noopener noreferrer">
+                  {shoot.tourLinks.mls}
+                </Link>
+              </div>
+            )}
+            {shoot.tourLinks.genericMls && (
+              <div className="text-sm text-muted-foreground">
+                Generic MLS: <Link className="underline" href={shoot.tourLinks.genericMls} target="_blank" rel="noopener noreferrer">
+                  {shoot.tourLinks.genericMls}
+                </Link>
+              </div>
+            )}
+            {(!shoot.tourLinks.branded && !shoot.tourLinks.mls && !shoot.tourLinks.genericMls) && (
+              <div className="text-sm text-muted-foreground">No tour links available</div>
+            )}
+          </div>
+        ) : (
+          <div className="text-sm text-muted-foreground">No tour links available</div>
+        )}
+      </div>
+    </div>
   );
-};
+}
