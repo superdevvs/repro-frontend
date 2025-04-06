@@ -28,8 +28,6 @@ interface StatsCardGridProps {
   showPhotographerInterface: boolean;
   shoots: ShootData[];
   timeRange: TimeRange;
-  isCompact?: boolean;
-  className?: string;
 }
 
 export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
@@ -38,8 +36,6 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
   showPhotographerInterface,
   shoots,
   timeRange,
-  isCompact = false,
-  className = "",
 }) => {
   // Calculate stats based on actual data
   const totalRevenue = getTotalPaidAmount(shoots);
@@ -48,13 +44,9 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
   const totalClientsCount = getUniqueClientsCount(shoots);
   const mediaAssetsCount = getTotalMediaAssetsCount(shoots);
   const completedShoots = getCompletedShootsCount(shoots);
-
-  const gridCols = isCompact 
-    ? "grid-cols-2 sm:grid-cols-3 gap-2" 
-    : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4";
   
   return (
-    <div className={`grid ${gridCols} ${className}`}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {showRevenue && (
         <StatsCard
           title="Total Revenue"
@@ -64,7 +56,6 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
           trend="up"
           trendValue="12%"
           delay={0}
-          isCompact={isCompact}
         />
       )}
       
@@ -76,7 +67,6 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         trend="up"
         trendValue="4"
         delay={1}
-        isCompact={isCompact}
       />
       
       {showClientStats && (
@@ -88,7 +78,6 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
           trend="up"
           trendValue="9%"
           delay={2}
-          isCompact={isCompact}
         />
       )}
       
@@ -100,7 +89,6 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         trend="up"
         trendValue="22%"
         delay={3}
-        isCompact={isCompact}
       />
       
       <StatsCard
@@ -111,7 +99,6 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         trend="up"
         trendValue="14%"
         delay={4}
-        isCompact={isCompact}
       />
       
       <StatsCard
@@ -122,7 +109,6 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         trend="up"
         trendValue="5%"
         delay={5}
-        isCompact={isCompact}
       />
       
       {showPhotographerInterface && (
@@ -134,7 +120,6 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
           trend="up"
           trendValue="14%"
           delay={6}
-          isCompact={isCompact}
         />
       )}
     </div>

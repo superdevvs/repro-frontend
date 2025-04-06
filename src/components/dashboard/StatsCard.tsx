@@ -1,104 +1,64 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { LucideIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 interface StatsCardProps {
   title: string;
   value: string;
-  description: string;
+  description?: string;
   icon: React.ReactNode;
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
-  delay?: number;
   className?: string;
-  isCompact?: boolean;
+  delay?: number;
 }
 
-export const StatsCard: React.FC<StatsCardProps> = ({ 
-  title, 
-  value, 
-  description, 
-  icon, 
-  trend = 'neutral',
+export function StatsCard({
+  title,
+  value,
+  description,
+  icon,
+  trend,
   trendValue,
-  delay = 0,
   className,
-  isCompact = false
-}) => {
-  const getTrendColor = (trend: 'up' | 'down' | 'neutral') => {
-    switch (trend) {
-      case 'up':
-        return 'text-green-500';
-      case 'down':
-        return 'text-red-500';
-      default:
-        return 'text-muted-foreground';
-    }
-  };
-  
-  const getTrendIcon = (trend: 'up' | 'down' | 'neutral') => {
-    switch (trend) {
-      case 'up':
-        return <ArrowUpRight className="h-3 w-3" />;
-      case 'down':
-        return <ArrowDownRight className="h-3 w-3" />;
-      default:
-        return null;
-    }
-  };
-  
-  const containerClass = isCompact
-    ? "p-2"
-    : "p-4 md:p-6";
-
-  const titleClass = isCompact
-    ? "text-sm font-medium text-muted-foreground mb-0.5"
-    : "text-sm font-medium text-muted-foreground mb-1";
-
-  const valueClass = isCompact
-    ? "text-lg font-bold mb-0"
-    : "text-2xl font-bold mb-1";
-
-  const iconContainerClass = isCompact
-    ? "p-1.5 rounded-full"
-    : "p-2 rounded-full";
-  
+  delay = 0,
+}: StatsCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: delay * 0.1, duration: 0.3 }}
-      className={className}
+      transition={{ duration: 0.3, delay: delay * 0.1 }}
     >
-      <Card className={cn("border shadow-sm hover:shadow-md transition-shadow", isCompact && "compact-card")}>
-        <CardContent className={cn("p-4", containerClass)}>
-          <div className="flex justify-between items-start">
-            <div>
-              <p className={titleClass}>{title}</p>
-              <h3 className={valueClass}>{value}</h3>
-              
-              <div className="flex items-center gap-1">
-                <p className="text-xs text-muted-foreground">{description}</p>
-                
-                {trendValue && (
-                  <div className={cn("flex items-center text-xs gap-0.5 ml-2", getTrendColor(trend))}>
-                    {getTrendIcon(trend)}
-                    <span className="font-medium">{trendValue}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className={cn("bg-primary/10 text-primary", iconContainerClass)}>
-              {icon}
-            </div>
+      <Card className={cn("glass-card overflow-hidden", className)}>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+          <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center text-primary">
+            {icon}
           </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{value}</div>
+          {(description || trend) && (
+            <div className="flex items-center mt-1">
+              {trend && (
+                <span
+                  className={cn(
+                    "inline-flex items-center mr-1 text-xs font-medium",
+                    trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : 'text-muted-foreground'
+                  )}
+                >
+                  {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'} {trendValue}
+                </span>
+              )}
+              {description && (
+                <p className="text-xs text-muted-foreground">{description}</p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>
   );
-};
+}
