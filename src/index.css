@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
@@ -133,6 +132,17 @@
     @apply shadow-glass-hover;
   }
 
+  /* New glass button utilities */
+  .glass-button {
+    @apply backdrop-blur-lg bg-background/20 border border-white/20 shadow-lg text-primary-foreground;
+    @apply hover:bg-background/30 hover:border-white/30 transition-all duration-300;
+  }
+
+  .glass-stroke {
+    @apply relative before:absolute before:inset-0 before:rounded-[inherit] before:border-2 before:border-primary/50;
+    @apply before:animate-pulse-slow;
+  }
+
   .neo-card {
     @apply bg-white dark:bg-card shadow-neo dark:shadow-none border border-border transition-all duration-300;
   }
@@ -223,12 +233,82 @@
   background-color: rgba(254, 242, 242, 1) !important; /* Very light pastel red */
 }
 
-/* Calendar day hover effect - make it lighter */
-.calendar-day:hover:not(.calendar-day-disabled):not(.calendar-day-selected) {
-  @apply bg-accent/70 text-accent-foreground;
+/* Mobile-specific styles */
+@media (max-width: 767px) {
+  .mobile-hidden {
+    display: none;
+  }
+  
+  .mobile-full-width {
+    width: 100%;
+  }
+  
+  .mobile-padding {
+    padding: 0.75rem;
+  }
+  
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
+  
+  .mobile-stack {
+    flex-direction: column;
+  }
+  
+  .mobile-center {
+    text-align: center;
+    justify-content: center;
+  }
+  
+  .mobile-scrollable {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    max-height: 100%;
+    padding-bottom: 60px; /* Add extra padding at the bottom for mobile */
+  }
+  
+  .mobile-compact-form .glass-card {
+    padding: 1rem !important;
+  }
+  
+  .mobile-compact-form .space-y-6 {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .mobile-compact-form h2 {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .mobile-compact-form p {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .mobile-compact-form .space-y-2 {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .mobile-compact-form .space-y-4 {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
 }
 
-/* Selected day - make it lighter */
-.calendar-day-selected {
-  @apply bg-primary/90 text-primary-foreground;
+/* Add a custom animation specifically for the stroke effect */
+@keyframes pulse-slow {
+  0%, 100% { 
+    opacity: 0.2;
+    transform: scale(0.98);
+  }
+  50% { 
+    opacity: 0.5; 
+    transform: scale(1.03);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s infinite ease-in-out;
 }

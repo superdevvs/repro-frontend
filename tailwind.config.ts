@@ -109,6 +109,10 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.5" },
         },
+        "pulse-slow": {
+          "0%, 100%": { opacity: "0.2", transform: "scale(0.98)" },
+          "50%": { opacity: "0.5", transform: "scale(1.03)" },
+        },
         float: {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-5px)" },
@@ -128,6 +132,7 @@ export default {
         slideInLeft: "slideInLeft 0.3s ease-out forwards",
         slideInRight: "slideInRight 0.3s ease-out forwards",
         pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "pulse-slow": "pulse-slow 3s infinite ease-in-out",
         float: "float 3s ease-in-out infinite",
         bounce: "bounce 2s ease-in-out infinite",
       },
