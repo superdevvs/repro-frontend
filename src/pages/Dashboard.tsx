@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { TaskManager } from '@/components/dashboard/TaskManager';
@@ -8,16 +9,15 @@ import { RevenueOverview } from '@/components/dashboard/RevenueOverview';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useShoots } from '@/context/ShootsContext';
 import { TimeRange, filterShootsByDateRange } from '@/utils/dateUtils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowRightIcon, CameraIcon, CloudIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { ShootCard } from '@/components/dashboard/ShootCard';
+import { ArrowRightIcon, CameraIcon } from 'lucide-react';
 import { compareAsc, parseISO } from 'date-fns';
 import { Pagination } from '@/components/ui/pagination';
 import { useNavigate } from 'react-router-dom';
+import { UpcomingShoots } from '@/components/dashboard/UpcomingShoots';
+import { Calendar } from '@/components/dashboard/Calendar';
 
 const Dashboard = () => {
   const { role } = useAuth();
@@ -65,7 +65,7 @@ const Dashboard = () => {
   
   return (
     <DashboardLayout>
-      <div className="space-y-6 pb-10">
+      <div className="space-y-4 md:space-y-6 pb-10">
         <DashboardHeader 
           isAdmin={isAdmin} 
           timeRange={timeRange}
@@ -82,96 +82,114 @@ const Dashboard = () => {
         
         {showRevenue && <RevenueOverview shoots={filteredShoots} timeRange={timeRange} />}
         
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Card className="glass-card">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border">
-              <div className="flex items-center gap-2">
-                <CameraIcon className="h-5 w-5 text-primary" />
-                <CardTitle>Upcoming Shoots</CardTitle>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="gap-1"
-                onClick={() => navigate('/shoots')}
-              >
-                View all <ArrowRightIcon className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="p-4">
-              {currentShoots.length > 0 ? (
-                <div className="space-y-4">
-                  {currentShoots.map((shoot, index) => (
-                    <ShootCard
-                      key={shoot.id}
-                      id={shoot.id}
-                      address={shoot.location.fullAddress}
-                      date={shoot.scheduledDate}
-                      time="10:00 AM - 12:00 PM" // This should come from actual data in a real app
-                      photographer={{
-                        name: shoot.photographer.name,
-                        avatar: shoot.photographer.avatar || "https://ui.shadcn.com/avatars/01.png",
-                      }}
-                      client={{
-                        name: shoot.client.name,
-                      }}
-                      status={shoot.status as "scheduled" | "completed" | "pending" | "hold" | "booked"}
-                      price={shoot.payment.totalQuote}
-                      delay={index}
-                      onClick={() => navigate(`/shoots?id=${shoot.id}`)}
-                    />
-                  ))}
-                  
-                  {totalPages > 1 && (
-                    <div className="flex justify-center mt-4">
-                      <Pagination>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          disabled={currentPage === 1}
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                        >
-                          Previous
-                        </Button>
-                        <div className="flex items-center mx-2">
-                          <span className="text-sm">
-                            Page {currentPage} of {totalPages}
-                          </span>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          disabled={currentPage === totalPages}
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        >
-                          Next
-                        </Button>
-                      </Pagination>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <p className="text-muted-foreground">No upcoming shoots scheduled.</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4"
-                    onClick={() => navigate('/book-shoot')}
-                  >
-                    Book a Shoot
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+        {/* Calendar for larger screens */}
+        {!isMobile && !showClientInterface && (
+          <Calendar height={400} className="mb-4" />
+        )}
         
-        {!showClientInterface && <TaskManager />}
+        {/* Custom Upcoming Shoots component for mobile */}
+        {isMobile ? (
+          <UpcomingShoots className="mb-4" />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mb-4"
+          >
+            <Card className="glass-card">
+              <div className="flex flex-row items-center justify-between p-4 pb-2 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <CameraIcon className="h-5 w-5 text-primary" />
+                  <h3 className="font-medium text-lg">Upcoming Shoots</h3>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="gap-1"
+                  onClick={() => navigate('/shoots')}
+                >
+                  View all <ArrowRightIcon className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="p-4">
+                {currentShoots.length > 0 ? (
+                  <div className="space-y-4">
+                    {currentShoots.map((shoot, index) => (
+                      <div
+                        key={shoot.id}
+                        className="bg-secondary/10 p-3 rounded-md cursor-pointer hover:bg-secondary/20 transition-colors"
+                        onClick={() => navigate(`/shoots?id=${shoot.id}`)}
+                      >
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+                          <div className="mb-2 md:mb-0">
+                            <p className="font-medium">{shoot.location.fullAddress}</p>
+                            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                              <span>{new Date(shoot.scheduledDate).toLocaleDateString()}</span>
+                              <span>•</span>
+                              <span>{shoot.photographer.name}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between md:justify-end gap-2">
+                            <span className="text-sm font-medium">${shoot.payment.totalQuote}</span>
+                            <span className="px-2 py-1 rounded-full text-xs capitalize bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                              {shoot.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {totalPages > 1 && (
+                      <div className="flex justify-center mt-4">
+                        <Pagination>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          >
+                            Previous
+                          </Button>
+                          <div className="flex items-center mx-2">
+                            <span className="text-sm">
+                              Page {currentPage} of {totalPages}
+                            </span>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                          >
+                            Next
+                          </Button>
+                        </Pagination>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <p className="text-muted-foreground">No upcoming shoots scheduled.</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4"
+                      onClick={() => navigate('/book-shoot')}
+                    >
+                      Book a Shoot
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </motion.div>
+        )}
+        
+        {!showClientInterface && (
+          <TaskManager className="pb-16 md:pb-0" />
+        )}
       </div>
     </DashboardLayout>
   );

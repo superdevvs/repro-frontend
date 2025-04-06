@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { useAuth } from '@/components/auth/AuthProvider';
 import { CheckCircleIcon, ClockIcon, ListChecksIcon, PlusIcon, TagIcon, TrashIcon, UserIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Mock task data
 const initialTasks = [{
@@ -72,13 +74,9 @@ export function TaskManager({
   showAllTasks = true,
   relatedShootId
 }: TaskManagerProps) {
-  const {
-    user,
-    role
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { user, role } = useAuth();
+  const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
@@ -256,26 +254,35 @@ export function TaskManager({
     if (role === 'editor' && task.assignedTo === 'editor') return true;
     return false;
   };
-  return <div className={className}>
-      <Card className="optimise this for mobile\n">
+
+  return (
+    <div className={className}>
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <div className="flex items-center gap-2">
             <ListChecksIcon className="h-5 w-5 text-primary" />
             <CardTitle>Tasks & To-Do</CardTitle>
           </div>
           
-          <div className="flex items-center gap-2">
-            {['admin', 'superadmin', 'photographer', 'rep'].includes(role) && <Button size="sm" onClick={() => {
-            resetForm();
-            setEditTaskId(null);
-            setNewTaskOpen(true);
-          }} className="gap-1">
+          <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
+            {['admin', 'superadmin', 'photographer', 'rep'].includes(role) && (
+              <Button 
+                size={isMobile ? "sm" : "default"} 
+                onClick={() => {
+                  resetForm();
+                  setEditTaskId(null);
+                  setNewTaskOpen(true);
+                }} 
+                className={`gap-1 ${isMobile ? 'px-2 py-1 h-8 text-sm' : ''}`}
+              >
                 <PlusIcon className="h-4 w-4" />
-                New Task
-              </Button>}
+                {!isMobile && "New Task"}
+              </Button>
+            )}
             
-            {showAllTasks && <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
-                <SelectTrigger className="w-[120px]">
+            {showAllTasks && (
+              <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
+                <SelectTrigger className={isMobile ? "w-[100px] h-8 text-xs" : "w-[120px]"}>
                   <SelectValue placeholder="Filter" />
                 </SelectTrigger>
                 <SelectContent>
@@ -284,77 +291,111 @@ export function TaskManager({
                   <SelectItem value="in-progress">In Progress</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
-              </Select>}
+              </Select>
+            )}
           </div>
         </CardHeader>
         
-        <CardContent className="p-4">
-          {filteredTasks.length > 0 ? <div className="space-y-3">
-              {filteredTasks.map(task => <div key={task.id} className="p-3 border rounded-md hover:bg-secondary/10 transition-colors">
+        <CardContent className={isMobile ? "p-2" : "p-4"}>
+          {filteredTasks.length > 0 ? (
+            <div className="space-y-3">
+              {filteredTasks.map(task => (
+                <div key={task.id} className={`${isMobile ? 'p-2' : 'p-3'} border rounded-md hover:bg-secondary/10 transition-colors`}>
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium">{task.title}</h3>
-                        <Badge className={getPriorityColor(task.priority)}>
+                      <div className={`flex flex-wrap items-center gap-1 ${isMobile ? 'mb-1' : 'mb-2'}`}>
+                        <h3 className={`font-medium ${isMobile ? 'text-sm' : ''}`}>{task.title}</h3>
+                        <Badge className={`${getPriorityColor(task.priority)} ${isMobile ? 'text-xs px-1 py-0' : ''}`}>
                           {task.priority}
                         </Badge>
-                        <Badge className={getStatusColor(task.status)}>
+                        <Badge className={`${getStatusColor(task.status)} ${isMobile ? 'text-xs px-1 py-0' : ''}`}>
                           {task.status}
                         </Badge>
                       </div>
                       
-                      {task.description && <p className="text-sm text-muted-foreground mb-2">{task.description}</p>}
+                      {task.description && (
+                        <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground mb-2`}>
+                          {task.description}
+                        </p>
+                      )}
                       
-                      <div className="text-xs text-muted-foreground grid grid-cols-2 gap-x-4 gap-y-1">
+                      <div className={`${isMobile ? 'text-[10px] gap-x-2' : 'text-xs gap-x-4'} text-muted-foreground grid grid-cols-2 gap-y-1`}>
                         <div className="flex items-center gap-1">
-                          <UserIcon className="h-3 w-3" />
+                          <UserIcon className={isMobile ? "h-2 w-2" : "h-3 w-3"} />
                           <span>Assigned to: {task.assignedTo}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <ClockIcon className="h-3 w-3" />
+                          <ClockIcon className={isMobile ? "h-2 w-2" : "h-3 w-3"} />
                           <span>Due: {formatDate(task.dueDate)}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <UserIcon className="h-3 w-3" />
+                          <UserIcon className={isMobile ? "h-2 w-2" : "h-3 w-3"} />
                           <span>Created by: {task.createdBy}</span>
                         </div>
-                        {task.relatedShoot && <div className="flex items-center gap-1">
-                            <TagIcon className="h-3 w-3" />
+                        {task.relatedShoot && (
+                          <div className="flex items-center gap-1">
+                            <TagIcon className={isMobile ? "h-2 w-2" : "h-3 w-3"} />
                             <span>Shoot ID: {task.relatedShoot}</span>
-                          </div>}
+                          </div>
+                        )}
                       </div>
                     </div>
                     
-                    <div className="flex gap-1 ml-4">
-                      {task.status !== 'completed' && <Button size="sm" variant="ghost" onClick={() => handleStatusChange(task.id, 'completed')} className="h-8 w-8 p-0">
-                          <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                        </Button>}
+                    <div className={`flex gap-1 ml-2 ${isMobile ? 'flex-col' : ''}`}>
+                      {task.status !== 'completed' && (
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleStatusChange(task.id, 'completed')} 
+                          className={isMobile ? "h-6 w-6 p-0" : "h-8 w-8 p-0"}
+                        >
+                          <CheckCircleIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-green-500`} />
+                        </Button>
+                      )}
                       
-                      {canEditTask(task) && <>
-                          <Button size="sm" variant="ghost" onClick={() => startEditTask(task)} className="h-8 w-8 p-0">
-                            <PlusIcon className="h-4 w-4 text-muted-foreground" />
+                      {canEditTask(task) && (
+                        <>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => startEditTask(task)} 
+                            className={isMobile ? "h-6 w-6 p-0" : "h-8 w-8 p-0"}
+                          >
+                            <PlusIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-muted-foreground`} />
                           </Button>
                           
-                          <Button size="sm" variant="ghost" onClick={() => handleDeleteTask(task.id)} className="h-8 w-8 p-0">
-                            <TrashIcon className="h-4 w-4 text-destructive" />
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => handleDeleteTask(task.id)} 
+                            className={isMobile ? "h-6 w-6 p-0" : "h-8 w-8 p-0"}
+                          >
+                            <TrashIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-destructive`} />
                           </Button>
-                        </>}
+                        </>
+                      )}
                     </div>
                   </div>
-                </div>)}
-            </div> : <div className="text-center py-8">
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
               <ListChecksIcon className="h-10 w-10 mx-auto text-muted-foreground opacity-20 mb-3" />
               <p className="text-muted-foreground">No tasks found</p>
-              {['admin', 'superadmin', 'photographer', 'rep'].includes(role) && <Button variant="outline" className="mt-4" onClick={() => setNewTaskOpen(true)}>
+              {['admin', 'superadmin', 'photographer', 'rep'].includes(role) && (
+                <Button variant="outline" className="mt-4" onClick={() => setNewTaskOpen(true)}>
                   Create a task
-                </Button>}
-            </div>}
+                </Button>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
       
       {/* Create/Edit Task Dialog */}
       <Dialog open={newTaskOpen} onOpenChange={setNewTaskOpen}>
-        <DialogContent>
+        <DialogContent className={isMobile ? "max-w-[95%] p-4" : ""}>
           <DialogHeader>
             <DialogTitle>{editTaskId ? 'Edit Task' : 'Create New Task'}</DialogTitle>
           </DialogHeader>
@@ -374,7 +415,7 @@ export function TaskManager({
               <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Enter task description" rows={3} />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className={`${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-4'} grid`}>
               <div className="space-y-2">
                 <label htmlFor="assignedTo" className="text-sm font-medium">
                   Assign To
@@ -416,27 +457,37 @@ export function TaskManager({
               <Input id="dueDate" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
             </div>
             
-            {!relatedShootId && <div className="space-y-2">
+            {!relatedShootId && (
+              <div className="space-y-2">
                 <label htmlFor="relatedShoot" className="text-sm font-medium">
                   Related Shoot ID (optional)
                 </label>
                 <Input id="relatedShoot" value={relatedShoot || ''} onChange={e => setRelatedShoot(e.target.value || null)} placeholder="Enter shoot ID" />
-              </div>}
+              </div>
+            )}
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-            resetForm();
-            setNewTaskOpen(false);
-            setEditTaskId(null);
-          }}>
+          <DialogFooter className={isMobile ? "flex-col space-y-2" : ""}>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                resetForm();
+                setNewTaskOpen(false);
+                setEditTaskId(null);
+              }}
+              className={isMobile ? "w-full" : ""}
+            >
               Cancel
             </Button>
-            <Button onClick={editTaskId ? handleEditTask : handleCreateTask}>
+            <Button 
+              onClick={editTaskId ? handleEditTask : handleCreateTask}
+              className={isMobile ? "w-full" : ""}
+            >
               {editTaskId ? 'Update Task' : 'Create Task'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 }

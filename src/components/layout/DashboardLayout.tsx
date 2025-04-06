@@ -17,10 +17,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, clas
   
   return (
     <div className="h-full flex">
-      <Sidebar />
+      {!isMobile && <Sidebar />}
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
-        <main className={`flex-1 overflow-y-auto p-3 pb-10 ${className || ''}`}>
+        <main className={`flex-1 overflow-y-auto ${isMobile ? 'p-2 pb-20' : 'p-3 pb-10'} ${className || ''}`}>
           {children || <Outlet />}
         </main>
         {isMobile && <MobileMenu />}
