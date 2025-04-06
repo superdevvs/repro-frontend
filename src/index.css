@@ -312,3 +312,15 @@
 .animate-pulse-slow {
   animation: pulse-slow 3s infinite ease-in-out;
 }
+
+/* Light mode specific glass button */
+.light .glass-button-light, .glass-button-light {
+  @apply bg-white/80 border border-gray-200 text-gray-800;
+  @apply hover:bg-white/90 hover:border-gray-300 transition-all duration-300;
+}
+
+/* Light mode specific glass stroke */
+.light .glass-stroke-light, .glass-stroke-light {
+  @apply relative before:absolute before:inset-0 before:rounded-[inherit] before:border-2 before:border-primary/30;
+  @apply before:animate-pulse-slow;
+}

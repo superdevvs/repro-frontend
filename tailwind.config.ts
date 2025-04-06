@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -152,6 +151,8 @@ export default {
         'glass-hover': '0 8px 32px rgba(0, 0, 0, 0.06)',
         'glass-card': '0 8px 32px rgba(31, 38, 135, 0.15)',
         'float': '0 10px 20px rgba(0, 0, 0, 0.1)',
+        'light-button': '0 4px 12px rgba(0, 0, 0, 0.08)',
+        'light-button-hover': '0 6px 16px rgba(0, 0, 0, 0.12)',
       },
     },
   },
