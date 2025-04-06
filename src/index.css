@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
@@ -93,6 +94,7 @@
 
   html, body, #root {
     @apply h-full w-full overflow-hidden;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
@@ -235,6 +237,16 @@
 
 /* Mobile-specific styles */
 @media (max-width: 767px) {
+  /* Base mobile styles */
+  body, html {
+    @apply text-base;
+  }
+  
+  input, button, select, textarea {
+    @apply text-base;
+    font-size: 16px !important; /* Prevent iOS zoom on focus */
+  }
+  
   .mobile-hidden {
     display: none;
   }
@@ -260,13 +272,16 @@
     justify-content: center;
   }
   
+  /* Enhanced scrollable areas */  
   .mobile-scrollable {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
     max-height: 100%;
     padding-bottom: 60px; /* Add extra padding at the bottom for mobile */
+    scroll-behavior: smooth;
   }
   
+  /* Form enhancements for mobile */
   .mobile-compact-form .glass-card {
     padding: 1rem !important;
   }
@@ -286,14 +301,78 @@
     margin-bottom: 0.5rem !important;
   }
   
-  .mobile-compact-form .space-y-2 {
+  .mobile-compact-form .space-y-2,
+  .mobile-compact-form .space-y-4 {
     margin-top: 0.5rem !important;
     margin-bottom: 0.5rem !important;
   }
   
-  .mobile-compact-form .space-y-4 {
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
+  /* Improved login and registration form on mobile */
+  .form-control-touch {
+    min-height: 48px; /* Larger touch targets */
+  }
+  
+  /* Improved mobile button styles */
+  .button-touch {
+    @apply h-12 min-w-[100px];
+    touch-action: manipulation;
+  }
+  
+  /* Enhanced mobile bottom nav */
+  .mobile-bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border z-50;
+    height: 60px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
+  .mobile-bottom-nav-item {
+    @apply flex-1 flex flex-col items-center justify-center;
+    touch-action: manipulation;
+  }
+  
+  /* Fix for form elements and touch targets */
+  input[type="text"], 
+  input[type="email"], 
+  input[type="password"], 
+  textarea, 
+  select {
+    @apply appearance-none;
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+  
+  button {
+    touch-action: manipulation;
+  }
+  
+  /* Enhanced typography for mobile */
+  .mobile-heading-lg {
+    @apply text-2xl font-bold;
+  }
+  
+  .mobile-heading-md {
+    @apply text-xl font-bold;
+  }
+  
+  .mobile-heading-sm {
+    @apply text-lg font-semibold;
+  }
+  
+  /* Login page specific mobile enhancements */
+  .login-page-mobile {
+    @apply pt-4 pb-8 px-4;
+  }
+  
+  .login-card-mobile {
+    @apply shadow-lg border border-border/30;
+  }
+  
+  /* Improved card and panel layouts for mobile */
+  .mobile-card {
+    @apply rounded-lg overflow-hidden shadow-md;
+  }
+  
+  .mobile-panel {
+    @apply p-3;
   }
 }
 
@@ -323,4 +402,23 @@
 .light .glass-stroke-light, .glass-stroke-light {
   @apply relative before:absolute before:inset-0 before:rounded-[inherit] before:border-2 before:border-primary/30;
   @apply before:animate-pulse-slow;
+}
+
+/* Safe area insets for modern mobile browsers */
+@supports (padding: max(0px)) {
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+  }
+  
+  .safe-top {
+    padding-top: max(env(safe-area-inset-top), 0.5rem);
+  }
+  
+  .safe-left {
+    padding-left: max(env(safe-area-inset-left), 0.5rem);
+  }
+  
+  .safe-right {
+    padding-right: max(env(safe-area-inset-right), 0.5rem);
+  }
 }

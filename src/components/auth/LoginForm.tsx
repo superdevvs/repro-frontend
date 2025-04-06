@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -166,8 +167,8 @@ export function LoginForm() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className="backdrop-blur-sm bg-background/80">
-        <CardContent className={`${isMobile ? 'p-4' : 'p-6'}`}>
+      <Card className="backdrop-blur-sm bg-background/80 border border-border/50 shadow-lg">
+        <CardContent className={`${isMobile ? 'p-5' : 'p-6'}`}>
           <div className="mb-4 text-center">
             <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-1`}>
               {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}

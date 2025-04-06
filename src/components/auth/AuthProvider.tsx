@@ -1,46 +1,79 @@
 
-import { ReactNode } from 'react';
-import { AuthContext } from '@/context/AuthContext';
-import { useAuthState } from '@/hooks/useAuthState';
-import { loginUser, logoutUser, updateUserRole } from '@/services/authService';
-import { UserData, UserMetadata } from '@/types/auth';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useAuthState } from '../../hooks/useAuthState';
+import { UserData } from '@/types/auth';
 
-// Export the User type for use in other components
-export type User = UserData;
-export type Role = 'admin' | 'client' | 'photographer' | 'editor' | 'superadmin';
-
-interface AuthProviderProps {
-  children: ReactNode;
+interface AuthContextType {
+  user: UserData | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  role: string;
+  login: (userData: UserData) => void;
+  logout: () => void;
+  setUserRole: (role: string) => void;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+// Create a context object
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+  role: 'client',
+  login: () => {},
+  logout: () => {},
+  setUserRole: () => {},
+});
+
+// Custom hook to use the auth context
+export const useAuth = () => useContext(AuthContext);
+
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const {
-    user, 
+    user,
     setUser,
     isAuthenticated,
     setIsAuthenticated,
     isLoading,
+    setIsLoading,
     role,
     setRole
   } = useAuthState();
 
-  // Login handler
+  // Login function
   const login = (userData: UserData) => {
-    loginUser(userData, setUser, setIsAuthenticated, setRole);
+    // Store the user data in localStorage
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    setIsAuthenticated(true);
+    setRole(userData.role || 'client');
   };
 
-  // Logout handler
+  // Logout function
   const logout = () => {
-    logoutUser(setUser, setIsAuthenticated, setRole);
+    // Remove user data from localStorage
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsAuthenticated(false);
+    setRole('client');
   };
 
-  // Set user role handler
   const setUserRole = (newRole: string) => {
-    updateUserRole(newRole, setRole, user, setUser);
+    setRole(newRole);
+    
+    // Update user object with new role
+    if (user) {
+      const updatedUser = { ...user, role: newRole };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
   };
 
-  // Value object to be provided to consumers
-  const value = {
+  // Context value
+  const contextValue: AuthContextType = {
     user,
     isAuthenticated,
     isLoading,
@@ -50,8 +83,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUserRole,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-// Export the useAuth hook directly from the component file for convenience
-export { useAuth } from '@/context/AuthContext';
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
