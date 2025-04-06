@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { UserIcon, ChevronRightIcon, MapPinIcon, PhoneIcon, MailIcon, Building2Icon, GlobeIcon } from 'lucide-react';
+import { UserIcon, ChevronRightIcon, MapPinIcon, PhoneIcon, MailIcon, Building2Icon, GlobeIcon, Camera } from 'lucide-react';
 import { Client } from '@/types/clients';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PaginationDots } from '@/components/ui/pagination';
@@ -127,7 +127,7 @@ export const ClientCards: React.FC<ClientCardsProps> = ({
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-muted-foreground">
-                            <CameraIcon className="h-4 w-4" />
+                            <Camera className="h-4 w-4" />
                             <span>Shoots</span>
                           </div>
                           <p className="font-medium pl-6">{client.shootsCount || 0}</p>
