@@ -141,15 +141,16 @@ const MobileMenu = () => {
 
   return (
     <>
-      {/* Floating Action Button */}
+      {/* Floating Action Button with Glassmorphism */}
       <motion.button
         className={cn(
-          "fixed z-50 bottom-5 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full flex items-center justify-center",
-          "bg-primary/80 backdrop-blur-md shadow-lg border border-primary/20",
-          "hover:scale-105 transition-all duration-300"
+          "fixed z-50 bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2",
+          "px-4 py-2 rounded-full",
+          "bg-primary/40 backdrop-blur-md shadow-lg border border-primary/20",
+          "hover:bg-primary/50 transition-all duration-300"
         )}
         onClick={toggleMenu}
-        whileTap={{ scale: 0.9 }}
+        whileTap={{ scale: 0.95 }}
         animate={{ 
           y: [0, -5, 0],
           transition: { 
@@ -160,9 +161,15 @@ const MobileMenu = () => {
         }}
       >
         {isMenuOpen ? (
-          <XIcon className="text-primary-foreground h-6 w-6" />
+          <>
+            <XIcon className="text-primary-foreground h-5 w-5" />
+            <span className="text-primary-foreground font-medium">Close</span>
+          </>
         ) : (
-          <MenuIcon className="text-primary-foreground h-6 w-6" />
+          <>
+            <MenuIcon className="text-primary-foreground h-5 w-5" />
+            <span className="text-primary-foreground font-medium">Dashboard</span>
+          </>
         )}
       </motion.button>
 
