@@ -7,10 +7,8 @@ import {
   UsersIcon, 
   ImageIcon, 
   HomeIcon, 
-  ReceiptIcon, 
   CheckIcon,
   HardDriveIcon,
-  FilesIcon
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ShootData } from '@/types/shoots';
@@ -20,7 +18,6 @@ import {
   getUniqueClientsCount,
   getTotalMediaAssetsCount,
   getScheduledTodayShoots,
-  getEstimatedTaxAmount,
   getCompletedShootsCount
 } from '@/utils/dateUtils';
 import { TimeRange } from '@/utils/dateUtils';
@@ -46,12 +43,10 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
   const scheduledTodayCount = getScheduledTodayShoots(shoots).length;
   const totalClientsCount = getUniqueClientsCount(shoots);
   const mediaAssetsCount = getTotalMediaAssetsCount(shoots);
-  const estimatedTax = getEstimatedTaxAmount(shoots);
   const completedShoots = getCompletedShootsCount(shoots);
-  const totalShoots = shoots.length;
   
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {showRevenue && (
         <StatsCard
           title="Total Revenue"
@@ -64,18 +59,6 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         />
       )}
       
-      {showRevenue && (
-        <StatsCard
-          title="Estimated Tax"
-          value={`$${estimatedTax.toLocaleString()}`}
-          description="Based on current revenue (15%)"
-          icon={<ReceiptIcon className="h-5 w-5" />}
-          trend="up"
-          trendValue="12%"
-          delay={1}
-        />
-      )}
-      
       <StatsCard
         title="Active Shoots"
         value={activeShootsCount.toString()}
@@ -83,7 +66,7 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         icon={<CameraIcon className="h-5 w-5" />}
         trend="up"
         trendValue="4"
-        delay={2}
+        delay={1}
       />
       
       {showClientStats && (
@@ -94,7 +77,7 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
           icon={<UsersIcon className="h-5 w-5" />}
           trend="up"
           trendValue="9%"
-          delay={3}
+          delay={2}
         />
       )}
       
@@ -105,7 +88,7 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         icon={<ImageIcon className="h-5 w-5" />}
         trend="up"
         trendValue="22%"
-        delay={4}
+        delay={3}
       />
       
       <StatsCard
@@ -115,17 +98,7 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         icon={<CheckIcon className="h-5 w-5" />}
         trend="up"
         trendValue="14%"
-        delay={5}
-      />
-      
-      <StatsCard
-        title="Total Shoots"
-        value={totalShoots.toString()}
-        description="All time"
-        icon={<FilesIcon className="h-5 w-5" />}
-        trend="up"
-        trendValue="8%"
-        delay={6}
+        delay={4}
       />
       
       <StatsCard
@@ -135,7 +108,7 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         icon={<HardDriveIcon className="h-5 w-5" />}
         trend="up"
         trendValue="5%"
-        delay={7}
+        delay={5}
       />
       
       {showPhotographerInterface && (
