@@ -18,6 +18,8 @@ import { Pagination } from '@/components/ui/pagination';
 import { useNavigate } from 'react-router-dom';
 import { UpcomingShoots } from '@/components/dashboard/UpcomingShoots';
 import { Calendar } from '@/components/dashboard/Calendar';
+import { LayoutToggle } from '@/components/dashboard/LayoutToggle';
+import { CompactDashboard } from '@/components/dashboard/layouts/CompactDashboard';
 
 const Dashboard = () => {
   const { role } = useAuth();
@@ -25,6 +27,7 @@ const Dashboard = () => {
   const { shoots } = useShoots();
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   const navigate = useNavigate();
+  const [isCompactLayout, setIsCompactLayout] = useState(false);
   
   // Pagination state for upcoming shoots
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,104 +65,127 @@ const Dashboard = () => {
   const handleTimeRangeChange = (range: TimeRange) => {
     setTimeRange(range);
   };
+
+  const toggleLayout = () => {
+    setIsCompactLayout(!isCompactLayout);
+  };
   
   return (
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6 pb-10">
-        <DashboardHeader 
-          isAdmin={isAdmin} 
-          timeRange={timeRange}
-          onTimeRangeChange={handleTimeRangeChange}
-        />
+        <div className="flex items-center justify-between">
+          <DashboardHeader 
+            isAdmin={isAdmin} 
+            timeRange={timeRange}
+            onTimeRangeChange={handleTimeRangeChange}
+          />
+          <LayoutToggle 
+            isCompact={isCompactLayout} 
+            toggleLayout={toggleLayout} 
+          />
+        </div>
         
-        <StatsCardGrid
-          showRevenue={showRevenue}
-          showClientStats={showClientStats}
-          showPhotographerInterface={showPhotographerInterface}
-          shoots={filteredShoots}
-          timeRange={timeRange}
-        />
-        
-        {showRevenue && <RevenueOverview shoots={filteredShoots} timeRange={timeRange} />}
-        
-        {/* Improved layout for Calendar, Upcoming Shoots, and Task Manager */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* Calendar - Takes 7/12 of the width on large screens */}
-          {!showClientInterface && (
-            <div className="lg:col-span-7">
-              <Calendar height={400} />
-            </div>
-          )}
-          
-          {/* Right side content - Takes 5/12 of the width on large screens */}
-          <div className="lg:col-span-5 space-y-4">
-            {/* Upcoming Shoots */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Card className="glass-card">
-                <div className="flex flex-row items-center justify-between p-4 pb-2 border-b border-border">
-                  <div className="flex items-center gap-2">
-                    <CameraIcon className="h-5 w-5 text-primary" />
-                    <h3 className="font-medium text-lg">Upcoming Shoots</h3>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="gap-1"
-                    onClick={() => navigate('/shoots')}
-                  >
-                    View all <ArrowRightIcon className="h-4 w-4" />
-                  </Button>
+        {isCompactLayout ? (
+          <CompactDashboard 
+            showRevenue={showRevenue}
+            showClientStats={showClientStats}
+            showPhotographerInterface={showPhotographerInterface}
+            shoots={shoots}
+            timeRange={timeRange}
+            filteredShoots={filteredShoots}
+          />
+        ) : (
+          <>
+            <StatsCardGrid
+              showRevenue={showRevenue}
+              showClientStats={showClientStats}
+              showPhotographerInterface={showPhotographerInterface}
+              shoots={filteredShoots}
+              timeRange={timeRange}
+            />
+            
+            {showRevenue && <RevenueOverview shoots={filteredShoots} timeRange={timeRange} />}
+            
+            {/* Improved layout for Calendar, Upcoming Shoots, and Task Manager */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              {/* Calendar - Takes 7/12 of the width on large screens */}
+              {!showClientInterface && (
+                <div className="lg:col-span-7">
+                  <Calendar height={400} />
                 </div>
-                
-                <div className="p-4 max-h-[200px] overflow-y-auto">
-                  {currentShoots.length > 0 ? (
-                    <div className="space-y-3">
-                      {currentShoots.map((shoot) => (
-                        <div
-                          key={shoot.id}
-                          className="bg-secondary/10 p-3 rounded-md cursor-pointer hover:bg-secondary/20 transition-colors"
-                          onClick={() => navigate(`/shoots?id=${shoot.id}`)}
-                        >
-                          <div className="flex flex-col">
-                            <p className="font-medium truncate">{shoot.location.fullAddress}</p>
-                            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                              <span>{new Date(shoot.scheduledDate).toLocaleDateString()}</span>
-                              <span>•</span>
-                              <span className="truncate">{shoot.photographer.name}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-4 text-center">
-                      <p className="text-muted-foreground">No upcoming shoots scheduled.</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-4"
-                        onClick={() => navigate('/book-shoot')}
+              )}
+              
+              {/* Right side content - Takes 5/12 of the width on large screens */}
+              <div className="lg:col-span-5 space-y-4">
+                {/* Upcoming Shoots */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card className="glass-card">
+                    <div className="flex flex-row items-center justify-between p-4 pb-2 border-b border-border">
+                      <div className="flex items-center gap-2">
+                        <CameraIcon className="h-5 w-5 text-primary" />
+                        <h3 className="font-medium text-lg">Upcoming Shoots</h3>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="gap-1"
+                        onClick={() => navigate('/shoots')}
                       >
-                        Book a Shoot
+                        View all <ArrowRightIcon className="h-4 w-4" />
                       </Button>
                     </div>
-                  )}
-                </div>
-              </Card>
-            </motion.div>
-            
-            {/* Task Manager */}
-            {!showClientInterface && (
-              <div className="h-[calc(100%-220px)] min-h-[300px]">
-                <TaskManager />
+                    
+                    <div className="p-4 max-h-[200px] overflow-y-auto">
+                      {currentShoots.length > 0 ? (
+                        <div className="space-y-3">
+                          {currentShoots.map((shoot) => (
+                            <div
+                              key={shoot.id}
+                              className="bg-secondary/10 p-3 rounded-md cursor-pointer hover:bg-secondary/20 transition-colors"
+                              onClick={() => navigate(`/shoots?id=${shoot.id}`)}
+                            >
+                              <div className="flex flex-col">
+                                <p className="font-medium truncate">{shoot.location.fullAddress}</p>
+                                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                  <span>{new Date(shoot.scheduledDate).toLocaleDateString()}</span>
+                                  <span>•</span>
+                                  <span className="truncate">{shoot.photographer.name}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-4 text-center">
+                          <p className="text-muted-foreground">No upcoming shoots scheduled.</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-4"
+                            onClick={() => navigate('/book-shoot')}
+                          >
+                            Book a Shoot
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                </motion.div>
+                
+                {/* Task Manager */}
+                {!showClientInterface && (
+                  <div className="h-[calc(100%-220px)] min-h-[300px]">
+                    <TaskManager />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
