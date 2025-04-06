@@ -1,15 +1,14 @@
-
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Search, Filter, CalendarDays, CheckCircle, Clock, RotateCw } from 'lucide-react';
+import { Search, Filter, CalendarDays, CheckCircle, Clock, RotateCw, ChevronDown, Hash } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +39,8 @@ export function ConversationList({
   filter,
   onFilterChange,
 }: ConversationListProps) {
+  const [showFolders, setShowFolders] = useState(true);
+  
   // Filter conversations based on current filter criteria
   const filteredConversations = conversations.filter((convo) => {
     // Filter by search query
@@ -66,7 +67,20 @@ export function ConversationList({
   // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return format(date, 'h:mm a');
+    const now = new Date();
+    
+    // If today, show time
+    if (format(date, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd')) {
+      return format(date, 'h:mm a');
+    }
+    
+    // If this year, show month and day
+    if (date.getFullYear() === now.getFullYear()) {
+      return format(date, 'd MMM');
+    }
+    
+    // Otherwise show date
+    return format(date, 'd MMM yyyy');
   };
 
   // Get status icon based on shoot status
@@ -87,57 +101,64 @@ export function ConversationList({
     }
   };
 
-  // Get service type badge color
-  const getServiceTypeColor = (type: string) => {
-    switch (type) {
-      case 'photography':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'drone':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'floorplan':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'staging':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+  // Folders list
+  const folders = [
+    { id: 'inbox', name: 'Inbox', count: conversations.filter(c => c.unreadCount > 0).length },
+    { id: 'starred', name: 'Starred', count: 0 },
+    { id: 'snoozed', name: 'Snoozed', count: 0 },
+    { id: 'sent', name: 'Sent', count: 0 },
+    { id: 'drafts', name: 'Drafts', count: 0 },
+    { id: 'trash', name: 'Trash', count: 0 },
+  ];
+  
+  // Labels/tags list
+  const labels = [
+    { id: 'clients', name: 'Clients', color: 'bg-blue-500' },
+    { id: 'photographers', name: 'Photographers', color: 'bg-green-500' },
+    { id: 'editors', name: 'Editors', color: 'bg-purple-500' },
+    { id: 'important', name: 'Important', color: 'bg-red-500' },
+  ];
 
   return (
     <Card className="h-full flex flex-col border-none shadow-none">
-      <CardHeader className="px-4 py-3 border-b flex-shrink-0">
-        <div className="flex items-center justify-between mb-3">
-          <CardTitle className="text-lg">Conversations</CardTitle>
-          <Tabs defaultValue={activeTab} onValueChange={onTabChange} className="w-[180px]">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="inbox">Inbox</TabsTrigger>
-              <TabsTrigger value="archived">Archived</TabsTrigger>
-            </TabsList>
-          </Tabs>
+      <div className="p-3 border-b flex-shrink-0">
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search conversations..." 
+            className="pl-9"
+            value={filter.searchQuery}
+            onChange={(e) => onFilterChange({ ...filter, searchQuery: e.target.value })}
+          />
         </div>
         
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search conversations..." 
-              className="pl-9"
-              value={filter.searchQuery}
-              onChange={(e) => onFilterChange({ ...filter, searchQuery: e.target.value })}
-            />
-          </div>
-          
+        <Tabs 
+          defaultValue={activeTab} 
+          value={activeTab} 
+          onValueChange={onTabChange} 
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-2 h-8 mb-1">
+            <TabsTrigger value="inbox" className="text-xs">Primary</TabsTrigger>
+            <TabsTrigger value="archived" className="text-xs">Archive</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        
+        <div className="flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="h-7 text-xs">
+                <Filter className="h-3.5 w-3.5 mr-1" />
+                Filter
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Filter Conversations</DropdownMenuLabel>
               <DropdownMenuSeparator />
               
-              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground mt-2">Service Type</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                Service Type
+              </DropdownMenuLabel>
               {['photography', 'drone', 'floorplan', 'staging'].map((type) => (
                 <DropdownMenuCheckboxItem
                   key={type}
@@ -158,7 +179,9 @@ export function ConversationList({
               
               <DropdownMenuSeparator />
               
-              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Status</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                Status
+              </DropdownMenuLabel>
               {['scheduled', 'inProgress', 'delivered', 'revisions', 'complete'].map((status) => (
                 <DropdownMenuCheckboxItem
                   key={status}
@@ -179,7 +202,9 @@ export function ConversationList({
               
               <DropdownMenuSeparator />
               
-              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">User Type</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                User Type
+              </DropdownMenuLabel>
               {['client', 'photographer', 'editor'].map((role) => (
                 <DropdownMenuCheckboxItem
                   key={role}
@@ -217,82 +242,152 @@ export function ConversationList({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </CardHeader>
+      </div>
       
-      <CardContent className="p-0 flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
-          <div className="flex flex-col">
-            {filteredConversations.length > 0 ? (
-              filteredConversations.map((conversation) => (
-                <motion.div
-                  key={conversation.id}
-                  whileHover={{ backgroundColor: 'rgba(0,0,0,0.03)' }}
-                  className={`cursor-pointer p-3 border-b border-border hover:bg-accent/30 transition-colors ${
-                    selectedConversation === conversation.id ? 'bg-accent/50' : ''
-                  }`}
-                  onClick={() => onSelectConversation(conversation.id)}
+      <ScrollArea className="flex-1">
+        <div className="p-3">
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-xs flex items-center p-1 pl-0 hover:bg-transparent" 
+                onClick={() => setShowFolders(!showFolders)}
+              >
+                <ChevronDown className={cn("h-3.5 w-3.5 mr-1 transition-transform", !showFolders && "transform -rotate-90")} />
+                <span className="font-semibold">Folders</span>
+              </Button>
+            </div>
+            
+            {showFolders && (
+              <div className="ml-3 space-y-1">
+                {folders.map(folder => (
+                  <Button
+                    key={folder.id}
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "w-full justify-start text-xs h-7 px-2 hover:bg-slate-100",
+                      folder.id === 'inbox' && "font-medium"
+                    )}
+                  >
+                    <span className="truncate">{folder.name}</span>
+                    {folder.count > 0 && (
+                      <Badge variant="secondary" className="ml-auto">
+                        {folder.count}
+                      </Badge>
+                    )}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <Separator className="my-3" />
+          
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-xs flex items-center p-1 pl-0 hover:bg-transparent"
+              >
+                <span className="font-semibold">Labels</span>
+              </Button>
+            </div>
+            
+            <div className="ml-3 space-y-1">
+              {labels.map(label => (
+                <Button
+                  key={label.id}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-xs h-7 px-2 hover:bg-slate-100"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="relative">
-                      <Avatar>
-                        <AvatarImage src={conversation.participant.avatar} />
-                        <AvatarFallback>{conversation.participant.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      {conversation.unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">
-                          {conversation.unreadCount}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium truncate">{conversation.participant.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(conversation.timestamp)}
-                        </p>
+                  <span className={cn("h-2.5 w-2.5 rounded-full mr-2", label.color)}></span>
+                  <span className="truncate">{label.name}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+          
+          <Separator className="my-3" />
+          
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-xs flex items-center p-1 pl-0 hover:bg-transparent"
+              >
+                <span className="font-semibold">Recent Conversations</span>
+              </Button>
+            </div>
+            
+            {filteredConversations.length > 0 ? (
+              <div className="space-y-1">
+                {filteredConversations.map((conversation) => (
+                  <div
+                    key={conversation.id}
+                    className={cn(
+                      "cursor-pointer px-2 py-2 rounded-md hover:bg-slate-100 transition-colors",
+                      selectedConversation === conversation.id ? "bg-slate-100" : ""
+                    )}
+                    onClick={() => onSelectConversation(conversation.id)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="relative">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={conversation.participant.avatar} />
+                          <AvatarFallback>{conversation.participant.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        {conversation.unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-primary" />
+                        )}
                       </div>
                       
-                      {conversation.shoot && (
-                        <div className="flex items-center gap-1.5 mt-0.5 mb-1">
-                          {getStatusIcon(conversation.shoot.status)}
-                          <p className="text-xs text-muted-foreground font-medium truncate">
-                            {conversation.shoot.title}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className={cn(
+                            "font-medium truncate text-xs",
+                            conversation.unreadCount > 0 && "font-bold"
+                          )}>
+                            {conversation.participant.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground whitespace-nowrap ml-1">
+                            {formatDate(conversation.timestamp)}
                           </p>
                         </div>
-                      )}
-                      
-                      <p className="text-sm text-muted-foreground truncate">{conversation.lastMessage}</p>
-                      
-                      <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                        <Badge variant="outline" className="text-xs h-5 py-0 px-1.5">
-                          {conversation.participant.role}
-                        </Badge>
                         
-                        {conversation.shoot?.serviceTypes.map((service) => (
-                          <Badge
-                            key={service}
-                            variant="outline"
-                            className={`text-xs h-5 py-0 px-1.5 ${getServiceTypeColor(service)}`}
-                          >
-                            {service}
-                          </Badge>
-                        ))}
+                        {conversation.shoot && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <Hash className="h-3 w-3 text-muted-foreground" />
+                            <p className="text-[10px] text-muted-foreground font-medium truncate">
+                              {conversation.shoot.title}
+                            </p>
+                          </div>
+                        )}
+                        
+                        <p className={cn(
+                          "text-xs text-muted-foreground truncate mt-0.5",
+                          conversation.unreadCount > 0 && "font-medium text-foreground"
+                        )}>
+                          {conversation.lastMessage}
+                        </p>
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              ))
+                ))}
+              </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-48 p-4">
-                <Search className="h-8 w-8 text-muted-foreground mb-2 opacity-25" />
+              <div className="flex flex-col items-center justify-center p-4">
                 <p className="text-sm text-muted-foreground text-center">
                   No conversations match your filters
                 </p>
                 <Button
-                  variant="ghost"
+                  variant="link"
                   size="sm"
-                  className="mt-2"
+                  className="mt-1 h-auto p-0"
                   onClick={() => onFilterChange({
                     searchQuery: '',
                     serviceType: undefined,
@@ -306,8 +401,8 @@ export function ConversationList({
               </div>
             )}
           </div>
-        </ScrollArea>
-      </CardContent>
+        </div>
+      </ScrollArea>
     </Card>
   );
 }

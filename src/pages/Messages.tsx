@@ -1,28 +1,26 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { 
-  MessageSquare, 
   ChevronLeft,
   ChevronRight,
   MessageCircle,
   Phone,
   Video,
-  Calendar,
-  Info,
   Search,
   MenuIcon,
-  X,
+  PlusCircle,
+  Paperclip,
+  Printer,
+  Download,
+  Star,
+  Reply,
+  MoreHorizontal,
+  Trash2,
+  Archive
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import {
-  HoverCard, 
-  HoverCardContent, 
-  HoverCardTrigger
-} from "@/components/ui/hover-card";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -32,25 +30,22 @@ import { ConversationList } from '@/components/messaging/ConversationList';
 import { MessageList } from '@/components/messaging/MessageList';
 import { MessageInput } from '@/components/messaging/MessageInput';
 import { ProjectContextBar } from '@/components/messaging/ProjectContextBar';
-import { TaskApprovalPanel } from '@/components/messaging/TaskApprovalPanel';
-import { TaskMessage } from '@/components/messaging/TaskMessage';
-import { Conversation, Message, ConversationFilter, MessageTemplate } from '@/types/messages';
-import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Conversation, ConversationFilter, MessageTemplate } from '@/types/messages';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const mockConversations: Conversation[] = [
   {
@@ -356,29 +351,18 @@ const mockTemplates: MessageTemplate[] = [
   },
 ];
 
-const mockTasks = [
-  { id: 't1', title: 'Photoshoot completed', completed: true },
-  { id: 't2', title: 'Initial editing', completed: true },
-  { id: 't3', title: 'Client review', completed: false },
-  { id: 't4', title: 'Final delivery', completed: false },
-];
-
 const Messages = () => {
   const [activeTab, setActiveTab] = useState('inbox');
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [isConversationsCollapsed, setIsConversationsCollapsed] = useState(false);
   const [filter, setFilter] = useState<ConversationFilter>({ searchQuery: '' });
-  const [messageInput, setMessageInput] = useState('');
-  const [tasks, setTasks] = useState(mockTasks);
-  const [waitingForApproval, setWaitingForApproval] = useState(false);
-  const [messageTasks, setMessageTasks] = useState<Record<string, boolean>>({});
-  const [rightPanelTab, setRightPanelTab] = useState('details');
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   
   const isMobile = useIsMobile();
   const { toast } = useToast();
   
-  useEffect(() => {
+  React.useEffect(() => {
     if (isMobile) {
       setIsConversationsCollapsed(true);
     }
@@ -400,209 +384,124 @@ const Messages = () => {
       : [];
   }, [selectedConversation]);
   
-  const projectProgress = useMemo(() => {
-    const completed = tasks.filter(t => t.completed).length;
-    return Math.round((completed / tasks.length) * 100);
-  }, [tasks]);
-  
   const toggleConversations = () => {
     setIsConversationsCollapsed(!isConversationsCollapsed);
   };
   
   const handleSendMessage = (content: string, attachments?: File[]) => {
+    if (!content.trim() && (!attachments || attachments.length === 0)) return;
+    
+    toast.success('Message sent');
+    
     console.log('Sending message:', content, attachments);
   };
   
-  const handleTaskToggle = (taskId: string, completed: boolean) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, completed } : task
-    ));
+  const handleMarkAsTask = (message: any) => {
+    toast.success('Added to tasks');
   };
   
-  const handleMarkAsTask = (message: Message) => {
-    const isCurrentlyTask = messageTasks[message.id];
-    
-    setMessageTasks(prev => ({
-      ...prev,
-      [message.id]: !prev[message.id]
-    }));
-    
-    toast({
-      title: !isCurrentlyTask ? "Added to tasks" : "Removed from tasks",
-      description: !isCurrentlyTask 
-        ? "Message has been added to your tasks" 
-        : "Message has been removed from tasks",
-    });
-  };
-  
-  const handleToggleMessageTask = (messageId: string, isCompleted: boolean) => {
-    setMessageTasks(prev => ({
-      ...prev,
-      [messageId]: isCompleted
-    }));
-  };
-  
-  const handleRequestApproval = () => {
-    setWaitingForApproval(true);
-  };
-  
-  const handleApprove = () => {
-    setWaitingForApproval(false);
-    setTasks(tasks.map(task => 
-      task.id === 't3' ? { ...task, completed: true } : task
-    ));
-  };
-  
-  const handleRequestRevision = () => {
-    setWaitingForApproval(false);
-  };
-  
-  const messageTasksList = useMemo(() => {
-    return currentMessages.filter(message => messageTasks[message.id]);
-  }, [currentMessages, messageTasks]);
-  
-  const renderContent = () => {
-    if (isMobile) {
+  const renderMobileView = () => {
+    if (!selectedConversation) {
       return (
         <div className="flex flex-col h-full">
           <div className="px-4 py-3 border-b flex-shrink-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="outline" size="icon" className="lg:hidden flex">
-                      <MenuIcon className="h-4 w-4" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-[85%] sm:max-w-md">
-                    <SheetHeader className="mb-4">
-                      <SheetTitle>Conversations</SheetTitle>
-                    </SheetHeader>
-                    <ConversationList 
-                      conversations={mockConversations}
-                      selectedConversation={selectedConversation}
-                      onSelectConversation={(id) => {
-                        setSelectedConversation(id);
-                        const closeButton = document.querySelector('[data-radix-collection-item]') as HTMLElement;
-                        if (closeButton) closeButton.click();
-                      }}
-                      activeTab={activeTab}
-                      onTabChange={setActiveTab}
-                      filter={filter}
-                      onFilterChange={setFilter}
-                    />
-                  </SheetContent>
-                </Sheet>
-                
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-semibold truncate max-w-[200px]">
-                    {currentConversation?.participant.name || 'Messages'}
-                  </h2>
-                  {currentConversation && (
-                    <Badge variant="outline" className="text-xs">
-                      {currentConversation.participant.role}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              
-              {currentConversation && (
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Phone className="h-4 w-4" />
-                  </Button>
-                  <Drawer open={isInfoDrawerOpen} onOpenChange={setIsInfoDrawerOpen}>
-                    <DrawerTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                      >
-                        <Info className="h-4 w-4" />
-                      </Button>
-                    </DrawerTrigger>
-                    <DrawerContent className="px-0 max-h-[85vh] overflow-y-auto">
-                      <Tabs defaultValue="details" className="w-full">
-                        <div className="px-4 pt-4 border-b">
-                          <TabsList className="w-full grid grid-cols-2">
-                            <TabsTrigger value="details">Details</TabsTrigger>
-                            <TabsTrigger value="tasks">Tasks & Progress</TabsTrigger>
-                          </TabsList>
-                        </div>
-                        <TabsContent value="details" className="mt-0">
-                          {currentConversation && (
-                            <ProjectContextBar 
-                              conversation={currentConversation}
-                              className="flex-shrink-0"
-                            />
-                          )}
-                        </TabsContent>
-                        <TabsContent value="tasks" className="mt-0">
-                          {currentConversation && (
-                            <TaskApprovalPanel 
-                              projectId={currentConversation.shoot?.id || ''}
-                              tasks={tasks}
-                              progress={projectProgress}
-                              onTaskToggle={handleTaskToggle}
-                              onApprove={handleApprove}
-                              onRequestRevision={handleRequestRevision}
-                              isClient={currentConversation.participant.role === 'client'}
-                              waitingForApproval={waitingForApproval}
-                            />
-                          )}
-                          
-                          {messageTasksList.length > 0 && (
-                            <div className="px-4 pt-4">
-                              <h3 className="text-sm font-medium mb-2">Message Tasks</h3>
-                              <div className="space-y-2">
-                                {messageTasksList.map(message => (
-                                  <TaskMessage 
-                                    key={message.id}
-                                    message={message}
-                                    isCompleted={!!messageTasks[message.id]}
-                                    onToggleComplete={handleToggleMessageTask}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </TabsContent>
-                      </Tabs>
-                    </DrawerContent>
-                  </Drawer>
-                </div>
-              )}
+              <h2 className="text-base font-semibold">Messages</h2>
+              <Button variant="outline" size="sm" className="rounded-full">
+                <PlusCircle className="h-4 w-4" />
+              </Button>
             </div>
           </div>
           
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <MessageList 
-              messages={currentMessages} 
-              currentUserId="me"
-              onMarkAsTask={handleMarkAsTask}
-            />
-            
-            <MessageInput 
-              onSendMessage={handleSendMessage}
-              templates={mockTemplates}
-            />
-          </div>
+          <ConversationList 
+            conversations={mockConversations}
+            selectedConversation={selectedConversation}
+            onSelectConversation={setSelectedConversation}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            filter={filter}
+            onFilterChange={setFilter}
+          />
         </div>
       );
     }
     
     return (
+      <div className="flex flex-col h-full">
+        <div className="px-4 py-3 border-b flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0"
+              onClick={() => setSelectedConversation(null)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={currentConversation?.participant.avatar} />
+              <AvatarFallback>{currentConversation?.participant.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            
+            <div>
+              <h2 className="text-sm font-medium">
+                {currentConversation?.participant.name}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {currentConversation?.participant.role}
+              </p>
+            </div>
+            
+            <div className="ml-auto flex items-center">
+              <Drawer open={isInfoDrawerOpen} onOpenChange={setIsInfoDrawerOpen}>
+                <DrawerTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MenuIcon className="h-4 w-4" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent className="max-h-[80vh]">
+                  {currentConversation && (
+                    <ProjectContextBar 
+                      conversation={currentConversation}
+                      className="p-4"
+                    />
+                  )}
+                </DrawerContent>
+              </Drawer>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <MessageList 
+            messages={currentMessages} 
+            currentUserId="me"
+            onMarkAsTask={handleMarkAsTask}
+            selectedMessageId={selectedMessageId}
+          />
+          
+          <MessageInput 
+            onSendMessage={handleSendMessage}
+            templates={mockTemplates}
+          />
+        </div>
+      </div>
+    );
+  };
+  
+  const renderDesktopView = () => {
+    return (
       <ResizablePanelGroup
         direction="horizontal"
-        className="min-h-full rounded-lg border"
+        className="rounded-lg overflow-hidden border"
       >
         {!isConversationsCollapsed && (
           <>
             <ResizablePanel 
               defaultSize={25} 
-              minSize={20}
+              minSize={15}
               maxSize={40}
-              className="bg-card"
             >
               <ConversationList 
                 conversations={mockConversations}
@@ -619,102 +518,148 @@ const Messages = () => {
           </>
         )}
         
-        <ResizablePanel 
-          defaultSize={isConversationsCollapsed ? 70 : 45}
-          className="bg-card"
-        >
-          {selectedConversation ? (
-            <div className="flex flex-col h-full">
-              <div className="px-4 py-3 border-b flex-shrink-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {isConversationsCollapsed && (
-                      <HoverCard>
-                        <HoverCardTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={toggleConversations}
-                            className="lg:block hidden"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                            {totalUnreadCount > 0 && (
-                              <Badge className="absolute -top-2 -right-2 h-5 min-w-5 flex items-center justify-center rounded-full p-0 text-xs font-medium">
-                                {totalUnreadCount}
-                              </Badge>
-                            )}
-                          </Button>
-                        </HoverCardTrigger>
-                        <HoverCardContent className="w-auto p-2">
-                          <span>Show all conversations</span>
-                        </HoverCardContent>
-                      </HoverCard>
-                    )}
-                    
+        <ResizablePanel defaultSize={isConversationsCollapsed ? 65 : 45}>
+          <div className="flex flex-col h-full">
+            {selectedConversation && currentConversation ? (
+              <>
+                <div className="border-b p-3">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <h2 className="text-base font-semibold">
-                        {currentConversation?.participant.name}
-                      </h2>
-                      <Badge variant="outline" className="text-xs">
-                        {currentConversation?.participant.role}
-                      </Badge>
+                      {isConversationsCollapsed && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="h-8 w-8 mr-1"
+                          onClick={toggleConversations}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      )}
+                      
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={currentConversation.participant.avatar} />
+                          <AvatarFallback>{currentConversation.participant.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h2 className="font-medium">
+                              {currentConversation.participant.name}
+                            </h2>
+                            <span className="text-xs text-muted-foreground">
+                              ({currentConversation.participant.role})
+                            </span>
+                          </div>
+                          
+                          {currentConversation.shoot && (
+                            <p className="text-xs text-muted-foreground">
+                              {currentConversation.shoot.title}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-1.5">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Archive className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Archive</TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Phone className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Call</TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Video className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Video</TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Search className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Search</TooltipContent>
+                      </Tooltip>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Printer className="mr-2 h-4 w-4" />
+                            <span>Print</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Download className="mr-2 h-4 w-4" />
+                            <span>Export</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Delete conversation</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Search className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Phone className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Video className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
-              </div>
-              
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <MessageList 
-                  messages={currentMessages} 
-                  currentUserId="me"
-                  onMarkAsTask={handleMarkAsTask}
-                />
                 
-                <MessageInput 
-                  onSendMessage={handleSendMessage}
-                  templates={mockTemplates}
-                />
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <MessageList 
+                    messages={currentMessages} 
+                    currentUserId="me"
+                    onMarkAsTask={handleMarkAsTask}
+                    selectedMessageId={selectedMessageId}
+                  />
+                  
+                  <MessageInput 
+                    onSendMessage={handleSendMessage}
+                    templates={mockTemplates}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                {isConversationsCollapsed && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={toggleConversations}
+                    className="absolute top-4 left-4"
+                  >
+                    <ChevronRight className="h-4 w-4 mr-1" />
+                    <span>Show Conversations</span>
+                  </Button>
+                )}
+                <MessageCircle className="h-12 w-12 text-muted-foreground opacity-20 mb-4" />
+                <h3 className="text-lg font-medium mb-1">No conversation selected</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  {isConversationsCollapsed 
+                    ? "Click 'Show Conversations' to view available messages" 
+                    : "Select a conversation from the list to start messaging"}
+                </p>
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full">
-              {isConversationsCollapsed && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={toggleConversations}
-                  className="absolute top-4 left-4 lg:block hidden"
-                >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  <span>All Chat</span>
-                  {totalUnreadCount > 0 && (
-                    <Badge className="ml-1.5 h-5 min-w-5 flex items-center justify-center rounded-full p-0 text-xs font-medium">
-                      {totalUnreadCount}
-                    </Badge>
-                  )}
-                </Button>
-              )}
-              <MessageCircle className="h-12 w-12 text-muted-foreground opacity-20" />
-              <h3 className="mt-4 text-lg font-medium">No conversation selected</h3>
-              <p className="text-sm text-muted-foreground">
-                {isConversationsCollapsed 
-                  ? "Click 'All Chat' to view conversations" 
-                  : "Select a conversation from the list to start messaging"}
-              </p>
-            </div>
-          )}
+            )}
+          </div>
         </ResizablePanel>
         
         {selectedConversation && currentConversation && !isMobile && (
@@ -725,59 +670,12 @@ const Messages = () => {
               defaultSize={30}
               minSize={20}
               maxSize={40}
-              className="bg-card hidden md:block"
+              className="hidden md:block border-l"
             >
-              <div className="h-full flex flex-col">
-                <Tabs 
-                  defaultValue="details" 
-                  value={rightPanelTab}
-                  onValueChange={setRightPanelTab}
-                  className="w-full"
-                >
-                  <div className="px-4 pt-4 border-b">
-                    <TabsList className="w-full grid grid-cols-2">
-                      <TabsTrigger value="details">Details</TabsTrigger>
-                      <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                    </TabsList>
-                  </div>
-                  
-                  <TabsContent value="details" className="flex-1 overflow-auto mt-0">
-                    <ProjectContextBar 
-                      conversation={currentConversation}
-                      className="flex-shrink-0"
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="tasks" className="flex-1 overflow-auto mt-0">
-                    <TaskApprovalPanel 
-                      projectId={currentConversation.shoot?.id || ''}
-                      tasks={tasks}
-                      progress={projectProgress}
-                      onTaskToggle={handleTaskToggle}
-                      onApprove={handleApprove}
-                      onRequestRevision={handleRequestRevision}
-                      isClient={currentConversation.participant.role === 'client'}
-                      waitingForApproval={waitingForApproval}
-                    />
-                    
-                    {messageTasksList.length > 0 && (
-                      <div className="px-4 pt-4">
-                        <h3 className="text-sm font-medium mb-2">Message Tasks</h3>
-                        <div className="space-y-2">
-                          {messageTasksList.map(message => (
-                            <TaskMessage 
-                              key={message.id}
-                              message={message}
-                              isCompleted={!!messageTasks[message.id]}
-                              onToggleComplete={handleToggleMessageTask}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </div>
+              <ProjectContextBar 
+                conversation={currentConversation}
+                className="p-4"
+              />
             </ResizablePanel>
           </>
         )}
@@ -788,55 +686,37 @@ const Messages = () => {
   return (
     <DashboardLayout>
       <div className="flex flex-col h-[calc(100vh-4rem)]">
-        <div className="py-2 md:py-3 flex flex-wrap md:flex-nowrap justify-between items-center gap-2">
-          <div>
-            <div className="flex items-center gap-2">
-              <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
-                Messages
-              </Badge>
-              <h1 className="text-lg md:text-2xl font-bold tracking-tight">Messaging Center</h1>
-            </div>
-            <p className="text-xs md:text-sm text-muted-foreground hidden md:block">
-              Communicate with clients and service providers
-            </p>
-          </div>
+        <div className="py-3 flex justify-between items-center border-b">
+          <h1 className="text-xl font-semibold">Messaging Center</h1>
           
-          <div className="flex items-center gap-2 ml-auto">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={toggleConversations}
-              className={cn(
-                "hidden md:flex items-center gap-1.5 border-primary/20 text-primary hover:bg-primary/5",
-                isConversationsCollapsed ? "bg-background" : "bg-primary/5"
-              )}
-            >
-              {isConversationsCollapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-              <span>All Chat</span>
-              {totalUnreadCount > 0 && (
-                <Badge variant="secondary" className="h-5 min-w-5 flex items-center justify-center rounded-full p-0 text-xs font-medium">
-                  {totalUnreadCount}
-                </Badge>
-              )}
-            </Button>
-            
-            <Button variant="outline" size="sm" className="hidden md:flex bg-blue-50 text-blue-500 border-blue-200 hover:bg-blue-100 hover:text-blue-600">
-              <Calendar className="mr-1.5 h-4 w-4" />
-              <span>Schedule</span>
-            </Button>
-            
-            <Button className="bg-blue-500 hover:bg-blue-600">
-              <MessageSquare className="mr-2 h-4 w-4" /> New Message
-            </Button>
-          </div>
+          {!isMobile && (
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={toggleConversations}
+                className={cn(
+                  "flex items-center gap-1.5",
+                  isConversationsCollapsed && "border-primary text-primary"
+                )}
+              >
+                {isConversationsCollapsed ? (
+                  <ChevronRight className="h-4 w-4" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4" />
+                )}
+                <span>Toggle Sidebar</span>
+              </Button>
+              
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> New Message
+              </Button>
+            </div>
+          )}
         </div>
         
         <div className="flex-1 overflow-hidden">
-          {renderContent()}
+          {isMobile ? renderMobileView() : renderDesktopView()}
         </div>
       </div>
     </DashboardLayout>

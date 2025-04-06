@@ -1,46 +1,38 @@
 
 import React, { useRef, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Paperclip, Download, CheckCircle, AlertCircle, CheckSquare } from 'lucide-react';
+import { Paperclip, Download, CheckCircle, AlertCircle, CheckSquare, CornerDownLeft, Reply, Star, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Message, Attachment } from '@/types/messages';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface MessageListProps {
   messages: Message[];
   currentUserId: string;
   onMarkAsTask?: (message: Message) => void;
+  selectedMessageId?: string;
 }
 
-export function MessageList({ messages, currentUserId, onMarkAsTask }: MessageListProps) {
+export function MessageList({ messages, currentUserId, onMarkAsTask, selectedMessageId }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   
   // Auto-scroll to bottom on new messages
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && (!selectedMessageId || selectedMessageId === messages[messages.length - 1]?.id)) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, selectedMessageId]);
   
   // Format date for display
   const formatMessageDate = (dateString: string) => {
     const date = new Date(dateString);
     return format(date, 'h:mm a');
   };
-  
-  // Group messages by date
-  const groupedMessages: { [date: string]: Message[] } = messages.reduce((groups, message) => {
-    const date = format(new Date(message.timestamp), 'yyyy-MM-dd');
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(message);
-    return groups;
-  }, {} as { [date: string]: Message[] });
   
   // Format date header
   const formatDateHeader = (dateString: string) => {
@@ -54,9 +46,19 @@ export function MessageList({ messages, currentUserId, onMarkAsTask }: MessageLi
     } else if (format(date, 'yyyy-MM-dd') === format(yesterday, 'yyyy-MM-dd')) {
       return 'Yesterday';
     } else {
-      return format(date, 'MMMM d, yyyy');
+      return format(date, 'd MMM yyyy');
     }
   };
+  
+  // Group messages by date
+  const groupedMessages: { [date: string]: Message[] } = messages.reduce((groups, message) => {
+    const date = format(new Date(message.timestamp), 'yyyy-MM-dd');
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(message);
+    return groups;
+  }, {} as { [date: string]: Message[] });
   
   // Render attachment preview
   const renderAttachment = (attachment: Attachment) => {
@@ -74,7 +76,7 @@ export function MessageList({ messages, currentUserId, onMarkAsTask }: MessageLi
     return (
       <div 
         key={attachment.id}
-        className="mt-2 rounded-md border overflow-hidden flex flex-col"
+        className="mt-2 rounded-md border overflow-hidden flex flex-col bg-white"
       >
         {attachment.type === 'image' && (
           <div className="relative h-24 md:h-32 bg-muted flex items-center justify-center">
@@ -86,7 +88,7 @@ export function MessageList({ messages, currentUserId, onMarkAsTask }: MessageLi
           </div>
         )}
         
-        <div className="flex items-center justify-between gap-2 p-2 bg-background">
+        <div className="flex items-center justify-between gap-2 p-2">
           <div className="flex items-center gap-2 min-w-0">
             <Paperclip className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
             <span className="text-xs font-medium truncate">{attachment.name}</span>
@@ -103,93 +105,113 @@ export function MessageList({ messages, currentUserId, onMarkAsTask }: MessageLi
       </div>
     );
   };
+
+  // For individual message styling
+  const messageWrapperClasses = (isSelected?: boolean) => cn(
+    "p-4 relative transition-all duration-200 hover:bg-slate-50",
+    isSelected && "bg-slate-50 border-l-4 border-primary"
+  );
   
   return (
-    <ScrollArea className="h-full pr-1">
-      <div className="p-2 md:p-4 space-y-4 md:space-y-6">
-        {Object.keys(groupedMessages).map((date) => (
-          <div key={date} className="space-y-3 md:space-y-4">
-            <div className="relative flex items-center py-1 md:py-2">
-              <div className="grow border-t border-border"></div>
-              <span className="mx-2 flex-shrink-0 text-xs font-medium text-muted-foreground">
-                {formatDateHeader(date)}
-              </span>
-              <div className="grow border-t border-border"></div>
-            </div>
-            
-            {groupedMessages[date].map((message) => {
-              const isSender = message.sender.id === currentUserId;
+    <ScrollArea className="h-full">
+      {Object.entries(groupedMessages).length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-full p-8 text-center text-muted-foreground">
+          <p>No messages in this conversation</p>
+        </div>
+      ) : (
+        <div>
+          {Object.keys(groupedMessages).map((date, index) => (
+            <div key={date} className="border-b last:border-b-0">
+              <div className="sticky top-0 z-10 text-center py-2 bg-white/80 backdrop-blur-sm border-b">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {formatDateHeader(date)}
+                </span>
+              </div>
               
-              return (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "flex",
-                    isSender ? "justify-end" : "justify-start"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "max-w-[85%] md:max-w-[75%] space-y-1",
-                      isSender ? "items-end" : "items-start"
-                    )}
+              {groupedMessages[date].map((message) => {
+                const isSelected = selectedMessageId === message.id;
+                
+                return (
+                  <div 
+                    key={message.id} 
+                    className={messageWrapperClasses(isSelected)}
+                    id={`message-${message.id}`}
                   >
-                    {!isSender && (
-                      <p className="text-xs font-medium">
-                        {message.sender.name} 
-                        <span className="text-muted-foreground">({message.sender.role})</span>
-                      </p>
-                    )}
-                    
-                    <div
-                      className={cn(
-                        "rounded-2xl p-3",
-                        isSender
-                          ? "bg-primary text-primary-foreground rounded-tr-sm ml-auto"
-                          : "bg-secondary rounded-tl-sm"
-                      )}
-                    >
-                      <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                    <div className="flex gap-3">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={message.sender.avatar} alt={message.sender.name} />
+                        <AvatarFallback>{message.sender.name[0]}</AvatarFallback>
+                      </Avatar>
                       
-                      {message.attachments && message.attachments.length > 0 && (
-                        <div className="space-y-1 md:space-y-2 mt-1">
-                          {message.attachments.map(renderAttachment)}
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm">{message.sender.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {message.sender.role}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">
+                              {formatMessageDate(message.timestamp)}
+                            </span>
+                            <div className="flex items-center">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100">
+                                    <Star className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Star</TooltipContent>
+                              </Tooltip>
+                              
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100">
+                                    <Reply className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Reply</TooltipContent>
+                              </Tooltip>
+                              
+                              {onMarkAsTask && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100"
+                                      onClick={() => onMarkAsTask(message)}
+                                    >
+                                      <CheckSquare className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Mark as task</TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-muted-foreground">
-                        {formatMessageDate(message.timestamp)}
-                        {!message.isRead && isSender && (
-                          <span className="ml-1.5 text-primary">• Delivered</span>
+                        
+                        <div className="text-sm">
+                          <p className="whitespace-pre-wrap">{message.content}</p>
+                        </div>
+                        
+                        {message.attachments && message.attachments.length > 0 && (
+                          <div className="space-y-2 mt-3">
+                            {message.attachments.map(renderAttachment)}
+                          </div>
                         )}
-                      </p>
-                      
-                      {!isMobile && onMarkAsTask && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() => onMarkAsTask(message)}
-                            >
-                              <CheckSquare className="h-3.5 w-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top">Mark as task</TooltipContent>
-                        </Tooltip>
-                      )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
-        <div ref={scrollRef} />
-      </div>
+                );
+              })}
+            </div>
+          ))}
+          <div ref={scrollRef} />
+        </div>
+      )}
     </ScrollArea>
   );
 }

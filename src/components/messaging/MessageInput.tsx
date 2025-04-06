@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, SmilePlus, FileText, Mic } from 'lucide-react';
+import { Send, Paperclip, SmilePlus, Image, FileText, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -8,10 +8,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { MessageTemplate } from '@/types/messages';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { supabase } from '@/integrations/supabase/client';
 
 interface MessageInputProps {
   onSendMessage: (content: string, attachments?: File[]) => void;
@@ -22,9 +22,6 @@ interface MessageInputProps {
 export function MessageInput({ onSendMessage, isLoading = false, templates = [] }: MessageInputProps) {
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -35,7 +32,7 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      const newHeight = Math.min(textarea.scrollHeight, 150); // Max height of 150px
+      const newHeight = Math.min(textarea.scrollHeight, 120); // Max height
       textarea.style.height = `${newHeight}px`;
     }
   }, [content]);
@@ -51,9 +48,6 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-    
-    // Show toast on send
-    toast.success('Message sent');
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -66,7 +60,6 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      // Validate file types and sizes
       const validFiles = newFiles.filter(file => {
         if (file.size > 10 * 1024 * 1024) { // 10MB limit
           toast.error(`File ${file.name} exceeds 10MB limit`);
@@ -75,7 +68,7 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
         return true;
       });
       
-      setAttachments(validFiles);
+      setAttachments(prevAttachments => [...prevAttachments, ...validFiles]);
     }
   };
   
@@ -83,182 +76,120 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
     setContent(template.content);
   };
   
-  // Voice recording functionality
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      
-      setAudioChunks([]);
-      setIsRecording(true);
-      setMediaRecorder(recorder);
-      
-      recorder.addEventListener('dataavailable', (event) => {
-        if (event.data.size > 0) {
-          setAudioChunks(prev => [...prev, event.data]);
-        }
-      });
-      
-      recorder.addEventListener('stop', async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        
-        // Convert to base64 for processing
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = async () => {
-          const base64Audio = reader.result?.toString().split(',')[1];
-          
-          if (base64Audio) {
-            // In real app, send to Supabase Edge Function for processing
-            try {
-              toast.loading('Transcribing your message...');
-              
-              // Mock response for demo
-              // In production, would call Supabase Edge Function:
-              // const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-              //   body: { audio: base64Audio }
-              // });
-              
-              // Simulate API call delay
-              await new Promise(resolve => setTimeout(resolve, 1500));
-              
-              // Mock response
-              const mockTranscription = "This is a transcribed message from voice input.";
-              setContent(prev => prev + (prev ? ' ' : '') + mockTranscription);
-              toast.dismiss();
-              toast.success('Voice message transcribed');
-            } catch (error) {
-              console.error('Transcription error:', error);
-              toast.dismiss();
-              toast.error('Failed to transcribe audio');
-            }
-          }
-        };
-        
-        // Clean up recording state
-        setIsRecording(false);
-        setMediaRecorder(null);
-      });
-      
-      recorder.start();
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-      toast.error('Could not access microphone');
-    }
-  };
-  
-  const stopRecording = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-      
-      // Stop all tracks of the stream
-      mediaRecorder.stream.getTracks().forEach(track => track.stop());
-    }
-  };
-  
-  const handleVoiceInput = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
+  const handleRemoveAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
   
   return (
-    <div className="p-2 md:p-3 border-t border-border">
+    <div className="border-t p-4 bg-white">
       {attachments.length > 0 && (
-        <div className="mb-2 md:mb-3 flex items-center gap-2 px-2">
-          <Paperclip className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm">
-            {attachments.length} file{attachments.length > 1 ? 's' : ''} selected
-          </span>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="h-6 ml-auto text-xs"
-            onClick={() => setAttachments([])}
-          >
-            Clear
-          </Button>
+        <div className="mb-3 flex flex-wrap gap-2">
+          {attachments.map((file, index) => (
+            <div key={index} className="flex items-center gap-2 bg-slate-100 rounded-md px-2 py-1">
+              <Paperclip className="h-3.5 w-3.5 text-slate-500" />
+              <span className="text-xs truncate max-w-[120px]">{file.name}</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-5 w-5 p-0 rounded-full"
+                onClick={() => handleRemoveAttachment(index)}
+              >
+                &times;
+              </Button>
+            </div>
+          ))}
         </div>
       )}
       
-      <div className="relative">
-        <Textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type your message..."
-          className="min-h-[40px] max-h-[150px] pr-20 resize-none overflow-auto"
-        />
-        
-        <div className="absolute bottom-2 right-2 flex items-center gap-1">
-          {isMobile && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className={`h-8 w-8 ${isRecording ? 'text-red-500' : ''}`}
-              onClick={handleVoiceInput}
-              aria-label={isRecording ? 'Stop recording' : 'Voice input'}
-            >
-              <Mic className={`h-4 w-4 ${isRecording ? 'animate-pulse' : ''}`} />
-            </Button>
-          )}
+      <div className="flex items-start gap-2">
+        <div className="relative flex-1 border rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+          <Textarea
+            ref={textareaRef}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Start typing to reply..."
+            className="min-h-[40px] max-h-[120px] resize-none px-3 py-2 border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+          />
           
-          {templates.length > 0 && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <FileText className="h-4 w-4" />
+          <div className="flex items-center px-2 py-1.5 bg-slate-50 border-t">
+            <div className="flex items-center gap-1.5">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7 rounded-full hover:bg-slate-200"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  multiple
+                />
+                <Paperclip className="h-4 w-4" />
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7 rounded-full hover:bg-slate-200"
+              >
+                <Image className="h-4 w-4" />
+              </Button>
+              
+              {!isMobile && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 rounded-full hover:bg-slate-200"
+                >
+                  <SmilePlus className="h-4 w-4" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-60 p-0">
-                <div className="p-2 font-medium text-sm border-b">
-                  Message Templates
-                </div>
-                <div className="max-h-60 overflow-auto divide-y">
-                  {templates.map((template) => (
-                    <Button
-                      key={template.id}
-                      variant="ghost"
-                      className="w-full justify-start p-2 h-auto text-left font-normal text-sm"
-                      onClick={() => handleInsertTemplate(template)}
-                    >
-                      {template.title}
-                    </Button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          )}
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className="hidden"
-              multiple
-            />
-            <Paperclip className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="default"
-            size="icon"
-            disabled={isLoading || (!content.trim() && attachments.length === 0)}
-            className="h-8 w-8"
-            onClick={handleSend}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+              )}
+            </div>
+            
+            {templates.length > 0 && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-7 w-7 ml-1 rounded-full hover:bg-slate-200"
+                  >
+                    <FileText className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-60 p-0">
+                  <div className="p-2 font-medium text-sm border-b">
+                    Message Templates
+                  </div>
+                  <div className="max-h-60 overflow-auto divide-y">
+                    {templates.map((template) => (
+                      <Button
+                        key={template.id}
+                        variant="ghost"
+                        className="w-full justify-start p-2 h-auto text-left font-normal text-sm"
+                        onClick={() => handleInsertTemplate(template)}
+                      >
+                        {template.title}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
         </div>
+        
+        <Button
+          size="icon"
+          className="h-10 w-10 rounded-full"
+          disabled={isLoading || (!content.trim() && attachments.length === 0)}
+          onClick={handleSend}
+        >
+          <Send className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
