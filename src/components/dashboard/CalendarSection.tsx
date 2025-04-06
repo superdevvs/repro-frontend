@@ -15,13 +15,17 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({ calendarHeight
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
       <div className="lg:col-span-7">
-        <Calendar height={calendarHeight} />
+        <div className="h-full">
+          <Calendar height={calendarHeight} />
+        </div>
       </div>
       
-      <div className="lg:col-span-5 space-y-4">
-        <UpcomingShoots />
+      <div className="lg:col-span-5 space-y-4 flex flex-col">
+        <div>
+          <UpcomingShoots />
+        </div>
         
-        <div className="h-[calc(100%-220px)] min-h-[300px]">
+        <div className="flex-1">
           <TaskManager />
         </div>
       </div>

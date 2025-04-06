@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -54,7 +53,6 @@ export function LoginForm() {
     },
   });
   
-  // Sample user data for demonstration
   const sampleUsers = {
     client: {
       id: '1',
@@ -85,15 +83,20 @@ export function LoginForm() {
       email: 'editor@example.com',
       role: 'editor',
       isActive: true,
+    },
+    superadmin: {
+      id: '5',
+      name: 'Super Admin',
+      email: 'superadmin@example.com',
+      role: 'superadmin',
+      isActive: true,
     }
   };
 
   const handleLogin = (values: LoginFormValues) => {
     setIsLoading(true);
     
-    // Simulate login - in a real app this would be an API call
     setTimeout(() => {
-      // Check email against sample users
       let userData: UserData | null = null;
       
       if (values.email === 'client@example.com') {
@@ -104,6 +107,8 @@ export function LoginForm() {
         userData = sampleUsers.photographer as UserData;
       } else if (values.email === 'editor@example.com') {
         userData = sampleUsers.editor as UserData;
+      } else if (values.email === 'superadmin@example.com') {
+        userData = sampleUsers.superadmin as UserData;
       }
       
       if (userData) {
@@ -127,9 +132,7 @@ export function LoginForm() {
   const handleRegister = (values: RegisterFormValues) => {
     setIsLoading(true);
     
-    // Simulate registration - in a real app this would be an API call
     setTimeout(() => {
-      // Create new user from form values
       const newUser: UserData = {
         id: `user-${Date.now()}`,
         name: values.name,
@@ -238,6 +241,9 @@ export function LoginForm() {
                     </Badge>
                     <Badge variant="outline" className="cursor-pointer" onClick={() => loginForm.setValue('email', 'editor@example.com')}>
                       Editor
+                    </Badge>
+                    <Badge variant="outline" className="cursor-pointer" onClick={() => loginForm.setValue('email', 'superadmin@example.com')}>
+                      SuperAdmin
                     </Badge>
                   </div>
                 </div>
