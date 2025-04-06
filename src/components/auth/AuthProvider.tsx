@@ -1,7 +1,29 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useAuthState } from '../../hooks/useAuthState';
-import { UserData } from '@/types/auth';
+
+// Define the Role type as a string literal union
+export type Role = 'admin' | 'photographer' | 'client' | 'editor' | 'superadmin';
+
+// Define the User interface
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  avatar?: string;
+  phone?: string;
+  company?: string;
+  bio?: string;
+  username?: string;
+  lastLogin?: string;
+  createdAt?: string;
+  isActive?: boolean;
+  metadata?: Record<string, any>;
+}
+
+// Update UserData to extend User or be an alias of User
+export type UserData = User;
 
 interface AuthContextType {
   user: UserData | null;
@@ -66,7 +88,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     
     // Update user object with new role
     if (user) {
-      const updatedUser = { ...user, role: newRole };
+      const updatedUser = { ...user, role: newRole as Role };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
     }

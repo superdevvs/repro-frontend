@@ -1,4 +1,4 @@
 
-// Re-export the AuthProvider and useAuth hook for convenience
-export { AuthProvider } from './AuthProvider';
-export { useAuth } from '@/context/AuthContext';
+// Re-export the AuthProvider, useAuth hook, and types for convenience
+export { AuthProvider, useAuth, User, Role } from './AuthProvider';
+

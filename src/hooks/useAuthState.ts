@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { UserData } from '@/types/auth';
+import { Role } from '@/components/auth/AuthProvider';
 
 export function useAuthState() {
   const [user, setUser] = useState<UserData | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [role, setRole] = useState<string>('client');
+  const [role, setRole] = useState<Role>('client');
 
   // Initialize auth state from localStorage on component mount
   useEffect(() => {
