@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { IntegrationCard } from '../IntegrationCard';
-import { Cube, Boxes, HomeIcon } from 'lucide-react';
+import { Box, HomeIcon, Boxes } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 export function ToursSection() {
@@ -51,7 +51,7 @@ export function ToursSection() {
           title="iGUIDE"
           description="3D virtual tours and floor plans"
           status="connected"
-          icon={<Cube className="h-4 w-4" />}
+          icon={<Box className="h-4 w-4" />}
           toggleOption={{
             label: "Auto Publish",
             enabled: autoPublish,
