@@ -39,7 +39,9 @@ export default function Dashboard() {
       
       {(isAdmin || isClient) && (
         <div className="grid gap-6 lg:grid-cols-2">
-          <UpcomingShoots shoots={filteredShoots} />
+          <UpcomingShoots 
+            shoots={filteredShoots} 
+          />
           
           {isAdmin && (
             <RevenueOverview 
@@ -50,7 +52,10 @@ export default function Dashboard() {
         </div>
       )}
       
-      <CalendarSection calendarHeight={400} />
+      <CalendarSection 
+        calendarHeight={400} 
+        shoots={filteredShoots}
+      />
     </div>
   );
 }
