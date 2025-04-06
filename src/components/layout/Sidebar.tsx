@@ -1,71 +1,30 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { motion } from 'framer-motion';
 import MobileMenu from './MobileMenu';
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  HomeIcon,
-  LogOutIcon,
-  SettingsIcon,
-  UsersIcon,
-  FileTextIcon,
-  UserIcon,
-  BuildingIcon,
-  MessageSquareIcon,
-  HistoryIcon,
-  CalendarIcon,
-  ClipboardIcon,
-  BarChart3Icon,
-} from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { SidebarHeader } from './sidebar/SidebarHeader';
+import { SidebarLinks } from './sidebar/SidebarLinks';
+import { SidebarFooter } from './sidebar/SidebarFooter';
 
 interface SidebarProps {
   className?: string;
 }
 
-interface NavLinkProps {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-  isCollapsed: boolean;
-  isActive: boolean;
-}
-
-function NavLink({ to, icon, label, isCollapsed, isActive }: NavLinkProps) {
-  return (
-    <Link
-      to={to}
-      className={cn(
-        'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-        isActive ? 'bg-secondary/80 font-medium' : 'text-muted-foreground hover:bg-secondary/50',
-        isCollapsed && 'justify-center p-2'
-      )}
-    >
-      {icon}
-      {!isCollapsed && <span>{label}</span>}
-    </Link>
-  );
-}
-
 export function Sidebar({ className }: SidebarProps) {
-  const { pathname } = useLocation();
   const isMobile = useIsMobile();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, role, logout } = useAuth();
   
-  // For mobile devices, we'll use our new MobileMenu component
+  // For mobile devices, use the MobileMenu component
   if (isMobile) {
     return <MobileMenu />;
   }
   
-  // Desktop sidebar stays the same
+  // Desktop sidebar
   return (
     <motion.div
       initial={false}
@@ -80,151 +39,16 @@ export function Sidebar({ className }: SidebarProps) {
       )}
     >
       <div className="flex h-full flex-col">
-        <div className="flex h-14 items-center border-b px-2">
-          <Link
-            to="/"
-            className={cn(
-              'flex items-center gap-2 font-semibold',
-              isCollapsed && 'justify-center w-full'
-            )}
-          >
-            {isCollapsed ? (
-              <HomeIcon className="h-6 w-6 text-primary" />
-            ) : (
-              <>
-                <HomeIcon className="h-6 w-6 text-primary" />
-                <span>REPro Dashboard</span>
-              </>
-            )}
-          </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              'ml-auto h-8 w-8',
-              isCollapsed && 'absolute -right-4 top-12 z-50 bg-background border shadow-sm'
-            )}
-            onClick={() => setIsCollapsed(!isCollapsed)}
-          >
-            {isCollapsed ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronLeftIcon className="h-4 w-4" />}
-          </Button>
-        </div>
+        <SidebarHeader 
+          isCollapsed={isCollapsed} 
+          toggleCollapsed={() => setIsCollapsed(!isCollapsed)} 
+        />
         
-        <ScrollArea
-          className="flex-1 overflow-auto"
-        >
-          <div className={cn('flex flex-1 flex-col gap-2 p-2')}>
-            <NavLink
-              to="/dashboard"
-              icon={<HomeIcon className="h-5 w-5" />}
-              label="Dashboard"
-              isCollapsed={isCollapsed}
-              isActive={pathname === '/dashboard'}
-            />
-            
-            {/* Show Book Shoot based on role */}
-            {['client', 'admin', 'superadmin'].includes(role) && (
-              <NavLink
-                to="/book-shoot"
-                icon={<ClipboardIcon className="h-5 w-5" />}
-                label="Book Shoot"
-                isCollapsed={isCollapsed}
-                isActive={pathname === '/book-shoot'}
-              />
-            )}
-            
-            {/* Show appropriate shoots history based on user role */}
-            {role === 'client' ? (
-              <NavLink
-                to="/shoot-history"
-                icon={<HistoryIcon className="h-5 w-5" />}
-                label="Shoots History"
-                isCollapsed={isCollapsed}
-                isActive={pathname === '/shoot-history'}
-              />
-            ) : (
-              <NavLink
-                to="/shoots"
-                icon={<CalendarIcon className="h-5 w-5" />}
-                label="Shoots History"
-                isCollapsed={isCollapsed}
-                isActive={pathname === '/shoots'}
-              />
-            )}
-            
-            <NavLink
-              to="/messages"
-              icon={<MessageSquareIcon className="h-5 w-5" />}
-              label="Messages"
-              isCollapsed={isCollapsed}
-              isActive={pathname === '/messages'}
-            />
-            
-            {/* Show Clients link only for specific roles */}
-            {['admin', 'superadmin', 'photographer', 'editor'].includes(role) && (
-              <NavLink
-                to="/clients"
-                icon={<UserIcon className="h-5 w-5" />}
-                label="Clients"
-                isCollapsed={isCollapsed}
-                isActive={pathname === '/clients'}
-              />
-            )}
-            
-            {/* Show Accounts link only for admin roles */}
-            {['admin', 'superadmin'].includes(role) && (
-              <NavLink
-                to="/accounts"
-                icon={<BuildingIcon className="h-5 w-5" />}
-                label="Accounts"
-                isCollapsed={isCollapsed}
-                isActive={pathname === '/accounts'}
-              />
-            )}
-            
-            {/* Replace Invoices with Accounting */}
-            <NavLink
-              to="/accounting"
-              icon={<BarChart3Icon className="h-5 w-5" />}
-              label="Accounting"
-              isCollapsed={isCollapsed}
-              isActive={pathname === '/accounting'}
-            />
-            
-            {/* Show Availability for admin and photographer */}
-            {['admin', 'photographer'].includes(role) && (
-              <NavLink
-                to="/availability"
-                icon={<CalendarIcon className="h-5 w-5" />}
-                label="Availability"
-                isCollapsed={isCollapsed}
-                isActive={pathname === '/availability'}
-              />
-            )}
-          </div>
+        <ScrollArea className="flex-1 overflow-auto">
+          <SidebarLinks isCollapsed={isCollapsed} role={role} />
         </ScrollArea>
-        <div className="mt-auto">
-          <Separator className="my-2" />
-          <NavLink
-            to="/settings"
-            icon={<SettingsIcon className="h-5 w-5" />}
-            label="Settings"
-            isCollapsed={isCollapsed}
-            isActive={pathname === '/settings'}
-          />
-          <Button
-            variant="ghost"
-            size={isCollapsed ? 'icon' : 'default'}
-            className={cn(
-              'w-full justify-start mt-2',
-              isCollapsed && 'h-10 w-10 p-0'
-            )}
-            onClick={logout}
-          >
-            <LogOutIcon className="h-5 w-5 mr-3" />
-            {!isCollapsed && <span>Logout</span>}
-          </Button>
-        </div>
+        
+        <SidebarFooter isCollapsed={isCollapsed} logout={logout} />
       </div>
     </motion.div>
   );
