@@ -114,7 +114,7 @@ export interface ShootsContextType {
 
 // Component Props Types
 export interface DashboardHeaderProps {
-  isAdmin: boolean;
+  isAdmin?: boolean;
   timeRange: TimeRange;
   onTimeRangeChange: (range: TimeRange) => void;
 }
@@ -152,6 +152,12 @@ export interface CalendarProps {
 export interface ShootsFilterProps {
   selectedRange: TimeRange;
   onChange: (range: TimeRange) => void;
+}
+
+export interface ShootDetailProps {
+  shoot: ShootData;
+  onClose?: () => void;
+  isOpen?: boolean;
 }
 
 export interface PhotographerAvailability {

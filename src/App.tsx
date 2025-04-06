@@ -1,7 +1,14 @@
 
-import React, { useEffect } from 'react';
-import { createBrowserRouter, RouterProvider, useNavigate } from "react-router-dom";
-import { AuthProvider, useAuth } from './components/auth/AuthProvider';
+import React from 'react';
+import { 
+  BrowserRouter as Router, 
+  Routes, 
+  Route, 
+  Navigate, 
+  useNavigate,
+  useLocation
+} from "react-router-dom";
+import { useAuth } from './components/auth/AuthProvider';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
@@ -18,188 +25,173 @@ import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
-import { Toaster } from 'sonner';
-import { ThemeProvider } from './components/theme-provider';
 import ShootDetail from './pages/ShootDetail';
 import Messages from './pages/Messages';
 import { ShootHistory } from './pages/ShootHistory';
 import VirtualTours from './pages/VirtualTours';
-import ErrorBoundary from './components/ErrorBoundary';
 
+// Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
-  useEffect(() => {
+  React.useEffect(() => {
     if (!user) {
-      navigate('/login');
+      navigate('/login', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, location]);
   
   return user ? <>{children}</> : null;
 };
 
 const App = () => {
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: <Home />
-    },
-    {
-      path: "/login",
-      element: <Login />
-    },
-    {
-      path: "/signup",
-      element: <Signup />
-    },
-    {
-      path: "/forgot-password",
-      element: <ForgotPassword />
-    },
-    {
-      path: "/reset-password/:token",
-      element: <ResetPassword />
-    },
-    {
-      path: "/verify-email/:token",
-      element: <VerifyEmail />
-    },
-    {
-      path: "/dashboard",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Dashboard />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/book-shoot",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <BookShoot />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/shoots",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Shoots />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/shoot-history",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <ShootHistory />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/shoots/:shootId",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <ShootDetail />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/clients",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Clients />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/accounts",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Accounts />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/invoices",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Invoices />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/reports",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Reports />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/availability",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Availability />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/settings",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Settings />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/messages",
-      element: (
-        <ProtectedRoute>
-          <DashboardLayout>
-            <Messages />
-          </DashboardLayout>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: "/virtual-tours",
-      element: <DashboardLayout><VirtualTours /></DashboardLayout>
-    }
-  ]);
-
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <ThemeProvider defaultTheme="system" storageKey="vite-react-theme">
-          <Toaster />
-          <RouterProvider router={router} />
-        </ThemeProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
+        
+        {/* Protected Routes */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Dashboard />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/book-shoot" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <BookShoot />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/shoots" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Shoots />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/shoot-history" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <ShootHistory />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/shoots/:shootId" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <ShootDetail />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/clients" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Clients />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/accounts" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Accounts />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/invoices" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Invoices />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/reports" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Reports />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/availability" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Availability />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/settings" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Settings />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/messages" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Messages />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/virtual-tours" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <VirtualTours />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* Fallback - 404 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 };
 

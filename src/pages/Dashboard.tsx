@@ -1,117 +1,97 @@
 
 import React, { useState, useEffect } from 'react';
-import { Shell } from '@/components/layout/Shell';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { StatsCardGrid } from '@/components/dashboard/StatsCardGrid';
-import { RevenueOverview } from '@/components/dashboard/RevenueOverview';
 import { UpcomingShoots } from '@/components/dashboard/UpcomingShoots';
+import { RevenueOverview } from '@/components/dashboard/RevenueOverview';
 import { CalendarSection } from '@/components/dashboard/CalendarSection';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { shootsData } from '@/data/shootsData';
-import { TimeRange, ShootData } from '@/types/shoots';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { useContext } from 'react';
+import { ShootsContext } from '@/context/ShootsContext';
+import { TimeRange } from '@/types/shoots';
+import { eachDayOfInterval, isPast, isFuture, parseISO, subDays, addDays } from 'date-fns';
 
-// Filter shoots by date range
-const filterShootsByDateRange = (shoots: ShootData[], timeRange: TimeRange): ShootData[] => {
-  const now = new Date();
-  const startDate = new Date();
+export default function Dashboard() {
+  const { role } = useAuth();
+  const [timeRange, setTimeRange] = useState<TimeRange>('week');
+  const { shoots } = useContext(ShootsContext);
   
-  switch (timeRange) {
-    case 'today':
-      // Today only
-      return shoots.filter(shoot => {
-        const shootDate = new Date(shoot.scheduledDate);
-        return shootDate.toDateString() === now.toDateString();
-      });
-    case 'day':
-      // Next 24 hours
-      return shoots.filter(shoot => {
-        const shootDate = new Date(shoot.scheduledDate);
-        const diffTime = Math.abs(shootDate.getTime() - now.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays <= 1;
-      });
-    case 'week':
-      // Next 7 days
-      return shoots.filter(shoot => {
-        const shootDate = new Date(shoot.scheduledDate);
-        const diffTime = Math.abs(shootDate.getTime() - now.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays <= 7;
-      });
-    case 'month':
-      // Next 30 days
-      return shoots.filter(shoot => {
-        const shootDate = new Date(shoot.scheduledDate);
-        const diffTime = Math.abs(shootDate.getTime() - now.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays <= 30;
-      });
-    case 'year':
-      // This year
-      return shoots.filter(shoot => {
-        const shootDate = new Date(shoot.scheduledDate);
-        return shootDate.getFullYear() === now.getFullYear();
-      });
-    case 'all':
-    default:
-      // All shoots
-      return shoots;
-  }
-};
-
-const Dashboard = () => {
-  const [timeRange, setTimeRange] = useState<TimeRange>('today');
-  const [filteredShoots, setFilteredShoots] = useState(shootsData);
-
-  useEffect(() => {
-    setFilteredShoots(filterShootsByDateRange(shootsData, timeRange));
-  }, [timeRange]);
-
+  const isAdmin = role === 'admin' || role === 'superadmin';
+  const isClient = role === 'client';
+  const isPhotographer = role === 'photographer';
+  
+  const filteredShoots = filterShootsByTimeRange(shoots, timeRange);
+  
   return (
-    <Shell>
+    <div className="space-y-6 p-5 pb-16">
       <DashboardHeader 
-        isAdmin={true} 
-        timeRange={timeRange} 
-        onTimeRangeChange={setTimeRange} 
+        timeRange={timeRange}
+        onTimeRangeChange={setTimeRange}
+        isAdmin={isAdmin}
       />
       
-      <Tabs defaultValue="analytics" className="w-full mt-6">
-        <TabsList>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="revenue">Revenue</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="analytics" className="space-y-4">
-          <StatsCardGrid 
-            showRevenue={true}
-            showClientStats={true}
-            showPhotographerInterface={false}
-            shoots={filteredShoots}
-            timeRange={timeRange}
-          />
+      <StatsCardGrid 
+        showRevenue={isAdmin || isClient} 
+        showClientStats={isAdmin}
+        showPhotographerInterface={isPhotographer}
+        shoots={filteredShoots}
+        timeRange={timeRange}
+      />
+      
+      {(isAdmin || isClient) && (
+        <div className="grid gap-6 lg:grid-cols-2">
           <UpcomingShoots 
-            shoots={filteredShoots} 
-            timeRange={timeRange}
-          />
-        </TabsContent>
-        
-        <TabsContent value="revenue" className="space-y-4">
-          <RevenueOverview 
             shoots={filteredShoots} 
             timeRange={timeRange} 
           />
-        </TabsContent>
-        
-        <TabsContent value="calendar" className="space-y-4">
-          <CalendarSection 
-            shoots={filteredShoots}
-            timeRange={timeRange}
-          />
-        </TabsContent>
-      </Tabs>
-    </Shell>
+          
+          {isAdmin && (
+            <RevenueOverview 
+              shoots={filteredShoots} 
+              timeRange={timeRange}
+            />
+          )}
+        </div>
+      )}
+      
+      <CalendarSection 
+        shoots={filteredShoots}
+        timeRange={timeRange} 
+      />
+    </div>
   );
-};
+}
 
-export default Dashboard;
+// Helper function to filter shoots by time range
+function filterShootsByTimeRange(shoots, timeRange: TimeRange) {
+  const today = new Date();
+  const startDate = (() => {
+    switch (timeRange) {
+      case 'today': return today;
+      case 'day': return today;
+      case 'week': return subDays(today, 7);
+      case 'month': return subDays(today, 30);
+      case 'year': return subDays(today, 365);
+      default: return new Date(0); // Beginning of time for 'all'
+    }
+  })();
+  
+  const endDate = (() => {
+    switch (timeRange) {
+      case 'today': return today;
+      case 'day': return today;
+      case 'week': return addDays(today, 7);
+      case 'month': return addDays(today, 30);
+      case 'year': return addDays(today, 365);
+      default: return new Date(8640000000000000); // End of time for 'all'
+    }
+  })();
+  
+  return shoots.filter(shoot => {
+    const shootDate = typeof shoot.scheduledDate === 'string' 
+      ? parseISO(shoot.scheduledDate) 
+      : shoot.scheduledDate;
+      
+    return shootDate >= startDate && shootDate <= endDate;
+  });
+}
