@@ -1,388 +1,321 @@
 
 import React, { useState } from 'react';
-import { useAuth } from './AuthProvider';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { motion, AnimatePresence } from 'framer-motion';
-import { EyeIcon, EyeOffIcon, KeyIcon, MailIcon, ShieldIcon, UserIcon } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { toast } from 'sonner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useAuth } from '@/context/AuthContext';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { toast } from '@/components/ui/use-toast';
+import { motion } from 'framer-motion';
 import { UserData } from '@/types/auth';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+const loginSchema = z.object({
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+});
+
+const registerSchema = loginSchema.extend({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  company: z.string().optional(),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function LoginForm() {
-  // Login state
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('login');
-  
-  // Signup state
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('client'); // Default role
-  const [showSignupPassword, setShowSignupPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
   const { login } = useAuth();
-  const { toast: uiToast } = useToast();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('login');
   const isMobile = useIsMobile();
+  
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      company: '',
+    },
+  });
+  
+  // Sample user data for demonstration
+  const sampleUsers = {
+    client: {
+      id: '1',
+      name: 'John Client',
+      email: 'client@example.com',
+      role: 'client',
+      company: 'Client Realty',
+      phone: '555-1234',
+      isActive: true,
+    },
+    admin: {
+      id: '2',
+      name: 'Admin User',
+      email: 'admin@example.com',
+      role: 'admin',
+      isActive: true,
+    },
+    photographer: {
+      id: '3',
+      name: 'Photo Grapher',
+      email: 'photographer@example.com',
+      role: 'photographer',
+      isActive: true,
+    },
+    editor: {
+      id: '4',
+      name: 'Emma Editor',
+      email: 'editor@example.com',
+      role: 'editor',
+      isActive: true,
+    }
+  };
+
+  const handleLogin = (values: LoginFormValues) => {
     setIsLoading(true);
     
-    try {
-      // Mock user data for demo
-      const mockUserData: UserData = {
-        id: '1',
-        name: 'Demo User',
-        email: email,
-        role: 'client',
-        lastLogin: new Date().toISOString(),
-      };
-
-      await login(mockUserData);
-      toast.success("Login successful", {
-        description: "Welcome to the Real Estate Media dashboard",
-      });
-    } catch (error) {
-      toast.error("Login failed", {
-        description: "Invalid email or password",
-      });
-      uiToast({
-        title: "Login failed",
-        description: "Invalid email or password",
-        variant: "destructive",
-      });
-    } finally {
+    // Simulate login - in a real app this would be an API call
+    setTimeout(() => {
+      // Check email against sample users
+      let userData: UserData | null = null;
+      
+      if (values.email === 'client@example.com') {
+        userData = sampleUsers.client as UserData;
+      } else if (values.email === 'admin@example.com') {
+        userData = sampleUsers.admin as UserData;
+      } else if (values.email === 'photographer@example.com') {
+        userData = sampleUsers.photographer as UserData;
+      } else if (values.email === 'editor@example.com') {
+        userData = sampleUsers.editor as UserData;
+      }
+      
+      if (userData) {
+        login(userData);
+        toast({
+          title: "Success",
+          description: "You have successfully logged in!",
+        });
+        navigate('/dashboard');
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Invalid email or password. Try one of the sample emails.",
+          variant: "destructive",
+        });
+      }
       setIsLoading(false);
-    }
-  };
-  
-  const handleSignup = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validation
-    if (signupPassword !== confirmPassword) {
-      toast.error("Passwords don't match", {
-        description: "Please make sure your passwords match",
-      });
-      return;
-    }
-    
-    if (signupPassword.length < 6) {
-      toast.error("Password too short", {
-        description: "Password must be at least 6 characters long",
-      });
-      return;
-    }
-    
-    toast.info("Registration is currently disabled", {
-      description: `Please use one of the demo accounts to login. You selected ${role} role.`,
-    });
-    
-    // Clear form
-    setSignupEmail('');
-    setSignupPassword('');
-    setConfirmPassword('');
-    setName('');
-    
-    // Switch to login tab
-    setActiveTab('login');
+    }, 1000);
   };
 
-  const demoLogins = [
-    { email: 'admin@example.com', password: 'password', label: 'Admin', icon: <ShieldIcon className="h-3 w-3 mr-1" /> },
-    { email: 'photographer@example.com', password: 'password', label: 'Photographer', icon: <CameraIcon className="h-3 w-3 mr-1" /> },
-    { email: 'client@example.com', password: 'password', label: 'Client', icon: <UserIcon className="h-3 w-3 mr-1" /> },
-  ];
-
-  const handleDemoLogin = (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
+  const handleRegister = (values: RegisterFormValues) => {
+    setIsLoading(true);
+    
+    // Simulate registration - in a real app this would be an API call
+    setTimeout(() => {
+      // Create new user from form values
+      const newUser: UserData = {
+        id: `user-${Date.now()}`,
+        name: values.name,
+        email: values.email,
+        role: 'client',
+        company: values.company,
+        isActive: true,
+        metadata: {
+          preferences: {
+            theme: 'system',
+            notifications: true,
+            emailFrequency: 'weekly'
+          }
+        }
+      };
+      
+      login(newUser);
+      toast({
+        title: "Account created",
+        description: "You have successfully registered and logged in!",
+      });
+      navigate('/dashboard');
+      setIsLoading(false);
+    }, 1000);
   };
-  
-  // Available roles for signup
-  const availableRoles = [
-    { value: 'client', label: 'Client', description: 'Hire photographers and manage listings' },
-    { value: 'photographer', label: 'Photographer', description: 'Provide photography services' },
-    { value: 'editor', label: 'Editor', description: 'Edit and process media' },
-    { value: 'rep', label: 'Representative', description: 'Manage client accounts' }
-  ];
-  
+
   return (
-    <motion.div
+    <motion.div 
+      className={`w-full max-w-md mx-auto ${isMobile ? 'px-4' : ''}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className={`w-full max-w-md ${isMobile ? 'mobile-compact-form px-4' : 'p-8'} glass-card rounded-2xl`}
+      transition={{ duration: 0.3 }}
     >
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="login">Login</TabsTrigger>
-          <TabsTrigger value="signup">Sign Up</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="login" className={`${isMobile ? 'space-y-3' : 'space-y-6'}`}>
-          <div className="text-center">
-            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold mb-2`}>Welcome Back</h2>
-            {!isMobile && <p className="text-muted-foreground">Enter your credentials to access the dashboard</p>}
+      <Card className="backdrop-blur-sm bg-background/80">
+        <CardContent className={`${isMobile ? 'p-4' : 'p-6'}`}>
+          <div className="mb-4 text-center">
+            <h1 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-1`}>
+              {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {activeTab === 'login' 
+                ? 'Sign in to access your account' 
+                : 'Register to get started with our platform'}
+            </p>
           </div>
           
-          <form onSubmit={handleSubmit} className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
-            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
-              <Label htmlFor="email">Email address</Label>
-              <div className="relative">
-                <MailIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  className="pl-10"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                {!isMobile && (
-                  <a href="#" className="text-xs text-primary hover:underline">
-                    Forgot password?
-                  </a>
-                )}
-              </div>
-              <div className="relative">
-                <KeyIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  className="pl-10 pr-10"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1 h-8 w-8"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? 
-                    <EyeOffIcon className="h-4 w-4 text-muted-foreground/70" /> : 
-                    <EyeIcon className="h-4 w-4 text-muted-foreground/70" />
-                  }
-                </Button>
-              </div>
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? "Signing in..." : "Sign in"}
-            </Button>
-          </form>
-          
-          <div>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or try a demo account</span>
-              </div>
-            </div>
-            
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {demoLogins.map((demo) => (
-                <Button
-                  key={demo.label}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoLogin(demo.email, demo.password)}
-                  className="text-xs h-8 flex items-center"
-                >
-                  {demo.icon}
-                  {demo.label}
-                </Button>
-              ))}
-            </div>
+          <div className="space-y-4">
+            <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-2 w-full mb-4">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="register">Register</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="your@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Signing in..." : "Sign In"}
+                    </Button>
+                  </form>
+                </Form>
+                
+                <div className="mt-4 text-center">
+                  <p className="text-xs text-muted-foreground mb-2">Sample logins:</p>
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    <Badge variant="outline" className="cursor-pointer" onClick={() => loginForm.setValue('email', 'client@example.com')}>
+                      Client
+                    </Badge>
+                    <Badge variant="outline" className="cursor-pointer" onClick={() => loginForm.setValue('email', 'admin@example.com')}>
+                      Admin
+                    </Badge>
+                    <Badge variant="outline" className="cursor-pointer" onClick={() => loginForm.setValue('email', 'photographer@example.com')}>
+                      Photographer
+                    </Badge>
+                    <Badge variant="outline" className="cursor-pointer" onClick={() => loginForm.setValue('email', 'editor@example.com')}>
+                      Editor
+                    </Badge>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="register">
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
+                    <FormField
+                      control={registerForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="John Smith" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="your@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="company"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company (Optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your Company" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Creating Account..." : "Create Account"}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+            </Tabs>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="signup" className={`${isMobile ? 'space-y-3' : 'space-y-6'}`}>
-          <div className="text-center">
-            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold mb-2`}>Create Account</h2>
-            {!isMobile && <p className="text-muted-foreground">Sign up to get started with our platform</p>}
-          </div>
-          
-          <form onSubmit={handleSignup} className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
-            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
-              <Label htmlFor="account-type">Account Type</Label>
-              <Select
-                value={role}
-                onValueChange={setRole}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select account type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Account Types</SelectLabel>
-                    {availableRoles.map((roleOption) => (
-                      <SelectItem 
-                        key={roleOption.value} 
-                        value={roleOption.value}
-                      >
-                        <div className="flex flex-col">
-                          <span>{roleOption.label}</span>
-                          <span className="text-xs text-muted-foreground">{roleOption.description}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
-              <Label htmlFor="signup-name">Full Name</Label>
-              <div className="relative">
-                <UserIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                <Input
-                  id="signup-name"
-                  type="text"
-                  placeholder="John Doe"
-                  className="pl-10"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
-              <Label htmlFor="signup-email">Email address</Label>
-              <div className="relative">
-                <MailIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="name@example.com"
-                  className="pl-10"
-                  value={signupEmail}
-                  onChange={(e) => setSignupEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
-              <Label htmlFor="signup-password">Password</Label>
-              <div className="relative">
-                <KeyIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                <Input
-                  id="signup-password"
-                  type={showSignupPassword ? "text" : "password"}
-                  className="pl-10 pr-10"
-                  value={signupPassword}
-                  onChange={(e) => setSignupPassword(e.target.value)}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1 h-8 w-8"
-                  onClick={() => setShowSignupPassword(!showSignupPassword)}
-                >
-                  {showSignupPassword ? 
-                    <EyeOffIcon className="h-4 w-4 text-muted-foreground/70" /> : 
-                    <EyeIcon className="h-4 w-4 text-muted-foreground/70" />
-                  }
-                </Button>
-              </div>
-            </div>
-            
-            <div className={`${isMobile ? 'space-y-1.5' : 'space-y-2'}`}>
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <div className="relative">
-                <KeyIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                <Input
-                  id="confirm-password"
-                  type={showConfirmPassword ? "text" : "password"}
-                  className="pl-10 pr-10"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1 h-8 w-8"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? 
-                    <EyeOffIcon className="h-4 w-4 text-muted-foreground/70" /> : 
-                    <EyeIcon className="h-4 w-4 text-muted-foreground/70" />
-                  }
-                </Button>
-              </div>
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full mt-4"
-              disabled={isLoading}
-            >
-              {isLoading ? "Creating account..." : "Create Account"}
-            </Button>
-          </form>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </motion.div>
-  );
-}
-
-// Custom camera icon component
-function CameraIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-      <circle cx="12" cy="13" r="3" />
-    </svg>
   );
 }

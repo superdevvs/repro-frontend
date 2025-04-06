@@ -8,7 +8,7 @@ const Index = () => {
   const isMobile = useIsMobile();
   
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row overflow-auto mobile-scrollable bg-gradient-to-br from-background to-secondary">
+    <div className="min-h-screen w-full flex flex-col md:flex-row overflow-auto bg-gradient-to-br from-background to-secondary">
       {/* Left side with branding - hidden on mobile */}
       {!isMobile && (
         <motion.div 
@@ -83,26 +83,27 @@ const Index = () => {
       {/* Mobile-only compact header */}
       {isMobile && (
         <motion.div 
-          className="pt-4 pb-2 text-center"
+          className="pt-6 pb-4 px-6 text-center"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="flex justify-center mb-2">
-            <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
-              <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex justify-center mb-3">
+            <div className="h-14 w-14 bg-primary/10 rounded-xl flex items-center justify-center">
+              <svg className="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 22V12h6v10" />
               </svg>
             </div>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Real Estate Media</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-1">Real Estate Media</h1>
+          <p className="text-sm text-muted-foreground mb-4">Your complete real estate photography platform</p>
         </motion.div>
       )}
       
       {/* Right side with login form */}
       <motion.div 
-        className={`w-full ${!isMobile ? 'md:w-1/2' : ''} flex items-center justify-center ${isMobile ? 'py-2' : 'p-8'} bg-background/50 backdrop-blur-sm ${!isMobile ? 'border-l border-border' : ''}`}
+        className={`w-full ${!isMobile ? 'md:w-1/2' : ''} flex items-center justify-center ${isMobile ? 'py-4 pb-12' : 'p-8'} bg-background/50 backdrop-blur-sm ${!isMobile ? 'border-l border-border' : ''}`}
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
