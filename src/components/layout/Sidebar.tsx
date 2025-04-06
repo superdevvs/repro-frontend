@@ -25,6 +25,7 @@ import {
   MessageSquareIcon,
   HistoryIcon,
   CalendarIcon,
+  XIcon,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -37,20 +38,22 @@ interface NavLinkProps {
   label: string;
   isCollapsed: boolean;
   isActive: boolean;
+  isMobileMenu?: boolean;
 }
 
-function NavLink({ to, icon, label, isCollapsed, isActive }: NavLinkProps) {
+function NavLink({ to, icon, label, isCollapsed, isActive, isMobileMenu = false }: NavLinkProps) {
   return (
     <Link
       to={to}
       className={cn(
-        'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/50',
-        isActive ? 'bg-secondary/80 font-medium' : 'text-muted-foreground',
-        isCollapsed && 'justify-center p-2'
+        'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+        isActive ? 'bg-secondary/80 font-medium' : 'text-muted-foreground hover:bg-secondary/50',
+        isCollapsed && !isMobileMenu && 'justify-center p-2',
+        isMobileMenu && 'text-base py-3'
       )}
     >
       {icon}
-      {!isCollapsed && <span>{label}</span>}
+      {(!isCollapsed || isMobileMenu) && <span>{label}</span>}
     </Link>
   );
 }
@@ -66,132 +69,161 @@ export function Sidebar({ className }: SidebarProps) {
     setIsOpen(false);
   }, [pathname, isMobile]);
   
-  const SidebarContent = () => (
+  const SidebarContent = ({ isMobileView = false }: { isMobileView?: boolean }) => (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center border-b px-2">
-        <Link
-          to="/"
-          className={cn(
-            'flex items-center gap-2 font-semibold',
-            isCollapsed && !isMobile && 'justify-center w-full'
-          )}
-        >
-          {isCollapsed && !isMobile ? (
+      {isMobileView && (
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <div className="flex items-center gap-2">
             <HomeIcon className="h-6 w-6 text-primary" />
-          ) : (
-            <>
-              <HomeIcon className="h-6 w-6 text-primary" />
-              <span>REPro Dashboard</span>
-            </>
-          )}
-        </Link>
-        {!isMobile && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              'ml-auto h-8 w-8',
-              isCollapsed && 'absolute -right-4 top-12 z-50 bg-background border shadow-sm'
-            )}
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            <span className="font-semibold text-lg">REPro Dashboard</span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setIsOpen(false)}
           >
-            {isCollapsed ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronLeftIcon className="h-4 w-4" />}
+            <XIcon className="h-5 w-5" />
           </Button>
-        )}
-      </div>
+        </div>
+      )}
+      
+      {!isMobileView && (
+        <div className="flex h-14 items-center border-b px-2">
+          <Link
+            to="/"
+            className={cn(
+              'flex items-center gap-2 font-semibold',
+              isCollapsed && !isMobile && 'justify-center w-full'
+            )}
+          >
+            {isCollapsed && !isMobile ? (
+              <HomeIcon className="h-6 w-6 text-primary" />
+            ) : (
+              <>
+                <HomeIcon className="h-6 w-6 text-primary" />
+                <span>REPro Dashboard</span>
+              </>
+            )}
+          </Link>
+          {!isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                'ml-auto h-8 w-8',
+                isCollapsed && 'absolute -right-4 top-12 z-50 bg-background border shadow-sm'
+              )}
+              onClick={() => setIsCollapsed(!isCollapsed)}
+            >
+              {isCollapsed ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronLeftIcon className="h-4 w-4" />}
+            </Button>
+          )}
+        </div>
+      )}
+      
       <ScrollArea
         className="flex-1 overflow-auto"
       >
-        <div className={cn('flex flex-1 flex-col gap-2 p-2')}>
+        <div className={cn('flex flex-1 flex-col gap-2 p-2', isMobileView && 'py-4')}>
           <NavLink
             to="/dashboard"
-            icon={<HomeIcon className="h-4 w-4" />}
+            icon={<HomeIcon className="h-5 w-5" />}
             label="Dashboard"
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/dashboard'}
+            isMobileMenu={isMobileView}
           />
           
           {/* Show Book Shoot for both admins and clients */}
           <NavLink
             to="/book-shoot"
-            icon={<ClipboardIcon className="h-4 w-4" />}
+            icon={<ClipboardIcon className="h-5 w-5" />}
             label="Book Shoot"
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/book-shoot'}
+            isMobileMenu={isMobileView}
           />
           
           {/* Show appropriate shoots history based on user role */}
           {role === 'client' ? (
             <NavLink
               to="/shoot-history"
-              icon={<HistoryIcon className="h-4 w-4" />}
-              label="My Shoots"
+              icon={<HistoryIcon className="h-5 w-5" />}
+              label="Shoots History"
               isCollapsed={isCollapsed && !isMobile}
               isActive={pathname === '/shoot-history'}
+              isMobileMenu={isMobileView}
             />
           ) : (
             <NavLink
               to="/shoots"
-              icon={<CalendarIcon className="h-4 w-4" />}
+              icon={<CalendarIcon className="h-5 w-5" />}
               label="Shoots History"
               isCollapsed={isCollapsed && !isMobile}
               isActive={pathname === '/shoots'}
+              isMobileMenu={isMobileView}
             />
           )}
           
           <NavLink
             to="/messages"
-            icon={<MessageSquareIcon className="h-4 w-4" />}
+            icon={<MessageSquareIcon className="h-5 w-5" />}
             label="Messages"
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/messages'}
+            isMobileMenu={isMobileView}
           />
           
           {role !== 'client' && (
             <NavLink
               to="/clients"
-              icon={<UserIcon className="h-4 w-4" />}
+              icon={<UserIcon className="h-5 w-5" />}
               label="Clients"
               isCollapsed={isCollapsed && !isMobile}
               isActive={pathname === '/clients'}
+              isMobileMenu={isMobileView}
             />
           )}
           
           {['admin', 'superadmin'].includes(role) && (
             <NavLink
               to="/accounts"
-              icon={<BuildingIcon className="h-4 w-4" />}
+              icon={<BuildingIcon className="h-5 w-5" />}
               label="Accounts"
               isCollapsed={isCollapsed && !isMobile}
               isActive={pathname === '/accounts'}
+              isMobileMenu={isMobileView}
             />
           )}
           
           <NavLink
             to="/invoices"
-            icon={<FileTextIcon className="h-4 w-4" />}
+            icon={<FileTextIcon className="h-5 w-5" />}
             label="Invoices"
             isCollapsed={isCollapsed && !isMobile}
             isActive={pathname === '/invoices'}
+            isMobileMenu={isMobileView}
           />
           
           {role === 'superadmin' && (
             <NavLink
               to="/reports"
-              icon={<BarChart3Icon className="h-4 w-4" />}
+              icon={<BarChart3Icon className="h-5 w-5" />}
               label="Reports"
               isCollapsed={isCollapsed && !isMobile}
               isActive={pathname === '/reports'}
+              isMobileMenu={isMobileView}
             />
           )}
           
           {role === 'admin' && (
             <NavLink
               to="/availability"
-              icon={<UsersIcon className="h-4 w-4" />}
+              icon={<UsersIcon className="h-5 w-5" />}
               label="Availability"
               isCollapsed={isCollapsed && !isMobile}
               isActive={pathname === '/availability'}
+              isMobileMenu={isMobileView}
             />
           )}
         </div>
@@ -200,21 +232,23 @@ export function Sidebar({ className }: SidebarProps) {
         <Separator className="my-2" />
         <NavLink
           to="/settings"
-          icon={<SettingsIcon className="h-4 w-4" />}
+          icon={<SettingsIcon className="h-5 w-5" />}
           label="Settings"
           isCollapsed={isCollapsed && !isMobile}
           isActive={pathname === '/settings'}
+          isMobileMenu={isMobileView}
         />
         <Button
           variant="ghost"
           size={isCollapsed && !isMobile ? 'icon' : 'default'}
           className={cn(
             'w-full justify-start mt-2',
-            isCollapsed && !isMobile && 'h-10 w-10 p-0'
+            isCollapsed && !isMobile && 'h-10 w-10 p-0',
+            isMobileView && 'py-3 text-base'
           )}
           onClick={logout}
         >
-          <LogOutIcon className="h-4 w-4 mr-2" />
+          <LogOutIcon className="h-5 w-5 mr-3" />
           {(!isCollapsed || isMobile) && <span>Logout</span>}
         </Button>
       </div>
@@ -230,8 +264,8 @@ export function Sidebar({ className }: SidebarProps) {
               <MenuIcon className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-[280px]">
-            <SidebarContent />
+          <SheetContent side="left" className="p-0 w-full sm:max-w-md">
+            <SidebarContent isMobileView={true} />
           </SheetContent>
         </Sheet>
       </div>
