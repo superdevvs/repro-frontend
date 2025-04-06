@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 const tasks = [
   {
     id: '1',
-    title: 'Review Emma's edit requests',
+    title: 'Review Emma\'s edit requests',
     dueDate: '2023-09-20',
     priority: 'high',
     project: 'Oak Avenue Listing',
