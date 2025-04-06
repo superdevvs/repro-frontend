@@ -18,8 +18,12 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 
-export const MobileBottomNav = () => {
-  const { filteredItems, toggleMenu } = useMobileMenu();
+interface MobileBottomNavProps {
+  toggleMenu: () => void;
+}
+
+export const MobileBottomNav = ({ toggleMenu }: MobileBottomNavProps) => {
+  const { filteredItems } = useMobileMenu();
   const { theme } = useTheme();
   const isLightMode = theme === 'light';
 

@@ -10,7 +10,7 @@ const MobileMenu = () => {
 
   return (
     <>
-      <MobileBottomNav />
+      <MobileBottomNav toggleMenu={toggleMenu} />
 
       <AnimatePresence>
         {isMenuOpen && (
