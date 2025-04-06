@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -131,7 +132,7 @@ const Availability = () => {
     const newAvailability: PhotographerAvailability = {
       id: uuidv4(),
       photographerId: selectedPhotographer,
-      photographerName: photographers.find(p => p.id === selectedPhotographer)?.name,
+      photographerName: photographers.find(p => p.id === selectedPhotographer)?.name || '',
       date: format(selectedDate, 'yyyy-MM-dd'),
       timeSlots: [{
         start: availabilityForm.startTime || '09:00',
@@ -164,7 +165,7 @@ const Availability = () => {
     const updatedAvailability: PhotographerAvailability = {
       ...currentAvailability,
       date: dateToUse,
-      photographerName: photographers.find(p => p.id === currentAvailability.photographerId)?.name,
+      photographerName: photographers.find(p => p.id === currentAvailability.photographerId)?.name || '',
       startTime: availabilityForm.startTime,
       endTime: availabilityForm.endTime,
       timeSlots: [{
@@ -239,7 +240,7 @@ const Availability = () => {
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  disabled={{}}
+                  disabled={false} // Fix: Changed from {} to false
                   initialFocus
                 />
               </PopoverContent>
