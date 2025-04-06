@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -253,7 +254,8 @@ const BookShoot = () => {
       propertyCity: city,
       propertyState: state,
       propertyZip: zip,
-      propertyInfo: notes
+      propertyInfo: notes,
+      selectedPackage: selectedPackage
     },
     onComplete: (data: any) => {
       if (!isClientAccount && data.clientId) {
@@ -307,6 +309,7 @@ const BookShoot = () => {
               <BookingStepIndicator currentStep={step} totalSteps={3} />
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* On mobile show the summary first (at top), on desktop show it in the first column */}
                 <div className="order-1 md:order-1 md:col-span-1">
                   <BookingSummary 
                     summaryInfo={summaryInfo} 

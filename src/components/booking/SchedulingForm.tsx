@@ -1,192 +1,126 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { TimeSelect } from '@/components/ui/time-select';
-import { CalendarIcon, AlertCircle, Info } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
-interface PackageType {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-}
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { TimeSelect } from "@/components/ui/time-select";
+import { format } from "date-fns";
 
 interface SchedulingFormProps {
   date: Date | undefined;
-  setDate: (date: Date | undefined) => void;
+  setDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
   time: string;
-  setTime: (time: string) => void;
+  setTime: React.Dispatch<React.SetStateAction<string>>;
+  formErrors: Record<string, string>;
+  setFormErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   selectedPackage: string;
-  notes: string;
-  setNotes: (notes: string) => void;
-  packages: PackageType[];
-  formErrors?: {
-    date?: string;
-    time?: string;
-  };
+  handleSubmit: () => void;
+  goBack: () => void;
 }
 
-export function SchedulingForm({
+export const SchedulingForm: React.FC<SchedulingFormProps> = ({
   date,
   setDate,
   time,
   setTime,
+  formErrors,
+  setFormErrors,
   selectedPackage,
-  notes,
-  setNotes,
-  packages,
-  formErrors
-}: SchedulingFormProps) {
-  // Generate available times based on selected date
-  const getAvailableTimes = () => {
-    if (!date) return [];
-    
-    // In a real app, this would be based on actual availability data
-    return [
-      "9:00 AM", 
-      "10:00 AM", 
-      "11:00 AM", 
-      "1:00 PM", 
-      "2:00 PM", 
-      "3:00 PM"
-    ];
+  handleSubmit,
+  goBack,
+}) => {
+  const disabledDates = {
+    before: new Date(),
   };
 
-  const selectedPackageDetails = packages.find(p => p.id === selectedPackage);
+  const onDateChange = (newDate: Date | undefined) => {
+    setDate(newDate);
+    if (newDate && formErrors['date']) {
+      const { date, ...rest } = formErrors;
+      setFormErrors(rest);
+    }
+  };
 
-  // Determine which dates should be marked as available
-  const today = new Date();
-  const nextThirtyDays = Array.from({ length: 30 }, (_, i) => {
-    const date = new Date();
-    date.setDate(today.getDate() + i + 1);
-    return date;
-  });
-  
-  // Removing weekends for this example
-  const availableDates = nextThirtyDays.filter(date => 
-    date.getDay() !== 0 && date.getDay() !== 6
-  );
+  const onTimeChange = (newTime: string) => {
+    setTime(newTime);
+    if (newTime && formErrors['time']) {
+      const { time, ...rest } = formErrors;
+      setFormErrors(rest);
+    }
+  };
 
   return (
-    <motion.div
-      key="step2"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
-    >
-      <div className="flex flex-col space-y-4">
-        <div className="flex items-center justify-between">
-          <Label className="text-base">Select a date</Label>
-          
-          {formErrors?.date && (
-            <div className="flex items-center text-sm text-destructive gap-1">
-              <AlertCircle className="h-4 w-4" />
-              <span>{formErrors.date}</span>
-            </div>
-          )}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-          <div className={cn(
-            "md:col-span-3 h-full",
-            formErrors?.date && "ring-1 ring-destructive rounded-md"
-          )}>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-medium mb-2">Select Date</h3>
             <Calendar
               mode="single"
               selected={date}
-              onSelect={setDate}
-              disabled={(date) => date < new Date() || !availableDates.some(d => d.toDateString() === date?.toDateString())}
-              className={cn(
-                "rounded-md border shadow-sm p-3 bg-background",
-                formErrors?.date && "border-destructive"
-              )}
-              modifiers={{
-                available: availableDates,
-              }}
-              modifiersStyles={{
-                available: {
-                  fontWeight: 'bold'
-                }
-              }}
+              onSelect={onDateChange}
+              disabled={disabledDates}
+              className="border rounded-md p-3"
+            />
+            {formErrors['date'] && (
+              <p className="text-sm font-medium text-destructive mt-1">{formErrors['date']}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-medium mb-2">Select Time</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"].map((t) => (
+                <Button
+                  key={t}
+                  type="button"
+                  variant={time === t ? "default" : "outline"}
+                  onClick={() => onTimeChange(t)}
+                  className="w-full"
+                >
+                  {t}
+                </Button>
+              ))}
+            </div>
+            {formErrors['time'] && (
+              <p className="text-sm font-medium text-destructive mt-1">{formErrors['time']}</p>
+            )}
+          </div>
+
+          <div>
+            <h3 className="text-lg font-medium mb-2">Or Select Custom Time</h3>
+            <TimeSelect
+              value={time}
+              onChange={onTimeChange}
+              startHour={8}
+              endHour={18}
+              interval={30}
+              placeholder="Select a time"
+              className="w-full"
             />
           </div>
-          
-          <div className="md:col-span-4">
-            <div className={cn(
-              "border rounded-md h-full shadow-sm p-4 bg-background",
-              formErrors?.time && "border-destructive"
-            )}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-medium">Available time slots</h3>
-                
-                {formErrors?.time && (
-                  <div className="flex items-center text-sm text-destructive gap-1">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>Please select a time</span>
-                  </div>
-                )}
-              </div>
-              
-              {date ? (
-                <div className="grid grid-cols-2 gap-2">
-                  {getAvailableTimes().map((t) => (
-                    <Button
-                      key={t}
-                      type="button"
-                      variant={time === t ? "default" : "outline"}
-                      className={cn(
-                        "w-full justify-center",
-                        time === t && "bg-primary hover:bg-primary/90 text-primary-foreground",
-                        "transition-all hover:shadow-md"
-                      )}
-                      onClick={() => setTime(t)}
-                    >
-                      {t}
-                    </Button>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center p-8 text-muted-foreground text-sm">
-                  Please select a date first
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
-      
-      <div>
-        <div className="flex items-center gap-2">
-          <Label htmlFor="notes">Additional Notes</Label>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-sm">
-                <p>Add any special instructions, gate codes, access information, or specific requirements for this shoot.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+
+      <div className="border rounded-md p-4 bg-muted/30">
+        <h3 className="font-medium">Selected Schedule</h3>
+        <div className="mt-1">
+          <p className="text-sm text-muted-foreground">
+            {date ? format(date, "PPPP") : "No date selected"}{" "}
+            {time ? `at ${time}` : ""}
+          </p>
         </div>
-        <Textarea
-          id="notes"
-          placeholder="Enter any special instructions or requirements..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="h-24 mt-2"
-        />
       </div>
-    </motion.div>
+
+      <div className="flex justify-between">
+        <Button type="button" variant="outline" onClick={goBack}>
+          Back
+        </Button>
+        <Button type="button" onClick={handleSubmit}>
+          Continue
+        </Button>
+      </div>
+    </div>
   );
-}
+};

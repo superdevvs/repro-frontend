@@ -73,7 +73,7 @@ export function BookingContentArea({
   handleSubmit,
   goBack
 }: BookingContentAreaProps) {
-  const currentStepContent = stepContent[step as keyof typeof stepContent];
+  const currentStepContent = stepContent[step as keyof typeof stepContent] || { title: '', description: '' };
   
   return (
     <Card className="p-4 md:p-6">
@@ -82,9 +82,22 @@ export function BookingContentArea({
         <p className="text-muted-foreground">{currentStepContent.description}</p>
       </div>
       
-      {step === 1 && (
+      {step === 1 && clientPropertyFormData && (
         <ClientPropertyForm
-          data={clientPropertyFormData.initialData}
+          initialData={clientPropertyFormData.initialData || {
+            clientId: '',
+            clientName: '',
+            clientEmail: '',
+            clientPhone: '',
+            clientCompany: '',
+            propertyType: 'residential',
+            propertyAddress: '',
+            propertyCity: '',
+            propertyState: '',
+            propertyZip: '',
+            propertyInfo: '',
+            selectedPackage: ''
+          }}
           onComplete={clientPropertyFormData.onComplete}
           packages={packages}
           isClientAccount={clientPropertyFormData.isClientAccount}
@@ -98,8 +111,8 @@ export function BookingContentArea({
           setDate={setDate}
           time={time}
           setTime={setTime}
-          errors={formErrors}
-          setErrors={setFormErrors}
+          formErrors={formErrors}
+          setFormErrors={setFormErrors}
           selectedPackage={selectedPackage}
           handleSubmit={handleSubmit}
           goBack={goBack}
@@ -108,7 +121,7 @@ export function BookingContentArea({
       
       {step === 3 && (
         <ReviewForm
-          client={clientPropertyFormData.initialData.clientName}
+          client={client}
           address={address}
           city={city}
           state={state}
