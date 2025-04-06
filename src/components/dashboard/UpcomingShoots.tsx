@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,15 +6,14 @@ import { ShootData } from '@/types/shoots';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { format, parseISO, isFuture } from 'date-fns';
-import { useShoots } from '@/context/ShootsContext';
 
 export interface UpcomingShoots {
   maxItems?: number;
+  shoots: ShootData[];
 }
 
-export function UpcomingShoots({ maxItems = 5 }: UpcomingShoots) {
+export function UpcomingShoots({ maxItems = 5, shoots }: UpcomingShoots) {
   const navigate = useNavigate();
-  const { shoots } = useShoots();
 
   // Filter to get only future shoots
   const upcomingShoots = shoots

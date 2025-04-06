@@ -1,4 +1,3 @@
-
 import { startOfDay, startOfWeek, startOfMonth, startOfYear, endOfDay, endOfWeek, endOfMonth, endOfYear, isWithinInterval, isSameDay, parseISO, format, differenceInDays } from 'date-fns';
 import { ShootData } from '@/types/shoots';
 
@@ -43,7 +42,6 @@ export const isDateInRange = (date: Date, range: TimeRange): boolean => {
   return isWithinInterval(date, { start, end });
 };
 
-// Added formatDate function
 export const formatDate = (date: string | Date | undefined): string => {
   if (!date) return 'N/A';
   
@@ -55,7 +53,6 @@ export const formatDate = (date: string | Date | undefined): string => {
   }
 };
 
-// Added getDaysSince function
 export const getDaysSince = (date: string | Date | undefined): number => {
   if (!date) return 0;
   
@@ -67,7 +64,6 @@ export const getDaysSince = (date: string | Date | undefined): number => {
   }
 };
 
-// Filter shoots by date range
 export const filterShootsByDateRange = (shoots: ShootData[], range: TimeRange): ShootData[] => {
   const { start, end } = getRangeStartEnd(range);
   return shoots.filter(shoot => {
@@ -79,25 +75,30 @@ export const filterShootsByDateRange = (shoots: ShootData[], range: TimeRange): 
   });
 };
 
-// Get active shoots count (scheduled or in progress)
 export const getActiveShootsCount = (shoots: ShootData[]): number => {
   return shoots.filter(shoot => ['scheduled', 'in-progress'].includes(shoot.status)).length;
 };
 
-// Calculate total paid amount from all shoots
 export const getTotalPaidAmount = (shoots: ShootData[]): number => {
   return shoots.reduce((total, shoot) => {
     return total + (shoot.payment?.totalPaid || 0);
   }, 0);
 };
 
-// Count unique clients
+export const getEstimatedTaxAmount = (shoots: ShootData[], taxRate: number = 0.15): number => {
+  const totalRevenue = getTotalPaidAmount(shoots);
+  return Math.round(totalRevenue * taxRate);
+};
+
+export const getCompletedShootsCount = (shoots: ShootData[]): number => {
+  return shoots.filter(shoot => shoot.status === 'completed').length;
+};
+
 export const getUniqueClientsCount = (shoots: ShootData[]): number => {
   const uniqueClientIds = new Set(shoots.map(shoot => shoot.client.id));
   return uniqueClientIds.size;
 };
 
-// Count total media assets across all shoots
 export const getTotalMediaAssetsCount = (shoots: ShootData[]): number => {
   return shoots.reduce((total, shoot) => {
     const photoCount = shoot.media?.photos?.length || 0;
@@ -109,7 +110,6 @@ export const getTotalMediaAssetsCount = (shoots: ShootData[]): number => {
   }, 0);
 };
 
-// Get shoots scheduled for today
 export const getScheduledTodayShoots = (shoots: ShootData[]): ShootData[] => {
   const today = new Date();
   return shoots.filter(shoot => {

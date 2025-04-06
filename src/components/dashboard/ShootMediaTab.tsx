@@ -7,9 +7,11 @@ import { Download } from 'lucide-react';
 
 interface ShootMediaTabProps {
   shoot: ShootData;
+  isPhotographer?: boolean;
+  setShoot?: (updatedShoot: ShootData) => void;
 }
 
-export function ShootMediaTab({ shoot }: ShootMediaTabProps) {
+export function ShootMediaTab({ shoot, isPhotographer = false, setShoot }: ShootMediaTabProps) {
   // No media available
   if (!shoot.media) {
     return (

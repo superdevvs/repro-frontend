@@ -3,16 +3,16 @@ import React from 'react';
 import { Calendar } from '@/components/dashboard/Calendar';
 import { UpcomingShoots } from '@/components/dashboard/UpcomingShoots';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useShoots } from '@/context/ShootsContext';
+import { ShootData } from '@/types/shoots';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 interface CalendarSectionProps {
   calendarHeight?: number;
+  shoots: ShootData[];
 }
 
-export const CalendarSection: React.FC<CalendarSectionProps> = ({ calendarHeight = 400 }) => {
+export const CalendarSection: React.FC<CalendarSectionProps> = ({ calendarHeight = 400, shoots }) => {
   const isMobile = useIsMobile();
-  const { shoots } = useShoots();
   
   return (
     <Card className="border shadow-sm">
