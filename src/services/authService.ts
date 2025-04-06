@@ -1,0 +1,46 @@
+
+import { UserData } from '@/types/auth';
+
+// Login function that stores user data in localStorage
+export const loginUser = (
+  userData: UserData, 
+  setUser: (user: UserData) => void,
+  setIsAuthenticated: (value: boolean) => void,
+  setRole: (role: string) => void
+) => {
+  // Store user data in localStorage
+  localStorage.setItem('user', JSON.stringify(userData));
+  // Update state
+  setUser(userData);
+  setIsAuthenticated(true);
+  setRole(userData.role || 'client');
+};
+
+// Logout function that removes user data from localStorage
+export const logoutUser = (
+  setUser: (user: null) => void,
+  setIsAuthenticated: (value: boolean) => void,
+  setRole: (role: string) => void
+) => {
+  // Remove user data from localStorage
+  localStorage.removeItem('user');
+  // Update state
+  setUser(null);
+  setIsAuthenticated(false);
+  setRole('client');
+};
+
+// Function to update user role
+export const updateUserRole = (
+  role: string,
+  setRole: (role: string) => void,
+  user: UserData | null,
+  setUser: (user: UserData | null) => void
+) => {
+  if (user) {
+    const updatedUser = { ...user, role };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  }
+  setRole(role);
+};
