@@ -2,18 +2,6 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { 
-  HomeIcon, 
-  ClipboardIcon, 
-  HistoryIcon, 
-  MessageSquareIcon, 
-  UserIcon, 
-  BuildingIcon, 
-  FileTextIcon, 
-  CalendarIcon, 
-  SettingsIcon, 
-  LogOutIcon
-} from 'lucide-react';
 
 export const useMobileMenu = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,69 +25,69 @@ export const useMobileMenu = () => {
   const menuItems = [
     {
       to: "/dashboard",
-      icon: <HomeIcon className="h-6 w-6" />,
+      icon: "Home",
       label: "Dashboard",
       isActive: pathname === '/dashboard',
       roles: ['client', 'admin', 'superadmin', 'photographer', 'editor']
     },
     {
       to: "/book-shoot",
-      icon: <ClipboardIcon className="h-6 w-6" />,
+      icon: "Clipboard",
       label: "Book Shoot",
       isActive: pathname === '/book-shoot',
       roles: ['client', 'admin', 'superadmin']
     },
     role === 'client' ? {
       to: "/shoot-history",
-      icon: <HistoryIcon className="h-6 w-6" />,
+      icon: "History",
       label: "Shoots History",
       isActive: pathname === '/shoot-history',
       roles: ['client']
     } : {
       to: "/shoots",
-      icon: <CalendarIcon className="h-6 w-6" />,
+      icon: "Calendar",
       label: "Shoots History",
       isActive: pathname === '/shoots',
       roles: ['admin', 'superadmin', 'photographer', 'editor']
     },
     {
       to: "/messages",
-      icon: <MessageSquareIcon className="h-6 w-6" />,
+      icon: "MessageSquare",
       label: "Messages",
       isActive: pathname === '/messages',
       roles: ['client', 'admin', 'superadmin', 'photographer', 'editor']
     },
     {
       to: "/clients",
-      icon: <UserIcon className="h-6 w-6" />,
+      icon: "User",
       label: "Clients",
       isActive: pathname === '/clients',
       roles: ['admin', 'superadmin', 'photographer', 'editor']
     },
     {
       to: "/accounts",
-      icon: <BuildingIcon className="h-6 w-6" />,
+      icon: "Building",
       label: "Accounts",
       isActive: pathname === '/accounts',
       roles: ['admin', 'superadmin']
     },
     {
       to: "/invoices",
-      icon: <FileTextIcon className="h-6 w-6" />,
+      icon: "FileText",
       label: "Invoices",
       isActive: pathname === '/invoices',
       roles: ['client', 'admin', 'superadmin', 'photographer', 'editor']
     },
     {
       to: "/availability",
-      icon: <CalendarIcon className="h-6 w-6" />,
+      icon: "Calendar",
       label: "Availability",
       isActive: pathname === '/availability',
       roles: ['admin', 'photographer']
     },
     {
       to: "/settings",
-      icon: <SettingsIcon className="h-6 w-6" />,
+      icon: "Settings",
       label: "Settings",
       isActive: pathname === '/settings',
       roles: ['client', 'admin', 'superadmin', 'photographer', 'editor']

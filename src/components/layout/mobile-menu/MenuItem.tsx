@@ -2,16 +2,56 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { 
+  HomeIcon, 
+  ClipboardIcon, 
+  HistoryIcon, 
+  MessageSquareIcon, 
+  UserIcon, 
+  BuildingIcon, 
+  FileTextIcon, 
+  CalendarIcon, 
+  SettingsIcon,
+  LogOutIcon
+} from 'lucide-react';
 
 interface MenuItemProps {
   to: string;
-  icon: React.ReactNode;
+  icon: string;
   label: string;
   isActive: boolean;
   onClick: () => void;
 }
 
 export const MenuItem = ({ to, icon, label, isActive, onClick }: MenuItemProps) => {
+  // Function to render the correct icon based on the string name
+  const renderIcon = () => {
+    switch (icon) {
+      case 'Home':
+        return <HomeIcon className="h-6 w-6" />;
+      case 'Clipboard':
+        return <ClipboardIcon className="h-6 w-6" />;
+      case 'History':
+        return <HistoryIcon className="h-6 w-6" />;
+      case 'MessageSquare':
+        return <MessageSquareIcon className="h-6 w-6" />;
+      case 'User':
+        return <UserIcon className="h-6 w-6" />;
+      case 'Building':
+        return <BuildingIcon className="h-6 w-6" />;
+      case 'FileText':
+        return <FileTextIcon className="h-6 w-6" />;
+      case 'Calendar':
+        return <CalendarIcon className="h-6 w-6" />;
+      case 'Settings':
+        return <SettingsIcon className="h-6 w-6" />;
+      case 'LogOut':
+        return <LogOutIcon className="h-6 w-6" />;
+      default:
+        return <HomeIcon className="h-6 w-6" />;
+    }
+  };
+
   return (
     <Link
       to={to}
@@ -22,7 +62,7 @@ export const MenuItem = ({ to, icon, label, isActive, onClick }: MenuItemProps) 
       onClick={onClick}
     >
       <div className="text-2xl text-primary">
-        {icon}
+        {renderIcon()}
       </div>
       <span className="text-sm font-medium">{label}</span>
     </Link>
