@@ -101,12 +101,12 @@ export function TaskManager({ className }: TaskManagerProps) {
         <CardHeader className={`${isMobile ? 'px-3 py-3' : 'p-4 pb-2'} border-b border-border`}>
           <div className="flex items-center justify-between mb-1">
             <CardTitle className={isMobile ? "text-base" : "text-lg"}>Tasks & To-Do</CardTitle>
-            <Tabs defaultValue="upcoming" value={activeTab} onValueChange={setActiveTab} className="w-[140px]">
+            <div className="w-[140px]">
               <TabsList className={`grid w-full grid-cols-2 h-7 ${isMobile ? 'text-xs' : ''}`}>
-                <TabsTrigger value="upcoming" className={isMobile ? "text-xs py-0.5" : ""}>Upcoming</TabsTrigger>
-                <TabsTrigger value="completed" className={isMobile ? "text-xs py-0.5" : ""}>Done</TabsTrigger>
+                <TabsTrigger value="upcoming" className={isMobile ? "text-xs py-0.5" : ""} onClick={() => setActiveTab('upcoming')}>Upcoming</TabsTrigger>
+                <TabsTrigger value="completed" className={isMobile ? "text-xs py-0.5" : ""} onClick={() => setActiveTab('completed')}>Done</TabsTrigger>
               </TabsList>
-            </Tabs>
+            </div>
           </div>
           <CardDescription className={`text-xs ${isMobile ? 'hidden' : ''}`}>
             Manage your personal tasks and shoot-related to-dos.
@@ -114,73 +114,77 @@ export function TaskManager({ className }: TaskManagerProps) {
         </CardHeader>
         
         <CardContent className={`${isMobile ? 'p-3' : 'p-4'} pt-2`}>
-          <TabsContent value="upcoming" className="mt-0 space-y-2">
-            {filteredTasks.length > 0 ? (
-              filteredTasks.map(task => (
-                <div
-                  key={task.id}
-                  className={`flex items-start gap-3 p-2.5 ${isMobile ? 'p-3' : 'p-3'} rounded-md hover:bg-secondary/10 transition-colors`}
-                >
-                  <button
-                    onClick={() => toggleTask(task.id)}
-                    className="flex-shrink-0 mt-0.5 text-muted-foreground hover:text-primary transition-colors"
+          {activeTab === 'upcoming' && (
+            <div className="mt-0 space-y-2">
+              {filteredTasks.length > 0 ? (
+                filteredTasks.map(task => (
+                  <div
+                    key={task.id}
+                    className={`flex items-start gap-3 p-2.5 ${isMobile ? 'p-3' : 'p-3'} rounded-md hover:bg-secondary/10 transition-colors`}
                   >
-                    <Circle className={`h-5 w-5 ${isMobile ? 'h-4.5 w-4.5' : ''}`} />
-                  </button>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className={`font-medium ${isMobile ? 'text-sm' : ''} line-clamp-1`}>{task.title}</p>
-                      <span className={`ml-4 capitalize text-xs px-2 py-0.5 rounded-full ${getPriorityStyle(task.priority)}`}>
-                        {task.priority}
-                      </span>
-                    </div>
+                    <button
+                      onClick={() => toggleTask(task.id)}
+                      className="flex-shrink-0 mt-0.5 text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Circle className={`h-5 w-5 ${isMobile ? 'h-4.5 w-4.5' : ''}`} />
+                    </button>
                     
-                    <div className={`flex items-center gap-2 mt-1 ${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>
-                      <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
-                      <span>•</span>
-                      <span className="truncate">{task.project}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className={`font-medium ${isMobile ? 'text-sm' : ''} line-clamp-1`}>{task.title}</p>
+                        <span className={`ml-4 capitalize text-xs px-2 py-0.5 rounded-full ${getPriorityStyle(task.priority)}`}>
+                          {task.priority}
+                        </span>
+                      </div>
+                      
+                      <div className={`flex items-center gap-2 mt-1 ${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>
+                        <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                        <span>•</span>
+                        <span className="truncate">{task.project}</span>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-muted-foreground">No upcoming tasks. Take a break!</p>
                 </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-muted-foreground">No upcoming tasks. Take a break!</p>
-              </div>
-            )}
-          </TabsContent>
+              )}
+            </div>
+          )}
           
-          <TabsContent value="completed" className="mt-0 space-y-2">
-            {filteredTasks.length > 0 ? (
-              filteredTasks.map(task => (
-                <div
-                  key={task.id}
-                  className={`flex items-start gap-3 ${isMobile ? 'p-3' : 'p-3'} rounded-md hover:bg-secondary/10 transition-colors`}
-                >
-                  <button
-                    onClick={() => toggleTask(task.id)}
-                    className="flex-shrink-0 mt-0.5 text-primary hover:text-primary/80 transition-colors"
+          {activeTab === 'completed' && (
+            <div className="mt-0 space-y-2">
+              {filteredTasks.length > 0 ? (
+                filteredTasks.map(task => (
+                  <div
+                    key={task.id}
+                    className={`flex items-start gap-3 ${isMobile ? 'p-3' : 'p-3'} rounded-md hover:bg-secondary/10 transition-colors`}
                   >
-                    <CheckCircle2 className={`h-5 w-5 ${isMobile ? 'h-4.5 w-4.5' : ''}`} />
-                  </button>
-                  
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-medium line-through ${isMobile ? 'text-sm' : ''} text-muted-foreground line-clamp-1`}>{task.title}</p>
-                    <div className={`flex items-center gap-2 mt-1 ${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground/70`}>
-                      <span>Completed</span>
-                      <span>•</span>
-                      <span className="truncate">{task.project}</span>
+                    <button
+                      onClick={() => toggleTask(task.id)}
+                      className="flex-shrink-0 mt-0.5 text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <CheckCircle2 className={`h-5 w-5 ${isMobile ? 'h-4.5 w-4.5' : ''}`} />
+                    </button>
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-medium line-through ${isMobile ? 'text-sm' : ''} text-muted-foreground line-clamp-1`}>{task.title}</p>
+                      <div className={`flex items-center gap-2 mt-1 ${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground/70`}>
+                        <span>Completed</span>
+                        <span>•</span>
+                        <span className="truncate">{task.project}</span>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-muted-foreground">No completed tasks yet.</p>
                 </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-muted-foreground">No completed tasks yet.</p>
-              </div>
-            )}
-          </TabsContent>
+              )}
+            </div>
+          )}
         </CardContent>
         
         <CardFooter className={`${isMobile ? 'px-3 py-2.5' : 'px-4 py-3'} border-t border-border flex justify-center`}>
