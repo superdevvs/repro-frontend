@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { IntegrationCard } from '../IntegrationCard';
 import { Box, HomeIcon, Boxes } from 'lucide-react';
