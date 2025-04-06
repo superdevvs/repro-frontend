@@ -374,6 +374,7 @@ const Messages = () => {
   const [messageTasks, setMessageTasks] = useState<Record<string, boolean>>({});
   const [rightPanelTab, setRightPanelTab] = useState('details');
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
+  const [showMobileConversations, setShowMobileConversations] = useState(true);
   
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -381,8 +382,17 @@ const Messages = () => {
   useEffect(() => {
     if (isMobile) {
       setIsConversationsCollapsed(true);
+      setShowMobileConversations(true);
+    } else {
+      setIsConversationsCollapsed(false);
     }
   }, [isMobile]);
+  
+  useEffect(() => {
+    if (isMobile && selectedConversation) {
+      setShowMobileConversations(false);
+    }
+  }, [selectedConversation, isMobile]);
   
   const totalUnreadCount = useMemo(() => {
     return mockConversations.reduce((total, convo) => total + convo.unreadCount, 0);
@@ -406,7 +416,11 @@ const Messages = () => {
   }, [tasks]);
   
   const toggleConversations = () => {
-    setIsConversationsCollapsed(!isConversationsCollapsed);
+    if (isMobile) {
+      setShowMobileConversations(!showMobileConversations);
+    } else {
+      setIsConversationsCollapsed(!isConversationsCollapsed);
+    }
   };
   
   const handleSendMessage = (content: string, attachments?: File[]) => {
@@ -461,38 +475,50 @@ const Messages = () => {
     return currentMessages.filter(message => messageTasks[message.id]);
   }, [currentMessages, messageTasks]);
   
+  const handleSelectConversation = (id: string) => {
+    setSelectedConversation(id);
+    if (isMobile) {
+      setShowMobileConversations(false);
+    }
+  };
+  
+  const handleBackToConversations = () => {
+    if (isMobile) {
+      setShowMobileConversations(true);
+    }
+  };
+  
   const renderContent = () => {
     if (isMobile) {
+      if (showMobileConversations) {
+        return (
+          <div className="flex flex-col h-full">
+            <ConversationList 
+              conversations={mockConversations}
+              selectedConversation={selectedConversation}
+              onSelectConversation={handleSelectConversation}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              filter={filter}
+              onFilterChange={setFilter}
+            />
+          </div>
+        );
+      }
+      
       return (
         <div className="flex flex-col h-full">
-          <div className="px-4 py-3 border-b flex-shrink-0">
+          <div className="px-3 py-2.5 border-b flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="outline" size="icon" className="lg:hidden flex">
-                      <MenuIcon className="h-4 w-4" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-[85%] sm:max-w-md">
-                    <SheetHeader className="mb-4">
-                      <SheetTitle>Conversations</SheetTitle>
-                    </SheetHeader>
-                    <ConversationList 
-                      conversations={mockConversations}
-                      selectedConversation={selectedConversation}
-                      onSelectConversation={(id) => {
-                        setSelectedConversation(id);
-                        const closeButton = document.querySelector('[data-radix-collection-item]') as HTMLElement;
-                        if (closeButton) closeButton.click();
-                      }}
-                      activeTab={activeTab}
-                      onTabChange={setActiveTab}
-                      filter={filter}
-                      onFilterChange={setFilter}
-                    />
-                  </SheetContent>
-                </Sheet>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleBackToConversations}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
                 
                 <div className="flex items-center gap-2">
                   <h2 className="text-base font-semibold truncate max-w-[200px]">
@@ -829,9 +855,11 @@ const Messages = () => {
               <span>Schedule</span>
             </Button>
             
-            <Button className="bg-blue-500 hover:bg-blue-600">
-              <MessageSquare className="mr-2 h-4 w-4" /> New Message
-            </Button>
+            {!isMobile && (
+              <Button className="bg-blue-500 hover:bg-blue-600">
+                <MessageSquare className="mr-2 h-4 w-4" /> New Message
+              </Button>
+            )}
           </div>
         </div>
         

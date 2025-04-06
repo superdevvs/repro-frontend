@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -20,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Conversation, ConversationFilter } from '@/types/messages';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -40,6 +40,8 @@ export function ConversationList({
   filter,
   onFilterChange,
 }: ConversationListProps) {
+  const isMobile = useIsMobile();
+
   // Filter conversations based on current filter criteria
   const filteredConversations = conversations.filter((convo) => {
     // Filter by search query
@@ -104,10 +106,10 @@ export function ConversationList({
   };
 
   return (
-    <Card className="h-full flex flex-col border-none shadow-none">
-      <CardHeader className="px-4 py-3 border-b flex-shrink-0">
+    <Card className={`h-full flex flex-col border-none shadow-none ${isMobile ? 'rounded-none' : ''}`}>
+      <CardHeader className={`${isMobile ? 'px-3 py-3' : 'px-4 py-3'} border-b flex-shrink-0`}>
         <div className="flex items-center justify-between mb-3">
-          <CardTitle className="text-lg">Conversations</CardTitle>
+          <CardTitle className={`${isMobile ? 'text-lg' : 'text-lg'}`}>Conversations</CardTitle>
           <Tabs defaultValue={activeTab} onValueChange={onTabChange} className="w-[180px]">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="inbox">Inbox</TabsTrigger>
@@ -219,7 +221,7 @@ export function ConversationList({
         </div>
       </CardHeader>
       
-      <CardContent className="p-0 flex-1 overflow-hidden">
+      <CardContent className={`p-0 flex-1 overflow-hidden ${isMobile ? 'message-conversation-list' : ''}`}>
         <ScrollArea className="h-full">
           <div className="flex flex-col">
             {filteredConversations.length > 0 ? (
@@ -227,7 +229,7 @@ export function ConversationList({
                 <motion.div
                   key={conversation.id}
                   whileHover={{ backgroundColor: 'rgba(0,0,0,0.03)' }}
-                  className={`cursor-pointer p-3 border-b border-border hover:bg-accent/30 transition-colors ${
+                  className={`cursor-pointer ${isMobile ? 'p-3' : 'p-3'} border-b border-border hover:bg-accent/30 transition-colors ${
                     selectedConversation === conversation.id ? 'bg-accent/50' : ''
                   }`}
                   onClick={() => onSelectConversation(conversation.id)}

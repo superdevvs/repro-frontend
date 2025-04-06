@@ -49,7 +49,7 @@ export function UpcomingShoots({ className }: UpcomingShootsProps) {
       className={cn("w-full", className)}
     >
       <Card className="glass-card">
-        <CardHeader className={`flex flex-row items-center justify-between ${isMobile ? 'p-3' : 'pb-2'} border-b border-border`}>
+        <CardHeader className={`flex flex-row items-center justify-between ${isMobile ? 'px-3 py-2.5' : 'pb-2'} border-b border-border`}>
           <div className="flex items-center gap-2">
             <CameraIcon className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-primary`} />
             <CardTitle className={isMobile ? "text-base" : ""}>Upcoming Shoots</CardTitle>
@@ -70,24 +70,24 @@ export function UpcomingShoots({ className }: UpcomingShootsProps) {
               {upcomingShoots.map((shoot, index) => (
                 <div 
                   key={shoot.id}
-                  className={`bg-secondary/10 ${isMobile ? 'p-2' : 'p-3'} rounded-md cursor-pointer hover:bg-secondary/20 transition-colors`}
+                  className={`bg-secondary/10 ${isMobile ? 'p-3' : 'p-3'} rounded-md cursor-pointer hover:bg-secondary/20 transition-colors`}
                   onClick={() => navigate(`/shoots?id=${shoot.id}`)}
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1 min-w-0">
                       <p className={`font-medium line-clamp-1 ${isMobile ? 'text-sm' : ''}`}>
                         {shoot.location.fullAddress}
                       </p>
-                      <div className={`flex flex-wrap gap-2 ${isMobile ? 'mt-1' : 'mt-2'}`}>
+                      <div className={`flex flex-wrap gap-2 ${isMobile ? 'mt-1.5' : 'mt-2'}`}>
                         <Badge variant="outline" className={`${isMobile ? 'text-xs py-0 h-5' : ''}`}>
                           {format(parseISO(shoot.scheduledDate), 'MMM d, yyyy')}
                         </Badge>
-                        <Badge variant="outline" className={`text-xs bg-primary/10 ${isMobile ? 'py-0 h-5' : ''}`}>
+                        <Badge variant="outline" className={`bg-primary/10 ${isMobile ? 'text-xs py-0 h-5' : ''}`}>
                           ${shoot.payment.totalQuote}
                         </Badge>
                       </div>
                     </div>
-                    <Badge className="capitalize">
+                    <Badge className="capitalize shrink-0">
                       {shoot.status}
                     </Badge>
                   </div>
