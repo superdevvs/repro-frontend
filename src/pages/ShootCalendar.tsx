@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
-import { useContext } from 'react';
 import { format, parseISO, isSameDay } from 'date-fns';
-import { ShootsContext } from '@/context/ShootsContext';
+import { useShoots } from '@/context/ShootsContext';
 import { Calendar } from '@/components/dashboard/Calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,7 +14,7 @@ import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function ShootCalendar() {
-  const { shoots } = useContext(ShootsContext);
+  const { shoots } = useShoots();
   const { role } = useAuth();
   const [selectedRange, setSelectedRange] = useState<TimeRange>('week');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -77,8 +76,8 @@ export default function ShootCalendar() {
               <div className="flex justify-between items-center">
                 <CardTitle>Calendar</CardTitle>
                 
-                <ShootsFilter
-                  selectedRange={selectedRange}
+                <ShootsFilter 
+                  value={selectedRange}
                   onChange={handleRangeChange}
                 />
               </div>

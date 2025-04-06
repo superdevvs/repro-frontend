@@ -1,5 +1,5 @@
 
-import { startOfDay, startOfWeek, startOfMonth, startOfYear, endOfDay, endOfWeek, endOfMonth, endOfYear, isWithinInterval, isSameDay, parseISO, format } from 'date-fns';
+import { startOfDay, startOfWeek, startOfMonth, startOfYear, endOfDay, endOfWeek, endOfMonth, endOfYear, isWithinInterval, isSameDay, parseISO, format, differenceInDays } from 'date-fns';
 import { ShootData } from '@/types/shoots';
 
 export type TimeRange = 'today' | 'day' | 'week' | 'month' | 'year' | 'all';
@@ -41,6 +41,30 @@ export const getRangeStartEnd = (range: TimeRange): { start: Date; end: Date } =
 export const isDateInRange = (date: Date, range: TimeRange): boolean => {
   const { start, end } = getRangeStartEnd(range);
   return isWithinInterval(date, { start, end });
+};
+
+// Added formatDate function
+export const formatDate = (date: string | Date | undefined): string => {
+  if (!date) return 'N/A';
+  
+  try {
+    const parsedDate = typeof date === 'string' ? parseISO(date) : date;
+    return format(parsedDate, 'MMMM d, yyyy');
+  } catch (e) {
+    return 'Invalid Date';
+  }
+};
+
+// Added getDaysSince function
+export const getDaysSince = (date: string | Date | undefined): number => {
+  if (!date) return 0;
+  
+  try {
+    const parsedDate = typeof date === 'string' ? parseISO(date) : date;
+    return differenceInDays(new Date(), parsedDate);
+  } catch (e) {
+    return 0;
+  }
 };
 
 // Filter shoots by date range
@@ -97,17 +121,6 @@ export const getScheduledTodayShoots = (shoots: ShootData[]): ShootData[] => {
     
     return isSameDay(shootDate, today);
   });
-};
-
-// Calculate estimated tax amount (assuming 15% of total revenue)
-export const getEstimatedTaxAmount = (shoots: ShootData[]): number => {
-  const totalRevenue = getTotalPaidAmount(shoots);
-  return totalRevenue * 0.15; // 15% tax rate assumption
-};
-
-// Count completed shoots
-export const getCompletedShootsCount = (shoots: ShootData[]): number => {
-  return shoots.filter(shoot => shoot.status === 'completed').length;
 };
 
 export { isSameDay };

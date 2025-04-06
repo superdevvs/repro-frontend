@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,26 +17,31 @@ import {
   Check, 
   X, 
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  Mail,
+  Phone
 } from 'lucide-react';
-import { ShootData } from '@/types/shoots';
+import { ShootData, Client as ClientType, Photographer as PhotographerType } from '@/types/shoots';
 import { ShootMediaTab } from './ShootMediaTab';
 import { ShootNotesTab } from './ShootNotesTab';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface ShootDetailProps {
   shoot: ShootData;
   onClose?: () => void;
+  isOpen?: boolean;
 }
 
-export default function ShootDetail({ shoot, onClose }: ShootDetailProps) {
+export default function ShootDetail({ shoot, onClose, isOpen }: ShootDetailProps) {
   const { user, role } = useAuth();
   
   const isAdmin = role === 'admin' || role === 'superadmin';
   const isPhotographer = role === 'photographer';
   const isClient = role === 'client';
   
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     scheduled: 'bg-blue-500',
     completed: 'bg-green-500',
     'in-progress': 'bg-orange-500',
@@ -45,7 +51,7 @@ export default function ShootDetail({ shoot, onClose }: ShootDetailProps) {
     booked: 'bg-teal-500'
   };
   
-  const statusIcons = {
+  const statusIcons: Record<string, JSX.Element> = {
     scheduled: <Calendar className="h-4 w-4" />,
     completed: <Check className="h-4 w-4" />,
     'in-progress': <Clock className="h-4 w-4" />,
@@ -121,7 +127,7 @@ export default function ShootDetail({ shoot, onClose }: ShootDetailProps) {
             <div className="font-semibold">Location</div>
             <div className="text-muted-foreground">
               <MapPin className="h-4 w-4 mr-2 inline-block align-middle" />
-              {shoot.location.fullAddress}
+              {shoot.location.fullAddress || `${shoot.location.address}, ${shoot.location.city}, ${shoot.location.state} ${shoot.location.zipCode || shoot.location.zip}`}
             </div>
           </div>
 
@@ -154,7 +160,7 @@ export default function ShootDetail({ shoot, onClose }: ShootDetailProps) {
             <div className="font-semibold">Shoot Notes</div>
             {shoot.notes && (
               <p className="text-muted-foreground text-sm">
-                {ensureNotesObject(shoot.notes).shootNotes || 'No notes available'}
+                {typeof shoot.notes === 'string' ? shoot.notes : ensureNotesObject(shoot.notes).shootNotes || 'No notes available'}
               </p>
             )}
           </div>
@@ -167,23 +173,23 @@ export default function ShootDetail({ shoot, onClose }: ShootDetailProps) {
               <div className="space-y-1">
                 {shoot.tourLinks.branded && (
                   <div className="text-sm text-muted-foreground">
-                    Branded: <Link className="underline" href={shoot.tourLinks.branded} target="_blank" rel="noopener noreferrer">
+                    Branded: <a className="underline" href={shoot.tourLinks.branded} target="_blank" rel="noopener noreferrer">
                       {shoot.tourLinks.branded}
-                    </Link>
+                    </a>
                   </div>
                 )}
                 {shoot.tourLinks.mls && (
                   <div className="text-sm text-muted-foreground">
-                    MLS: <Link className="underline" href={shoot.tourLinks.mls} target="_blank" rel="noopener noreferrer">
+                    MLS: <a className="underline" href={shoot.tourLinks.mls} target="_blank" rel="noopener noreferrer">
                       {shoot.tourLinks.mls}
-                    </Link>
+                    </a>
                   </div>
                 )}
                 {shoot.tourLinks.genericMls && (
                   <div className="text-sm text-muted-foreground">
-                    Generic MLS: <Link className="underline" href={shoot.tourLinks.genericMls} target="_blank" rel="noopener noreferrer">
+                    Generic MLS: <a className="underline" href={shoot.tourLinks.genericMls} target="_blank" rel="noopener noreferrer">
                       {shoot.tourLinks.genericMls}
-                    </Link>
+                    </a>
                   </div>
                 )}
                 {(!shoot.tourLinks.branded && !shoot.tourLinks.mls && !shoot.tourLinks.genericMls) && (
@@ -197,7 +203,7 @@ export default function ShootDetail({ shoot, onClose }: ShootDetailProps) {
         </TabsContent>
         
         <TabsContent value="media" className="flex-grow overflow-auto">
-          <ShootMediaTab shoot={shoot} isAdmin={isAdmin} />
+          <ShootMediaTab shoot={shoot} />
         </TabsContent>
         
         <TabsContent value="notes" className="flex-grow overflow-auto">
@@ -213,7 +219,7 @@ export default function ShootDetail({ shoot, onClose }: ShootDetailProps) {
   );
 }
 
-const renderClientInfo = (client: Client) => (
+const renderClientInfo = (client: ClientType) => (
   <div className="space-y-1">
     <div className="font-semibold">{client.name}</div>
     {client.company && <div className="text-sm text-muted-foreground">{client.company}</div>}
@@ -230,7 +236,7 @@ const renderClientInfo = (client: Client) => (
   </div>
 );
 
-const renderPhotographerInfo = (photographer: Photographer) => (
+const renderPhotographerInfo = (photographer: PhotographerType) => (
   <div className="flex items-center space-x-4">
     <Avatar>
       <AvatarImage src={photographer.avatar} alt={photographer.name} />
@@ -238,7 +244,7 @@ const renderPhotographerInfo = (photographer: Photographer) => (
     </Avatar>
     <div className="space-y-1">
       <div className="font-semibold">{photographer.name}</div>
-      <div className="text-sm text-muted-foreground">{photographer.email}</div>
+      {photographer.email && <div className="text-sm text-muted-foreground">{photographer.email}</div>}
       {photographer.phone && <div className="text-sm text-muted-foreground">{photographer.phone}</div>}
     </div>
   </div>

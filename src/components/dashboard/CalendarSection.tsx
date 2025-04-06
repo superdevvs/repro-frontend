@@ -3,23 +3,27 @@ import React from 'react';
 import { Calendar } from '@/components/dashboard/Calendar';
 import { UpcomingShoots } from '@/components/dashboard/UpcomingShoots';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useShoots } from '@/context/ShootsContext';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 interface CalendarSectionProps {
-  calendarHeight: number;
+  calendarHeight?: number;
 }
 
-export const CalendarSection: React.FC<CalendarSectionProps> = ({ calendarHeight }) => {
+export const CalendarSection: React.FC<CalendarSectionProps> = ({ calendarHeight = 400 }) => {
   const isMobile = useIsMobile();
+  const { shoots } = useShoots();
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div className="lg:col-span-1">
-        <UpcomingShoots />
-      </div>
-      
-      <div className="lg:col-span-2">
-        <Calendar height={calendarHeight} />
-      </div>
-    </div>
+    <Card className="border shadow-sm">
+      <CardHeader>
+        <CardTitle>Calendar</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
+          <Calendar shoots={shoots} height={calendarHeight} />
+        </div>
+      </CardContent>
+    </Card>
   );
 };

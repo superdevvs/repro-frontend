@@ -17,16 +17,17 @@ import { useShoots } from '@/context/ShootsContext';
 import { ShootData } from '@/types/shoots';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, MapPinIcon, UserIcon, ClockIcon } from 'lucide-react';
-import { ShootDetail } from './ShootDetail';
+import ShootDetail from './ShootDetail'; // Fixed import
 
 interface CalendarProps {
   className?: string;
   height?: number;
+  shoots: ShootData[]; // Added to match the props passed
+  onDateSelect?: (date: Date | undefined) => void; // Added to match the props passed
 }
 
-export function Calendar({ className, height = 400 }: CalendarProps) {
+export function Calendar({ className, height = 400, shoots, onDateSelect }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const { shoots } = useShoots();
   const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
@@ -74,6 +75,13 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
     setIsDetailOpen(false);
   };
 
+  // Handle date selection for the parent component if provided
+  const handleDayClick = (day: Date) => {
+    if (onDateSelect) {
+      onDateSelect(day);
+    }
+  };
+
   return (
     <div className={cn("w-full h-full", className)}>
       <div className="flex items-center justify-between mb-4">
@@ -93,9 +101,10 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
           <div
             key={day.toISOString()}
             className={cn(
-              "text-center text-sm py-1 font-medium",
+              "text-center text-sm py-1 font-medium cursor-pointer",
               isToday(day) ? "text-primary" : "text-muted-foreground"
             )}
+            onClick={() => handleDayClick(day)}
           >
             <div>{format(day, 'EEE')}</div>
             <div className={cn(
@@ -163,7 +172,6 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
       {selectedShoot && isDetailOpen && (
         <ShootDetail 
           shoot={selectedShoot} 
-          isOpen={isDetailOpen} 
           onClose={handleCloseShootDetails} 
         />
       )}

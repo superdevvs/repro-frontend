@@ -1,9 +1,10 @@
+
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { ShootData, ShootsContextType } from '@/types/shoots';
 import { toStringId } from '@/utils/formatters';
 
-// Create context
-const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
+// Create context and export it
+export const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
 
 // Sample data for development
 const sampleShoots: ShootData[] = [

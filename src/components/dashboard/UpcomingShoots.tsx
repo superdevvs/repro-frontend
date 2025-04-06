@@ -1,119 +1,111 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { ShootCard } from './ShootCard';
-import { ArrowRightIcon, CameraIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useShoots } from '@/context/ShootsContext';
-import { compareAsc, format, parseISO } from 'date-fns';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ShootData } from '@/types/shoots';
 import { useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import { ensureDateString } from '@/utils/formatters';
+import { MapPin, Calendar, Clock, ArrowRight } from 'lucide-react';
+import { format, parseISO, isFuture } from 'date-fns';
+import { useShoots } from '@/context/ShootsContext';
 
-interface UpcomingShootsProps {
-  className?: string;
+export interface UpcomingShoots {
+  maxItems?: number;
 }
 
-export function UpcomingShoots({ className }: UpcomingShootsProps) {
-  const { shoots } = useShoots();
+export function UpcomingShoots({ maxItems = 5 }: UpcomingShoots) {
   const navigate = useNavigate();
-  
-  // Get today's date at the beginning of the day
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  // Filter and sort upcoming shoots
+  const { shoots } = useShoots();
+
+  // Filter to get only future shoots
   const upcomingShoots = shoots
     .filter(shoot => {
-      // Only include scheduled shoots
-      if (shoot.status !== 'scheduled') return false;
-      
-      // Only include shoots scheduled for today or in the future
-      const shootDateStr = ensureDateString(shoot.scheduledDate);
-      const shootDate = parseISO(shootDateStr);
-      return compareAsc(shootDate, today) >= 0;
+      const shootDate = typeof shoot.scheduledDate === 'string'
+        ? parseISO(shoot.scheduledDate)
+        : new Date(shoot.scheduledDate);
+      return isFuture(shootDate) && shoot.status === 'scheduled';
     })
     .sort((a, b) => {
-      // Sort by date, earliest first
-      const aDateStr = ensureDateString(a.scheduledDate);
-      const bDateStr = ensureDateString(b.scheduledDate);
-      return compareAsc(parseISO(aDateStr), parseISO(bDateStr));
+      const dateA = typeof a.scheduledDate === 'string'
+        ? parseISO(a.scheduledDate)
+        : new Date(a.scheduledDate);
+      const dateB = typeof b.scheduledDate === 'string'
+        ? parseISO(b.scheduledDate)
+        : new Date(b.scheduledDate);
+      return dateA.getTime() - dateB.getTime();
     })
-    .slice(0, 6); // Show up to 6 upcoming shoots for better space utilization
+    .slice(0, maxItems);
+
+  const handleViewShoot = (shootId: string) => {
+    navigate(`/shoots/${shootId}`);
+  };
+
+  const handleViewAll = () => {
+    navigate('/shoots');
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.1 }}
-      className={cn("w-full", className)}
-    >
-      <Card className="glass-card h-full">
-        <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border">
-          <div className="flex items-center gap-2">
-            <CameraIcon className="h-5 w-5 text-primary" />
-            <CardTitle>Upcoming Shoots</CardTitle>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="gap-1"
-            onClick={() => navigate('/shoots')}
-          >
-            View all <ArrowRightIcon className="h-4 w-4" />
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle>Upcoming Shoots</CardTitle>
+          <Button onClick={handleViewAll} variant="ghost" size="sm">
+            View all
+            <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
-        </CardHeader>
-        <CardContent className="p-4">
+        </div>
+        <CardDescription>
+          Your upcoming scheduled photo shoots
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
           {upcomingShoots.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {upcomingShoots.map((shoot, index) => (
+            upcomingShoots.map((shoot) => {
+              const shootDate = typeof shoot.scheduledDate === 'string'
+                ? parseISO(shoot.scheduledDate)
+                : new Date(shoot.scheduledDate);
+              
+              return (
                 <div 
                   key={shoot.id}
-                  className="bg-secondary/10 p-3 rounded-md cursor-pointer hover:bg-secondary/20 transition-colors"
-                  onClick={() => navigate(`/shoots?id=${shoot.id}`)}
+                  className="border border-border rounded-md p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => handleViewShoot(shoot.id)}
                 >
-                  <div className="flex justify-between items-start">
+                  <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-medium line-clamp-1">{shoot.location.fullAddress}</p>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {format(parseISO(ensureDateString(shoot.scheduledDate)), 'MMM d, yyyy')}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs bg-primary/10">
-                          ${shoot.payment?.totalQuote || 0}
-                        </Badge>
+                      <h3 className="font-medium text-sm">{shoot.client.name}</h3>
+                      <div className="flex items-center text-xs text-muted-foreground mt-1">
+                        <MapPin className="h-3.5 w-3.5 mr-1" />
+                        {shoot.location.address}
                       </div>
                     </div>
-                    <Badge className="capitalize">
+                    <Badge>
                       {shoot.status}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
-                    <div className="h-6 w-6 rounded-full bg-secondary flex items-center justify-center text-xs">
-                      {shoot.photographer?.name ? shoot.photographer.name.split(' ').map(n => n[0]).join('') : '?'}
-                    </div>
-                    <span>{shoot.photographer?.name || 'Unassigned'}</span>
+                  
+                  <div className="flex items-center text-xs text-muted-foreground mt-2">
+                    <Calendar className="h-3.5 w-3.5 mr-1" />
+                    {format(shootDate, 'MMMM d, yyyy')}
+                    
+                    {shoot.time && (
+                      <>
+                        <Clock className="h-3.5 w-3.5 mx-1" />
+                        {shoot.time}
+                      </>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })
           ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-muted-foreground">No upcoming shoots scheduled.</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={() => navigate('/book-shoot')}
-              >
-                Book a Shoot
-              </Button>
+            <div className="text-center py-6 text-sm text-muted-foreground">
+              No upcoming shoots scheduled
             </div>
           )}
-        </CardContent>
-      </Card>
-    </motion.div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
