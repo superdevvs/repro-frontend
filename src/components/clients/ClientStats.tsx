@@ -41,7 +41,7 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
       delay: 0.3
     },
     {
-      title: "Avg. Shoots per Client",
+      title: "Avg. Shoots",
       value: averageShootsPerClient,
       icon: <BarChart3Icon className="h-5 w-5 text-purple-500" />,
       bgClass: "bg-purple-500/10",
@@ -50,7 +50,7 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
   ];
   
   return (
-    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 px-2 md:px-0">
       {statItems.map((item, index) => (
         <motion.div
           key={item.title}
@@ -58,14 +58,14 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: item.delay, duration: 0.3 }}
         >
-          <Card className="border-none shadow-sm">
-            <CardContent className="p-4">
+          <Card className="border shadow-sm">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">{item.title}</p>
-                  <h3 className="text-xl sm:text-2xl font-bold mt-1">{item.value}</h3>
+                  <h3 className="text-lg sm:text-xl font-bold mt-1">{item.value}</h3>
                 </div>
-                <div className={cn("p-2.5 rounded-full", item.bgClass)}>
+                <div className={cn("p-2 sm:p-2.5 rounded-full", item.bgClass)}>
                   {item.icon}
                 </div>
               </div>

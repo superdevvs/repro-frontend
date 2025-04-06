@@ -20,10 +20,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  ClientCard, 
-  ClientCardContent, 
-  ClientCardFooter, 
-  ClientCardHeader 
+  Card,
+  CardContent,
+  CardFooter,
 } from '@/components/ui/card';
 import { Client } from '@/types/clients';
 
@@ -45,39 +44,44 @@ export const ClientCardComponent: React.FC<ClientCardComponentProps> = ({
   onDelete
 }) => {
   const statusColors = {
-    active: 'border-green-500/50 text-green-500 bg-green-50/50',
-    inactive: 'border-gray-500/50 text-gray-500 bg-gray-50/50'
+    active: 'bg-green-100 text-green-800 border-green-200',
+    inactive: 'bg-gray-100 text-gray-800 border-gray-200'
   };
 
   return (
-    <ClientCard onClick={() => onSelect(client)} className="transform transition-all hover:translate-y-[-2px] hover:shadow">
-      <ClientCardHeader className="bg-gradient-to-r from-primary/5 to-secondary/20">
-        <div className="absolute -bottom-10 left-4">
-          <Avatar className="h-20 w-20 border-4 border-background shadow-md">
+    <Card 
+      onClick={() => onSelect(client)} 
+      className="overflow-hidden transition-all hover:shadow-md border-border mb-4"
+    >
+      {/* Header with background and avatar */}
+      <div className="relative bg-gradient-to-r from-primary/10 to-secondary/10 h-24">
+        <div className="absolute -bottom-12 left-4">
+          <Avatar className="h-24 w-24 border-4 border-background shadow-md">
             {client.avatar ? (
               <AvatarImage src={client.avatar} alt={client.name} />
             ) : (
-              <AvatarFallback className="text-lg bg-primary/10 text-primary font-medium">
+              <AvatarFallback className="text-xl bg-primary/10 text-primary font-medium">
                 {client.name.split(' ').map((n) => n[0]).join('')}
               </AvatarFallback>
             )}
           </Avatar>
         </div>
-      </ClientCardHeader>
+        <div className="absolute top-4 right-4">
+          <Badge 
+            variant="outline" 
+            className={`${client.status === 'active' 
+              ? statusColors.active
+              : statusColors.inactive}`}
+          >
+            {client.status}
+          </Badge>
+        </div>
+      </div>
       
-      <ClientCardContent className="pt-12">
+      {/* Content */}
+      <CardContent className="pt-16 px-4 pb-4">
         <div className="flex flex-col gap-1 mb-3">
-          <div className="flex justify-between items-start">
-            <h3 className="font-semibold text-lg leading-tight">{client.name}</h3>
-            <Badge 
-              variant="outline" 
-              className={`self-start ${client.status === 'active' 
-                ? statusColors.active
-                : statusColors.inactive}`}
-            >
-              {client.status}
-            </Badge>
-          </div>
+          <h3 className="font-semibold text-lg">{client.name}</h3>
           {client.company && (
             <p className="text-sm text-muted-foreground flex items-center gap-1.5">
               <BuildingIcon className="h-3.5 w-3.5 inline" />
@@ -87,21 +91,21 @@ export const ClientCardComponent: React.FC<ClientCardComponentProps> = ({
         </div>
         
         <div className="space-y-2.5">
-          <div className="client-info-row">
-            <MailIcon className="h-4 w-4 client-info-icon" />
+          <div className="flex items-center gap-2.5 text-sm py-0.5">
+            <MailIcon className="h-4 w-4 text-muted-foreground" />
             <span className="truncate">{client.email}</span>
           </div>
           
           {client.phone && (
-            <div className="client-info-row">
-              <PhoneIcon className="h-4 w-4 client-info-icon" />
+            <div className="flex items-center gap-2.5 text-sm py-0.5">
+              <PhoneIcon className="h-4 w-4 text-muted-foreground" />
               <span>{client.phone}</span>
             </div>
           )}
           
           {client.address && (
-            <div className="client-info-row">
-              <MapPinIcon className="h-4 w-4 client-info-icon" />
+            <div className="flex items-center gap-2.5 text-sm py-0.5">
+              <MapPinIcon className="h-4 w-4 text-muted-foreground" />
               <span className="truncate">{client.address}</span>
             </div>
           )}
@@ -122,13 +126,19 @@ export const ClientCardComponent: React.FC<ClientCardComponentProps> = ({
             )}
           </div>
         </div>
-      </ClientCardContent>
+      </CardContent>
       
-      <ClientCardFooter className="flex justify-between border-t bg-muted/10">
-        <Button variant="secondary" size="sm" className="px-4" onClick={(e) => {
-          e.stopPropagation();
-          onBookShoot(client, e);
-        }}>
+      {/* Footer */}
+      <CardFooter className="flex justify-between border-t bg-muted/10 px-4 py-3">
+        <Button 
+          variant="secondary" 
+          size="sm" 
+          className="px-4" 
+          onClick={(e) => {
+            e.stopPropagation();
+            onBookShoot(client, e);
+          }}
+        >
           Book Shoot
         </Button>
         
@@ -163,7 +173,7 @@ export const ClientCardComponent: React.FC<ClientCardComponentProps> = ({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </ClientCardFooter>
-    </ClientCard>
+      </CardFooter>
+    </Card>
   );
 };

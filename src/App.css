@@ -1,14 +1,15 @@
+
 #root {
   max-width: 100%;
   margin: 0 auto;
-  padding: 0.5rem;
+  padding: 0;
   text-align: center;
 }
 
 @media (min-width: 768px) {
   #root {
     max-width: 1280px;
-    padding: 2rem;
+    padding: 1rem;
   }
 }
 
@@ -83,14 +84,14 @@
   
   /* Add bottom padding for the mobile navbar */
   body {
-    padding-bottom: 70px; /* Ensure content doesn't get hidden behind the navbar */
+    padding-bottom: 80px; /* Ensure content doesn't get hidden behind the navbar */
   }
   
   .mobile-scrollable {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
     max-height: 100%;
-    padding-bottom: 80px; /* Increase padding at the bottom for mobile navbar */
+    padding-bottom: 100px; /* Increase padding at the bottom for mobile navbar */
   }
   
   .mobile-compact-form .glass-card {
@@ -139,7 +140,7 @@
   }
   
   .client-card-footer {
-    @apply flex justify-between items-center p-3 bg-background border-t;
+    @apply flex justify-between items-center p-4 bg-background border-t;
   }
   
   .client-info-row {
@@ -179,7 +180,7 @@
 
   /* Added bottom padding to account for pagination controls */
   .client-cards-container {
-    @apply pb-16;
+    @apply pb-24;
   }
 
   /* Enhanced stats cards for mobile */
