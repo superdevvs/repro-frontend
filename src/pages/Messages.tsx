@@ -30,7 +30,7 @@ import { ConversationList } from '@/components/messaging/ConversationList';
 import { MessageList } from '@/components/messaging/MessageList';
 import { MessageInput } from '@/components/messaging/MessageInput';
 import { ProjectContextBar } from '@/components/messaging/ProjectContextBar';
-import { Conversation, ConversationFilter, MessageTemplate } from '@/types/messages';
+import { Conversation, ConversationFilter, MessageTemplate, Message } from '@/types/messages';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -391,15 +391,21 @@ const Messages = () => {
   const handleSendMessage = (content: string, attachments?: File[]) => {
     if (!content.trim() && (!attachments || attachments.length === 0)) return;
     
-    toast.success('Message sent');
+    toast({
+      title: "Message sent",
+      description: "Your message has been delivered successfully.",
+    });
     
     console.log('Sending message:', content, attachments);
   };
   
   const handleMarkAsTask = (message: any) => {
-    toast.success('Added to tasks');
+    toast({
+      title: "Added to tasks",
+      description: "The message has been added to your tasks.",
+    });
   };
-  
+
   const renderMobileView = () => {
     if (!selectedConversation) {
       return (
