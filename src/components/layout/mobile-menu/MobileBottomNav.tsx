@@ -14,6 +14,7 @@ import {
   BuildingIcon, 
   FileTextIcon, 
   SettingsIcon,
+  BarChart3Icon,
   MoreHorizontal
 } from 'lucide-react';
 
@@ -46,7 +47,7 @@ export const MobileBottomNav = () => {
       case 'Building':
         return <BuildingIcon className={iconClass} />;
       case 'FileText':
-        return <FileTextIcon className={iconClass} />;
+        return <BarChart3Icon className={iconClass} />;
       case 'Settings':
         return <SettingsIcon className={iconClass} />;
       default:

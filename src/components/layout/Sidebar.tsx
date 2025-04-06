@@ -23,6 +23,7 @@ import {
   HistoryIcon,
   CalendarIcon,
   ClipboardIcon,
+  BarChart3Icon,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -121,14 +122,16 @@ export function Sidebar({ className }: SidebarProps) {
               isActive={pathname === '/dashboard'}
             />
             
-            {/* Show Book Shoot for both admins and clients */}
-            <NavLink
-              to="/book-shoot"
-              icon={<ClipboardIcon className="h-5 w-5" />}
-              label="Book Shoot"
-              isCollapsed={isCollapsed}
-              isActive={pathname === '/book-shoot'}
-            />
+            {/* Show Book Shoot based on role */}
+            {['client', 'admin', 'superadmin'].includes(role) && (
+              <NavLink
+                to="/book-shoot"
+                icon={<ClipboardIcon className="h-5 w-5" />}
+                label="Book Shoot"
+                isCollapsed={isCollapsed}
+                isActive={pathname === '/book-shoot'}
+              />
+            )}
             
             {/* Show appropriate shoots history based on user role */}
             {role === 'client' ? (
@@ -157,7 +160,8 @@ export function Sidebar({ className }: SidebarProps) {
               isActive={pathname === '/messages'}
             />
             
-            {role !== 'client' && (
+            {/* Show Clients link only for specific roles */}
+            {['admin', 'superadmin', 'photographer', 'editor'].includes(role) && (
               <NavLink
                 to="/clients"
                 icon={<UserIcon className="h-5 w-5" />}
@@ -167,6 +171,7 @@ export function Sidebar({ className }: SidebarProps) {
               />
             )}
             
+            {/* Show Accounts link only for admin roles */}
             {['admin', 'superadmin'].includes(role) && (
               <NavLink
                 to="/accounts"
@@ -177,28 +182,20 @@ export function Sidebar({ className }: SidebarProps) {
               />
             )}
             
+            {/* Replace Invoices with Accounting */}
             <NavLink
-              to="/invoices"
-              icon={<FileTextIcon className="h-5 w-5" />}
-              label="Invoices"
+              to="/accounting"
+              icon={<BarChart3Icon className="h-5 w-5" />}
+              label="Accounting"
               isCollapsed={isCollapsed}
-              isActive={pathname === '/invoices'}
+              isActive={pathname === '/accounting'}
             />
             
-            {role === 'superadmin' && (
-              <NavLink
-                to="/reports"
-                icon={<SettingsIcon className="h-5 w-5" />}
-                label="Reports"
-                isCollapsed={isCollapsed}
-                isActive={pathname === '/reports'}
-              />
-            )}
-            
-            {role === 'admin' && (
+            {/* Show Availability for admin and photographer */}
+            {['admin', 'photographer'].includes(role) && (
               <NavLink
                 to="/availability"
-                icon={<UsersIcon className="h-5 w-5" />}
+                icon={<CalendarIcon className="h-5 w-5" />}
                 label="Availability"
                 isCollapsed={isCollapsed}
                 isActive={pathname === '/availability'}

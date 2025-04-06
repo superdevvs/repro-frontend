@@ -12,7 +12,8 @@ import {
   FileTextIcon, 
   CalendarIcon, 
   SettingsIcon,
-  LogOutIcon
+  LogOutIcon,
+  BarChart3Icon
 } from 'lucide-react';
 
 interface MenuItemProps {
@@ -47,6 +48,8 @@ export const MenuItem = ({ to, icon, label, isActive, onClick }: MenuItemProps) 
         return <SettingsIcon className="h-6 w-6" />;
       case 'LogOut':
         return <LogOutIcon className="h-6 w-6" />;
+      case 'BarChart3':
+        return <BarChart3Icon className="h-6 w-6" />;
       default:
         return <HomeIcon className="h-6 w-6" />;
     }

@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/hooks/useTheme';
 import { TimeRangeFilter } from '@/components/dashboard/TimeRangeFilter';
 import { TimeRange } from '@/utils/dateUtils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface DashboardHeaderProps {
   isAdmin: boolean;
@@ -17,17 +19,37 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onTimeRangeChange 
 }) => {
   const { theme } = useTheme();
+  const { user } = useAuth();
+  
+  // Get user name or username if available
+  const userName = user?.name || 'there';
+  
+  // Get first letter for avatar fallback
+  const getInitials = () => {
+    if (!user?.name) return 'U';
+    return user.name.charAt(0).toUpperCase();
+  };
   
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full">
-      <div>
-        <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
-          Dashboard
-        </Badge>
-        <h1 className="text-3xl font-bold">Welcome back</h1>
-        <p className="text-muted-foreground">
-          Here's what's happening with your shoots today.
-        </p>
+      <div className="flex items-center gap-4">
+        <Avatar className="h-12 w-12 border-2 border-primary/20">
+          <AvatarImage src={user?.avatar} alt={userName} />
+          <AvatarFallback className="bg-primary/10 text-primary">{getInitials()}</AvatarFallback>
+        </Avatar>
+        <div>
+          <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
+            Dashboard
+          </Badge>
+          <h1 className="text-3xl font-bold">Welcome back, {userName}</h1>
+          <p className="text-muted-foreground">
+            {isAdmin ? (
+              "Here's an overview of your business stats and scheduled shoots."
+            ) : (
+              "Here's what's happening with your shoots today."
+            )}
+          </p>
+        </div>
       </div>
       <TimeRangeFilter 
         selectedRange={timeRange}

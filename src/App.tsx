@@ -1,3 +1,4 @@
+
 import React from 'react'
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -23,6 +24,7 @@ import PhotographerAccount from "./pages/PhotographerAccount";
 import PhotographerAvailability from "./pages/PhotographerAvailability";
 import { ShootsProvider } from './context/ShootsContext';
 import Profile from "./pages/Profile";
+import Accounting from "./pages/Accounting";
 
 // Declare global type augmentations for User to include metadata
 declare module './components/auth/AuthProvider' {
@@ -90,6 +92,11 @@ const AppRoutes = () => {
       <Route path="/invoices" element={
         <ProtectedRoute>
           <Invoices />
+        </ProtectedRoute>
+      } />
+      <Route path="/accounting" element={
+        <ProtectedRoute>
+          <Accounting />
         </ProtectedRoute>
       } />
       <Route path="/accounts" element={

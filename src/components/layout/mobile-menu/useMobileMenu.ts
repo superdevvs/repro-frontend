@@ -66,10 +66,10 @@ export const useMobileMenu = () => {
       roles: ['admin', 'superadmin']
     },
     {
-      to: "/invoices",
+      to: "/accounting",
       icon: "FileText",
-      label: "Invoices",
-      isActive: pathname === '/invoices',
+      label: "Accounting",
+      isActive: pathname === '/accounting',
       roles: ['client', 'admin', 'superadmin', 'photographer', 'editor']
     },
     {
