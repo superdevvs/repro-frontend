@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock } from 'lucide-react';
 import { TimeRange } from '@/utils/dateUtils';
 
 interface TimeRangeFilterProps {
@@ -17,11 +16,6 @@ export function TimeRangeFilter({
 }: TimeRangeFilterProps) {
   return (
     <div className={`flex flex-col sm:flex-row items-end sm:items-center gap-2 ${className}`}>
-      <div className="flex items-center text-xs text-muted-foreground gap-1.5 whitespace-nowrap">
-        <Calendar className="h-3.5 w-3.5" />
-        <span>Time Period</span>
-      </div>
-      
       <div className="bg-muted/20 p-1 rounded-lg flex items-center shadow-sm">
         <Button 
           variant={selectedRange === 'day' ? 'default' : 'ghost'} 
