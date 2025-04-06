@@ -11,6 +11,10 @@ export interface UserMetadata {
   };
   lastActivity?: string;
   features?: string[];
+  // Add missing properties that are being referenced in other files
+  clientId?: string;
+  phone?: string;
+  company?: string;
 }
 
 // Define the user data interface

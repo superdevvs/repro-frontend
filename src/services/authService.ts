@@ -38,7 +38,9 @@ export const updateUserRole = (
   setUser: (user: UserData | null) => void
 ) => {
   if (user) {
-    const updatedUser = { ...user, role };
+    // Make sure we're using a valid Role type by casting it
+    const typedRole = role as UserData['role'];
+    const updatedUser = { ...user, role: typedRole };
     localStorage.setItem('user', JSON.stringify(updatedUser));
     setUser(updatedUser);
   }

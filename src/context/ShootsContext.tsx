@@ -1,258 +1,108 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ShootData } from '@/types/shoots';
-import { shootsData as initialShootsData } from '@/data/shootsData';
-import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid';
+import { format, addDays } from 'date-fns';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { UserMetadata } from '@/types/auth';
 
 interface ShootsContextType {
   shoots: ShootData[];
   addShoot: (shoot: ShootData) => void;
-  updateShoot: (id: string, updatedShoot: Partial<ShootData>) => void;
-  deleteShoot: (id: string) => void;
-  // Helper functions for accounts page
-  getUniquePhotographers: () => { name: string; shootCount: number }[];
-  getUniqueEditors: () => { name: string; shootCount: number }[];
-  getUniqueClients: () => { name: string; shootCount: number; email?: string; company?: string; phone?: string }[];
-  // New functions for client-specific data
-  getCurrentClientShoots: () => ShootData[];
-  getClientShootsByStatus: (status: ShootData['status']) => ShootData[];
-  // Dashboard data helpers
-  getShootsByStatus: (status: ShootData['status']) => ShootData[];
-  getRecentShoots: (limit?: number) => ShootData[];
-  getUpcomingShoots: (limit?: number) => ShootData[];
+  updateShoot: (shootId: string, updates: Partial<ShootData>) => void;
+  deleteShoot: (shootId: string) => void;
 }
 
 const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
 
-export function ShootsProvider({ children }: { children: React.ReactNode }) {
+export const useShoots = () => {
+  const context = useContext(ShootsContext);
+  if (!context) {
+    throw new Error('useShoots must be used within a ShootsProvider');
+  }
+  return context;
+};
+
+export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [shoots, setShoots] = useState<ShootData[]>(() => {
     const storedShoots = localStorage.getItem('shoots');
-    return storedShoots ? JSON.parse(storedShoots) : initialShootsData;
+    return storedShoots ? JSON.parse(storedShoots) : [];
   });
-  
-  const { toast } = useToast();
   const { user } = useAuth();
 
-  // Save shoots to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('shoots', JSON.stringify(shoots));
   }, [shoots]);
 
   const addShoot = (shoot: ShootData) => {
-    // Add default time from the time string if available
-    const shootWithTime = shoot.time ? {
-      ...shoot,
-      time: shoot.time
-    } : shoot;
-    
-    // Ensure new shoots are set to 'booked' status by default
-    const shootWithDefaultStatus = {
-      ...shootWithTime,
-      status: shoot.status || 'booked' as const
-    };
-    
-    setShoots(prevShoots => [...prevShoots, shootWithDefaultStatus]);
-    toast({
-      title: "Shoot created",
-      description: "New shoot has been successfully added.",
-    });
+    setShoots(prevShoots => [...prevShoots, shoot]);
   };
 
-  const updateShoot = (id: string, updatedShoot: Partial<ShootData>) => {
-    setShoots(prevShoots => 
-      prevShoots.map(shoot => 
-        shoot.id === id ? { ...shoot, ...updatedShoot } : shoot
+  const updateShoot = (shootId: string, updates: Partial<ShootData>) => {
+    setShoots(prevShoots =>
+      prevShoots.map(shoot =>
+        shoot.id === shootId ? { ...shoot, ...updates } : shoot
       )
     );
-    toast({
-      title: "Shoot updated",
-      description: "Shoot details have been updated.",
-    });
   };
 
-  const deleteShoot = (id: string) => {
-    setShoots(prevShoots => prevShoots.filter(shoot => shoot.id !== id));
-    toast({
-      title: "Shoot deleted",
-      description: "The shoot has been removed.",
-      variant: "destructive",
-    });
+  const deleteShoot = (shootId: string) => {
+    setShoots(prevShoots => prevShoots.filter(shoot => shoot.id !== shootId));
   };
 
-  // New functions for dashboard data
-  const getShootsByStatus = (status: ShootData['status']) => {
-    if (user?.role === 'client') {
-      return shoots.filter(shoot => 
-        shoot.client.name === user.name && 
-        shoot.status === status
-      );
+  const createNewShoot = (shootData: Partial<ShootData>) => {
+    const newShoot: ShootData = {
+      id: uuidv4(),
+      scheduledDate: shootData.scheduledDate || format(new Date(), 'yyyy-MM-dd'),
+      time: shootData.time || '10:00',
+      client: {
+        name: shootData.client?.name || 'New Client',
+        email: shootData.client?.email || 'client@example.com',
+        company: shootData.client?.company || '',
+        totalShoots: 0
+      },
+      location: {
+        address: shootData.location?.address || '123 Main St',
+        address2: shootData.location?.address2 || '',
+        city: shootData.location?.city || 'Anytown',
+        state: shootData.location?.state || 'CA',
+        zip: shootData.location?.zip || '12345',
+        fullAddress: shootData.location?.fullAddress || '123 Main St, Anytown, CA 12345'
+      },
+      photographer: {
+        name: shootData.photographer?.name || 'John Doe',
+        avatar: shootData.photographer?.avatar || '/avatars/avatar-john.png'
+      },
+      services: shootData.services || ['Photography'],
+      payment: {
+        baseQuote: shootData.payment?.baseQuote || 500,
+        taxRate: shootData.payment?.taxRate || 7.25,
+        taxAmount: shootData.payment?.taxAmount || 36.25,
+        totalQuote: shootData.payment?.totalQuote || 536.25,
+        totalPaid: shootData.payment?.totalPaid || 0,
+      },
+      status: shootData.status || 'scheduled',
+      notes: shootData.notes,
+      createdBy: user?.name || "System"
+    };
+    
+    if (user && user.metadata) {
+      newShoot.client.company = user.metadata.company || user.company || '';
+      newShoot.client.phone = user.metadata.phone || user.phone || '';
     }
-    return shoots.filter(shoot => shoot.status === status);
+
+    addShoot(newShoot);
   };
 
-  const getRecentShoots = (limit = 5) => {
-    const sortedShoots = [...shoots].sort((a, b) => {
-      const dateA = new Date(a.scheduledDate);
-      const dateB = new Date(b.scheduledDate);
-      return dateB.getTime() - dateA.getTime();
-    });
-
-    if (user?.role === 'client') {
-      return sortedShoots
-        .filter(shoot => shoot.client.name === user.name)
-        .slice(0, limit);
-    }
-    
-    return sortedShoots.slice(0, limit);
-  };
-
-  const getUpcomingShoots = (limit = 5) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const upcomingShoots = [...shoots].filter(shoot => {
-      const shootDate = new Date(shoot.scheduledDate);
-      return shootDate >= today && shoot.status !== 'completed';
-    }).sort((a, b) => {
-      const dateA = new Date(a.scheduledDate);
-      const dateB = new Date(b.scheduledDate);
-      return dateA.getTime() - dateB.getTime();
-    });
-
-    if (user?.role === 'client') {
-      return upcomingShoots
-        .filter(shoot => shoot.client.name === user.name)
-        .slice(0, limit);
-    }
-    
-    return upcomingShoots.slice(0, limit);
-  };
-
-  // New functions for client-specific data
-  const getCurrentClientShoots = () => {
-    if (user && user.role === 'client') {
-      return shoots.filter(shoot => shoot.client.name === user.name);
-    }
-    return []; // Return empty array if not a client
-  };
-
-  const getClientShootsByStatus = (status: ShootData['status']) => {
-    if (user && user.role === 'client') {
-      return shoots.filter(shoot => 
-        shoot.client.name === user.name && 
-        shoot.status === status
-      );
-    }
-    return []; // Return empty array if not a client
-  };
-
-  // Helper functions for Accounts page
-  const getUniquePhotographers = () => {
-    const photographerMap = new Map<string, number>();
-    
-    // For clients, only count photographers from their shoots
-    const relevantShoots = user?.role === 'client' 
-      ? shoots.filter(shoot => shoot.client.name === user.name)
-      : shoots;
-    
-    relevantShoots.forEach(shoot => {
-      if (shoot.photographer && shoot.photographer.name) {
-        const name = shoot.photographer.name;
-        photographerMap.set(name, (photographerMap.get(name) || 0) + 1);
-      }
-    });
-    
-    return Array.from(photographerMap.entries()).map(([name, shootCount]) => ({
-      name, 
-      shootCount
-    }));
-  };
-  
-  const getUniqueEditors = () => {
-    // Since there's no editor field in ShootData, create mock data for demonstration
-    return [
-      { name: "Sarah Johnson", shootCount: 24 },
-      { name: "Mike Reynolds", shootCount: 18 },
-      { name: "Alicia Rodriguez", shootCount: 32 }
-    ];
-  };
-  
-  const getUniqueClients = () => {
-    // For clients, only show their own data
-    if (user?.role === 'client') {
-      const clientData = {
-        name: user.name || '',
-        shootCount: shoots.filter(shoot => shoot.client.name === user.name).length,
-        email: user.email,
-        company: user.metadata?.company,
-        phone: user.metadata?.phone
-      };
-      return [clientData];
-    }
-    
-    // For admins, show all clients
-    const clientMap = new Map<string, { 
-      count: number, 
-      email?: string,
-      company?: string,
-      phone?: string
-    }>();
-    
-    shoots.forEach(shoot => {
-      if (shoot.client && shoot.client.name) {
-        const name = shoot.client.name;
-        const existingClient = clientMap.get(name);
-        
-        if (existingClient) {
-          clientMap.set(name, {
-            ...existingClient,
-            count: existingClient.count + 1
-          });
-        } else {
-          clientMap.set(name, {
-            count: 1,
-            email: shoot.client.email,
-            company: shoot.client.company,
-            phone: shoot.client.phone
-          });
-        }
-      }
-    });
-    
-    return Array.from(clientMap.entries()).map(([name, data]) => ({
-      name,
-      shootCount: data.count,
-      email: data.email,
-      company: data.company,
-      phone: data.phone
-    }));
+  const value: ShootsContextType = {
+    shoots,
+    addShoot,
+    updateShoot,
+    deleteShoot,
   };
 
   return (
-    <ShootsContext.Provider value={{ 
-      shoots, 
-      addShoot, 
-      updateShoot, 
-      deleteShoot,
-      getUniquePhotographers,
-      getUniqueEditors,
-      getUniqueClients,
-      getCurrentClientShoots,
-      getClientShootsByStatus,
-      getShootsByStatus,
-      getRecentShoots,
-      getUpcomingShoots
-    }}>
+    <ShootsContext.Provider value={value}>
       {children}
     </ShootsContext.Provider>
   );
-}
-
-export function useShoots() {
-  const context = useContext(ShootsContext);
-  if (context === undefined) {
-    throw new Error('useShoots must be used within a ShootsProvider');
-  }
-  return context;
-}
+};

@@ -33,8 +33,9 @@ const BookShoot = () => {
   });
   
   const [client, setClient] = useState(() => {
-    if (user && user.role === 'client' && user.metadata && user.metadata.clientId) {
-      return user.metadata.clientId;
+    // Use optional chaining and nullish coalescing for safety when accessing metadata properties
+    if (user && user.role === 'client' && user.metadata) {
+      return user.metadata.clientId ?? '';
     }
     return clientIdFromUrl || '';
   });
@@ -246,8 +247,9 @@ const BookShoot = () => {
       clientId: client,
       clientName: isClientAccount ? user?.name || '' : clients.find(c => c.id === client)?.name || '',
       clientEmail: isClientAccount ? user?.email || '' : clients.find(c => c.id === client)?.email || '',
-      clientPhone: isClientAccount ? (user?.metadata?.phone || '') : clients.find(c => c.id === client)?.phone || '',
-      clientCompany: isClientAccount ? (user?.metadata?.company || '') : clients.find(c => c.id === client)?.company || '',
+      // Use optional chaining and nullish coalescing for safety
+      clientPhone: isClientAccount ? (user?.metadata?.phone || user?.phone || '') : clients.find(c => c.id === client)?.phone || '',
+      clientCompany: isClientAccount ? (user?.metadata?.company || user?.company || '') : clients.find(c => c.id === client)?.company || '',
       propertyType: 'residential' as const,
       propertyAddress: address,
       propertyCity: city,
