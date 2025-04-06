@@ -5,8 +5,56 @@ import { Calendar } from '@/components/dashboard/Calendar';
 import { ShootsFilter } from '@/components/dashboard/ShootsFilter';
 import { Button } from '@/components/ui/button';
 import { shootsData } from '@/data/shootsData';
-import { filterShootsByDateRange } from '@/utils/dateUtils';
-import { TimeRange } from '@/utils/dateUtils';
+import { TimeRange, ShootData } from '@/types/shoots';
+
+// Filter shoots by date range
+const filterShootsByDateRange = (shoots: ShootData[], timeRange: TimeRange): ShootData[] => {
+  const now = new Date();
+  const startDate = new Date();
+  
+  switch (timeRange) {
+    case 'today':
+      // Today only
+      return shoots.filter(shoot => {
+        const shootDate = new Date(shoot.scheduledDate);
+        return shootDate.toDateString() === now.toDateString();
+      });
+    case 'day':
+      // Next 24 hours
+      return shoots.filter(shoot => {
+        const shootDate = new Date(shoot.scheduledDate);
+        const diffTime = Math.abs(shootDate.getTime() - now.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 1;
+      });
+    case 'week':
+      // Next 7 days
+      return shoots.filter(shoot => {
+        const shootDate = new Date(shoot.scheduledDate);
+        const diffTime = Math.abs(shootDate.getTime() - now.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 7;
+      });
+    case 'month':
+      // Next 30 days
+      return shoots.filter(shoot => {
+        const shootDate = new Date(shoot.scheduledDate);
+        const diffTime = Math.abs(shootDate.getTime() - now.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 30;
+      });
+    case 'year':
+      // This year
+      return shoots.filter(shoot => {
+        const shootDate = new Date(shoot.scheduledDate);
+        return shootDate.getFullYear() === now.getFullYear();
+      });
+    case 'all':
+    default:
+      // All shoots
+      return shoots;
+  }
+};
 
 const ShootCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -45,6 +93,7 @@ const ShootCalendar = () => {
       <Calendar
         shoots={filteredShoots}
         className="w-full"
+        onDateSelect={handleDateSelect}
       />
     </Shell>
   );

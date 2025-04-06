@@ -1,7 +1,7 @@
 
 import { ReactNode } from 'react';
 
-export type ShootStatus = 'scheduled' | 'completed' | 'in-progress' | 'cancelled';
+export type ShootStatus = 'scheduled' | 'completed' | 'in-progress' | 'cancelled' | 'pending' | 'hold' | 'booked';
 export type TimeRange = 'today' | 'day' | 'week' | 'month' | 'year' | 'all';
 
 export interface MediaItem {
@@ -18,6 +18,7 @@ export interface Client {
   email: string;
   phone?: string;
   company?: string;
+  totalShoots?: number;
 }
 
 export interface Photographer {
@@ -31,9 +32,12 @@ export interface Photographer {
 
 export interface Location {
   address: string;
+  address2?: string; 
   city?: string;
   state?: string;
   zipCode?: string;
+  zip?: string; // Some components use zipCode, others use zip
+  fullAddress?: string;
   coordinates?: {
     lat: number;
     lng: number;
@@ -45,6 +49,12 @@ export interface Payment {
   invoiceId?: string;
   status?: 'paid' | 'pending' | 'overdue';
   date?: string;
+  baseQuote?: number;
+  taxRate?: number;
+  taxAmount?: number;
+  totalQuote?: number;
+  lastPaymentDate?: string;
+  lastPaymentType?: string;
 }
 
 export interface ShootMedia {
@@ -52,6 +62,20 @@ export interface ShootMedia {
   videos?: MediaItem[];
   floorplans?: MediaItem[];
   slideshows?: MediaItem[];
+  documents?: MediaItem[];
+}
+
+export interface Notes {
+  shootNotes?: string;
+  photographerNotes?: string;
+  companyNotes?: string;
+  editingNotes?: string;
+}
+
+export interface TourLinks {
+  branded?: string;
+  mls?: string;
+  genericMls?: string;
 }
 
 export interface ShootData {
@@ -59,13 +83,33 @@ export interface ShootData {
   client: Client;
   photographer?: Photographer;
   scheduledDate: string | Date;
+  completedDate?: string | Date;
   status: ShootStatus;
-  location?: Location;
+  location: Location;
   payment: Payment;
   media?: ShootMedia;
-  notes?: string;
+  notes?: Notes | string;
   createdAt?: string;
   updatedAt?: string;
+  time?: string;
+  services?: string[];
+  tourLinks?: TourLinks;
+  tourPurchased?: boolean;
+  createdBy?: string;
+}
+
+// Context type definition
+export interface ShootsContextType {
+  shoots: ShootData[];
+  loading: boolean;
+  error: Error | null;
+  addShoot: (shoot: ShootData) => void;
+  updateShoot: (id: string | number, updates: Partial<ShootData>) => void;
+  deleteShoot: (id: string | number) => void;
+  getUniquePhotographers: () => any[];
+  getUniqueEditors: () => any[];
+  getUniqueClients: () => any[];
+  getClientShootsByStatus: (status: string) => ShootData[];
 }
 
 // Component Props Types
@@ -102,6 +146,7 @@ export interface CalendarProps {
   shoots: ShootData[];
   className?: string;
   height?: number;
+  onDateSelect?: (date: Date) => void;
 }
 
 export interface ShootsFilterProps {
