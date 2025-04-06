@@ -34,7 +34,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full mb-6">
       <div className="flex items-start sm:items-center gap-4">
         <Avatar className="hidden sm:flex h-12 w-12 border-2 border-primary/20">
-          <AvatarImage src={user?.avatarUrl} alt={userName} />
+          <AvatarImage src={user?.avatar} alt={userName} />
           <AvatarFallback className="bg-primary/10 text-primary font-medium">
             {getInitials()}
           </AvatarFallback>
