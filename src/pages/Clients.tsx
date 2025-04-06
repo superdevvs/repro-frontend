@@ -57,6 +57,9 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from '@/components/ui/pagination';
+import { ClientCardComponent } from '@/components/clients/ClientCard';
+import { PaginationDots } from '@/components/ui/pagination';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 const Clients = () => {
   
@@ -74,7 +77,6 @@ const Clients = () => {
   const [clientFormOpen, setClientFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const clientsPerPage = 8;
   
@@ -103,7 +105,6 @@ const Clients = () => {
     return storedClients ? JSON.parse(storedClients) : initialClientsData;
   });
   
-  // Dashboard statistics
   const totalClients = clientsData.length;
   const activeClients = clientsData.filter(client => client.status === 'active').length;
   const totalShoots = shoots.length;
@@ -111,6 +112,7 @@ const Clients = () => {
     ? Math.round((totalShoots / totalClients) * 10) / 10 
     : 0;
   
+  const isMobile = useMediaQuery("(max-width: 767px)");
   
   useEffect(() => {
     if (shoots.length > 0) {
@@ -179,7 +181,6 @@ const Clients = () => {
     client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  // Get current clients for pagination
   const indexOfLastClient = currentPage * clientsPerPage;
   const indexOfFirstClient = indexOfLastClient - clientsPerPage;
   const currentClients = filteredClients.slice(indexOfFirstClient, indexOfLastClient);
@@ -408,27 +409,22 @@ const Clients = () => {
     });
   };
 
-  // Function to render page numbers for pagination
   const renderPageNumbers = () => {
     const pageNumbers = [];
-    const maxPagesToShow = 5; // Max number of page links to show
+    const maxPagesToShow = 5;
     
     if (totalPages <= maxPagesToShow) {
-      // If we have fewer pages than the max, show all pages
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
       }
     } else {
-      // Otherwise use a smarter algorithm to show pages around the current one
       let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
       let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
       
-      // Adjust if we're at the end
       if (endPage - startPage + 1 < maxPagesToShow) {
         startPage = Math.max(1, endPage - maxPagesToShow + 1);
       }
       
-      // Add first page if not included
       if (startPage > 1) {
         pageNumbers.push(1);
         if (startPage > 2) {
@@ -436,12 +432,10 @@ const Clients = () => {
         }
       }
       
-      // Add pages in the middle
       for (let i = startPage; i <= endPage; i++) {
         pageNumbers.push(i);
       }
       
-      // Add last page if not included
       if (endPage < totalPages) {
         if (endPage < totalPages - 1) {
           pageNumbers.push('ellipsis');
@@ -476,7 +470,6 @@ const Clients = () => {
             )}
           </div>
           
-          {/* Client Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-6">
@@ -556,95 +549,129 @@ const Clients = () => {
               <CardTitle>Client Directory</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Client</TableHead>
-                      <TableHead>Company</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Shoots</TableHead>
-                      <TableHead>Last Activity</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentClients.length > 0 ? (
-                      currentClients.map((client) => (
-                        <TableRow key={client.id} className="cursor-pointer hover:bg-secondary/10" onClick={() => handleClientSelect(client)}>
-                          <TableCell className="font-medium">{client.name}</TableCell>
-                          <TableCell>{client.company}</TableCell>
-                          <TableCell>{client.email}</TableCell>
-                          <TableCell>{client.phone}</TableCell>
-                          <TableCell>{client.shootsCount}</TableCell>
-                          <TableCell>{new Date(client.lastActivity).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            <Badge 
-                              className={client.status === 'active' 
-                                ? 'bg-green-500/10 text-green-500 border-green-500/20' 
-                                : 'bg-gray-500/10 text-gray-500 border-gray-500/20'}
-                            >
-                              {client.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <Button variant="ghost" size="sm">
-                                  Actions
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleClientSelect(client);
-                                }}>
-                                  <UserIcon className="h-4 w-4 mr-2" />
-                                  View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => handleEditClient(client, e)}>
-                                  <EditIcon className="h-4 w-4 mr-2" />
-                                  Edit Client
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => handleBookShoot(client, e)}>
-                                  <HomeIcon className="h-4 w-4 mr-2" />
-                                  Book Shoot
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => handleClientPortal(client, e)}>
-                                  <ExternalLinkIcon className="h-4 w-4 mr-2" />
-                                  Client Portal
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  className="text-red-500 focus:text-red-500 focus:bg-red-500/10"
-                                  onClick={(e) => handleDeleteClient(client, e)}
-                                >
-                                  <Trash2Icon className="h-4 w-4 mr-2" />
-                                  Delete Client
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+              {!isMobile && (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Company</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Shoots</TableHead>
+                        <TableHead>Last Activity</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {currentClients.length > 0 ? (
+                        currentClients.map((client) => (
+                          <TableRow key={client.id} className="cursor-pointer hover:bg-secondary/10" onClick={() => handleClientSelect(client)}>
+                            <TableCell className="font-medium">{client.name}</TableCell>
+                            <TableCell>{client.company}</TableCell>
+                            <TableCell>{client.email}</TableCell>
+                            <TableCell>{client.phone}</TableCell>
+                            <TableCell>{client.shootsCount}</TableCell>
+                            <TableCell>{new Date(client.lastActivity).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <Badge 
+                                className={client.status === 'active' 
+                                  ? 'bg-green-500/10 text-green-500 border-green-500/20' 
+                                  : 'bg-gray-500/10 text-gray-500 border-gray-500/20'}
+                              >
+                                {client.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                  <Button variant="ghost" size="sm">
+                                    Actions
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleClientSelect(client);
+                                  }}>
+                                    <UserIcon className="h-4 w-4 mr-2" />
+                                    View Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={(e) => handleEditClient(client, e)}>
+                                    <EditIcon className="h-4 w-4 mr-2" />
+                                    Edit Client
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={(e) => handleBookShoot(client, e)}>
+                                    <HomeIcon className="h-4 w-4 mr-2" />
+                                    Book Shoot
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={(e) => handleClientPortal(client, e)}>
+                                    <ExternalLinkIcon className="h-4 w-4 mr-2" />
+                                    Client Portal
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    className="text-red-500 focus:text-red-500 focus:bg-red-500/10"
+                                    onClick={(e) => handleDeleteClient(client, e)}
+                                  >
+                                    <Trash2Icon className="h-4 w-4 mr-2" />
+                                    Delete Client
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center h-24">
+                            <div className="flex flex-col items-center justify-center text-muted-foreground">
+                              <UserIcon className="h-8 w-8 mb-2 opacity-20" />
+                              <p>No clients found</p>
+                              <p className="text-sm">Try adjusting your search</p>
+                            </div>
                           </TableCell>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center h-24">
-                          <div className="flex flex-col items-center justify-center text-muted-foreground">
-                            <UserIcon className="h-8 w-8 mb-2 opacity-20" />
-                            <p>No clients found</p>
-                            <p className="text-sm">Try adjusting your search</p>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
               
-              {/* Improved Pagination */}
-              {filteredClients.length > clientsPerPage && (
+              {isMobile && (
+                <div className="p-4 space-y-4">
+                  {currentClients.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-1 gap-4">
+                        {currentClients.map((client) => (
+                          <ClientCardComponent
+                            key={client.id}
+                            client={client}
+                            onSelect={handleClientSelect}
+                            onEdit={handleEditClient}
+                            onBookShoot={handleBookShoot}
+                            onClientPortal={handleClientPortal}
+                            onDelete={handleDeleteClient}
+                          />
+                        ))}
+                      </div>
+                      
+                      <PaginationDots 
+                        currentPage={currentPage} 
+                        totalPages={totalPages} 
+                      />
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                      <UserIcon className="h-12 w-12 mb-3 opacity-20" />
+                      <p className="font-medium">No clients found</p>
+                      <p className="text-sm mt-1">Try adjusting your search</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {!isMobile && filteredClients.length > clientsPerPage && (
                 <div className="mt-6 flex justify-center">
                   <Pagination>
                     <PaginationContent className="bg-background p-1 rounded-lg shadow-sm">

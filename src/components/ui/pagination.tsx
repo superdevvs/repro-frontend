@@ -1,4 +1,5 @@
 
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
@@ -83,6 +84,32 @@ const PaginationEllipsis = ({
   </span>
 );
 
+// New mobile pagination dots component
+const PaginationDots = ({
+  className,
+  currentPage,
+  totalPages,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & {
+  currentPage: number;
+  totalPages: number;
+}) => (
+  <div
+    className={cn("pagination-indicator", className)}
+    {...props}
+  >
+    {Array.from({ length: totalPages }).map((_, i) => (
+      <div
+        key={i}
+        className={cn(
+          "pagination-dot",
+          currentPage === i + 1 && "active"
+        )}
+      />
+    ))}
+  </div>
+);
+
 export {
   Pagination,
   PaginationContent,
@@ -91,4 +118,6 @@ export {
   PaginationNext,
   PaginationPrevious,
   PaginationEllipsis,
+  PaginationDots
 };
+

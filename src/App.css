@@ -1,4 +1,3 @@
-
 #root {
   max-width: 100%;
   margin: 0 auto;
@@ -122,5 +121,45 @@
     margin-top: 0.5rem !important;
     margin-bottom: 0.5rem !important;
   }
+  
+  /* Client Card Styles for Mobile */
+  .client-card {
+    @apply rounded-lg overflow-hidden border shadow-sm transition-all hover:shadow-md;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  .client-card-header {
+    @apply relative p-3 bg-gradient-to-r from-primary/5 to-secondary/20;
+    height: 70px;
+  }
+  
+  .client-card-content {
+    @apply p-4 flex flex-col gap-2;
+  }
+  
+  .client-card-footer {
+    @apply flex justify-between items-center p-3 bg-muted/20 border-t;
+  }
+  
+  .client-info-row {
+    @apply flex items-center gap-2 text-sm;
+  }
+  
+  .client-info-icon {
+    @apply text-muted-foreground;
+  }
+  
+  /* Pagination button styles for client cards */
+  .pagination-indicator {
+    @apply inline-flex gap-1 justify-center items-center mt-4 mb-6;
+  }
+  
+  .pagination-dot {
+    @apply h-2 w-2 rounded-full bg-muted transition-all;
+  }
+  
+  .pagination-dot.active {
+    @apply bg-primary w-4;
+  }
 }
-

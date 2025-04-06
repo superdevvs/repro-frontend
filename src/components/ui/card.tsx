@@ -76,4 +76,58 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+const ClientCard = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "client-card bg-card text-card-foreground",
+      className
+    )}
+    {...props}
+  />
+))
+ClientCard.displayName = "ClientCard"
+
+const ClientCardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("client-card-header", className)}
+    {...props}
+  />
+))
+ClientCardHeader.displayName = "ClientCardHeader"
+
+const ClientCardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("client-card-content", className)}
+    {...props}
+  />
+))
+ClientCardContent.displayName = "ClientCardContent"
+
+const ClientCardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("client-card-footer", className)}
+    {...props}
+  />
+))
+ClientCardFooter.displayName = "ClientCardFooter"
+
+export { 
+  Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent,
+  ClientCard, ClientCardHeader, ClientCardContent, ClientCardFooter
+}
