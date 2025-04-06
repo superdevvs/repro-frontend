@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -45,13 +44,11 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
   };
 
   const parseCSV = (text: string): string[][] => {
-    // Split by newline first
     const rows = text.split(/\r?\n/).filter(row => row.trim() !== '');
     
     const result: string[][] = [];
     
     for (const row of rows) {
-      // Custom CSV parsing to handle quotes and commas
       const cells: string[] = [];
       let currentCell = '';
       let inQuotes = false;
@@ -65,7 +62,6 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
           cells.push(currentCell.trim());
           currentCell = '';
         } else if (char === '\t' && !inQuotes) {
-          // Support for TSV format
           cells.push(currentCell.trim());
           currentCell = '';
         } else {
@@ -73,7 +69,6 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
         }
       }
       
-      // Don't forget the last cell
       cells.push(currentCell.trim());
       result.push(cells);
     }
@@ -100,13 +95,11 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
       const successfulImports = [];
       const failedImports = [];
       
-      // Create a mapping of header indices to their column names
       const headerMap: Record<string, number> = {};
       headers.forEach((header, index) => {
         headerMap[header.trim().toLowerCase()] = index;
       });
       
-      // Process each data row
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         if (row.length !== headers.length) {
@@ -120,13 +113,11 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
             return index !== undefined ? row[index] : '';
           };
           
-          // Parse currency values
           const parseCurrency = (value: string): number => {
             const cleaned = value.replace(/[^0-9.]/g, '');
             return cleaned ? parseFloat(cleaned) : 0;
           };
           
-          // Convert services from string to array
           const parseServices = (services: string): string[] => {
             if (!services) return [];
             return [services.trim()];
@@ -134,7 +125,8 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
           
           const newShoot: ShootData = {
             id: uuidv4(),
-            scheduledDate: getValue('scheduled') || new Date().toISOString(),
+            scheduledDate: getValue('scheduled') || new Date().toISOString().split('T')[0],
+            time: getValue('time') || "12:00",
             completedDate: getValue('completed') || undefined,
             client: {
               name: getValue('client') || 'Unknown Client',
@@ -160,7 +152,7 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
               taxRate: parseCurrency(getValue('tax')),
               taxAmount: parseCurrency(getValue('tax amount')),
               totalQuote: parseCurrency(getValue('total quote')),
-              totalPaid: parseCurrency(getValue('total paid')),
+              totalPaid: parseCurrency(getValue('total paid')) || 0,
               lastPaymentDate: getValue('last payment date') || undefined,
               lastPaymentType: getValue('last payment type') || undefined,
             },
@@ -173,7 +165,6 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
             status: getValue('completed') ? 'completed' : 'scheduled',
           };
           
-          // Add the shoot to the context
           addShoot(newShoot);
           successfulImports.push(i);
         } catch (error) {

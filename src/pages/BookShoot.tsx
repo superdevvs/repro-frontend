@@ -192,7 +192,9 @@ const BookShoot = () => {
           taxRate: 6.0,
           taxAmount: getTax(),
           totalQuote: getTotal(),
-          ...(bypassPayment ? {} : { totalPaid: getTotal(), lastPaymentDate: new Date().toISOString().split('T')[0], lastPaymentType: 'Credit Card' })
+          totalPaid: bypassPayment ? 0 : getTotal(),
+          lastPaymentDate: bypassPayment ? undefined : new Date().toISOString().split('T')[0],
+          lastPaymentType: bypassPayment ? undefined : 'Credit Card'
         },
         status: bookingStatus,
         notes: notes ? { shootNotes: notes } : undefined,
