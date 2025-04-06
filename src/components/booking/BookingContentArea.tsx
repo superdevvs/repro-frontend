@@ -144,6 +144,7 @@ export function BookingContentArea({
           setAdditionalNotes={setNotes}
           onConfirm={handleSubmit}
           onBack={goBack}
+          packages={packages}
         />
       )}
     </Card>

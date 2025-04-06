@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -69,13 +70,6 @@ type ClientFormValues = z.infer<typeof clientAccountPropertyFormSchema>;
 type AdminFormValues = z.infer<typeof adminPropertyFormSchema>;
 type FormValues = ClientFormValues | AdminFormValues;
 
-const packages: PackageOption[] = [
-  { id: '1', name: 'Basic', description: 'Photos only', price: 150 },
-  { id: '2', name: 'Standard', description: 'Photos + Floor Plans', price: 250 },
-  { id: '3', name: 'Premium', description: 'Photos + Video + Floor Plans', price: 350 },
-  { id: '4', name: 'Luxury', description: 'Photos + Video + 3D Tour + Floor Plans', price: 500 },
-];
-
 type ClientPropertyFormProps = {
   onComplete: (data: any) => void;
   initialData: {
@@ -93,14 +87,11 @@ type ClientPropertyFormProps = {
     selectedPackage?: string;
   };
   isClientAccount?: boolean;
+  packages: PackageOption[]; // Added packages prop
+  clients: Client[]; // Added clients prop
 };
 
-export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = false }: ClientPropertyFormProps) => {
-  const [clients, setClients] = useState<Client[]>(() => {
-    const storedClients = localStorage.getItem('clientsData');
-    return storedClients ? JSON.parse(storedClients) : initialClientsData;
-  });
-  
+export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = false, packages, clients }: ClientPropertyFormProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingClient, setIsAddingClient] = useState(false);
 
@@ -437,7 +428,62 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
           </div>
         </div>
 
-        {renderPackageSelection()}
+        <div className="pt-2">
+          <Separator className="my-6" />
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="text-lg font-medium">Package Selection</h3>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm">
+                  <p>Choose the package that best fits your needs. Each package includes different services and deliverables.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="selectedPackage"
+            render={({ field }) => (
+              <FormItem>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {packages.map((pkg) => {
+                    const highlight = getPackageHighlight(pkg);
+                    return (
+                      <div
+                        key={pkg.id}
+                        className={`p-4 border rounded-md cursor-pointer transition-all hover:shadow-md ${
+                          field.value === pkg.id
+                            ? "bg-primary/10 border-primary transform scale-[1.02]"
+                            : "bg-card hover:bg-accent/50 hover:border-primary/30"
+                        }`}
+                        onClick={() => form.setValue("selectedPackage", pkg.id)}
+                      >
+                        {highlight && (
+                          <div className="flex items-center gap-1 text-xs font-medium text-primary mb-1.5">
+                            {highlight.icon}
+                            <span>{highlight.label}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <div className="font-medium">{pkg.name}</div>
+                          <div className="font-bold">${pkg.price}</div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {pkg.description}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="mt-6 flex justify-end">
           <Button type="submit">Continue</Button>
@@ -445,4 +491,4 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
       </form>
     </Form>
   );
-};
+}

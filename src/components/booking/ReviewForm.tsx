@@ -19,18 +19,20 @@ interface ReviewFormProps {
   photographer: string;
   setPhotographer: (id: string) => void;
   selectedPackage: string;
-  notes: string;
+  additionalNotes: string; // Renamed from notes to additionalNotes
+  setAdditionalNotes: (value: string) => void; // Renamed from setNotes
   bypassPayment: boolean;
   setBypassPayment: (value: boolean) => void;
   sendNotification: boolean;
   setSendNotification: (value: boolean) => void;
-  getPackagePrice: () => number;
-  getPhotographerRate: () => number;
-  getTax: () => number;
-  getTotal: () => number;
-  clients: Array<{ id: string; name: string }>;
+  packagePrice: number; // Changed from getPackagePrice function to packagePrice value
+  photographerRate: number;
+  tax: number;
+  total: number;
   photographers: Array<{ id: string; name: string; avatar: string; rate: number; availability: boolean }>;
   packages: Array<{ id: string; name: string; description: string; price: number }>;
+  onConfirm: () => void; // Renamed from handleSubmit
+  onBack: () => void; // Renamed from goBack
 }
 
 export function ReviewForm({
@@ -44,21 +46,22 @@ export function ReviewForm({
   photographer,
   setPhotographer,
   selectedPackage,
-  notes,
+  additionalNotes,
+  setAdditionalNotes,
   bypassPayment,
   setBypassPayment,
   sendNotification,
   setSendNotification,
-  getPackagePrice,
-  getPhotographerRate,
-  getTax,
-  getTotal,
-  clients,
+  packagePrice,
+  photographerRate,
+  tax,
+  total,
   photographers,
-  packages
+  packages,
+  onConfirm,
+  onBack
 }: ReviewFormProps) {
-  const selectedClient = clients.find(c => c.id === client);
-  const selectedPhotographer = photographers.find(p => p.id === photographer);
+  // Find the selected client, photographer, and package
   const selectedPackageDetails = packages.find(p => p.id === selectedPackage);
   
   return (
@@ -131,7 +134,7 @@ export function ReviewForm({
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Client:</span>
-            <span className="text-sm font-medium">{selectedClient?.name || "No client selected"}</span>
+            <span className="text-sm font-medium">{client || "No client selected"}</span>
           </div>
           
           <div className="flex justify-between">
@@ -154,14 +157,14 @@ export function ReviewForm({
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Photographer:</span>
             <span className="text-sm font-medium">
-              {selectedPhotographer?.name || (photographers.length === 0 ? "To be assigned" : "No photographer selected")}
+              {photographers.find(p => p.id === photographer)?.name || (photographers.length === 0 ? "To be assigned" : "No photographer selected")}
             </span>
           </div>
           
-          {notes && (
+          {additionalNotes && (
             <div className="pt-2">
               <span className="text-sm text-muted-foreground">Notes:</span>
-              <p className="text-sm mt-1 bg-background p-2 rounded">{notes}</p>
+              <p className="text-sm mt-1 bg-background p-2 rounded">{additionalNotes}</p>
             </div>
           )}
         </div>
@@ -171,24 +174,24 @@ export function ReviewForm({
         <div className="space-y-1">
           <div className="flex justify-between">
             <span className="text-sm">Package:</span>
-            <span className="text-sm">${getPackagePrice()}</span>
+            <span className="text-sm">${packagePrice}</span>
           </div>
           
           <div className="flex justify-between">
             <span className="text-sm">Photographer Fee:</span>
-            <span className="text-sm">${getPhotographerRate()}</span>
+            <span className="text-sm">${photographerRate}</span>
           </div>
           
           <div className="flex justify-between">
             <span className="text-sm">Tax (6%):</span>
-            <span className="text-sm">${getTax()}</span>
+            <span className="text-sm">${tax}</span>
           </div>
           
           <Separator className="my-2" />
           
           <div className="flex justify-between font-bold">
             <span>Total:</span>
-            <span>${getTotal()}</span>
+            <span>${total}</span>
           </div>
         </div>
       </div>
