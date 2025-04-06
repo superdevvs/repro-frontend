@@ -1,41 +1,35 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ClientPropertyForm } from '@/components/booking/ClientPropertyForm';
-import { SchedulingForm } from '@/components/booking/SchedulingForm';
-import { ReviewForm } from '@/components/booking/ReviewForm';
-import { StepNavigation } from '@/components/booking/StepNavigation';
+import { Card } from '@/components/ui/card';
+import { ClientPropertyForm } from './ClientPropertyForm';
+import { SchedulingForm } from './SchedulingForm';
+import { ReviewForm } from './ReviewForm';
 import { stepContent } from '@/constants/bookingSteps';
 
 interface BookingContentAreaProps {
   step: number;
   formErrors: Record<string, string>;
-  setFormErrors: (errors: Record<string, string>) => void;
-  clientPropertyFormData: {
-    initialData: any;
-    onComplete: (data: any) => void;
-    isClientAccount: boolean;
-  };
+  setFormErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  clientPropertyFormData: any;
   date: Date | undefined;
-  setDate: (date: Date | undefined) => void;
+  setDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
   time: string;
-  setTime: (time: string) => void;
+  setTime: React.Dispatch<React.SetStateAction<string>>;
   selectedPackage: string;
   notes: string;
-  setNotes: (notes: string) => void;
-  packages: Array<{ id: string; name: string; description: string; price: number }>;
+  setNotes: React.Dispatch<React.SetStateAction<string>>;
+  packages: any[];
   client: string;
   address: string;
   city: string;
   state: string;
   zip: string;
   photographer: string;
-  setPhotographer: (photographer: string) => void;
+  setPhotographer: React.Dispatch<React.SetStateAction<string>>;
   bypassPayment: boolean;
-  setBypassPayment: (bypass: boolean) => void;
+  setBypassPayment: React.Dispatch<React.SetStateAction<boolean>>;
   sendNotification: boolean;
-  setSendNotification: (send: boolean) => void;
+  setSendNotification: React.Dispatch<React.SetStateAction<boolean>>;
   getPackagePrice: () => number;
   getPhotographerRate: () => number;
   getTax: () => number;
@@ -79,79 +73,66 @@ export function BookingContentArea({
   handleSubmit,
   goBack
 }: BookingContentAreaProps) {
+  const currentStepContent = stepContent[step as keyof typeof stepContent];
+  
   return (
-    <motion.div
-      key={`step-${step}`}
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className="border shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle>{stepContent[step as keyof typeof stepContent]?.title}</CardTitle>
-          <p className="text-muted-foreground text-sm">{stepContent[step as keyof typeof stepContent]?.description}</p>
-        </CardHeader>
-        
-        <CardContent className="pb-8">
-          <AnimatePresence mode="wait">
-            {step === 1 && (
-              <ClientPropertyForm
-                onComplete={clientPropertyFormData.onComplete}
-                initialData={clientPropertyFormData.initialData}
-                isClientAccount={clientPropertyFormData.isClientAccount}
-              />
-            )}
-            
-            {step === 2 && (
-              <SchedulingForm
-                date={date}
-                setDate={setDate}
-                time={time}
-                setTime={setTime}
-                selectedPackage={selectedPackage}
-                notes={notes}
-                setNotes={setNotes}
-                packages={packages}
-                formErrors={formErrors}
-              />
-            )}
-            
-            {step === 3 && (
-              <ReviewForm
-                client={client}
-                address={address}
-                city={city}
-                state={state}
-                zip={zip}
-                date={date}
-                time={time}
-                photographer={photographer}
-                setPhotographer={setPhotographer}
-                selectedPackage={selectedPackage}
-                notes={notes}
-                bypassPayment={bypassPayment}
-                setBypassPayment={setBypassPayment}
-                sendNotification={sendNotification}
-                setSendNotification={setSendNotification}
-                getPackagePrice={getPackagePrice}
-                getPhotographerRate={getPhotographerRate}
-                getTax={getTax}
-                getTotal={getTotal}
-                clients={clients}
-                photographers={photographers}
-                packages={packages}
-              />
-            )}
-          </AnimatePresence>
-        </CardContent>
-      </Card>
+    <Card className="p-4 md:p-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-semibold">{currentStepContent.title}</h2>
+        <p className="text-muted-foreground">{currentStepContent.description}</p>
+      </div>
       
-      <StepNavigation 
-        step={step} 
-        goBack={goBack} 
-        goNext={handleSubmit}
-      />
-    </motion.div>
+      {step === 1 && (
+        <ClientPropertyForm
+          data={clientPropertyFormData.initialData}
+          onComplete={clientPropertyFormData.onComplete}
+          packages={packages}
+          isClientAccount={clientPropertyFormData.isClientAccount}
+          clients={clients}
+        />
+      )}
+      
+      {step === 2 && (
+        <SchedulingForm
+          date={date}
+          setDate={setDate}
+          time={time}
+          setTime={setTime}
+          errors={formErrors}
+          setErrors={setFormErrors}
+          selectedPackage={selectedPackage}
+          handleSubmit={handleSubmit}
+          goBack={goBack}
+        />
+      )}
+      
+      {step === 3 && (
+        <ReviewForm
+          client={clientPropertyFormData.initialData.clientName}
+          address={address}
+          city={city}
+          state={state}
+          zip={zip}
+          date={date}
+          time={time}
+          photographer={photographer}
+          setPhotographer={setPhotographer}
+          bypassPayment={bypassPayment}
+          setBypassPayment={setBypassPayment}
+          sendNotification={sendNotification}
+          setSendNotification={setSendNotification}
+          photographers={photographers}
+          selectedPackage={selectedPackage}
+          packagePrice={getPackagePrice()}
+          photographerRate={getPhotographerRate()}
+          tax={getTax()}
+          total={getTotal()}
+          additionalNotes={notes}
+          setAdditionalNotes={setNotes}
+          onConfirm={handleSubmit}
+          onBack={goBack}
+        />
+      )}
+    </Card>
   );
 }

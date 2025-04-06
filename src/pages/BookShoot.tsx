@@ -288,7 +288,7 @@ const BookShoot = () => {
 
   return (
     <DashboardLayout>
-      <div className="container max-w-5xl py-6 space-y-8">
+      <div className="container max-w-5xl py-3">
         <Button 
           variant="ghost" 
           size="sm" 
@@ -306,8 +306,8 @@ const BookShoot = () => {
             <>
               <BookingStepIndicator currentStep={step} totalSteps={3} />
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="md:col-span-1 order-2 md:order-1">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="order-1 md:order-1 md:col-span-1">
                   <BookingSummary 
                     summaryInfo={summaryInfo} 
                     selectedPackage={selectedPackage}
@@ -315,7 +315,7 @@ const BookShoot = () => {
                   />
                 </div>
                 
-                <div className="md:col-span-2 order-1 md:order-2">
+                <div className="order-2 md:order-2 md:col-span-2">
                   <BookingContentArea
                     step={step}
                     formErrors={formErrors}

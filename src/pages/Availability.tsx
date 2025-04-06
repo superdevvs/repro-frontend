@@ -196,7 +196,7 @@ const Availability = () => {
 
   return (
     <DashboardLayout>
-      <div className="container max-w-4xl py-6 space-y-8">
+      <div className="container max-w-4xl py-4 space-y-6">
         <h1 className="text-3xl font-semibold tracking-tight">Photographer Availability</h1>
         <p className="text-muted-foreground">
           Manage photographer availability and schedule shoots.
@@ -240,7 +240,7 @@ const Availability = () => {
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  disabled={false} // Fix: Changed from {} to false
+                  disabled={false}
                   initialFocus
                 />
               </PopoverContent>
