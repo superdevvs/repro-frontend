@@ -84,17 +84,16 @@
   
   /* Add bottom padding for the mobile navbar */
   body {
-    padding-bottom: 70px; /* Ensure content doesn't get hidden behind the navbar */
+    padding-bottom: 80px; /* Ensure content doesn't get hidden behind the navbar */
   }
   
   .mobile-scrollable {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
     max-height: 100%;
-    padding-bottom: 80px; /* Increase padding at the bottom for mobile navbar */
+    padding-bottom: 100px; /* Increase padding at the bottom for mobile navbar */
   }
   
-  /* Better form styling for mobile */
   .mobile-compact-form .glass-card {
     padding: 1rem !important;
   }
@@ -194,7 +193,7 @@
 
   /* Better scaling for mobile forms */
   .mobile-form-container {
-    @apply px-1 py-1;
+    @apply px-2 py-1;
   }
 
   /* Improved mobile buttons */
@@ -207,72 +206,6 @@
     position: relative;
     margin-bottom: -25px;
     z-index: 10;
-  }
-  
-  /* Messaging styling improvements */
-  .message-conversation-list {
-    height: calc(100vh - 130px);
-    overflow-y: auto;
-  }
-  
-  /* Task styling improvements */
-  .task-item {
-    @apply p-3 rounded-md hover:bg-muted/20 transition-colors;
-    margin-bottom: 0.5rem;
-  }
-  
-  .task-item-mobile {
-    padding: 0.75rem;
-    border-radius: 0.375rem;
-    margin-bottom: 0.375rem;
-  }
-  
-  /* Dashboard header improvements */
-  .dashboard-welcome {
-    font-size: 1.75rem;
-    line-height: 1.2;
-    font-weight: 700;
-  }
-  
-  .dashboard-subtitle {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: var(--muted-foreground);
-    margin-top: 0.25rem;
-  }
-  
-  /* Mobile Time filter */
-  .mobile-time-range {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
-  }
-  
-  /* Better breathing space for mobile elements */
-  .mobile-breathing-space > * {
-    margin-bottom: 0.75rem;
-  }
-  
-  .mobile-breathing-space > *:last-child {
-    margin-bottom: 0;
-  }
-  
-  /* Mobile padding overrides */
-  .mobile-px-1 {
-    padding-left: 0.25rem;
-    padding-right: 0.25rem;
-  }
-  
-  .mobile-px-2 {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-  
-  /* Mobile full screen sheet */
-  .mobile-full-sheet {
-    width: 100vw !important;
-    max-width: 100vw !important;
   }
 }
 
