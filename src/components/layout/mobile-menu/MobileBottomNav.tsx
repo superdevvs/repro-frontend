@@ -8,13 +8,13 @@ import { useMobileMenu } from './useMobileMenu';
 import { 
   HomeIcon, 
   ClipboardIcon, 
-  HistoryIcon, 
+  CalendarIcon, 
   MessageSquareIcon, 
   UserIcon, 
   BuildingIcon, 
   FileTextIcon, 
-  CalendarIcon, 
-  SettingsIcon
+  SettingsIcon,
+  MoreHorizontal
 } from 'lucide-react';
 
 export const MobileBottomNav = () => {
@@ -37,8 +37,8 @@ export const MobileBottomNav = () => {
         return <HomeIcon className={iconClass} />;
       case 'Clipboard':
         return <ClipboardIcon className={iconClass} />;
-      case 'History':
-        return <HistoryIcon className={iconClass} />;
+      case 'Calendar':
+        return <CalendarIcon className={iconClass} />;
       case 'MessageSquare':
         return <MessageSquareIcon className={iconClass} />;
       case 'User':
@@ -47,8 +47,6 @@ export const MobileBottomNav = () => {
         return <BuildingIcon className={iconClass} />;
       case 'FileText':
         return <FileTextIcon className={iconClass} />;
-      case 'Calendar':
-        return <CalendarIcon className={iconClass} />;
       case 'Settings':
         return <SettingsIcon className={iconClass} />;
       default:
@@ -101,7 +99,7 @@ export const MobileBottomNav = () => {
               : "text-muted-foreground hover:text-primary hover:bg-primary/10"
           )}
         >
-          <SettingsIcon className={cn(
+          <MoreHorizontal className={cn(
             "h-5 w-5 mb-1",
             isLightMode ? "text-gray-600" : "text-muted-foreground"
           )} />
