@@ -1,4 +1,3 @@
-
 #root {
   max-width: 100%;
   margin: 0 auto;
@@ -82,11 +81,16 @@
     justify-content: center;
   }
   
+  /* Add bottom padding for the mobile navbar */
+  body {
+    padding-bottom: 70px; /* Ensure content doesn't get hidden behind the navbar */
+  }
+  
   .mobile-scrollable {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
     max-height: 100%;
-    padding-bottom: 60px; /* Add extra padding at the bottom for mobile */
+    padding-bottom: 80px; /* Increase padding at the bottom for mobile navbar */
   }
   
   .mobile-compact-form .glass-card {
@@ -118,3 +122,4 @@
     margin-bottom: 0.5rem !important;
   }
 }
+

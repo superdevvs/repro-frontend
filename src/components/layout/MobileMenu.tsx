@@ -2,7 +2,7 @@
 import React from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useMobileMenu } from './mobile-menu/useMobileMenu';
-import { FloatingActionButton } from './mobile-menu/FloatingActionButton';
+import { MobileBottomNav } from './mobile-menu/MobileBottomNav';
 import { MenuContent } from './mobile-menu/MenuContent';
 
 const MobileMenu = () => {
@@ -10,10 +10,7 @@ const MobileMenu = () => {
 
   return (
     <>
-      <FloatingActionButton 
-        isMenuOpen={isMenuOpen} 
-        toggleMenu={toggleMenu} 
-      />
+      <MobileBottomNav />
 
       <AnimatePresence>
         {isMenuOpen && (

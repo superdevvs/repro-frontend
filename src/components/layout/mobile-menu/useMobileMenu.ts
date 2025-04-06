@@ -33,22 +33,16 @@ export const useMobileMenu = () => {
     {
       to: "/book-shoot",
       icon: "Clipboard",
-      label: "Book Shoot",
+      label: "Book",
       isActive: pathname === '/book-shoot',
       roles: ['client', 'admin', 'superadmin']
     },
-    role === 'client' ? {
-      to: "/shoot-history",
-      icon: "History",
-      label: "Shoots History",
-      isActive: pathname === '/shoot-history',
-      roles: ['client']
-    } : {
-      to: "/shoots",
+    {
+      to: role === 'client' ? "/shoot-history" : "/shoots",
       icon: "Calendar",
-      label: "Shoots History",
-      isActive: pathname === '/shoots',
-      roles: ['admin', 'superadmin', 'photographer', 'editor']
+      label: "Shoots",
+      isActive: pathname === '/shoot-history' || pathname === '/shoots',
+      roles: ['client', 'admin', 'superadmin', 'photographer', 'editor']
     },
     {
       to: "/messages",
