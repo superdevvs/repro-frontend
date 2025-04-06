@@ -32,15 +32,20 @@ export function Navbar() {
 
   // Fetch current weather data for demo purposes
   useEffect(() => {
+    // Safe check to prevent error if component unmounts
+    let isMounted = true;
+
     const fetchWeather = async () => {
       try {
         // In a real app, this would use the user's location or a default location
         // This is a mock response for demo purposes
-        setWeather({
-          temp: 22, // Using Celsius
-          condition: 'Partly Cloudy',
-          icon: '⛅️'
-        });
+        if (isMounted) {
+          setWeather({
+            temp: 22, // Using Celsius
+            condition: 'Partly Cloudy',
+            icon: '⛅️'
+          });
+        }
         
         // Actual API call would look like:
         // const res = await fetch(`https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=auto:ip`);
@@ -56,6 +61,11 @@ export function Navbar() {
     };
 
     fetchWeather();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const toggleTheme = () => {

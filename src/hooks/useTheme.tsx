@@ -8,22 +8,31 @@ interface ThemeContextType {
   setTheme: (theme: Theme) => void;
 }
 
+// Initialize with undefined
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem('theme') as Theme;
-    
-    // If no saved preference, check system preference
-    if (!savedTheme) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    // Run in browser only
+    if (typeof window !== 'undefined') {
+      // Check for saved theme preference
+      const savedTheme = localStorage.getItem('theme') as Theme;
+      
+      // If no saved preference, check system preference
+      if (!savedTheme) {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      
+      return savedTheme;
     }
     
-    return savedTheme;
+    // Default theme for SSR
+    return 'light';
   });
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     // Save theme preference
     localStorage.setItem('theme', theme);
     
@@ -33,8 +42,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.classList.add(theme);
   }, [theme]);
 
+  // Create the context value
+  const contextValue = React.useMemo(() => {
+    return { theme, setTheme };
+  }, [theme]);
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );

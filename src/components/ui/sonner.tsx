@@ -1,16 +1,25 @@
 
-// Import from our local theme hook instead of next-themes
-import { useTheme } from "../../hooks/useTheme"
-import { Toaster as Sonner } from "sonner"
+import React from 'react';
+import { useTheme } from "../../hooks/useTheme";
+import { Toaster as Sonner } from "sonner";
 
-type ToasterProps = React.ComponentProps<typeof Sonner>
+type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  // Safely access theme - with default value in case ThemeProvider isn't available yet
+  let themeValue: string;
+  
+  try {
+    const { theme } = useTheme();
+    themeValue = theme;
+  } catch (error) {
+    // Fallback to system theme if there's an error
+    themeValue = "system";
+  }
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={themeValue as ToasterProps["theme"]}
       className="toaster group"
       toastOptions={{
         classNames: {
@@ -25,7 +34,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       {...props}
     />
-  )
-}
+  );
+};
 
-export { Toaster }
+export { Toaster };

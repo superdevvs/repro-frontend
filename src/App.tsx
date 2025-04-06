@@ -1,4 +1,4 @@
-
+import React from 'react'
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,7 +22,6 @@ import PhotographerShootHistory from "./pages/PhotographerShootHistory";
 import PhotographerAccount from "./pages/PhotographerAccount";
 import PhotographerAvailability from "./pages/PhotographerAvailability";
 import { ShootsProvider } from './context/ShootsContext';
-import { ThemeProvider } from './hooks/useTheme';
 import Profile from "./pages/Profile";
 
 // Declare global type augmentations for User to include metadata
@@ -32,6 +31,7 @@ declare module './components/auth/AuthProvider' {
   }
 }
 
+// Create a new QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -127,8 +127,8 @@ const AppRoutes = () => {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
           <Sonner position="top-right" closeButton richColors />
@@ -140,8 +140,8 @@ function App() {
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 }
 
