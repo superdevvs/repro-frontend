@@ -13,6 +13,8 @@ interface ClientCardsProps {
   onBookShoot: (client: Client, e: React.MouseEvent) => void;
   onClientPortal: (client: Client, e: React.MouseEvent) => void;
   onDelete: (client: Client, e: React.MouseEvent) => void;
+  currentPage?: number;
+  totalPages?: number;
 }
 
 export const ClientCards: React.FC<ClientCardsProps> = ({
@@ -22,18 +24,26 @@ export const ClientCards: React.FC<ClientCardsProps> = ({
   onBookShoot,
   onClientPortal,
   onDelete,
+  currentPage: externalCurrentPage,
+  totalPages: externalTotalPages,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [internalCurrentPage, setInternalCurrentPage] = useState(1);
   
-  // Show 5 clients per page
+  // Use external pagination values if provided, otherwise use internal state
+  const currentPage = externalCurrentPage || internalCurrentPage;
   const cardsPerPage = 5;
-  const totalPages = Math.ceil(clients.length / cardsPerPage);
-  const indexOfLastClient = currentPage * cardsPerPage;
-  const indexOfFirstClient = indexOfLastClient - cardsPerPage;
-  const currentClients = clients.slice(indexOfFirstClient, indexOfLastClient);
+  const totalPages = externalTotalPages || Math.ceil(clients.length / cardsPerPage);
+  
+  // If external pagination is not used, apply internal pagination
+  const currentClients = externalCurrentPage ? clients : clients.slice(
+    (internalCurrentPage - 1) * cardsPerPage, 
+    internalCurrentPage * cardsPerPage
+  );
   
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    if (!externalCurrentPage) {
+      setInternalCurrentPage(page);
+    }
   };
 
   return (
