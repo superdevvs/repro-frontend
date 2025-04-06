@@ -3,7 +3,11 @@ import { ReactNode } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import { useAuthState } from '@/hooks/useAuthState';
 import { loginUser, logoutUser, updateUserRole } from '@/services/authService';
-import { UserData } from '@/types/auth';
+import { UserData, UserMetadata } from '@/types/auth';
+
+// Export the User type for use in other components
+export type User = UserData;
+export type Role = 'admin' | 'client' | 'photographer' | 'editor' | 'superadmin';
 
 interface AuthProviderProps {
   children: ReactNode;

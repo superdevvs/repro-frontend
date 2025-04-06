@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { UserData } from '@/types/auth';
 
 export function LoginForm() {
   // Login state
@@ -46,7 +47,16 @@ export function LoginForm() {
     setIsLoading(true);
     
     try {
-      await login(email, password);
+      // Mock user data for demo
+      const mockUserData: UserData = {
+        id: '1',
+        name: 'Demo User',
+        email: email,
+        role: 'client',
+        lastLogin: new Date().toISOString(),
+      };
+
+      await login(mockUserData);
       toast.success("Login successful", {
         description: "Welcome to the Real Estate Media dashboard",
       });
