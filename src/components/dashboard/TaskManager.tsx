@@ -103,8 +103,22 @@ export function TaskManager({ className }: TaskManagerProps) {
             <CardTitle className={isMobile ? "text-base" : "text-lg"}>Tasks & To-Do</CardTitle>
             <div className="w-[140px]">
               <TabsList className={`grid w-full grid-cols-2 h-7 ${isMobile ? 'text-xs' : ''}`}>
-                <TabsTrigger value="upcoming" className={isMobile ? "text-xs py-0.5" : ""} onClick={() => setActiveTab('upcoming')}>Upcoming</TabsTrigger>
-                <TabsTrigger value="completed" className={isMobile ? "text-xs py-0.5" : ""} onClick={() => setActiveTab('completed')}>Done</TabsTrigger>
+                <TabsTrigger 
+                  value="upcoming" 
+                  className={isMobile ? "text-xs py-0.5" : ""} 
+                  onClick={() => setActiveTab('upcoming')}
+                  data-state={activeTab === 'upcoming' ? 'active' : ''}
+                >
+                  Upcoming
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="completed" 
+                  className={isMobile ? "text-xs py-0.5" : ""}
+                  onClick={() => setActiveTab('completed')}
+                  data-state={activeTab === 'completed' ? 'active' : ''}
+                >
+                  Done
+                </TabsTrigger>
               </TabsList>
             </div>
           </div>
