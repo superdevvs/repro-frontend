@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { UsersIcon, UserIcon, CameraIcon, BarChart3Icon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ClientStatsProps {
   totalClients: number;
@@ -18,6 +19,8 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
   totalShoots,
   averageShootsPerClient
 }) => {
+  const isMobile = useIsMobile();
+  
   const statItems = [
     {
       title: "Total Clients",
@@ -50,7 +53,7 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
   ];
   
   return (
-    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 px-2 md:px-0">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 px-2 md:px-0">
       {statItems.map((item, index) => (
         <motion.div
           key={item.title}
@@ -59,13 +62,13 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
           transition={{ delay: item.delay, duration: 0.3 }}
         >
           <Card className="border shadow-sm">
-            <CardContent className="p-3 sm:p-4">
+            <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">{item.title}</p>
-                  <h3 className="text-lg sm:text-xl font-bold mt-1">{item.value}</h3>
+                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-muted-foreground`}>{item.title}</p>
+                  <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mt-1`}>{item.value}</h3>
                 </div>
-                <div className={cn("p-2 sm:p-2.5 rounded-full", item.bgClass)}>
+                <div className={cn(`p-2 rounded-full`, item.bgClass)}>
                   {item.icon}
                 </div>
               </div>

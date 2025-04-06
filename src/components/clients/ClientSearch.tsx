@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { SearchIcon, FilterIcon, SlidersHorizontal } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ClientSearchProps {
   searchTerm: string;
@@ -11,9 +12,11 @@ interface ClientSearchProps {
 }
 
 export const ClientSearch: React.FC<ClientSearchProps> = ({ searchTerm, setSearchTerm }) => {
+  const isMobile = useIsMobile();
+
   return (
     <Card className="glass-card shadow-sm border-none bg-background/70 backdrop-blur-sm mb-4">
-      <CardContent className="p-4">
+      <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />

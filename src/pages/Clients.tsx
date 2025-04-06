@@ -1,17 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusIcon } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/clients';
 import { initialClientsData } from '@/data/clientsData';
 import { useShoots } from '@/context/ShootsContext';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { ClientStats } from '@/components/clients/ClientStats';
@@ -21,12 +18,14 @@ import { ClientCards } from '@/components/clients/ClientCards';
 import { ClientPagination } from '@/components/clients/ClientPagination';
 import { ClientDetails } from '@/components/clients/ClientDetails';
 import { ClientForm, ClientFormData } from '@/components/clients/ClientForm';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Clients = () => {
   const { role } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { shoots } = useShoots();
+  const isMobile = useIsMobile();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -37,7 +36,7 @@ const Clients = () => {
   const [isEditing, setIsEditing] = useState(false);
   
   const [currentPage, setCurrentPage] = useState(1);
-  const clientsPerPage = 8;
+  const clientsPerPage = isMobile ? 5 : 10;
   
   const [clientFormData, setClientFormData] = useState<ClientFormData>({
     name: '',
@@ -61,9 +60,6 @@ const Clients = () => {
     ? Math.round((totalShoots / totalClients) * 10) / 10 
     : 0;
   
-  const isMobile = useMediaQuery("(max-width: 767px)");
-  
-  // Update clients with shoot data
   useEffect(() => {
     if (shoots.length > 0) {
       const clientShootCounts = new Map<string, { count: number, lastDate: string }>();
@@ -121,7 +117,6 @@ const Clients = () => {
     }
   }, [shoots]);
   
-  // Save clients to localStorage
   useEffect(() => {
     localStorage.setItem('clientsData', JSON.stringify(clientsData));
   }, [clientsData]);
@@ -281,7 +276,7 @@ const Clients = () => {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-6">
+        <div className="space-y-6 px-4 md:px-0">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
@@ -314,11 +309,22 @@ const Clients = () => {
           />
           
           <Card className="glass-card">
-            <CardHeader>
+            <CardHeader className="px-4 py-3 sm:p-6">
               <CardTitle>Client Directory</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {!isMobile ? (
+              {isMobile ? (
+                <ClientCards 
+                  clients={currentClients}
+                  onSelect={handleClientSelect}
+                  onEdit={handleEditClient}
+                  onBookShoot={handleBookShoot}
+                  onClientPortal={handleClientPortal}
+                  onDelete={handleDeleteClient}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                />
+              ) : (
                 <>
                   <ClientTable 
                     clients={currentClients}
@@ -336,17 +342,6 @@ const Clients = () => {
                     />
                   )}
                 </>
-              ) : (
-                <ClientCards 
-                  clients={currentClients}
-                  onSelect={handleClientSelect}
-                  onEdit={handleEditClient}
-                  onBookShoot={handleBookShoot}
-                  onClientPortal={handleClientPortal}
-                  onDelete={handleDeleteClient}
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                />
               )}
             </CardContent>
           </Card>
