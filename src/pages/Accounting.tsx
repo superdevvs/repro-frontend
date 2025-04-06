@@ -11,6 +11,7 @@ import { UpcomingPayments } from '@/components/accounting/UpcomingPayments';
 import { CreateInvoiceDialog } from '@/components/invoices/CreateInvoiceDialog';
 import { InvoiceViewDialog } from '@/components/invoices/InvoiceViewDialog';
 import { PaymentDialog } from '@/components/invoices/PaymentDialog';
+import { BatchInvoiceDialog } from '@/components/accounting/BatchInvoiceDialog';
 import { InvoiceData } from '@/utils/invoiceUtils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -24,6 +25,7 @@ const AccountingPage = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
   const [timeFilter, setTimeFilter] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
 
   const handleDownloadInvoice = (invoice: InvoiceData) => {
@@ -80,6 +82,15 @@ const AccountingPage = () => {
       variant: "default",
     });
   };
+  
+  const handleCreateBatchInvoices = (newInvoices: InvoiceData[]) => {
+    setInvoices(prevInvoices => [...newInvoices, ...prevInvoices]);
+    toast({
+      title: "Batch Invoices Created",
+      description: `${newInvoices.length} invoices have been created successfully.`,
+      variant: "default",
+    });
+  };
 
   const handleSendReminder = (invoice: InvoiceData) => {
     toast({
@@ -95,6 +106,7 @@ const AccountingPage = () => {
         <div className="space-y-6 pb-8">
           <AccountingHeader 
             onCreateInvoice={() => setCreateDialogOpen(true)}
+            onCreateBatch={() => setBatchDialogOpen(true)}
           />
           
           <OverviewCards invoices={invoices} timeFilter={timeFilter} />
@@ -145,6 +157,12 @@ const AccountingPage = () => {
         isOpen={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onInvoiceCreate={handleCreateInvoice}
+      />
+      
+      <BatchInvoiceDialog
+        isOpen={batchDialogOpen}
+        onClose={() => setBatchDialogOpen(false)}
+        onCreateBatch={handleCreateBatchInvoices}
       />
     </DashboardLayout>
   );

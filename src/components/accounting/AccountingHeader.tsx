@@ -2,19 +2,21 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { PlusIcon, FileTextIcon, Download } from 'lucide-react';
+import { PlusIcon, FileTextIcon, Download, UsersIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 interface AccountingHeaderProps {
   onCreateInvoice: () => void;
+  onCreateBatch?: () => void;
 }
 
-export function AccountingHeader({ onCreateInvoice }: AccountingHeaderProps) {
+export function AccountingHeader({ onCreateInvoice, onCreateBatch }: AccountingHeaderProps) {
   return (
     <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -60,10 +62,26 @@ export function AccountingHeader({ onCreateInvoice }: AccountingHeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
         
-        <Button onClick={onCreateInvoice} className="gap-2">
-          <PlusIcon className="h-4 w-4" />
-          Create Invoice
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="gap-2">
+              <PlusIcon className="h-4 w-4" />
+              Create Invoice
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={onCreateInvoice}>
+              <PlusIcon className="h-4 w-4 mr-2" />
+              <span>Single Invoice</span>
+            </DropdownMenuItem>
+            {onCreateBatch && (
+              <DropdownMenuItem onClick={onCreateBatch}>
+                <UsersIcon className="h-4 w-4 mr-2" />
+                <span>Batch Invoices</span>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
