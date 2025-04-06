@@ -11,6 +11,7 @@ import {
   BuildingIcon,
   CalendarIcon,
   BarChart3Icon,
+  PlugIcon,
 } from 'lucide-react';
 
 interface SidebarLinksProps {
@@ -101,13 +102,24 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
       />
       
       {/* Show Availability for admin and photographer */}
-      {['admin', 'photographer'].includes(role) && (
+      {['admin', 'photographer', 'superadmin'].includes(role) && (
         <NavLink
           to="/availability"
           icon={<CalendarIcon className="h-5 w-5" />}
           label="Availability"
           isCollapsed={isCollapsed}
           isActive={pathname === '/availability'}
+        />
+      )}
+      
+      {/* Show Integrations only for superadmin */}
+      {role === 'superadmin' && (
+        <NavLink
+          to="/integrations"
+          icon={<PlugIcon className="h-5 w-5" />}
+          label="Integrations"
+          isCollapsed={isCollapsed}
+          isActive={pathname === '/integrations'}
         />
       )}
     </div>

@@ -1,3 +1,4 @@
+
 import React from 'react'
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -24,6 +25,7 @@ import PhotographerAvailability from "./pages/PhotographerAvailability";
 import { ShootsProvider } from './context/ShootsContext';
 import Profile from "./pages/Profile";
 import Accounting from "./pages/Accounting";
+import Integrations from "./pages/Integrations";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -114,6 +116,11 @@ const AppRoutes = () => {
       <Route path="/profile" element={
         <ProtectedRoute>
           <Profile />
+        </ProtectedRoute>
+      } />
+      <Route path="/integrations" element={
+        <ProtectedRoute>
+          <Integrations />
         </ProtectedRoute>
       } />
       <Route path="/photographer-history" element={<PhotographerShootHistory />} />
