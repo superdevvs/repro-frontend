@@ -2,15 +2,13 @@
 export interface ShootData {
   id: string;
   scheduledDate: string;
-  completedDate?: string;
-  time?: string;
+  time: string;
   client: {
-    id?: string;
     name: string;
     email: string;
-    phone?: string;
     company?: string;
-    totalShoots?: number;
+    phone?: string;
+    totalShoots: number;
   };
   location: {
     address: string;
@@ -25,48 +23,21 @@ export interface ShootData {
     name: string;
     avatar?: string;
   };
+  // Add editor information to the shoot data type
+  editor?: {
+    id?: string;
+    name: string;
+    avatar?: string;
+  };
   services: string[];
   payment: {
     baseQuote: number;
     taxRate: number;
     taxAmount: number;
     totalQuote: number;
-    totalPaid?: number;
-    lastPaymentDate?: string;
-    lastPaymentType?: string;
+    totalPaid: number;
   };
-  tourPurchased?: boolean;
-  notes?: {
-    shootNotes?: string;
-    photographerNotes?: string;
-    companyNotes?: string;
-    editingNotes?: string;
-  };
-  createdBy?: string;
-  status: 'scheduled' | 'completed' | 'pending' | 'hold' | 'booked';
-  media?: {
-    photos?: string[];
-    videos?: string[];
-    floorplans?: string[];
-    slideshows?: {
-      id: string;
-      title: string;
-      url: string;
-      visible: boolean;
-    }[];
-  };
-  tourLinks?: {
-    branded?: string;
-    mls?: string;
-    genericMls?: string;
-  };
-}
-
-export interface PhotographerAvailability {
-  id: string;
-  photographerId: string;
-  photographerName: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
+  status: string;
+  notes?: string;
+  createdBy: string;
 }

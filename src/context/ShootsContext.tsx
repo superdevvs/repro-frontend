@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ShootData } from '@/types/shoots';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,6 +11,11 @@ interface ShootsContextType {
   addShoot: (shoot: ShootData) => void;
   updateShoot: (shootId: string, updates: Partial<ShootData>) => void;
   deleteShoot: (shootId: string) => void;
+  // Add the missing methods to the context type
+  getClientShootsByStatus: (status: string) => ShootData[];
+  getUniquePhotographers: () => { name: string; shootCount: number; avatar?: string }[];
+  getUniqueEditors: () => { name: string; shootCount: number; avatar?: string }[];
+  getUniqueClients: () => { name: string; email?: string; company?: string; phone?: string; shootCount: number }[];
 }
 
 const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
@@ -49,6 +55,112 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setShoots(prevShoots => prevShoots.filter(shoot => shoot.id !== shootId));
   };
 
+  // Implement the getClientShootsByStatus method
+  const getClientShootsByStatus = (status: string): ShootData[] => {
+    // If user is client, filter by their name/company, else return all
+    if (user?.role === 'client') {
+      return shoots.filter(shoot => 
+        shoot.status === status && 
+        (shoot.client.name === user.name || 
+         shoot.client.company === user?.company ||
+         shoot.client.email === user.email)
+      );
+    }
+    
+    // For other roles, just filter by status
+    return shoots.filter(shoot => shoot.status === status);
+  };
+
+  // Implement getUniquePhotographers method
+  const getUniquePhotographers = () => {
+    const photographersMap = new Map<string, { name: string; shootCount: number; avatar?: string }>();
+    
+    shoots.forEach(shoot => {
+      if (shoot.photographer && shoot.photographer.name) {
+        const name = shoot.photographer.name;
+        const existingPhotographer = photographersMap.get(name);
+        
+        if (existingPhotographer) {
+          photographersMap.set(name, {
+            ...existingPhotographer,
+            shootCount: existingPhotographer.shootCount + 1
+          });
+        } else {
+          photographersMap.set(name, {
+            name,
+            avatar: shoot.photographer.avatar,
+            shootCount: 1
+          });
+        }
+      }
+    });
+    
+    return Array.from(photographersMap.values());
+  };
+
+  // Implement getUniqueEditors method
+  const getUniqueEditors = () => {
+    const editorsMap = new Map<string, { name: string; shootCount: number; avatar?: string }>();
+    
+    shoots.forEach(shoot => {
+      // Assuming editor info is stored in the shoot data
+      if (shoot.editor && shoot.editor.name) {
+        const name = shoot.editor.name;
+        const existingEditor = editorsMap.get(name);
+        
+        if (existingEditor) {
+          editorsMap.set(name, {
+            ...existingEditor,
+            shootCount: existingEditor.shootCount + 1
+          });
+        } else {
+          editorsMap.set(name, {
+            name,
+            avatar: shoot.editor.avatar,
+            shootCount: 1
+          });
+        }
+      }
+    });
+    
+    return Array.from(editorsMap.values());
+  };
+
+  // Implement getUniqueClients method
+  const getUniqueClients = () => {
+    const clientsMap = new Map<string, { 
+      name: string; 
+      email?: string; 
+      company?: string; 
+      phone?: string; 
+      shootCount: number 
+    }>();
+    
+    shoots.forEach(shoot => {
+      if (shoot.client && shoot.client.name) {
+        const name = shoot.client.name;
+        const existingClient = clientsMap.get(name);
+        
+        if (existingClient) {
+          clientsMap.set(name, {
+            ...existingClient,
+            shootCount: existingClient.shootCount + 1
+          });
+        } else {
+          clientsMap.set(name, {
+            name,
+            email: shoot.client.email,
+            company: shoot.client.company,
+            phone: shoot.client.phone,
+            shootCount: 1
+          });
+        }
+      }
+    });
+    
+    return Array.from(clientsMap.values());
+  };
+
   const createNewShoot = (shootData: Partial<ShootData>) => {
     const newShoot: ShootData = {
       id: uuidv4(),
@@ -86,8 +198,8 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
     
     if (user && user.metadata) {
-      newShoot.client.company = user.metadata.company || user.company || '';
-      newShoot.client.phone = user.metadata.phone || user.phone || '';
+      newShoot.client.company = user.metadata.company ?? user.company ?? '';
+      newShoot.client.phone = user.metadata.phone ?? user.phone ?? '';
     }
 
     addShoot(newShoot);
@@ -98,6 +210,10 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     addShoot,
     updateShoot,
     deleteShoot,
+    getClientShootsByStatus,
+    getUniquePhotographers,
+    getUniqueEditors,
+    getUniqueClients,
   };
 
   return (
