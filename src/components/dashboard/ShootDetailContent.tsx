@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +58,11 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
     toast.success("Share link generated", {
       description: "A shareable link has been copied to your clipboard",
     });
+  };
+
+  // Helper function to safely get tour links
+  const hasTourLinks = () => {
+    return shoot.tourLinks && Object.values(shoot.tourLinks).some(link => !!link);
   };
 
   return (
@@ -133,48 +139,48 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
           </div>
         </div>
 
-        {shoot.tourLinks && (
+        {hasTourLinks() && (
           <>
             <Separator />
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">Tour Links</h3>
               <div className="space-y-2">
-                {shoot.tourLinks.branded && (
+                {shoot.tourLinks?.matterport && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Branded Tour</span>
+                    <span className="text-sm">Matterport Tour</span>
                     <Button 
                       variant="outline" 
                       size="sm" 
                       className="h-7"
-                      onClick={() => openTourLink(shoot.tourLinks?.branded)}
+                      onClick={() => openTourLink(shoot.tourLinks?.matterport)}
                     >
                       <ExternalLink className="h-3.5 w-3.5 mr-1" />
                       View
                     </Button>
                   </div>
                 )}
-                {shoot.tourLinks.mls && (
+                {shoot.tourLinks?.iGuide && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">MLS Tour</span>
+                    <span className="text-sm">iGuide Tour</span>
                     <Button 
                       variant="outline" 
                       size="sm" 
                       className="h-7"
-                      onClick={() => openTourLink(shoot.tourLinks?.mls)}
+                      onClick={() => openTourLink(shoot.tourLinks?.iGuide)}
                     >
                       <ExternalLink className="h-3.5 w-3.5 mr-1" />
                       View
                     </Button>
                   </div>
                 )}
-                {shoot.tourLinks.genericMls && (
+                {shoot.tourLinks?.cubicasa && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Generic MLS Tour</span>
+                    <span className="text-sm">Cubicasa Tour</span>
                     <Button 
                       variant="outline" 
                       size="sm" 
                       className="h-7"
-                      onClick={() => openTourLink(shoot.tourLinks?.genericMls)}
+                      onClick={() => openTourLink(shoot.tourLinks?.cubicasa)}
                     >
                       <ExternalLink className="h-3.5 w-3.5 mr-1" />
                       View

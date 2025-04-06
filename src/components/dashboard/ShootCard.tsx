@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -120,24 +121,37 @@ export function ShootCard(props: ShootCardProps) {
     setWeather(getRandomWeather());
   }, []);
 
+  // Helper function to get media images regardless of format
+  const getMediaImages = (media?: ShootData['media']): string[] => {
+    if (!media) return [];
+    if (media.images && media.images.length > 0) {
+      return media.images.map(img => img.url);
+    }
+    if (media.photos && media.photos.length > 0) {
+      return media.photos;
+    }
+    return [];
+  };
+
   // If using new props structure
   if (isNewProps) {
     const { shoot } = props;
+    const mediaImages = getMediaImages(shoot.media);
     
     return (
       <div 
         className="cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={onClick}
       >
-        {showMedia && shoot.media?.photos && shoot.media.photos.length > 0 && (
+        {showMedia && mediaImages.length > 0 && (
           <div className="relative h-40 w-full overflow-hidden">
             <img 
-              src={shoot.media.photos[0]}
+              src={mediaImages[0]}
               alt={shoot.location.address}
               className="h-full w-full object-cover"
             />
             <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs font-medium">
-              {shoot.media.photos.length} photos
+              {mediaImages.length} photos
             </div>
           </div>
         )}
@@ -190,7 +204,7 @@ export function ShootCard(props: ShootCardProps) {
             </div>
           )}
           
-          {showMedia && !shoot.media?.photos && (
+          {showMedia && !mediaImages.length && (
             <div className="mt-3 flex items-center text-sm text-muted-foreground">
               <ImageIcon className="h-4 w-4 mr-2" />
               <span>No media uploaded yet</span>

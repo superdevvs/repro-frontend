@@ -2,7 +2,7 @@
 export interface ShootData {
   id: string;
   scheduledDate: string;
-  time: string;
+  time: string;  // Required field
   client: {
     name: string;
     email: string;
@@ -24,7 +24,6 @@ export interface ShootData {
     name: string;
     avatar?: string;
   };
-  // Add editor information to the shoot data type
   editor?: {
     id?: string;
     name: string;
@@ -36,7 +35,7 @@ export interface ShootData {
     taxRate: number;
     taxAmount: number;
     totalQuote: number;
-    totalPaid: number;
+    totalPaid: number;  // Making this required
     lastPaymentDate?: string;
     lastPaymentType?: string;
   };
@@ -71,22 +70,35 @@ export interface ShootData {
       type: string;
       size: number;
     }>;
+    photos?: Array<string>; // Legacy format for backward compatibility
+    slideshows?: Array<{
+      id: string;
+      title: string;
+      url: string;
+    }>;
   };
   tourLinks?: {
     matterport?: string;
     iGuide?: string;
     cubicasa?: string;
+    branded?: string;
+    mls?: string;
+    genericMls?: string;
   };
+  tourPurchased?: boolean; // Add this field for ImportShootsDialog
 }
 
-// New interface for photographer availability
+// Update the PhotographerAvailability interface to include the required properties
 export interface PhotographerAvailability {
   id: string;
   photographerId: string;
+  photographerName?: string; // Add this field for compatibility
   date: string;
   timeSlots: {
     start: string;
     end: string;
     booked: boolean;
   }[];
+  startTime?: string; // Add for backward compatibility
+  endTime?: string;   // Add for backward compatibility
 }

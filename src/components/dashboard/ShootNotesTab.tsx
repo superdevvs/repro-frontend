@@ -18,6 +18,13 @@ export function ShootNotesTab({
   isPhotographer,
   role 
 }: ShootNotesTabProps) {
+  // Helper function to safely get notes based on type
+  const getNotes = (key: string): string => {
+    if (!shoot.notes) return '';
+    if (typeof shoot.notes === 'string') return shoot.notes;
+    return shoot.notes[key as keyof typeof shoot.notes] || '';
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -30,7 +37,7 @@ export function ShootNotesTab({
         </div>
         <Textarea 
           placeholder="No shoot notes available" 
-          value={shoot.notes?.shootNotes || ''} 
+          value={getNotes('shootNotes')} 
           readOnly
           className="resize-none min-h-[100px]"
         />
@@ -49,7 +56,7 @@ export function ShootNotesTab({
           </div>
           <Textarea 
             placeholder="No photographer notes available" 
-            value={shoot.notes?.photographerNotes || ''}
+            value={getNotes('photographerNotes')}
             readOnly={!isPhotographer}
             className="resize-none min-h-[100px]"
           />
@@ -67,7 +74,7 @@ export function ShootNotesTab({
           </div>
           <Textarea 
             placeholder="No company notes available" 
-            value={shoot.notes?.companyNotes || ''}
+            value={getNotes('companyNotes')}
             className="resize-none min-h-[100px]"
           />
         </div>
@@ -86,7 +93,7 @@ export function ShootNotesTab({
           </div>
           <Textarea 
             placeholder="No editing notes available" 
-            value={shoot.notes?.editingNotes || ''}
+            value={getNotes('editingNotes')}
             readOnly={role !== 'editor'}
             className="resize-none min-h-[100px]"
           />

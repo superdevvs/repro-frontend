@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,6 @@ const BookShoot = () => {
   });
   
   const [client, setClient] = useState(() => {
-    // Use optional chaining and nullish coalescing for safety when accessing metadata properties
     if (user && user.role === 'client' && user.metadata) {
       return user.metadata.clientId ?? '';
     }
@@ -160,7 +158,6 @@ const BookShoot = () => {
       const selectedPhotographerData = photographers.find(p => p.id === photographer);
       const selectedPackageData = packages.find(p => p.id === selectedPackage);
       
-      // Fix the status type by explicitly setting it to a valid literal type
       const bookingStatus: ShootData['status'] = 'booked';
       
       const newShoot: ShootData = {
@@ -192,7 +189,7 @@ const BookShoot = () => {
         services: selectedPackageData ? [selectedPackageData.name] : [],
         payment: {
           baseQuote: getPackagePrice(),
-          taxRate: 6.00,
+          taxRate: 6.0,
           taxAmount: getTax(),
           totalQuote: getTotal(),
           ...(bypassPayment ? {} : { totalPaid: getTotal(), lastPaymentDate: new Date().toISOString().split('T')[0], lastPaymentType: 'Credit Card' })
@@ -247,7 +244,6 @@ const BookShoot = () => {
       clientId: client,
       clientName: isClientAccount ? user?.name || '' : clients.find(c => c.id === client)?.name || '',
       clientEmail: isClientAccount ? user?.email || '' : clients.find(c => c.id === client)?.email || '',
-      // Use optional chaining and nullish coalescing for safety
       clientPhone: isClientAccount ? (user?.metadata?.phone || user?.phone || '') : clients.find(c => c.id === client)?.phone || '',
       clientCompany: isClientAccount ? (user?.metadata?.company || user?.company || '') : clients.find(c => c.id === client)?.company || '',
       propertyType: 'residential' as const,

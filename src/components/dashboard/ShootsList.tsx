@@ -42,6 +42,18 @@ export function ShootsList({
     'hold': 'bg-purple-500'
   };
 
+  // Helper function to get media images regardless of format
+  const getMediaImages = (media?: ShootData['media']): string[] => {
+    if (!media) return [];
+    if (media.images && media.images.length > 0) {
+      return media.images.map(img => img.url);
+    }
+    if (media.photos && media.photos.length > 0) {
+      return media.photos;
+    }
+    return [];
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -58,79 +70,82 @@ export function ShootsList({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {shoots.map((shoot) => (
-            <TableRow key={shoot.id} className="cursor-pointer" onClick={() => onSelect(shoot)}>
-              <TableCell><Checkbox onClick={(e) => e.stopPropagation()} /></TableCell>
-              <TableCell className="font-medium">
-                <div className="flex items-center">
-                  <MapPinIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-                  {shoot.location.fullAddress}
-                </div>
-              </TableCell>
-              <TableCell>{shoot.client.name}</TableCell>
-              <TableCell>{shoot.photographer.name}</TableCell>
-              <TableCell>
-                <div className="flex items-center">
-                  <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-                  {format(new Date(shoot.scheduledDate), 'MMM dd, yyyy')}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Badge 
-                  variant="secondary" 
-                  className={`${statusColorMap[shoot.status]} text-white`}
-                >
-                  {shoot.status.charAt(0).toUpperCase() + shoot.status.slice(1)}
-                </Badge>
-              </TableCell>
-              {showMedia && shoot.status === 'completed' && (
+          {shoots.map((shoot) => {
+            const mediaImages = getMediaImages(shoot.media);
+            return (
+              <TableRow key={shoot.id} className="cursor-pointer" onClick={() => onSelect(shoot)}>
+                <TableCell><Checkbox onClick={(e) => e.stopPropagation()} /></TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center">
+                    <MapPinIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                    {shoot.location.fullAddress}
+                  </div>
+                </TableCell>
+                <TableCell>{shoot.client.name}</TableCell>
+                <TableCell>{shoot.photographer.name}</TableCell>
                 <TableCell>
-                  {shoot.media?.photos && shoot.media.photos.length > 0 ? (
-                    <div className="flex -space-x-2">
-                      {shoot.media.photos.slice(0, 3).map((photo, index) => (
-                        <Avatar key={index} className="border-2 border-background w-8 h-8">
-                          <AvatarImage src={photo} alt="Media" />
-                          <AvatarFallback>
-                            <ImageIcon className="h-4 w-4" />
-                          </AvatarFallback>
-                        </Avatar>
-                      ))}
-                      {shoot.media.photos.length > 3 && (
-                        <Avatar className="border-2 border-background bg-muted w-8 h-8">
-                          <AvatarFallback>+{shoot.media.photos.length - 3}</AvatarFallback>
-                        </Avatar>
-                      )}
-                    </div>
+                  <div className="flex items-center">
+                    <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                    {format(new Date(shoot.scheduledDate), 'MMM dd, yyyy')}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge 
+                    variant="secondary" 
+                    className={`${statusColorMap[shoot.status]} text-white`}
+                  >
+                    {shoot.status.charAt(0).toUpperCase() + shoot.status.slice(1)}
+                  </Badge>
+                </TableCell>
+                {showMedia && shoot.status === 'completed' && (
+                  <TableCell>
+                    {mediaImages.length > 0 ? (
+                      <div className="flex -space-x-2">
+                        {mediaImages.slice(0, 3).map((photo, index) => (
+                          <Avatar key={index} className="border-2 border-background w-8 h-8">
+                            <AvatarImage src={photo} alt="Media" />
+                            <AvatarFallback>
+                              <ImageIcon className="h-4 w-4" />
+                            </AvatarFallback>
+                          </Avatar>
+                        ))}
+                        {mediaImages.length > 3 && (
+                          <Avatar className="border-2 border-background bg-muted w-8 h-8">
+                            <AvatarFallback>+{mediaImages.length - 3}</AvatarFallback>
+                          </Avatar>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">No media</span>
+                    )}
+                  </TableCell>
+                )}
+                {showMedia && shoot.status !== 'completed' && showMedia && (
+                  <TableCell>
+                    <span className="text-muted-foreground text-sm">Not completed</span>
+                  </TableCell>
+                )}
+                <TableCell className="text-right">
+                  {shoot.status === 'completed' && showMedia && onUploadMedia ? (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUploadMedia(shoot);
+                      }}
+                    >
+                      <UploadIcon className="h-4 w-4 mr-2" /> Upload
+                    </Button>
                   ) : (
-                    <span className="text-muted-foreground text-sm">No media</span>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <ChevronRightIcon className="h-4 w-4" />
+                    </Button>
                   )}
                 </TableCell>
-              )}
-              {showMedia && shoot.status !== 'completed' && showMedia && (
-                <TableCell>
-                  <span className="text-muted-foreground text-sm">Not completed</span>
-                </TableCell>
-              )}
-              <TableCell className="text-right">
-                {shoot.status === 'completed' && showMedia && onUploadMedia ? (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onUploadMedia(shoot);
-                    }}
-                  >
-                    <UploadIcon className="h-4 w-4 mr-2" /> Upload
-                  </Button>
-                ) : (
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <ChevronRightIcon className="h-4 w-4" />
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

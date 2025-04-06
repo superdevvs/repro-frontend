@@ -1,10 +1,10 @@
-
 import { ShootData } from "@/types/shoots";
 
 export const shootsData: ShootData[] = [
   {
     id: "1",
     scheduledDate: "2025-03-10",
+    time: "10:00 AM",
     client: {
       name: "Dave Cornelius",
       email: "dhcornelius@gmail.com",
@@ -36,6 +36,7 @@ export const shootsData: ShootData[] = [
   {
     id: "2",
     scheduledDate: "2025-03-03",
+    time: "11:30 AM",
     client: {
       name: "Marney Kirk",
       email: "marney@realtormarney.com",
@@ -57,7 +58,8 @@ export const shootsData: ShootData[] = [
       baseQuote: 250.00,
       taxRate: 6.00,
       taxAmount: 15.00,
-      totalQuote: 265.00
+      totalQuote: 265.00,
+      totalPaid: 0
     },
     status: "scheduled",
     createdBy: "Michael Bereson"
@@ -65,6 +67,7 @@ export const shootsData: ShootData[] = [
   {
     id: "3",
     scheduledDate: "2025-02-28",
+    time: "2:00 PM",
     client: {
       name: "Mimma Andriuolo",
       email: "mandriuoloweichert@gmail.com",
@@ -87,7 +90,8 @@ export const shootsData: ShootData[] = [
       baseQuote: 700.00,
       taxRate: 0.00,
       taxAmount: 0,
-      totalQuote: 700.00
+      totalQuote: 700.00,
+      totalPaid: 0
     },
     status: "scheduled",
     createdBy: "Bill Hang"
@@ -95,6 +99,7 @@ export const shootsData: ShootData[] = [
   {
     id: "4",
     scheduledDate: "2025-02-07",
+    time: "9:30 AM",
     completedDate: "2025-02-08",
     client: {
       name: "Carl Herber",
@@ -118,7 +123,8 @@ export const shootsData: ShootData[] = [
       baseQuote: 145.00,
       taxRate: 6.00,
       taxAmount: 8.70,
-      totalQuote: 153.70
+      totalQuote: 153.70,
+      totalPaid: 0
     },
     status: "completed",
     createdBy: "Michael Bereson"
@@ -126,6 +132,7 @@ export const shootsData: ShootData[] = [
   {
     id: "5",
     scheduledDate: "2025-02-07",
+    time: "3:15 PM",
     completedDate: "2025-02-08",
     client: {
       name: "Gregory Gray",
@@ -148,7 +155,8 @@ export const shootsData: ShootData[] = [
       baseQuote: 150.00,
       taxRate: 6.00,
       taxAmount: 9.00,
-      totalQuote: 159.00
+      totalQuote: 159.00,
+      totalPaid: 0
     },
     status: "completed",
     createdBy: "Michael Bereson"
@@ -156,6 +164,7 @@ export const shootsData: ShootData[] = [
   {
     id: "6",
     scheduledDate: "2025-02-07",
+    time: "11:00 AM",
     completedDate: "2025-02-08",
     client: {
       name: "Pitina Stucky De Juan",
@@ -189,6 +198,7 @@ export const shootsData: ShootData[] = [
   {
     id: "7",
     scheduledDate: "2025-02-04",
+    time: "10:45 AM",
     client: {
       name: "Ajay Khetarpal",
       email: "ajk@maxxum.org",
@@ -211,7 +221,8 @@ export const shootsData: ShootData[] = [
       baseQuote: 0,
       taxRate: 6.00,
       taxAmount: 0,
-      totalQuote: 0
+      totalQuote: 0,
+      totalPaid: 0
     },
     status: "pending",
     createdBy: "Super Admin"
@@ -219,6 +230,7 @@ export const shootsData: ShootData[] = [
   {
     id: "8",
     scheduledDate: "2025-01-31",
+    time: "1:30 PM",
     completedDate: "2025-02-01",
     client: {
       name: "Jocelyn Dulany",
@@ -248,24 +260,23 @@ export const shootsData: ShootData[] = [
     },
     status: "completed",
     media: {
-      photos: [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg"
+      images: [
+        { id: "1", url: "/placeholder.svg", type: "image/svg+xml" },
+        { id: "2", url: "/placeholder.svg", type: "image/svg+xml" },
+        { id: "3", url: "/placeholder.svg", type: "image/svg+xml" },
+        { id: "4", url: "/placeholder.svg", type: "image/svg+xml" },
+        { id: "5", url: "/placeholder.svg", type: "image/svg+xml" }
       ]
     },
     tourLinks: {
-      branded: "https://example.com/tour/branded/8",
-      mls: "https://example.com/tour/mls/8",
-      genericMls: "https://example.com/tour/generic/8"
+      matterport: "https://example.com/tour/branded/8",
+      iGuide: "https://example.com/tour/mls/8",
+      cubicasa: "https://example.com/tour/generic/8"
     },
     createdBy: "Michael Bereson"
   }
 ];
 
-// Helper functions to work with the data
 export const getShootById = (id: string): ShootData | undefined => {
   return shootsData.find(shoot => shoot.id === id);
 };
