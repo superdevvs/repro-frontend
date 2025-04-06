@@ -113,6 +113,10 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-5px)" },
         },
+        bounce: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -125,6 +129,7 @@ export default {
         slideInRight: "slideInRight 0.3s ease-out forwards",
         pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         float: "float 3s ease-in-out infinite",
+        bounce: "bounce 2s ease-in-out infinite",
       },
       backdropFilter: {
         'none': 'none',
@@ -140,6 +145,8 @@ export default {
         'neo-inset': 'inset 5px 5px 10px rgba(0, 0, 0, 0.05), inset -5px -5px 10px rgba(255, 255, 255, 0.8)',
         'glass': '0 4px 32px rgba(0, 0, 0, 0.04)',
         'glass-hover': '0 8px 32px rgba(0, 0, 0, 0.06)',
+        'glass-card': '0 8px 32px rgba(31, 38, 135, 0.15)',
+        'float': '0 10px 20px rgba(0, 0, 0, 0.1)',
       },
     },
   },
