@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { UsersIcon, UserIcon, CameraIcon, BarChart3Icon } from 'lucide-react';
+import { UsersIcon, UserIcon, CameraIcon, BarChart3Icon, Activity, TrendingUp, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -25,8 +25,9 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
     {
       title: "Total Clients",
       value: totalClients,
-      icon: <UsersIcon className="h-5 w-5 text-primary" />,
+      icon: <Users className="h-5 w-5 text-primary" />,
       bgClass: "bg-primary/10",
+      iconClass: "text-primary",
       delay: 0.1
     },
     {
@@ -34,6 +35,7 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
       value: activeClients,
       icon: <UserIcon className="h-5 w-5 text-green-500" />,
       bgClass: "bg-green-500/10",
+      iconClass: "text-green-500",
       delay: 0.2
     },
     {
@@ -41,19 +43,21 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
       value: totalShoots,
       icon: <CameraIcon className="h-5 w-5 text-blue-500" />,
       bgClass: "bg-blue-500/10",
+      iconClass: "text-blue-500",
       delay: 0.3
     },
     {
       title: "Avg. Shoots",
       value: averageShootsPerClient,
-      icon: <BarChart3Icon className="h-5 w-5 text-purple-500" />,
+      icon: <TrendingUp className="h-5 w-5 text-purple-500" />,
       bgClass: "bg-purple-500/10",
+      iconClass: "text-purple-500",
       delay: 0.4
     }
   ];
   
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 px-2 md:px-0">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 px-0">
       {statItems.map((item, index) => (
         <motion.div
           key={item.title}
@@ -61,12 +65,22 @@ export const ClientStats: React.FC<ClientStatsProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: item.delay, duration: 0.3 }}
         >
-          <Card className="border shadow-sm">
-            <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
+          <Card className="border glass-card overflow-hidden">
+            <CardContent className={`${isMobile ? 'p-3' : 'p-4'} relative`}>
+              <div className="absolute top-0 right-0 h-full w-1/3 opacity-5">
+                {item.icon}
+              </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-muted-foreground`}>{item.title}</p>
-                  <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mt-1`}>{item.value}</h3>
+                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-muted-foreground mb-1`}>
+                    {item.title}
+                  </p>
+                  <h3 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>
+                    {typeof item.value === 'number' && item.title === "Avg. Shoots" 
+                      ? item.value.toFixed(1) 
+                      : item.value
+                    }
+                  </h3>
                 </div>
                 <div className={cn(`p-2 rounded-full`, item.bgClass)}>
                   {item.icon}

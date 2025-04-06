@@ -114,7 +114,8 @@ export const useClientActions = ({ clientsData, setClientsData }: UseClientActio
         avatar: clientFormData.avatar
       };
       
-      setClientsData(prevClients => [newClient, ...prevClients]);
+      // Fix TypeScript error by directly setting the clients array
+      setClientsData([newClient, ...clientsData]);
       
       toast({
         title: "Client Added",

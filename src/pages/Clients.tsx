@@ -60,10 +60,11 @@ const Clients = () => {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-6 px-4 md:px-0">
+        <div className="space-y-6 px-4 md:px-0 pb-20 md:pb-10">
           <ClientsHeader 
             role={role} 
-            handleAddClient={handleAddClient} 
+            handleAddClient={handleAddClient}
+            totalClients={totalClients}
           />
           
           <ClientStats 
@@ -76,6 +77,7 @@ const Clients = () => {
           <ClientSearch 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
+            clientCount={filteredClients.length}
           />
           
           <ClientList

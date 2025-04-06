@@ -1,42 +1,55 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Search, FilterIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { SearchIcon, FilterIcon, SlidersHorizontal } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Badge } from '@/components/ui/badge';
 
 interface ClientSearchProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
+  clientCount?: number;
 }
 
-export const ClientSearch: React.FC<ClientSearchProps> = ({ searchTerm, setSearchTerm }) => {
-  const isMobile = useIsMobile();
-
+export const ClientSearch: React.FC<ClientSearchProps> = ({ 
+  searchTerm, 
+  setSearchTerm,
+  clientCount
+}) => {
   return (
-    <Card className="glass-card shadow-sm border-none bg-background/70 backdrop-blur-sm mb-4">
-      <CardContent className={`${isMobile ? 'p-3' : 'p-4'}`}>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search by name, email or company..." 
-              className="pl-9 h-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
-              <FilterIcon className="h-4 w-4" />
+    <div className="relative">
+      <div className="flex items-center gap-2 flex-col sm:flex-row">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search clients by name, company or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-full"
+          />
+          {searchTerm && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 h-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              onClick={() => setSearchTerm('')}
+            >
+              Clear
             </Button>
-            <Button variant="outline" size="icon" className="h-10 w-10 shrink-0">
-              <SlidersHorizontal className="h-4 w-4" />
-            </Button>
-          </div>
+          )}
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" className="shrink-0">
+            <FilterIcon className="h-4 w-4" />
+          </Button>
+          
+          {clientCount !== undefined && searchTerm && (
+            <Badge variant="outline" className="ml-2 bg-card">
+              {clientCount} {clientCount === 1 ? 'result' : 'results'} found
+            </Badge>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
