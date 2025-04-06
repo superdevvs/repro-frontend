@@ -1,278 +1,198 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import React, { useState, useEffect } from 'react';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageTransition } from '@/components/layout/PageTransition';
+import { ShootDetail } from '@/components/dashboard/ShootDetail';
+import { ShootsHeader } from '@/components/dashboard/ShootsHeader';
+import { ShootsFilter } from '@/components/dashboard/ShootsFilter';
+import { ShootsContent } from '@/components/dashboard/ShootsContent';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FileUploader } from '@/components/media/FileUploader';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from '@/components/ui/pagination';
 import { ShootData } from '@/types/shoots';
-import { Badge } from "@/components/ui/badge";
-import { MoreVertical, Edit, Copy, Trash, Plus } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useShoots } from '@/context/ShootsContext';
-import { Link, useNavigate } from 'react-router-dom';
-import { Skeleton } from '@/components/ui/skeleton';
-import { formatDateSafe } from '@/utils/formatters';
-import { TimeRangeFilter } from '@/components/dashboard/TimeRangeFilter';
-import { TimeRange } from '@/utils/dateUtils';
-import { ShootActionsDialog } from '@/components/dashboard/ShootActionsDialog';
-import { MessageDialog } from '@/components/dashboard/MessageDialog';
-import { useToast } from '@/hooks/use-toast';
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { stringifyId, ensureValidId } from '@/utils/idUtils';
-import { toStringId } from '@/utils/formatters';
+import { useAuth } from '@/components/auth/AuthProvider';
 
-export function Shoots() {
-  const [searchQuery, setSearchQuery] = useState("");
+const ITEMS_PER_PAGE = 6;
+
+const Shoots = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTab, setSelectedTab] = useState('scheduled');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
-  const [isActionsOpen, setIsActionsOpen] = useState(false);
-  const [isMessageOpen, setIsMessageOpen] = useState(false);
-  const [timeRange, setTimeRange] = useState<TimeRange>('all');
-  const { shoots, loading, error, deleteShoot, getClientShootsByStatus } = useShoots();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
-
-  const handleActionsOpen = (shoot: ShootData) => {
-    setSelectedShoot(shoot);
-    setIsActionsOpen(true);
-  };
-
-  const handleActionsClose = () => {
-    setIsActionsOpen(false);
-  };
-
-  const handleMessageOpen = (shoot: ShootData) => {
-    setSelectedShoot(shoot);
-    setIsMessageOpen(true);
-  };
-
-  const handleMessageClose = () => {
-    setIsMessageOpen(false);
-  };
-
-  const handleDelete = (id: string | number) => {
-    const shootId = toStringId(id);
-    deleteShoot(shootId);
-    toast({
-      title: "Shoot deleted",
-      description: `Shoot #${shootId} has been permanently deleted.`,
-    });
-  };
-
-  const filteredShoots = shoots?.filter(shoot =>
-    shoot.location.fullAddress?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    shoot.client.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  
+  const { shoots, updateShoot } = useShoots();
+  const { user } = useAuth();
+  
+  const userFilteredShoots = shoots.filter(shoot => {
+    if (user && user.role === 'client') {
+      return shoot.client.name === user.name;
+    }
+    return true;
+  });
+  
+  const filteredShoots = userFilteredShoots.filter(shoot => {
+    const matchesSearch = 
+      shoot.location.fullAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      shoot.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      shoot.photographer.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (selectedTab === 'all') return matchesSearch;
+    if (selectedTab === 'scheduled') return matchesSearch && shoot.status === 'scheduled';
+    if (selectedTab === 'completed') return matchesSearch && shoot.status === 'completed';
+    if (selectedTab === 'pending') return matchesSearch && shoot.status === 'pending';
+    if (selectedTab === 'hold') return matchesSearch && shoot.status === 'hold';
+    return false;
+  });
+  
+  const totalPages = Math.ceil(filteredShoots.length / ITEMS_PER_PAGE);
+  const paginatedShoots = filteredShoots.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   );
-
-  const paginatedShoots = () => {
-    if (!filteredShoots) return [];
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return filteredShoots.slice(startIndex, endIndex);
+  
+  const isCompletedTab = selectedTab === 'completed';
+  
+  const handleShootSelect = (shoot: ShootData) => {
+    setSelectedShoot(shoot);
+    setIsDetailOpen(true);
+  };
+  
+  const closeDetail = () => {
+    setIsDetailOpen(false);
+    setSelectedShoot(null);
+  };
+  
+  const handleUploadMedia = (shoot: ShootData) => {
+    setSelectedShoot(shoot);
+    setIsUploadDialogOpen(true);
+  };
+  
+  const handleUploadComplete = (files: File[]) => {
+    if (!selectedShoot) return;
+    
+    const photoUrls = files
+      .filter(file => file.type.startsWith('image/'))
+      .map(() => '/placeholder.svg');
+    
+    updateShoot(selectedShoot.id, {
+      media: {
+        ...selectedShoot.media,
+        photos: [...(selectedShoot.media?.photos || []), ...photoUrls]
+      }
+    });
+    
+    setIsUploadDialogOpen(false);
   };
 
-  const totalPages = filteredShoots ? Math.ceil(filteredShoots.length / pageSize) : 0;
-
-  const shootCountByStatus = (status: string): number => {
-    if (!getClientShootsByStatus) return 0;
-    return getClientShootsByStatus(status).length;
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
-  if (loading) {
-    return (
-      <div className="container mx-auto py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Shoots</CardTitle>
-            <CardDescription>Loading shoots...</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton /></TableCell>
-                    <TableCell><Skeleton /></TableCell>
-                    <TableCell><Skeleton /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="w-24" /></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Shoots</CardTitle>
-            <CardDescription>Error: {error.message}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>Failed to load shoots. Please try again later.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedTab, searchTerm, user]);
+  
   return (
-    <div className="container mx-auto py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Shoots</CardTitle>
-          <CardDescription>
-            Manage your photo shoots and view details.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center">
-            <Input
-              type="search"
-              placeholder="Search shoots..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="md:w-1/3"
-            />
-            <div className="flex-grow"></div>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedShoots().map((shoot) => {
-                // Use toStringId for consistent string conversion
-                const shootId = toStringId(shoot.id);
+    <DashboardLayout>
+      <PageTransition>
+        <div className="space-y-6">
+          <ShootsHeader 
+            title={isCompletedTab ? "Completed Shoots" : "Property Shoots"} 
+            subtitle={isCompletedTab 
+              ? "View and manage completed property photoshoots."
+              : "Manage and track all property photoshoot sessions."
+            } 
+          />
+          
+          <ShootsFilter 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedTab={selectedTab}
+            setSelectedTab={setSelectedTab}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+          />
+          
+          <ShootsContent 
+            filteredShoots={paginatedShoots}
+            viewMode={viewMode}
+            onShootSelect={handleShootSelect}
+            onUploadMedia={isCompletedTab ? handleUploadMedia : undefined}
+            showMedia={isCompletedTab}
+          />
 
-                return (
-                  <TableRow key={shootId}>
-                    <TableCell>{formatDateSafe(shoot.scheduledDate)}</TableCell>
-                    <TableCell>{shoot.location.fullAddress}</TableCell>
-                    <TableCell>{shoot.client.name}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => navigate(`/shoot/${shootId}`)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            <span>Edit</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleMessageOpen(shoot)}>
-                            <Copy className="mr-2 h-4 w-4" />
-                            <span>Message</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleActionsOpen(shoot)}>
-                            <Copy className="mr-2 h-4 w-4" />
-                            <span>Actions</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleDelete(shoot.id)}>
-                            <Trash className="mr-2 h-4 w-4" />
-                            <span>Delete</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          <div className="flex items-center justify-between pt-4">
-            <Pagination>
+          {totalPages > 1 && (
+            <Pagination className="mt-6">
               <PaginationContent>
-                <PaginationPrevious
-                  href="#"
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                />
-                {currentPage > 2 && (
-                  <PaginationItem>
-                    <PaginationLink href="#" onClick={() => setCurrentPage(1)}>
-                      1
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-                {currentPage > 3 && <PaginationEllipsis />}
-                {Array.from({ length: Math.min(5, totalPages) })
-                  .map((_, i) => {
-                    const pageNumber = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                
+                {[...Array(totalPages)].map((_, index) => {
+                  const page = index + 1;
+                  if (
+                    page === 1 || 
+                    page === totalPages || 
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
                     return (
-                      <PaginationItem key={pageNumber}>
-                        <PaginationLink
-                          href="#"
-                          isActive={pageNumber === currentPage}
-                          onClick={() => setCurrentPage(pageNumber)}
+                      <PaginationItem key={page}>
+                        <PaginationLink 
+                          isActive={page === currentPage}
+                          onClick={() => handlePageChange(page)}
                         >
-                          {pageNumber}
+                          {page}
                         </PaginationLink>
                       </PaginationItem>
                     );
-                  })}
-                {currentPage < totalPages - 2 && <PaginationEllipsis />}
-                {currentPage < totalPages - 1 && (
-                  <PaginationItem>
-                    <PaginationLink
-                      href="#"
-                      onClick={() => setCurrentPage(totalPages)}
-                    >
-                      {totalPages}
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-                <PaginationNext
-                  href="#"
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                />
+                  }
+                  if (page === 2 || page === totalPages - 1) {
+                    return (
+                      <PaginationItem key={`ellipsis-${page}`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    );
+                  }
+                  return null;
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
               </PaginationContent>
             </Pagination>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <ShootActionsDialog 
-        shoot={selectedShoot}
-        isOpen={isActionsOpen}
-        onClose={handleActionsClose}
-      />
-      
-      <MessageDialog
-        shoot={selectedShoot}
-        isOpen={isMessageOpen}
-        onClose={handleMessageClose}
-      />
-    </div>
+          )}
+        </div>
+        
+        <ShootDetail 
+          shoot={selectedShoot}
+          isOpen={isDetailOpen}
+          onClose={closeDetail}
+        />
+        
+        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Upload Media for {selectedShoot?.location.fullAddress}</DialogTitle>
+            </DialogHeader>
+            <FileUploader 
+              shootId={selectedShoot?.id} 
+              onUploadComplete={handleUploadComplete}
+            />
+          </DialogContent>
+        </Dialog>
+      </PageTransition>
+    </DashboardLayout>
   );
-}
+};
+
+export default Shoots;

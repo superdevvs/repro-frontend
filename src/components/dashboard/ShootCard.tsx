@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,9 +17,8 @@ import {
   CloudRainIcon,
   CloudSnowIcon
 } from 'lucide-react';
-import { format, parseISO, isValid } from 'date-fns';
-import { ShootData, MediaItem } from '@/types/shoots';
-import { ensureDateString } from '@/utils/formatters';
+import { format, parseISO } from 'date-fns';
+import { ShootData } from '@/types/shoots';
 
 interface WeatherInfo {
   temp: number;
@@ -56,8 +54,10 @@ type ShootCardProps = (LegacyShootCardProps | NewShootCardProps) & {
 };
 
 export function ShootCard(props: ShootCardProps) {
+  // Check if using the new props structure
   const isNewProps = 'shoot' in props;
   
+  // Setup all needed variables whether using new or legacy props
   const status = isNewProps ? props.shoot.status : props.status;
   const showMedia = isNewProps ? props.showMedia : false;
   const onClick = props.onClick;
@@ -70,13 +70,10 @@ export function ShootCard(props: ShootCardProps) {
     'booked': 'bg-indigo-500'
   };
   
-  const formatDate = (dateString: string | Date): string => {
+  const formatDate = (dateString: string) => {
     try {
-      const dateStr = ensureDateString(dateString);
-      const date = parseISO(dateStr);
-      return isValid(date) ? format(date, 'MMM dd, yyyy') : 'Invalid date';
+      return format(new Date(dateString), 'MMM dd, yyyy');
     } catch (error) {
-      console.error('Error formatting date:', error);
       return 'Invalid date';
     }
   };
@@ -86,6 +83,7 @@ export function ShootCard(props: ShootCardProps) {
     return timeString;
   };
 
+  // Get mock weather data for the shoot date
   const [weather, setWeather] = useState<WeatherInfo | null>(null);
   
   const getWeatherIcon = (condition: string) => {
@@ -104,6 +102,8 @@ export function ShootCard(props: ShootCardProps) {
   };
 
   useEffect(() => {
+    // Mock weather API call
+    // In a real app, you would fetch from a weather API using the shoot date and location
     const getRandomWeather = () => {
       const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Snow'];
       const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
@@ -112,7 +112,7 @@ export function ShootCard(props: ShootCardProps) {
       return {
         temp: randomTemp,
         condition: randomCondition,
-        icon: '🌤️',
+        icon: '🌤️', // This would be the icon URL from the API
         iconComponent: getWeatherIcon(randomCondition)
       };
     };
@@ -120,6 +120,7 @@ export function ShootCard(props: ShootCardProps) {
     setWeather(getRandomWeather());
   }, []);
 
+  // If using new props structure
   if (isNewProps) {
     const { shoot } = props;
     
@@ -131,8 +132,8 @@ export function ShootCard(props: ShootCardProps) {
         {showMedia && shoot.media?.photos && shoot.media.photos.length > 0 && (
           <div className="relative h-40 w-full overflow-hidden">
             <img 
-              src={shoot.media.photos[0].url}
-              alt={shoot.media.photos[0].name || shoot.location.address || "Property"}
+              src={shoot.media.photos[0]}
+              alt={shoot.location.address}
               className="h-full w-full object-cover"
             />
             <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs font-medium">
@@ -215,6 +216,7 @@ export function ShootCard(props: ShootCardProps) {
     );
   }
   
+  // Using legacy props structure
   const { address, date, time, photographer, client, price } = props;
   
   return (

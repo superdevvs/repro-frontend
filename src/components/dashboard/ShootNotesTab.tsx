@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PenLine } from "lucide-react";
-import { ShootData, ensureNotesObject } from '@/types/shoots';
+import { ShootData } from '@/types/shoots';
 
 interface ShootNotesTabProps {
   shoot: ShootData;
@@ -18,18 +18,19 @@ export function ShootNotesTab({
   isPhotographer,
   role 
 }: ShootNotesTabProps) {
-  // Use the helper function to ensure we have a notes object
-  const notesObject = ensureNotesObject(shoot.notes);
-
   return (
     <div className="space-y-4">
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-muted-foreground">Shoot Notes</h3>
+          <Button variant="ghost" size="sm">
+            <PenLine className="h-3.5 w-3.5 mr-1" />
+            Edit
+          </Button>
         </div>
         <Textarea 
           placeholder="No shoot notes available" 
-          value={notesObject.shootNotes || ''} 
+          value={shoot.notes?.shootNotes || ''} 
           readOnly
           className="resize-none min-h-[100px]"
         />
@@ -39,10 +40,16 @@ export function ShootNotesTab({
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-muted-foreground">Photographer Notes</h3>
+            {isPhotographer && (
+              <Button variant="ghost" size="sm">
+                <PenLine className="h-3.5 w-3.5 mr-1" />
+                Edit
+              </Button>
+            )}
           </div>
           <Textarea 
             placeholder="No photographer notes available" 
-            value={notesObject.photographerNotes || ''}
+            value={shoot.notes?.photographerNotes || ''}
             readOnly={!isPhotographer}
             className="resize-none min-h-[100px]"
           />
@@ -53,10 +60,14 @@ export function ShootNotesTab({
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-muted-foreground">Company Notes</h3>
+            <Button variant="ghost" size="sm">
+              <PenLine className="h-3.5 w-3.5 mr-1" />
+              Edit
+            </Button>
           </div>
           <Textarea 
             placeholder="No company notes available" 
-            value={notesObject.companyNotes || ''}
+            value={shoot.notes?.companyNotes || ''}
             className="resize-none min-h-[100px]"
           />
         </div>
@@ -66,10 +77,16 @@ export function ShootNotesTab({
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-muted-foreground">Editing Notes</h3>
+            {role === 'editor' && (
+              <Button variant="ghost" size="sm">
+                <PenLine className="h-3.5 w-3.5 mr-1" />
+                Edit
+              </Button>
+            )}
           </div>
           <Textarea 
             placeholder="No editing notes available" 
-            value={notesObject.editingNotes || ''}
+            value={shoot.notes?.editingNotes || ''}
             readOnly={role !== 'editor'}
             className="resize-none min-h-[100px]"
           />

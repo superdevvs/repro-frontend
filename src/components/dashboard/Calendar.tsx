@@ -17,17 +17,16 @@ import { useShoots } from '@/context/ShootsContext';
 import { ShootData } from '@/types/shoots';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, MapPinIcon, UserIcon, ClockIcon } from 'lucide-react';
-import ShootDetail from './ShootDetail'; // Fixed import
+import { ShootDetail } from './ShootDetail';
 
 interface CalendarProps {
   className?: string;
   height?: number;
-  shoots: ShootData[]; // Added to match the props passed
-  onDateSelect?: (date: Date | undefined) => void; // Added to match the props passed
 }
 
-export function Calendar({ className, height = 400, shoots, onDateSelect }: CalendarProps) {
+export function Calendar({ className, height = 400 }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const { shoots } = useShoots();
   const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
@@ -75,13 +74,6 @@ export function Calendar({ className, height = 400, shoots, onDateSelect }: Cale
     setIsDetailOpen(false);
   };
 
-  // Handle date selection for the parent component if provided
-  const handleDayClick = (day: Date) => {
-    if (onDateSelect) {
-      onDateSelect(day);
-    }
-  };
-
   return (
     <div className={cn("w-full h-full", className)}>
       <div className="flex items-center justify-between mb-4">
@@ -101,10 +93,9 @@ export function Calendar({ className, height = 400, shoots, onDateSelect }: Cale
           <div
             key={day.toISOString()}
             className={cn(
-              "text-center text-sm py-1 font-medium cursor-pointer",
+              "text-center text-sm py-1 font-medium",
               isToday(day) ? "text-primary" : "text-muted-foreground"
             )}
-            onClick={() => handleDayClick(day)}
           >
             <div>{format(day, 'EEE')}</div>
             <div className={cn(
@@ -147,16 +138,29 @@ export function Calendar({ className, height = 400, shoots, onDateSelect }: Cale
                           className="absolute top-0 left-0 right-0 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-primary p-1.5 text-xs h-full overflow-hidden border border-primary/20 cursor-pointer"
                           onClick={() => handleShowShootDetails(event)}
                         >
-                          <div className="flex items-center gap-1">
-                            <ClockIcon className="h-3 w-3" />
-                            <span>{formattedTime}</span>
-                          </div>
-                          <div className="font-medium truncate">
-                            {event.location.address || 'No address'}
-                          </div>
-                          <div className="flex items-center text-xs text-primary/80 truncate">
-                            <UserIcon className="h-3 w-3 mr-1" />
-                            {event.client.name || 'No client'}
+                          <Badge className="absolute top-1 right-1 rounded-full h-4 w-4 text-[8px] p-0 flex items-center justify-center">
+                            {event.status.charAt(0).toUpperCase()}
+                          </Badge>
+                          <p className="font-medium leading-tight truncate">{event.client.name}</p>
+                          <div className="flex flex-col gap-0.5 mt-0.5">
+                            <div 
+                              className="flex items-center gap-0.5 text-[9px] text-primary cursor-pointer hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShowShootDetails(event);
+                              }}
+                            >
+                              <UserIcon className="h-2.5 w-2.5 flex-shrink-0" />
+                              <span className="truncate">{event.photographer.name}</span>
+                            </div>
+                            <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                              <ClockIcon className="h-2.5 w-2.5 flex-shrink-0" />
+                              <span>{formattedTime}</span>
+                            </div>
+                            <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                              <MapPinIcon className="h-2.5 w-2.5 flex-shrink-0" />
+                              <span className="truncate">{event.location.city}</span>
+                            </div>
                           </div>
                         </div>
                       );
@@ -169,12 +173,12 @@ export function Calendar({ className, height = 400, shoots, onDateSelect }: Cale
         </div>
       </ScrollArea>
       
-      {selectedShoot && isDetailOpen && (
-        <ShootDetail 
-          shoot={selectedShoot} 
-          onClose={handleCloseShootDetails} 
-        />
-      )}
+      {/* Shoot Detail Dialog */}
+      <ShootDetail 
+        shoot={selectedShoot}
+        isOpen={isDetailOpen}
+        onClose={handleCloseShootDetails}
+      />
     </div>
   );
 }

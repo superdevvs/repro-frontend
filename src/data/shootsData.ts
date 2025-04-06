@@ -46,7 +46,7 @@ export const shootsData: ShootData[] = [
       address: "4 Salthill Court",
       city: "Timonium",
       state: "MD",
-      zipCode: "21093",
+      zip: "21093",
       fullAddress: "4 Salthill Court, Timonium, MD 21093"
     },
     photographer: {
@@ -57,8 +57,7 @@ export const shootsData: ShootData[] = [
       baseQuote: 250.00,
       taxRate: 6.00,
       taxAmount: 15.00,
-      totalQuote: 265.00,
-      totalPaid: 0
+      totalQuote: 265.00
     },
     status: "scheduled",
     createdBy: "Michael Bereson"
@@ -77,7 +76,7 @@ export const shootsData: ShootData[] = [
       address: "869 High Mountain Road",
       city: "Franklin Lakes",
       state: "NJ",
-      zipCode: "7417",
+      zip: "7417",
       fullAddress: "869 High Mountain Road, Franklin Lakes, NJ 07417"
     },
     photographer: {
@@ -88,8 +87,7 @@ export const shootsData: ShootData[] = [
       baseQuote: 700.00,
       taxRate: 0.00,
       taxAmount: 0,
-      totalQuote: 700.00,
-      totalPaid: 0
+      totalQuote: 700.00
     },
     status: "scheduled",
     createdBy: "Bill Hang"
@@ -120,8 +118,7 @@ export const shootsData: ShootData[] = [
       baseQuote: 145.00,
       taxRate: 6.00,
       taxAmount: 8.70,
-      totalQuote: 153.70,
-      totalPaid: 0
+      totalQuote: 153.70
     },
     status: "completed",
     createdBy: "Michael Bereson"
@@ -151,8 +148,7 @@ export const shootsData: ShootData[] = [
       baseQuote: 150.00,
       taxRate: 6.00,
       taxAmount: 9.00,
-      totalQuote: 159.00,
-      totalPaid: 0
+      totalQuote: 159.00
     },
     status: "completed",
     createdBy: "Michael Bereson"
@@ -215,8 +211,7 @@ export const shootsData: ShootData[] = [
       baseQuote: 0,
       taxRate: 6.00,
       taxAmount: 0,
-      totalQuote: 0,
-      totalPaid: 0
+      totalQuote: 0
     },
     status: "pending",
     createdBy: "Super Admin"
@@ -254,41 +249,11 @@ export const shootsData: ShootData[] = [
     status: "completed",
     media: {
       photos: [
-        {
-          id: "photo1",
-          name: "Front View",
-          url: "/placeholder.svg",
-          type: "image/svg+xml",
-          approved: true
-        },
-        {
-          id: "photo2",
-          name: "Living Room",
-          url: "/placeholder.svg",
-          type: "image/svg+xml",
-          approved: true
-        },
-        {
-          id: "photo3",
-          name: "Kitchen",
-          url: "/placeholder.svg",
-          type: "image/svg+xml",
-          approved: true
-        },
-        {
-          id: "photo4",
-          name: "Master Bedroom",
-          url: "/placeholder.svg",
-          type: "image/svg+xml",
-          approved: true
-        },
-        {
-          id: "photo5",
-          name: "Bathroom",
-          url: "/placeholder.svg",
-          type: "image/svg+xml",
-          approved: true
-        }
+        "/placeholder.svg",
+        "/placeholder.svg",
+        "/placeholder.svg",
+        "/placeholder.svg",
+        "/placeholder.svg"
       ]
     },
     tourLinks: {

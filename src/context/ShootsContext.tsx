@@ -1,206 +1,258 @@
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { ShootData, ShootsContextType } from '@/types/shoots';
-import { toStringId } from '@/utils/formatters';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { ShootData } from '@/types/shoots';
+import { shootsData as initialShootsData } from '@/data/shootsData';
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/components/auth/AuthProvider';
 
-// Create context and export it
-export const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
-
-// Sample data for development
-const sampleShoots: ShootData[] = [
-  {
-    id: '1',
-    scheduledDate: new Date().toISOString(),
-    time: '10:00 AM',
-    status: 'scheduled',
-    location: {
-      address: '123 Main St',
-      city: 'City',
-      state: 'State',
-      zipCode: '12345',
-      fullAddress: '123 Main St, City, State 12345',
-    },
-    client: {
-      id: '101',
-      name: 'John Smith',
-      email: 'john@example.com',
-      phone: '555-1234',
-      company: 'Company Name',
-      totalShoots: 5,
-    },
-    photographer: {
-      id: '201',
-      name: 'Jane Photographer',
-      email: 'jane@example.com',
-      avatar: '/assets/avatars/photographer1.jpg',
-    },
-    notes: {
-      shootNotes: 'Sample shoot notes',
-    },
-    payment: {
-      totalPaid: 0,
-      baseQuote: 150,
-      taxRate: 8,
-      taxAmount: 12,
-      totalQuote: 162,
-    },
-    services: ['Photography', 'Video Tour'],
-    media: {
-      photos: [],
-      videos: [],
-      floorplans: [],
-      slideshows: [],
-    },
-    tourLinks: {
-      branded: '',
-      mls: '',
-      genericMls: '',
-    },
-  },
-  {
-    id: '2',
-    scheduledDate: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-    time: '2:00 PM',
-    status: 'pending',
-    location: {
-      address: '456 Oak Ave',
-      city: 'Town',
-      state: 'State',
-      zipCode: '54321',
-      fullAddress: '456 Oak Ave, Town, State 54321',
-    },
-    client: {
-      id: '102',
-      name: 'Alice Johnson',
-      email: 'alice@example.com',
-      company: 'Johnson Properties',
-      totalShoots: 3,
-    },
-    photographer: {
-      id: '202',
-      name: 'Bob Photographer',
-      email: 'bob@example.com',
-      avatar: '/assets/avatars/photographer2.jpg',
-    },
-    payment: {
-      totalPaid: 0,
-      baseQuote: 200,
-      totalQuote: 225,
-    },
-    services: ['Photography'],
-    media: {
-      photos: [],
-      videos: [],
-      floorplans: [],
-      slideshows: [],
-    },
-  },
-];
-
-interface ShootsProviderProps {
-  children: ReactNode;
+interface ShootsContextType {
+  shoots: ShootData[];
+  addShoot: (shoot: ShootData) => void;
+  updateShoot: (id: string, updatedShoot: Partial<ShootData>) => void;
+  deleteShoot: (id: string) => void;
+  // Helper functions for accounts page
+  getUniquePhotographers: () => { name: string; shootCount: number }[];
+  getUniqueEditors: () => { name: string; shootCount: number }[];
+  getUniqueClients: () => { name: string; shootCount: number; email?: string; company?: string; phone?: string }[];
+  // New functions for client-specific data
+  getCurrentClientShoots: () => ShootData[];
+  getClientShootsByStatus: (status: ShootData['status']) => ShootData[];
+  // Dashboard data helpers
+  getShootsByStatus: (status: ShootData['status']) => ShootData[];
+  getRecentShoots: (limit?: number) => ShootData[];
+  getUpcomingShoots: (limit?: number) => ShootData[];
 }
 
-// Provider component
-export const ShootsProvider = ({ children }: ShootsProviderProps) => {
-  const [shoots, setShoots] = useState<ShootData[]>(sampleShoots);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
 
-  const addShoot = useCallback((shoot: ShootData) => {
-    setShoots(prevShoots => [...prevShoots, shoot]);
-  }, []);
+export function ShootsProvider({ children }: { children: React.ReactNode }) {
+  const [shoots, setShoots] = useState<ShootData[]>(() => {
+    const storedShoots = localStorage.getItem('shoots');
+    return storedShoots ? JSON.parse(storedShoots) : initialShootsData;
+  });
+  
+  const { toast } = useToast();
+  const { user } = useAuth();
 
-  const updateShoot = useCallback((id: string | number, updates: Partial<ShootData>) => {
+  // Save shoots to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('shoots', JSON.stringify(shoots));
+  }, [shoots]);
+
+  const addShoot = (shoot: ShootData) => {
+    // Add default time from the time string if available
+    const shootWithTime = shoot.time ? {
+      ...shoot,
+      time: shoot.time
+    } : shoot;
+    
+    // Ensure new shoots are set to 'booked' status by default
+    const shootWithDefaultStatus = {
+      ...shootWithTime,
+      status: shoot.status || 'booked' as const
+    };
+    
+    setShoots(prevShoots => [...prevShoots, shootWithDefaultStatus]);
+    toast({
+      title: "Shoot created",
+      description: "New shoot has been successfully added.",
+    });
+  };
+
+  const updateShoot = (id: string, updatedShoot: Partial<ShootData>) => {
     setShoots(prevShoots => 
       prevShoots.map(shoot => 
-        shoot.id === id ? { ...shoot, ...updates } : shoot
+        shoot.id === id ? { ...shoot, ...updatedShoot } : shoot
       )
     );
-  }, []);
+    toast({
+      title: "Shoot updated",
+      description: "Shoot details have been updated.",
+    });
+  };
 
-  const deleteShoot = useCallback((id: string | number) => {
+  const deleteShoot = (id: string) => {
     setShoots(prevShoots => prevShoots.filter(shoot => shoot.id !== id));
-  }, []);
-  
-  const getUniquePhotographers = useCallback(() => {
-    const photographersMap = new Map();
-    shoots.forEach(shoot => {
-      if (shoot.photographer && shoot.photographer.id && shoot.photographer.name) {
-        const id = toStringId(shoot.photographer.id);
-        const photographerShoots = shoots.filter(s => 
-          s.photographer && toStringId(s.photographer.id) === id
-        );
-        
-        photographersMap.set(id, {
-          id: id,
-          name: shoot.photographer.name,
-          avatar: shoot.photographer.avatar,
-          email: 'photographer@example.com',  // Added for AccountsLayout
-          shootCount: photographerShoots.length
-        });
-      }
+    toast({
+      title: "Shoot deleted",
+      description: "The shoot has been removed.",
+      variant: "destructive",
     });
-    return Array.from(photographersMap.values());
-  }, [shoots]);
-  
-  const getUniqueEditors = useCallback(() => {
-    // Mock function - in a real app, you'd extract actual editor data
-    return [
-      { id: 'ed1', name: 'Editor One', email: 'editor1@example.com', company: 'Editing Co', phone: '555-1111', shootCount: 12 },
-      { id: 'ed2', name: 'Editor Two', email: 'editor2@example.com', company: 'Post Production', phone: '555-2222', shootCount: 8 },
-    ];
-  }, []);
-  
-  const getUniqueClients = useCallback(() => {
-    const clientsMap = new Map();
-    shoots.forEach(shoot => {
-      if (shoot.client && shoot.client.id && shoot.client.name) {
-        const id = toStringId(shoot.client.id);
-        const clientShoots = shoots.filter(s => 
-          s.client && toStringId(s.client.id) === id
-        );
-        
-        clientsMap.set(id, {
-          id: id,
-          name: shoot.client.name,
-          email: shoot.client.email,
-          company: shoot.client.company,
-          phone: shoot.client.phone,
-          shootCount: clientShoots.length
-        });
-      }
-    });
-    return Array.from(clientsMap.values());
-  }, [shoots]);
-  
-  const getClientShootsByStatus = useCallback((status: string) => {
+  };
+
+  // New functions for dashboard data
+  const getShootsByStatus = (status: ShootData['status']) => {
+    if (user?.role === 'client') {
+      return shoots.filter(shoot => 
+        shoot.client.name === user.name && 
+        shoot.status === status
+      );
+    }
     return shoots.filter(shoot => shoot.status === status);
-  }, [shoots]);
+  };
+
+  const getRecentShoots = (limit = 5) => {
+    const sortedShoots = [...shoots].sort((a, b) => {
+      const dateA = new Date(a.scheduledDate);
+      const dateB = new Date(b.scheduledDate);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    if (user?.role === 'client') {
+      return sortedShoots
+        .filter(shoot => shoot.client.name === user.name)
+        .slice(0, limit);
+    }
+    
+    return sortedShoots.slice(0, limit);
+  };
+
+  const getUpcomingShoots = (limit = 5) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const upcomingShoots = [...shoots].filter(shoot => {
+      const shootDate = new Date(shoot.scheduledDate);
+      return shootDate >= today && shoot.status !== 'completed';
+    }).sort((a, b) => {
+      const dateA = new Date(a.scheduledDate);
+      const dateB = new Date(b.scheduledDate);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    if (user?.role === 'client') {
+      return upcomingShoots
+        .filter(shoot => shoot.client.name === user.name)
+        .slice(0, limit);
+    }
+    
+    return upcomingShoots.slice(0, limit);
+  };
+
+  // New functions for client-specific data
+  const getCurrentClientShoots = () => {
+    if (user && user.role === 'client') {
+      return shoots.filter(shoot => shoot.client.name === user.name);
+    }
+    return []; // Return empty array if not a client
+  };
+
+  const getClientShootsByStatus = (status: ShootData['status']) => {
+    if (user && user.role === 'client') {
+      return shoots.filter(shoot => 
+        shoot.client.name === user.name && 
+        shoot.status === status
+      );
+    }
+    return []; // Return empty array if not a client
+  };
+
+  // Helper functions for Accounts page
+  const getUniquePhotographers = () => {
+    const photographerMap = new Map<string, number>();
+    
+    // For clients, only count photographers from their shoots
+    const relevantShoots = user?.role === 'client' 
+      ? shoots.filter(shoot => shoot.client.name === user.name)
+      : shoots;
+    
+    relevantShoots.forEach(shoot => {
+      if (shoot.photographer && shoot.photographer.name) {
+        const name = shoot.photographer.name;
+        photographerMap.set(name, (photographerMap.get(name) || 0) + 1);
+      }
+    });
+    
+    return Array.from(photographerMap.entries()).map(([name, shootCount]) => ({
+      name, 
+      shootCount
+    }));
+  };
+  
+  const getUniqueEditors = () => {
+    // Since there's no editor field in ShootData, create mock data for demonstration
+    return [
+      { name: "Sarah Johnson", shootCount: 24 },
+      { name: "Mike Reynolds", shootCount: 18 },
+      { name: "Alicia Rodriguez", shootCount: 32 }
+    ];
+  };
+  
+  const getUniqueClients = () => {
+    // For clients, only show their own data
+    if (user?.role === 'client') {
+      const clientData = {
+        name: user.name || '',
+        shootCount: shoots.filter(shoot => shoot.client.name === user.name).length,
+        email: user.email,
+        company: user.metadata?.company,
+        phone: user.metadata?.phone
+      };
+      return [clientData];
+    }
+    
+    // For admins, show all clients
+    const clientMap = new Map<string, { 
+      count: number, 
+      email?: string,
+      company?: string,
+      phone?: string
+    }>();
+    
+    shoots.forEach(shoot => {
+      if (shoot.client && shoot.client.name) {
+        const name = shoot.client.name;
+        const existingClient = clientMap.get(name);
+        
+        if (existingClient) {
+          clientMap.set(name, {
+            ...existingClient,
+            count: existingClient.count + 1
+          });
+        } else {
+          clientMap.set(name, {
+            count: 1,
+            email: shoot.client.email,
+            company: shoot.client.company,
+            phone: shoot.client.phone
+          });
+        }
+      }
+    });
+    
+    return Array.from(clientMap.entries()).map(([name, data]) => ({
+      name,
+      shootCount: data.count,
+      email: data.email,
+      company: data.company,
+      phone: data.phone
+    }));
+  };
 
   return (
-    <ShootsContext.Provider value={{
-      shoots,
-      loading,
-      error,
-      addShoot,
-      updateShoot,
+    <ShootsContext.Provider value={{ 
+      shoots, 
+      addShoot, 
+      updateShoot, 
       deleteShoot,
       getUniquePhotographers,
       getUniqueEditors,
       getUniqueClients,
-      getClientShootsByStatus
+      getCurrentClientShoots,
+      getClientShootsByStatus,
+      getShootsByStatus,
+      getRecentShoots,
+      getUpcomingShoots
     }}>
       {children}
     </ShootsContext.Provider>
   );
-};
+}
 
-// Custom hook to use the context
-export const useShoots = () => {
+export function useShoots() {
   const context = useContext(ShootsContext);
   if (context === undefined) {
     throw new Error('useShoots must be used within a ShootsProvider');
   }
   return context;
-};
+}

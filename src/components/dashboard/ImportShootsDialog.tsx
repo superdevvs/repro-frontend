@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -131,15 +132,13 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
             return [services.trim()];
           };
           
-          // Create new slot object
           const newShoot: ShootData = {
             id: uuidv4(),
             scheduledDate: getValue('scheduled') || new Date().toISOString(),
             completedDate: getValue('completed') || undefined,
             client: {
-              id: uuidv4(),
               name: getValue('client') || 'Unknown Client',
-              email: getValue('client email') || 'unknown@example.com',
+              email: getValue('client email') || '',
               phone: getValue('client phone') || undefined,
               company: getValue('client company') || undefined,
               totalShoots: parseInt(getValue('total shoots')) || 1,
@@ -153,9 +152,7 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
               fullAddress: getValue('full address') || getValue('address') || '',
             },
             photographer: {
-              id: uuidv4(),
               name: getValue('photographer') || 'Unassigned',
-              email: 'photographer@example.com',
             },
             services: parseServices(getValue('services')),
             payment: {
@@ -163,7 +160,7 @@ export function ImportShootsDialog({ isOpen, onClose }: ImportShootsDialogProps)
               taxRate: parseCurrency(getValue('tax')),
               taxAmount: parseCurrency(getValue('tax amount')),
               totalQuote: parseCurrency(getValue('total quote')),
-              totalPaid: parseCurrency(getValue('total paid')) || 0,
+              totalPaid: parseCurrency(getValue('total paid')),
               lastPaymentDate: getValue('last payment date') || undefined,
               lastPaymentType: getValue('last payment type') || undefined,
             },

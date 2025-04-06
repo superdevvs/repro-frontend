@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "sonner";
 
 // Define types
@@ -22,7 +23,7 @@ export interface User {
   bio?: string;
   username?: string;
   metadata?: UserMetadata;
-  isActive?: boolean;
+  isActive?: boolean; // Add isActive property
 }
 
 interface AuthContextType {
@@ -103,6 +104,9 @@ const routePermissions: Record<string, Role[]> = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   // Initialize user state from localStorage if available
   const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem('user');
@@ -120,6 +124,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return false;
     return requiredRoles.includes(user.role);
   };
+
+  // Route authorization check
+  useEffect(() => {
+    const currentPath = location.pathname;
+    
+    // Allow access to public routes regardless of authentication status
+    if (publicRoutes.includes(currentPath)) {
+      return;
+    }
+    
+    // Redirect to login if not authenticated and trying to access protected route
+    if (!isAuthenticated) {
+      toast.error("Please login to access this page");
+      navigate('/');
+      return;
+    }
+    
+    // Check role-based permissions for the current route
+    const requiredRoles = routePermissions[currentPath];
+    if (requiredRoles && !hasPermission(requiredRoles)) {
+      toast.error("You don't have permission to access this page");
+      navigate('/dashboard');
+    }
+  }, [location.pathname, isAuthenticated, role, navigate]);
 
   useEffect(() => {
     // Save user to localStorage when it changes
@@ -146,11 +174,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { password, ...userWithoutPassword } = userWithUpdatedLogin;
       setUser(userWithoutPassword);
       
+      // Route to appropriate dashboard based on role
+      navigate('/dashboard');
+      
       toast.success(`Welcome back, ${userWithoutPassword.name}`);
-      return Promise.resolve();
     } else {
-      toast.error("Invalid email or password");
-      return Promise.reject(new Error('Invalid email or password'));
+      throw new Error('Invalid email or password');
     }
   };
 
@@ -158,6 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     toast.info("You have been logged out");
+    navigate('/');
   };
 
   return (

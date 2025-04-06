@@ -3,8 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link2, ExternalLink, PaperclipIcon, Share2Icon } from "lucide-react";
-import { format, parseISO, isValid } from 'date-fns';
-import { ensureDateString } from '@/utils/formatters';
+import { format } from 'date-fns';
 import { ShootData } from '@/types/shoots';
 import { toast } from "sonner";
 import {
@@ -29,14 +28,9 @@ interface ShootDetailContentProps {
 }
 
 export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) {
-  const formatDate = (dateString?: string | Date): string => {
+  const formatDate = (dateString?: string) => {
     if (!dateString) return 'Not set';
-    try {
-      const date = typeof dateString === 'string' ? parseISO(dateString) : dateString;
-      return isValid(date) ? format(date, 'MMMM d, yyyy') : 'Not set';
-    } catch (error) {
-      return 'Not set';
-    }
+    return format(new Date(dateString), 'MMMM d, yyyy');
   };
 
   const openTourLink = (url?: string) => {

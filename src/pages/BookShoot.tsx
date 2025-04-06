@@ -1,258 +1,362 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { v4 as uuid } from 'uuid';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { ShootData } from '@/types/shoots';
-import { useShoots } from '@/context/ShootsContext';
+
+import React, { useState, useEffect } from 'react';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Button } from '@/components/ui/button';
+import { AnimatePresence } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
-import { TimeSelect } from '@/components/ui/time-select';
+import { BookingStepIndicator } from '@/components/booking/BookingStepIndicator';
+import { BookingComplete } from '@/components/booking/BookingComplete';
+import { useShoots } from '@/context/ShootsContext';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
+import { Client } from '@/types/clients';
+import { initialClientsData } from '@/data/clientsData';
+import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { format } from 'date-fns';
+import { BookingSummary } from '@/components/booking/BookingSummary';
+import { BookingContentArea } from '@/components/booking/BookingContentArea';
+import { packages, photographers } from '@/constants/bookingSteps';
+import { ShootData } from '@/types/shoots';
 
-interface Photographer {
-  id: string;
-  name: string;
-  avatar?: string;
-}
-
-export function BookShoot() {
-  const navigate = useNavigate();
-  const { addShoot, getUniquePhotographers } = useShoots();
-  const { toast } = useToast();
+const BookShoot = () => {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const clientIdFromUrl = queryParams.get('clientId');
+  const clientNameFromUrl = queryParams.get('clientName');
+  const clientCompanyFromUrl = queryParams.get('clientCompany');
+  const { user } = useAuth();
   
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedTime, setSelectedTime] = useState<string>("");
-  const [basePrice, setBasePrice] = useState<number>(200);
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [selectedPhotographer, setSelectedPhotographer] = useState<Photographer | null>(null);
+  const [clients, setClients] = useState<Client[]>(() => {
+    const storedClients = localStorage.getItem('clientsData');
+    return storedClients ? JSON.parse(storedClients) : initialClientsData;
+  });
   
-  const photographers = getUniquePhotographers ? getUniquePhotographers() : [];
-  
-  const services = [
-    "HDR Photography",
-    "Drone Photography",
-    "3D Virtual Tour",
-    "Floor Plans",
-    "Video Walkthrough"
-  ];
-
-  const handleFormSubmit = (formData) => {
-    if (!selectedDate || !selectedTime) {
-      toast({
-        title: "Missing Information",
-        description: "Please select both a date and a time for the shoot.",
-        variant: "destructive"
-      });
-      return;
+  const [client, setClient] = useState(() => {
+    if (user && user.role === 'client' && user.metadata && user.metadata.clientId) {
+      return user.metadata.clientId;
     }
+    return clientIdFromUrl || '';
+  });
 
-    const newShoot: ShootData = {
-      id: uuid(),
-      scheduledDate: selectedDate,
-      time: selectedTime,
-      status: "booked" as const,
-      location: {
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        zipCode: formData.zipCode,
-        fullAddress: `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`
-      },
-      client: {
-        id: uuid(),
-        name: formData.clientName,
-        email: formData.clientEmail || 'unknown@example.com',
-        phone: formData.clientPhone,
-        company: formData.clientCompany
-      },
-      photographer: selectedPhotographer ? {
-        id: selectedPhotographer.id,
-        name: selectedPhotographer.name,
-        avatar: selectedPhotographer.avatar,
-        email: 'photographer@example.com'
-      } : undefined,
-      payment: {
-        baseQuote: basePrice,
-        taxRate: 0.08,
-        taxAmount: basePrice * 0.08,
-        totalQuote: basePrice * 1.08,
-        totalPaid: 0
-      },
-      services: selectedServices,
-      notes: {
-        shootNotes: formData.notes || "",
-      },
-      media: {
-        photos: [],
-        videos: [],
-        floorplans: []
-      },
-      createdBy: "Admin user"
-    };
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [zip, setZip] = useState('');
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [time, setTime] = useState('');
+  const [photographer, setPhotographer] = useState('');
+  const [selectedPackage, setSelectedPackage] = useState('');
+  const [notes, setNotes] = useState('');
+  const [bypassPayment, setBypassPayment] = useState(false);
+  const [sendNotification, setSendNotification] = useState(true);
+  const [step, setStep] = useState(1);
+  const [isComplete, setIsComplete] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const { toast } = useToast();
+  const { addShoot } = useShoots();
+  const navigate = useNavigate();
 
-    addShoot(newShoot);
-    toast({
-      title: "Shoot Booked",
-      description: "Your shoot has been successfully booked!",
-    });
+  const isClientAccount = user && user.role === 'client';
+
+  useEffect(() => {
+    const storedClients = localStorage.getItem('clientsData');
+    if (storedClients) {
+      setClients(JSON.parse(storedClients));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (clientIdFromUrl && clientNameFromUrl) {
+      setClient(clientIdFromUrl);
+      
+      toast({
+        title: "Client Selected",
+        description: `${decodeURIComponent(clientNameFromUrl)}${clientCompanyFromUrl ? ` (${decodeURIComponent(clientCompanyFromUrl)})` : ''} has been selected for this shoot.`,
+        variant: "default",
+      });
+    }
+  }, [clientIdFromUrl, clientNameFromUrl, clientCompanyFromUrl, toast]);
+
+  const getPackagePrice = () => {
+    const pkg = packages.find(p => p.id === selectedPackage);
+    return pkg ? pkg.price : 0;
+  };
+
+  const getPhotographerRate = () => {
+    const photog = photographers.find(p => p.id === photographer);
+    return photog ? photog.rate : 0;
+  };
+
+  const getTax = () => {
+    const subtotal = getPackagePrice() + getPhotographerRate();
+    return Math.round(subtotal * 0.06);
+  };
+
+  const getTotal = () => {
+    return getPackagePrice() + getPhotographerRate() + getTax();
+  };
+
+  const getAvailablePhotographers = () => {
+    if (!date || !time || !selectedPackage) return [];
+
+    return photographers.filter(p => p.availability);
+  };
+
+  const validateCurrentStep = () => {
+    if (step === 1) {
+      if (!client && !isClientAccount) {
+        toast({
+          title: "Missing information",
+          description: "Please select a client before proceeding.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      if (!address || !city || !state || !zip || !selectedPackage) {
+        toast({
+          title: "Missing information",
+          description: "Please fill in all property details and select a package before proceeding.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      return true;
+    }
+    
+    if (step === 2) {
+      const errors = {};
+      if (!date) errors['date'] = "Please select a date";
+      if (!time) errors['time'] = "Please select a time";
+      
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors);
+        return false;
+      }
+      return true;
+    }
+    
+    return true;
+  };
+
+  const handleSubmit = () => {
+    setFormErrors({});
+    
+    if (step === 3) {
+      const availablePhotographers = getAvailablePhotographers();
+      
+      if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
+        toast({
+          title: "Missing information",
+          description: "Please fill in all required fields before confirming the booking.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const selectedClientData = clients.find(c => c.id === client);
+      const selectedPhotographerData = photographers.find(p => p.id === photographer);
+      const selectedPackageData = packages.find(p => p.id === selectedPackage);
+      
+      // Fix the status type by explicitly setting it to a valid literal type
+      const bookingStatus: ShootData['status'] = 'booked';
+      
+      const newShoot: ShootData = {
+        id: uuidv4(),
+        scheduledDate: date.toISOString().split('T')[0],
+        time: time,
+        client: {
+          name: selectedClientData?.name || 'Unknown Client',
+          email: selectedClientData?.email || `client${client}@example.com`,
+          company: selectedClientData?.company,
+          totalShoots: 1
+        },
+        location: {
+          address: address,
+          address2: '',
+          city: city,
+          state: state,
+          zip: zip,
+          fullAddress: `${address}, ${city}, ${state} ${zip}`
+        },
+        photographer: selectedPhotographerData ? {
+          id: selectedPhotographerData.id,
+          name: selectedPhotographerData.name,
+          avatar: selectedPhotographerData.avatar
+        } : {
+          name: "To Be Assigned",
+          avatar: ""
+        },
+        services: selectedPackageData ? [selectedPackageData.name] : [],
+        payment: {
+          baseQuote: getPackagePrice(),
+          taxRate: 6.00,
+          taxAmount: getTax(),
+          totalQuote: getTotal(),
+          ...(bypassPayment ? {} : { totalPaid: getTotal(), lastPaymentDate: new Date().toISOString().split('T')[0], lastPaymentType: 'Credit Card' })
+        },
+        status: bookingStatus,
+        notes: notes ? { shootNotes: notes } : undefined,
+        createdBy: user?.name || "Current User"
+      };
+
+      addShoot(newShoot);
+      setIsComplete(true);
+
+      console.log("New shoot created:", newShoot);
+    } else {
+      if (!validateCurrentStep()) {
+        return;
+      }
+      
+      setStep(step + 1);
+    }
+  };
+
+  const goBack = () => {
+    if (step > 1) {
+      setFormErrors({});
+      setStep(step - 1);
+    }
+  };
+
+  const resetForm = () => {
+    if (!isClientAccount) {
+      setClient('');
+    }
+    setAddress('');
+    setCity('');
+    setState('');
+    setZip('');
+    setDate(undefined);
+    setTime('');
+    setPhotographer('');
+    setSelectedPackage('');
+    setNotes('');
+    setBypassPayment(false);
+    setSendNotification(true);
+    setStep(1);
+    setIsComplete(false);
     navigate('/shoots');
   };
 
+  const clientPropertyFormData = {
+    initialData: {
+      clientId: client,
+      clientName: isClientAccount ? user?.name || '' : clients.find(c => c.id === client)?.name || '',
+      clientEmail: isClientAccount ? user?.email || '' : clients.find(c => c.id === client)?.email || '',
+      clientPhone: isClientAccount ? (user?.metadata?.phone || '') : clients.find(c => c.id === client)?.phone || '',
+      clientCompany: isClientAccount ? (user?.metadata?.company || '') : clients.find(c => c.id === client)?.company || '',
+      propertyType: 'residential' as const,
+      propertyAddress: address,
+      propertyCity: city,
+      propertyState: state,
+      propertyZip: zip,
+      propertyInfo: notes
+    },
+    onComplete: (data: any) => {
+      if (!isClientAccount && data.clientId) {
+        setClient(data.clientId);
+      }
+      setAddress(data.propertyAddress);
+      setCity(data.propertyCity);
+      setState(data.propertyState);
+      setZip(data.propertyZip);
+      setNotes(data.propertyInfo || '');
+      setSelectedPackage(data.selectedPackage || '');
+      setStep(2);
+    },
+    isClientAccount: isClientAccount
+  };
+
+  const getSummaryInfo = () => {
+    const selectedClientData = clients.find(c => c.id === client);
+    const selectedPackageData = packages.find(p => p.id === selectedPackage);
+    
+    return {
+      client: selectedClientData?.name || (isClientAccount ? user?.name : ''),
+      package: selectedPackageData?.name || '',
+      packagePrice: getPackagePrice(),
+      address: address ? `${address}, ${city}, ${state} ${zip}` : '',
+      date: date ? format(date, 'PPP') : '',
+      time: time || '',
+    };
+  };
+
+  const summaryInfo = getSummaryInfo();
+
   return (
-    <div className="container max-w-3xl py-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Book a Shoot</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="grid gap-2">
-            <Label htmlFor="clientName">Client Name</Label>
-            <Input id="clientName" placeholder="Client Name" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="clientEmail">Client Email</Label>
-            <Input id="clientEmail" type="email" placeholder="Client Email" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="clientPhone">Client Phone</Label>
-            <Input id="clientPhone" type="tel" placeholder="Client Phone" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="clientCompany">Client Company</Label>
-            <Input id="clientCompany" placeholder="Client Company" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="address">Address</Label>
-            <Input id="address" placeholder="Address" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="city">City</Label>
-            <Input id="city" placeholder="City" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="state">State</Label>
-            <Input id="state" placeholder="State" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="zipCode">Zip Code</Label>
-            <Input id="zipCode" placeholder="Zip Code" />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Select Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-[240px] justify-start text-left font-normal",
-                    !selectedDate && "text-muted-foreground"
-                  )}
-                >
-                  {selectedDate ? (
-                    format(selectedDate, "PPP")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  className="border-0 rounded-md"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Select Time</Label>
-            <TimeSelect 
-              value={selectedTime}
-              onChange={setSelectedTime}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Select Photographer</Label>
-            <select
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              onChange={(e) => {
-                const photographer = photographers.find(p => p.id === e.target.value);
-                setSelectedPhotographer(photographer || null);
-              }}
-            >
-              <option value="">Select a photographer</option>
-              {photographers.map((photographer) => (
-                <option key={photographer.id} value={photographer.id}>
-                  {photographer.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Select Services</Label>
-            <ScrollArea className="h-[120px] w-full rounded-md border">
-              {services.map((service) => (
-                <div key={service} className="flex items-center space-x-2 p-3">
-                  <Checkbox
-                    id={service}
-                    checked={selectedServices.includes(service)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedServices([...selectedServices, service]);
-                      } else {
-                        setSelectedServices(selectedServices.filter((s) => s !== service));
-                      }
-                    }}
+    <DashboardLayout>
+      <div className="container max-w-5xl py-6 space-y-8">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
+          onClick={() => navigate('/shoots')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Shoots
+        </Button>
+        
+        <AnimatePresence mode="wait">
+          {isComplete ? (
+            <BookingComplete date={date} time={time} resetForm={resetForm} />
+          ) : (
+            <>
+              <BookingStepIndicator currentStep={step} totalSteps={3} />
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="md:col-span-1 order-2 md:order-1">
+                  <BookingSummary 
+                    summaryInfo={summaryInfo} 
+                    selectedPackage={selectedPackage}
+                    packages={packages}
                   />
-                  <Label htmlFor={service} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    {service}
-                  </Label>
                 </div>
-              ))}
-            </ScrollArea>
-          </div>
-
-          <Separator />
-
-          <div className="grid gap-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea id="notes" placeholder="Additional notes for the shoot" />
-          </div>
-
-          <Button onClick={() => {
-            const formData = {
-              clientName: (document.getElementById('clientName') as HTMLInputElement).value,
-              clientEmail: (document.getElementById('clientEmail') as HTMLInputElement).value,
-              clientPhone: (document.getElementById('clientPhone') as HTMLInputElement).value,
-              clientCompany: (document.getElementById('clientCompany') as HTMLInputElement).value,
-              address: (document.getElementById('address') as HTMLInputElement).value,
-              city: (document.getElementById('city') as HTMLInputElement).value,
-              state: (document.getElementById('state') as HTMLInputElement).value,
-              zipCode: (document.getElementById('zipCode') as HTMLInputElement).value,
-              notes: (document.getElementById('notes') as HTMLTextAreaElement).value,
-            };
-            handleFormSubmit(formData);
-          }}>
-            Book Shoot
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+                
+                <div className="md:col-span-2 order-1 md:order-2">
+                  <BookingContentArea
+                    step={step}
+                    formErrors={formErrors}
+                    setFormErrors={setFormErrors}
+                    clientPropertyFormData={clientPropertyFormData}
+                    date={date}
+                    setDate={setDate}
+                    time={time}
+                    setTime={setTime}
+                    selectedPackage={selectedPackage}
+                    notes={notes}
+                    setNotes={setNotes}
+                    packages={packages}
+                    client={client}
+                    address={address}
+                    city={city}
+                    state={state}
+                    zip={zip}
+                    photographer={photographer}
+                    setPhotographer={setPhotographer}
+                    bypassPayment={bypassPayment}
+                    setBypassPayment={setBypassPayment}
+                    sendNotification={sendNotification}
+                    setSendNotification={setSendNotification}
+                    getPackagePrice={getPackagePrice}
+                    getPhotographerRate={getPhotographerRate}
+                    getTax={getTax}
+                    getTotal={getTotal}
+                    clients={clients}
+                    photographers={getAvailablePhotographers()}
+                    handleSubmit={handleSubmit}
+                    goBack={goBack}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </DashboardLayout>
   );
-}
+};
 
 export default BookShoot;

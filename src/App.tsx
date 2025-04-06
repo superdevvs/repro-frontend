@@ -1,198 +1,148 @@
 
-import React from 'react';
-import { 
-  BrowserRouter as Router, 
-  Routes, 
-  Route, 
-  Navigate, 
-  useNavigate,
-  useLocation
-} from "react-router-dom";
-import { useAuth } from './components/auth/AuthProvider';
-import { DashboardLayout } from './components/layout/DashboardLayout';
-import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
-import { BookShoot } from './pages/BookShoot'; 
-import { Shoots } from './pages/Shoots';
-import { Clients } from './pages/Clients';
-import Accounts from './pages/Accounts';
-import Invoices from './pages/Invoices';
-import Reports from './pages/Reports';
-import Availability from './pages/Availability';
-import Settings from './pages/Settings';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import VerifyEmail from './pages/VerifyEmail';
-import ShootDetail from './pages/ShootDetail';
-import Messages from './pages/Messages';
-import { ShootHistory } from './pages/ShootHistory';
-import VirtualTours from './pages/VirtualTours';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth, UserMetadata } from "./components/auth/AuthProvider";
+import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import Shoots from "./pages/Shoots";
+import BookShoot from "./pages/BookShoot";
+import Clients from "./pages/Clients";
+import Invoices from "./pages/Invoices";
+import Settings from "./pages/Settings";
+import Accounts from "./pages/Accounts";
+import Availability from "./pages/Availability";
+import Reports from "./pages/Reports";
+import Messages from "./pages/Messages";
+import NotFound from "./pages/NotFound";
+import ShootHistory from "./pages/ShootHistory";
+import PhotographerShootHistory from "./pages/PhotographerShootHistory";
+import PhotographerAccount from "./pages/PhotographerAccount";
+import PhotographerAvailability from "./pages/PhotographerAvailability";
+import { ShootsProvider } from './context/ShootsContext';
+import { ThemeProvider } from './hooks/useTheme';
+import Profile from "./pages/Profile";
 
-// Protected route wrapper
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+// Declare global type augmentations for User to include metadata
+declare module './components/auth/AuthProvider' {
+  interface User {
+    metadata?: UserMetadata;
+  }
+}
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
+// Protected route component
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const { isAuthenticated } = useAuth();
   
-  React.useEffect(() => {
-    if (!user) {
-      navigate('/login', { replace: true });
-    }
-  }, [user, navigate, location]);
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
   
-  return user ? <>{children}</> : null;
+  return children;
 };
 
-const App = () => {
+// Routes wrapper with auth provider
+const AppRoutes = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-        <Route path="/verify-email/:token" element={<VerifyEmail />} />
-        
-        {/* Protected Routes */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <Dashboard />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/book-shoot" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <BookShoot />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/shoots" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <Shoots />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/shoot-history" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <ShootHistory />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/shoots/:shootId" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <ShootDetail />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/clients" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <Clients />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/accounts" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <Accounts />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/invoices" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <Invoices />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/reports" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <Reports />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/availability" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <Availability />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/settings" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <Settings />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/messages" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <Messages />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/virtual-tours" 
-          element={
-            <ProtectedRoute>
-              <DashboardLayout>
-                <VirtualTours />
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        {/* Fallback - 404 */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/shoots" element={
+        <ProtectedRoute>
+          <Shoots />
+        </ProtectedRoute>
+      } />
+      <Route path="/book-shoot" element={
+        <ProtectedRoute>
+          <BookShoot />
+        </ProtectedRoute>
+      } />
+      <Route path="/shoot-history" element={
+        <ProtectedRoute>
+          <ShootHistory />
+        </ProtectedRoute>
+      } />
+      <Route path="/messages" element={
+        <ProtectedRoute>
+          <Messages />
+        </ProtectedRoute>
+      } />
+      <Route path="/clients" element={
+        <ProtectedRoute>
+          <Clients />
+        </ProtectedRoute>
+      } />
+      <Route path="/invoices" element={
+        <ProtectedRoute>
+          <Invoices />
+        </ProtectedRoute>
+      } />
+      <Route path="/accounts" element={
+        <ProtectedRoute>
+          <Accounts />
+        </ProtectedRoute>
+      } />
+      <Route path="/availability" element={
+        <ProtectedRoute>
+          <Availability />
+        </ProtectedRoute>
+      } />
+      <Route path="/reports" element={
+        <ProtectedRoute>
+          <Reports />
+        </ProtectedRoute>
+      } />
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>
+      } />
+      <Route path="/photographer-history" element={<PhotographerShootHistory />} />
+      <Route path="/photographer-account" element={<PhotographerAccount />} />
+      <Route path="/photographer-availability" element={<PhotographerAvailability />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner position="top-right" closeButton richColors />
+          <BrowserRouter>
+            <AuthProvider>
+              <ShootsProvider>
+                <AppRoutes />
+              </ShootsProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
