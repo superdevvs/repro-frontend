@@ -58,7 +58,10 @@ export function TaskFilters({
         variant="ghost" 
         size="sm"
         className="h-8 w-8 p-0" 
-        onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+        onClick={() => {
+          // Fix: Instead of using a function, directly set the new value
+          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        }}
       >
         {sortDirection === 'asc' ? 
           <ArrowDown className="h-4 w-4" /> : 
