@@ -16,12 +16,12 @@ export function TimeRangeFilter({
 }: TimeRangeFilterProps) {
   return (
     <div className={`flex flex-col sm:flex-row items-end sm:items-center gap-2 ${className}`}>
-      <div className="bg-muted/20 p-1 rounded-lg flex items-center shadow-sm">
+      <div className="flex items-center rounded-md">
         <Button 
           variant={selectedRange === 'day' ? 'default' : 'ghost'} 
           size="sm" 
           onClick={() => onChange('day')} 
-          className={`text-xs h-8 px-3 font-medium ${selectedRange === 'day' ? 'shadow-sm' : ''}`}
+          className={`h-8 px-3 rounded-l-md ${selectedRange !== 'day' ? 'hover:bg-muted' : ''}`}
         >
           Day
         </Button>
@@ -29,7 +29,7 @@ export function TimeRangeFilter({
           variant={selectedRange === 'week' ? 'default' : 'ghost'} 
           size="sm" 
           onClick={() => onChange('week')} 
-          className={`text-xs h-8 px-3 font-medium ${selectedRange === 'week' ? 'shadow-sm' : ''}`}
+          className={`h-8 px-3 ${selectedRange !== 'week' ? 'hover:bg-muted' : ''}`}
         >
           Week
         </Button>
@@ -37,7 +37,7 @@ export function TimeRangeFilter({
           variant={selectedRange === 'month' ? 'default' : 'ghost'} 
           size="sm" 
           onClick={() => onChange('month')} 
-          className={`text-xs h-8 px-3 font-medium ${selectedRange === 'month' ? 'shadow-sm' : ''}`}
+          className={`h-8 px-3 ${selectedRange !== 'month' ? 'hover:bg-muted' : ''}`}
         >
           Month
         </Button>
@@ -45,7 +45,7 @@ export function TimeRangeFilter({
           variant={selectedRange === 'year' ? 'default' : 'ghost'} 
           size="sm" 
           onClick={() => onChange('year')} 
-          className={`text-xs h-8 px-3 font-medium ${selectedRange === 'year' ? 'shadow-sm' : ''}`}
+          className={`h-8 px-3 rounded-r-md ${selectedRange !== 'year' ? 'hover:bg-muted' : ''}`}
         >
           Year
         </Button>
