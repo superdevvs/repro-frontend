@@ -22,8 +22,7 @@ export interface User {
   metadata?: Record<string, any>;
 }
 
-// Update UserData to extend User or be an alias of User
-export type UserData = User;
+// We don't need to redefine UserData here since we're importing it from @/types/auth
 
 interface AuthContextType {
   user: UserData | null;
