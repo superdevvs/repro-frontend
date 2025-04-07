@@ -2,7 +2,6 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   GridIcon, 
   ListIcon, 
@@ -34,6 +33,14 @@ export function ShootsFilter({
   const { user } = useAuth();
   const isClient = user?.role === 'client';
   
+  const tabs = [
+    { id: 'all', label: 'All' },
+    { id: 'scheduled', label: 'Scheduled' },
+    { id: 'completed', label: 'Completed' },
+    { id: 'pending', label: 'Pending' },
+    { id: 'hold', label: 'On Hold' }
+  ];
+  
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <div className="relative flex-1">
@@ -46,20 +53,25 @@ export function ShootsFilter({
         />
       </div>
       
-      <Tabs 
-        defaultValue="scheduled" 
-        value={selectedTab}
-        onValueChange={setSelectedTab}
-        className="w-full md:w-auto"
-      >
-        <TabsList className="grid grid-cols-5 w-full">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-          <TabsTrigger value="pending">Pending</TabsTrigger>
-          <TabsTrigger value="hold">On Hold</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="overflow-x-auto pb-1 w-full md:w-auto">
+        <div className="flex bg-muted rounded-md p-1 min-w-max">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setSelectedTab(tab.id)}
+              className={`
+                px-4 py-2 text-sm font-medium rounded-md transition-all min-w-[100px]
+                ${selectedTab === tab.id 
+                  ? 'bg-background text-foreground shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10'
+                }
+              `}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
       
       <div className="flex items-center gap-2">
         {onFilterClick && (

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -8,9 +9,12 @@ import { ShootsContent } from '@/components/dashboard/ShootsContent';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileUploader } from '@/components/media/FileUploader';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from '@/components/ui/pagination';
+import { Button } from '@/components/ui/button';
+import { PlusIcon } from 'lucide-react';
 import { ShootData } from '@/types/shoots';
 import { useShoots } from '@/context/ShootsContext';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { toast } from "@/components/ui/use-toast";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -85,10 +89,23 @@ const Shoots = () => {
     });
     
     setIsUploadDialogOpen(false);
+    toast({
+      title: "Upload Complete",
+      description: `${files.length} files have been uploaded successfully.`
+    });
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+  
+  const handleNewShoot = () => {
+    // Navigate to book shoot page or open modal
+    // This is just a placeholder - implement based on your app's flow
+    toast({
+      title: "New Shoot",
+      description: "Create a new shoot functionality will be implemented here."
+    });
   };
 
   useEffect(() => {
@@ -106,6 +123,15 @@ const Shoots = () => {
               : "Manage and track all property photoshoot sessions."
             } 
           />
+          
+          <div className="md:hidden mb-4">
+            <Button 
+              className="w-full gap-2 bg-primary text-primary-foreground" 
+              onClick={handleNewShoot}
+            >
+              <PlusIcon className="h-4 w-4" /> Book New Shoot
+            </Button>
+          </div>
           
           <ShootsFilter 
             searchTerm={searchTerm}
