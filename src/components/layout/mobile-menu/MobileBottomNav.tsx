@@ -116,20 +116,6 @@ export const MobileBottomNav = ({ toggleMenu }: MobileBottomNavProps) => {
           <span className="text-[10px] font-medium">More</span>
         </button>
       </nav>
-
-      {/* Special shape at the top of the navbar */}
-      <div className="absolute -top-[10px] left-0 right-0 h-[10px] overflow-hidden">
-        <svg 
-          className={cn(
-            "w-full h-full",
-            isLightMode ? "fill-white/80" : "fill-background/50"
-          )}
-          viewBox="0 0 375 10" 
-          preserveAspectRatio="none"
-        >
-          <path d="M256 0H117L48.25 10H0V10H375V10H324.75L257 0.16V0H256Z" />
-        </svg>
-      </div>
     </motion.div>
   );
 };

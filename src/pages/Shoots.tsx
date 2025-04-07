@@ -6,6 +6,7 @@ import { ShootDetail } from '@/components/dashboard/ShootDetail';
 import { ShootsHeader } from '@/components/dashboard/ShootsHeader';
 import { ShootsFilter } from '@/components/dashboard/ShootsFilter';
 import { ShootsContent } from '@/components/dashboard/ShootsContent';
+import { QuickBookingCard } from '@/components/dashboard/QuickBookingCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileUploader } from '@/components/media/FileUploader';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from '@/components/ui/pagination';
@@ -100,13 +101,11 @@ const Shoots = () => {
   };
   
   const handleNewShoot = () => {
-    // Navigate to book shoot page or open modal
-    // This is just a placeholder - implement based on your app's flow
-    toast({
-      title: "New Shoot",
-      description: "Create a new shoot functionality will be implemented here."
-    });
+    // Navigate to book shoot page
+    navigate('/book-shoot');
   };
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     setCurrentPage(1);
@@ -132,6 +131,11 @@ const Shoots = () => {
               <PlusIcon className="h-4 w-4" /> Book New Shoot
             </Button>
           </div>
+          
+          {/* Quick Booking Card */}
+          {['admin', 'superadmin'].includes(user?.role || '') && (
+            <QuickBookingCard />
+          )}
           
           <ShootsFilter 
             searchTerm={searchTerm}
