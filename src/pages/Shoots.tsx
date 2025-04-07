@@ -1,15 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
-import { ShootDetail } from '@/components/dashboard/ShootDetail';
 import { ShootsHeader } from '@/components/dashboard/ShootsHeader';
 import { ShootsFilter } from '@/components/dashboard/ShootsFilter';
 import { ShootsContent } from '@/components/dashboard/ShootsContent';
+import { ShootsPagination } from '@/components/dashboard/ShootsPagination';
+import { ShootsDialogs } from '@/components/dashboard/ShootsDialogs';
 import { QuickBookingCard } from '@/components/dashboard/QuickBookingCard';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { FileUploader } from '@/components/media/FileUploader';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 import { ShootData } from '@/types/shoots';
@@ -30,7 +29,9 @@ const Shoots = () => {
   
   const { shoots, updateShoot } = useShoots();
   const { user } = useAuth();
+  const navigate = useNavigate();
   
+  // Filter shoots based on user role
   const userFilteredShoots = shoots.filter(shoot => {
     if (user && user.role === 'client') {
       return shoot.client.name === user.name;
@@ -38,6 +39,7 @@ const Shoots = () => {
     return true;
   });
   
+  // Filter shoots based on search and tab
   const filteredShoots = userFilteredShoots.filter(shoot => {
     const matchesSearch = 
       shoot.location.fullAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -63,11 +65,6 @@ const Shoots = () => {
   const handleShootSelect = (shoot: ShootData) => {
     setSelectedShoot(shoot);
     setIsDetailOpen(true);
-  };
-  
-  const closeDetail = () => {
-    setIsDetailOpen(false);
-    setSelectedShoot(null);
   };
   
   const handleUploadMedia = (shoot: ShootData) => {
@@ -101,11 +98,8 @@ const Shoots = () => {
   };
   
   const handleNewShoot = () => {
-    // Navigate to book shoot page
     navigate('/book-shoot');
   };
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     setCurrentPage(1);
@@ -154,72 +148,21 @@ const Shoots = () => {
             showMedia={isCompletedTab}
           />
 
-          {totalPages > 1 && (
-            <Pagination className="mt-6">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                  />
-                </PaginationItem>
-                
-                {[...Array(totalPages)].map((_, index) => {
-                  const page = index + 1;
-                  if (
-                    page === 1 || 
-                    page === totalPages || 
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                  ) {
-                    return (
-                      <PaginationItem key={page}>
-                        <PaginationLink 
-                          isActive={page === currentPage}
-                          onClick={() => handlePageChange(page)}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  }
-                  if (page === 2 || page === totalPages - 1) {
-                    return (
-                      <PaginationItem key={`ellipsis-${page}`}>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    );
-                  }
-                  return null;
-                })}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
+          <ShootsPagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </div>
         
-        <ShootDetail 
-          shoot={selectedShoot}
-          isOpen={isDetailOpen}
-          onClose={closeDetail}
+        <ShootsDialogs 
+          selectedShoot={selectedShoot}
+          isDetailOpen={isDetailOpen}
+          isUploadDialogOpen={isUploadDialogOpen}
+          setIsDetailOpen={setIsDetailOpen}
+          setIsUploadDialogOpen={setIsUploadDialogOpen}
+          onUploadComplete={handleUploadComplete}
         />
-        
-        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Upload Media for {selectedShoot?.location.fullAddress}</DialogTitle>
-            </DialogHeader>
-            <FileUploader 
-              shootId={selectedShoot?.id} 
-              onUploadComplete={handleUploadComplete}
-            />
-          </DialogContent>
-        </Dialog>
       </PageTransition>
     </DashboardLayout>
   );
