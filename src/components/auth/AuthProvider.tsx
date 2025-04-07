@@ -29,10 +29,10 @@ interface AuthContextType {
   user: UserData | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  role: string;
+  role: Role;
   login: (userData: UserData) => void;
   logout: () => void;
-  setUserRole: (role: string) => void;
+  setUserRole: (role: Role) => void;
 }
 
 // Create a context object
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
     setIsAuthenticated(true);
-    setRole(userData.role || 'client');
+    setRole(userData.role);
   };
 
   // Logout function
@@ -83,12 +83,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setRole('client');
   };
 
-  const setUserRole = (newRole: string) => {
+  const setUserRole = (newRole: Role) => {
     setRole(newRole);
     
     // Update user object with new role
     if (user) {
-      const updatedUser = { ...user, role: newRole as Role };
+      const updatedUser = { ...user, role: newRole };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
     }

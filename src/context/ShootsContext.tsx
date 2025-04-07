@@ -4,7 +4,7 @@ import { ShootData } from '@/types/shoots';
 import { v4 as uuidv4 } from 'uuid';
 import { format, addDays } from 'date-fns';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { UserMetadata } from '@/types/auth';
+import { UserData } from '@/types/auth';
 
 interface ShootsContextType {
   shoots: ShootData[];
