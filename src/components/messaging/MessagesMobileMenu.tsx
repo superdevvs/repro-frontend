@@ -3,18 +3,14 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
-import { 
-  FolderIcon, 
-  TagIcon, 
-  ChevronDown, 
-  FilterIcon,
-  X
-} from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { ConversationFilter } from '@/types/messages';
+import { FoldersSection } from './message-menu/FoldersSection';
+import { LabelsSection } from './message-menu/LabelsSection';
+import { FilterOptionsSection } from './message-menu/FilterOptionsSection';
 
 interface MessagesMobileMenuProps {
   isOpen: boolean;
@@ -55,6 +51,16 @@ export function MessagesMobileMenu({ isOpen, onClose, filters }: MessagesMobileM
     onFilterChange 
   } = filters;
 
+  const handleClearFilters = () => {
+    onFilterChange({
+      searchQuery: '',
+      serviceType: undefined,
+      status: undefined,
+      userType: undefined,
+      dateRange: 'all'
+    });
+  };
+
   return (
     <motion.div
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
@@ -83,176 +89,28 @@ export function MessagesMobileMenu({ isOpen, onClose, filters }: MessagesMobileM
 
         <ScrollArea className="max-h-[60vh] overflow-y-auto">
           <div className="p-3">
-            <div className="mb-3">
-              <div className="flex items-center justify-between mb-1.5">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 text-xs flex items-center p-1 pl-0 hover:bg-transparent" 
-                  onClick={() => setShowFolders(!showFolders)}
-                >
-                  <ChevronDown className={cn("h-3.5 w-3.5 mr-1 transition-transform", !showFolders && "transform -rotate-90")} />
-                  <FolderIcon className="h-4 w-4 mr-1.5" />
-                  <span className="font-semibold">Folders</span>
-                </Button>
-              </div>
-              
-              {showFolders && (
-                <div className="ml-3 space-y-1">
-                  {folders.map(folder => (
-                    <Button
-                      key={folder.id}
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "w-full justify-start text-xs h-7 px-2 hover:bg-slate-100",
-                        folder.id === 'inbox' && "font-medium"
-                      )}
-                    >
-                      <span className="truncate">{folder.name}</span>
-                      {folder.count > 0 && (
-                        <Badge variant="secondary" className="ml-auto">
-                          {folder.count}
-                        </Badge>
-                      )}
-                    </Button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <FoldersSection 
+              showFolders={showFolders}
+              setShowFolders={setShowFolders}
+              folders={folders}
+            />
             
             <Separator className="my-3" />
             
-            <div className="mb-3">
-              <div className="flex items-center justify-between mb-1.5">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 text-xs flex items-center p-1 pl-0 hover:bg-transparent"
-                >
-                  <TagIcon className="h-4 w-4 mr-1.5" />
-                  <span className="font-semibold">Labels</span>
-                </Button>
-              </div>
-              
-              <div className="ml-3 space-y-1">
-                {labels.map(label => (
-                  <Button
-                    key={label.id}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start text-xs h-7 px-2 hover:bg-slate-100"
-                  >
-                    <span className={cn("h-2.5 w-2.5 rounded-full mr-2", label.color)}></span>
-                    <span className="truncate">{label.name}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
+            <LabelsSection labels={labels} />
             
             <Separator className="my-3" />
             
-            <div className="mb-2">
-              <div className="flex items-center justify-between mb-1.5">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 text-xs flex items-center p-1 pl-0 hover:bg-transparent"
-                >
-                  <FilterIcon className="h-4 w-4 mr-1.5" />
-                  <span className="font-semibold">Filter Options</span>
-                </Button>
-              </div>
-              
-              <div className="ml-3 space-y-3">
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Service Type</p>
-                  <div className="flex flex-wrap gap-1">
-                    {['photography', 'drone', 'floorplan', 'staging'].map((type) => (
-                      <Button
-                        key={type}
-                        variant={filter.serviceType?.includes(type as any) ? "default" : "outline"}
-                        size="sm"
-                        className="text-xs h-7"
-                        onClick={() => {
-                          const newTypes = filter.serviceType || [];
-                          onFilterChange({
-                            ...filter,
-                            serviceType: filter.serviceType?.includes(type as any)
-                              ? newTypes.filter(t => t !== type) as any
-                              : [...newTypes, type] as any
-                          });
-                        }}
-                      >
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Status</p>
-                  <div className="flex flex-wrap gap-1">
-                    {['scheduled', 'inProgress', 'delivered', 'revisions', 'complete'].map((status) => (
-                      <Button
-                        key={status}
-                        variant={filter.status?.includes(status as any) ? "default" : "outline"}
-                        size="sm"
-                        className="text-xs h-7"
-                        onClick={() => {
-                          const newStatus = filter.status || [];
-                          onFilterChange({
-                            ...filter,
-                            status: filter.status?.includes(status as any)
-                              ? newStatus.filter(s => s !== status) as any
-                              : [...newStatus, status] as any
-                          });
-                        }}
-                      >
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">User Type</p>
-                  <div className="flex flex-wrap gap-1">
-                    {['client', 'photographer', 'editor'].map((role) => (
-                      <Button
-                        key={role}
-                        variant={filter.userType?.includes(role as any) ? "default" : "outline"}
-                        size="sm"
-                        className="text-xs h-7"
-                        onClick={() => {
-                          const newRoles = filter.userType || [];
-                          onFilterChange({
-                            ...filter,
-                            userType: filter.userType?.includes(role as any)
-                              ? newRoles.filter(r => r !== role) as any
-                              : [...newRoles, role] as any
-                          });
-                        }}
-                      >
-                        {role.charAt(0).toUpperCase() + role.slice(1)}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <FilterOptionsSection 
+              filter={filter}
+              onFilterChange={onFilterChange}
+            />
             
             <Button 
               variant="outline" 
               size="sm" 
               className="w-full justify-center text-xs mt-2"
-              onClick={() => onFilterChange({
-                searchQuery: '',
-                serviceType: undefined,
-                status: undefined,
-                userType: undefined,
-                dateRange: 'all'
-              })}
+              onClick={handleClearFilters}
             >
               Clear All Filters
             </Button>
