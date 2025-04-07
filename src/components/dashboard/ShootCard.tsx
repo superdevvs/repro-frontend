@@ -12,20 +12,21 @@ import {
   UserIcon,
   CameraIcon,
   ImageIcon,
-  CloudIcon,
-  SunIcon,
-  CloudSunIcon,
-  CloudRainIcon,
-  CloudSnowIcon
+  Cloud,
+  Sun,
+  CloudSun,
+  CloudRain,
+  CloudSnow,
+  Thermometer
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ShootData } from '@/types/shoots';
+import { useWeatherData } from '@/hooks/useWeatherData';
 
 interface WeatherInfo {
   temp: number;
   condition: string;
-  icon: string;
-  iconComponent: React.ReactNode;
+  icon: React.ReactNode;
 }
 
 interface LegacyShootCardProps {
@@ -84,21 +85,21 @@ export function ShootCard(props: ShootCardProps) {
     return timeString;
   };
 
-  // Get mock weather data for the shoot date
+  // Get weather data for the shoot location and date
   const [weather, setWeather] = useState<WeatherInfo | null>(null);
   
   const getWeatherIcon = (condition: string) => {
     condition = condition.toLowerCase();
     if (condition.includes('sun') || condition.includes('clear')) {
-      return <SunIcon className="h-4 w-4 text-amber-500" />;
+      return <Sun className="h-5 w-5 text-amber-500" />;
     } else if (condition.includes('rain')) {
-      return <CloudRainIcon className="h-4 w-4 text-blue-500" />;
+      return <CloudRain className="h-5 w-5 text-blue-500" />;
     } else if (condition.includes('snow')) {
-      return <CloudSnowIcon className="h-4 w-4 text-blue-200" />;
-    } else if (condition.includes('cloud') && condition.includes('part')) {
-      return <CloudSunIcon className="h-4 w-4 text-gray-500" />;
+      return <CloudSnow className="h-5 w-5 text-blue-200" />;
+    } else if (condition.includes('cloud') && (condition.includes('part') || condition.includes('partly'))) {
+      return <CloudSun className="h-5 w-5 text-gray-500" />;
     } else {
-      return <CloudIcon className="h-4 w-4 text-gray-500" />;
+      return <Cloud className="h-5 w-5 text-gray-500" />;
     }
   };
 
@@ -113,8 +114,7 @@ export function ShootCard(props: ShootCardProps) {
       return {
         temp: randomTemp,
         condition: randomCondition,
-        icon: '🌤️', // This would be the icon URL from the API
-        iconComponent: getWeatherIcon(randomCondition)
+        icon: getWeatherIcon(randomCondition)
       };
     };
     
@@ -166,9 +166,9 @@ export function ShootCard(props: ShootCardProps) {
             </Badge>
             
             {weather && (
-              <div className="flex items-center text-xs text-muted-foreground bg-muted/50 p-1 rounded">
-                {weather.iconComponent}
-                <span className="ml-1">{weather.temp}°F</span>
+              <div className="flex items-center gap-1.5 bg-muted/60 p-1.5 px-2 rounded-full">
+                {weather.icon}
+                <span className="font-medium text-sm">{weather.temp}°F</span>
               </div>
             )}
           </div>
@@ -199,7 +199,7 @@ export function ShootCard(props: ShootCardProps) {
           
           {weather && (
             <div className="flex items-center text-sm">
-              <CloudIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+              <Thermometer className="h-4 w-4 mr-2 text-muted-foreground" />
               <span>{weather.condition}</span>
             </div>
           )}
@@ -248,9 +248,9 @@ export function ShootCard(props: ShootCardProps) {
           </Badge>
           
           {weather && (
-            <div className="flex items-center text-xs text-muted-foreground bg-muted/50 p-1 rounded">
-              {weather.iconComponent}
-              <span className="ml-1">{weather.temp}°F</span>
+            <div className="flex items-center gap-1.5 bg-muted/60 p-1.5 px-2 rounded-full">
+              {weather.icon}
+              <span className="font-medium text-sm">{weather.temp}°F</span>
             </div>
           )}
         </div>
@@ -281,7 +281,7 @@ export function ShootCard(props: ShootCardProps) {
         
         {weather && (
           <div className="flex items-center text-sm">
-            <CloudIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+            <Thermometer className="h-4 w-4 mr-2 text-muted-foreground" />
             <span>{weather.condition}</span>
           </div>
         )}

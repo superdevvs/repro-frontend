@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ViewIcon, GridIcon, List, Search, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface ShootsFilterProps {
   searchTerm: string;
@@ -22,6 +23,8 @@ export function ShootsFilter({
   viewMode,
   setViewMode,
 }: ShootsFilterProps) {
+  const navigate = useNavigate();
+  
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3">
