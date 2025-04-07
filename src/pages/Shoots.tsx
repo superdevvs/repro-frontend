@@ -9,8 +9,6 @@ import { ShootsContent } from '@/components/dashboard/ShootsContent';
 import { ShootsPagination } from '@/components/dashboard/ShootsPagination';
 import { ShootsDialogs } from '@/components/dashboard/ShootsDialogs';
 import { QuickBookingCard } from '@/components/dashboard/QuickBookingCard';
-import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
 import { ShootData } from '@/types/shoots';
 import { useShoots } from '@/context/ShootsContext';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -117,16 +115,7 @@ const Shoots = () => {
             } 
           />
           
-          <div className="md:hidden mb-4">
-            <Button 
-              className="w-full gap-2 bg-primary text-primary-foreground" 
-              onClick={handleNewShoot}
-            >
-              <PlusIcon className="h-4 w-4" /> Book New Shoot
-            </Button>
-          </div>
-          
-          {/* Quick Booking Card */}
+          {/* Quick Booking Card - Show only for admin users */}
           {['admin', 'superadmin'].includes(user?.role || '') && (
             <QuickBookingCard />
           )}
