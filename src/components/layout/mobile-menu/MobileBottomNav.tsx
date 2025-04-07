@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
@@ -12,10 +12,13 @@ import {
   MessageSquareIcon, 
   UserIcon, 
   BuildingIcon, 
-  FileTextIcon, 
+  BarChart3Icon, 
   SettingsIcon,
-  BarChart3Icon,
-  MoreHorizontal
+  MoreHorizontal,
+  PlusCircle,
+  FilterIcon,
+  FolderIcon,
+  TagIcon
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -25,7 +28,9 @@ interface MobileBottomNavProps {
 export const MobileBottomNav = ({ toggleMenu }: MobileBottomNavProps) => {
   const { filteredItems } = useMobileMenu();
   const { theme } = useTheme();
+  const location = useLocation();
   const isLightMode = theme === 'light';
+  const isMessagesPage = location.pathname === '/messages';
 
   // Only show the first 5 items in the bottom nav
   const navItems = filteredItems.slice(0, 5);

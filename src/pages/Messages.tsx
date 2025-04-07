@@ -18,7 +18,8 @@ import {
   Reply,
   MoreHorizontal,
   Trash2,
-  Archive
+  Archive,
+  FilterIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -30,11 +31,12 @@ import { ConversationList } from '@/components/messaging/ConversationList';
 import { MessageList } from '@/components/messaging/MessageList';
 import { MessageInput } from '@/components/messaging/MessageInput';
 import { ProjectContextBar } from '@/components/messaging/ProjectContextBar';
+import { MessagesMobileMenu } from '@/components/messaging/MessagesMobileMenu';
 import { Conversation, ConversationFilter, MessageTemplate, Message } from '@/types/messages';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -46,6 +48,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { AnimatePresence } from 'framer-motion';
 
 const mockConversations: Conversation[] = [
   {
@@ -358,6 +361,8 @@ const Messages = () => {
   const [filter, setFilter] = useState<ConversationFilter>({ searchQuery: '' });
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showFolders, setShowFolders] = useState(true);
   
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -406,6 +411,26 @@ const Messages = () => {
     });
   };
 
+  const folders = [
+    { id: 'inbox', name: 'Inbox', count: totalUnreadCount },
+    { id: 'starred', name: 'Starred', count: 0 },
+    { id: 'snoozed', name: 'Snoozed', count: 0 },
+    { id: 'sent', name: 'Sent', count: 0 },
+    { id: 'drafts', name: 'Drafts', count: 0 },
+    { id: 'trash', name: 'Trash', count: 0 },
+  ];
+  
+  const labels = [
+    { id: 'clients', name: 'Clients', color: 'bg-blue-500' },
+    { id: 'photographers', name: 'Photographers', color: 'bg-green-500' },
+    { id: 'editors', name: 'Editors', color: 'bg-purple-500' },
+    { id: 'important', name: 'Important', color: 'bg-red-500' },
+  ];
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   const renderMobileView = () => {
     if (!selectedConversation) {
       return (
@@ -419,15 +444,120 @@ const Messages = () => {
             </div>
           </div>
           
-          <ConversationList 
-            conversations={mockConversations}
-            selectedConversation={selectedConversation}
-            onSelectConversation={setSelectedConversation}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            filter={filter}
-            onFilterChange={setFilter}
-          />
+          <div className="p-3 border-b flex-shrink-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search conversations..." 
+                className="pl-9"
+                value={filter.searchQuery}
+                onChange={(e) => setFilter({ ...filter, searchQuery: e.target.value })}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex bg-muted rounded-md p-1 flex-1">
+                <button
+                  onClick={() => setActiveTab('inbox')}
+                  className={cn(
+                    "flex-1 px-3 py-1 text-xs font-medium rounded-sm transition-colors",
+                    activeTab === 'inbox' 
+                      ? "bg-background text-foreground" 
+                      : "text-muted-foreground"
+                  )}
+                >
+                  Primary
+                </button>
+                <button
+                  onClick={() => setActiveTab('archived')}
+                  className={cn(
+                    "flex-1 px-3 py-1 text-xs font-medium rounded-sm transition-colors",
+                    activeTab === 'archived' 
+                      ? "bg-background text-foreground" 
+                      : "text-muted-foreground"
+                  )}
+                >
+                  Archive
+                </button>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-2 h-8 w-8 p-0"
+                onClick={toggleMobileMenu}
+              >
+                <FilterIcon className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-auto">
+            {mockConversations.filter(convo => 
+              convo.participant.name.toLowerCase().includes(filter.searchQuery.toLowerCase()) ||
+              (convo.lastMessage.toLowerCase().includes(filter.searchQuery.toLowerCase()))
+            ).map((conversation) => (
+              <div
+                key={conversation.id}
+                className={cn(
+                  "cursor-pointer p-3 border-b transition-colors",
+                  selectedConversation === conversation.id ? "bg-muted/50" : ""
+                )}
+                onClick={() => setSelectedConversation(conversation.id)}
+              >
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={conversation.participant.avatar} />
+                    <AvatarFallback>{conversation.participant.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className={cn(
+                        "font-medium truncate",
+                        conversation.unreadCount > 0 && "font-bold"
+                      )}>
+                        {conversation.participant.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground whitespace-nowrap ml-1">
+                        {format(new Date(conversation.timestamp), 'h:mm a')}
+                      </p>
+                    </div>
+                    
+                    {conversation.shoot && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {conversation.shoot.title}
+                      </p>
+                    )}
+                    
+                    <p className={cn(
+                      "text-sm text-muted-foreground truncate mt-0.5",
+                      conversation.unreadCount > 0 && "font-medium text-foreground"
+                    )}>
+                      {conversation.lastMessage}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <AnimatePresence>
+            {isMobileMenuOpen && (
+              <MessagesMobileMenu 
+                isOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
+                filters={{
+                  showFolders,
+                  setShowFolders,
+                  folders,
+                  labels,
+                  filter,
+                  onFilterChange: setFilter
+                }}
+              />
+            )}
+          </AnimatePresence>
         </div>
       );
     }
