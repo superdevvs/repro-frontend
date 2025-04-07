@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/components/auth';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -15,6 +15,7 @@ import { toast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
 import { UserData } from '@/types/auth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { AlertCircle } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -33,6 +34,7 @@ export function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('login');
   const isMobile = useIsMobile();
   
@@ -94,32 +96,51 @@ export function LoginForm() {
     }
   };
 
+  const clearErrors = () => {
+    setLoginError(null);
+  };
+
   const handleLogin = (values: LoginFormValues) => {
     setIsLoading(true);
+    clearErrors();
     
     setTimeout(() => {
       let userData: UserData | null = null;
       
-      if (values.email === 'client@example.com') {
+      // Check for exact match of email (case insensitive)
+      const lowerEmail = values.email.toLowerCase();
+      
+      if (lowerEmail === 'client@example.com') {
         userData = sampleUsers.client as UserData;
-      } else if (values.email === 'admin@example.com') {
+      } else if (lowerEmail === 'admin@example.com') {
         userData = sampleUsers.admin as UserData;
-      } else if (values.email === 'photographer@example.com') {
+      } else if (lowerEmail === 'photographer@example.com') {
         userData = sampleUsers.photographer as UserData;
-      } else if (values.email === 'editor@example.com') {
+      } else if (lowerEmail === 'editor@example.com') {
         userData = sampleUsers.editor as UserData;
-      } else if (values.email === 'superadmin@example.com') {
+      } else if (lowerEmail === 'superadmin@example.com') {
         userData = sampleUsers.superadmin as UserData;
       }
       
       if (userData) {
-        login(userData);
-        toast({
-          title: "Success",
-          description: "You have successfully logged in!",
-        });
-        navigate('/dashboard');
+        try {
+          login(userData);
+          toast({
+            title: "Success",
+            description: "You have successfully logged in!",
+          });
+          navigate('/dashboard');
+        } catch (error) {
+          console.error("Login error:", error);
+          setLoginError("An unexpected error occurred during login.");
+          toast({
+            title: "Login Failed",
+            description: "An unexpected error occurred. Please try again.",
+            variant: "destructive",
+          });
+        }
       } else {
+        setLoginError("Invalid email or password. Try one of the sample emails.");
         toast({
           title: "Login Failed",
           description: "Invalid email or password. Try one of the sample emails.",
@@ -132,33 +153,48 @@ export function LoginForm() {
 
   const handleRegister = (values: RegisterFormValues) => {
     setIsLoading(true);
+    clearErrors();
     
     setTimeout(() => {
-      const newUser: UserData = {
-        id: `user-${Date.now()}`,
-        name: values.name,
-        email: values.email,
-        role: 'client',
-        company: values.company,
-        isActive: true,
-        metadata: {
-          preferences: {
-            theme: 'system',
-            notifications: true,
-            emailFrequency: 'weekly'
+      try {
+        const newUser: UserData = {
+          id: `user-${Date.now()}`,
+          name: values.name,
+          email: values.email,
+          role: 'client',
+          company: values.company,
+          isActive: true,
+          metadata: {
+            preferences: {
+              theme: 'system',
+              notifications: true,
+              emailFrequency: 'weekly'
+            }
           }
-        }
-      };
-      
-      login(newUser);
-      toast({
-        title: "Account created",
-        description: "You have successfully registered and logged in!",
-      });
-      navigate('/dashboard');
+        };
+        
+        login(newUser);
+        toast({
+          title: "Account created",
+          description: "You have successfully registered and logged in!",
+        });
+        navigate('/dashboard');
+      } catch (error) {
+        console.error("Registration error:", error);
+        toast({
+          title: "Registration Failed",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
       setIsLoading(false);
     }, 1000);
   };
+
+  // React to tab changes to clear errors
+  React.useEffect(() => {
+    clearErrors();
+  }, [activeTab]);
 
   return (
     <motion.div 
@@ -188,6 +224,13 @@ export function LoginForm() {
               </TabsList>
               
               <TabsContent value="login">
+                {loginError && (
+                  <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-md flex items-center gap-2 text-sm text-destructive">
+                    <AlertCircle size={16} />
+                    <span>{loginError}</span>
+                  </div>
+                )}
+                
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                     <FormField
@@ -223,7 +266,12 @@ export function LoginForm() {
                       className="w-full"
                       disabled={isLoading}
                     >
-                      {isLoading ? "Signing in..." : "Sign In"}
+                      {isLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin h-4 w-4 border-2 border-t-transparent rounded-full" />
+                          <span>Signing in...</span>
+                        </div>
+                      ) : "Sign In"}
                     </Button>
                   </form>
                 </Form>
@@ -231,19 +279,39 @@ export function LoginForm() {
                 <div className="mt-4 text-center">
                   <p className="text-xs text-muted-foreground mb-2">Sample logins:</p>
                   <div className="flex flex-wrap gap-1 justify-center">
-                    <Badge variant="outline" className="cursor-pointer" onClick={() => loginForm.setValue('email', 'client@example.com')}>
+                    <Badge variant="outline" className="cursor-pointer" onClick={() => {
+                      loginForm.setValue('email', 'client@example.com');
+                      loginForm.setValue('password', 'password123');
+                      clearErrors();
+                    }}>
                       Client
                     </Badge>
-                    <Badge variant="outline" className="cursor-pointer" onClick={() => loginForm.setValue('email', 'admin@example.com')}>
+                    <Badge variant="outline" className="cursor-pointer" onClick={() => {
+                      loginForm.setValue('email', 'admin@example.com');
+                      loginForm.setValue('password', 'password123');
+                      clearErrors();
+                    }}>
                       Admin
                     </Badge>
-                    <Badge variant="outline" className="cursor-pointer" onClick={() => loginForm.setValue('email', 'photographer@example.com')}>
+                    <Badge variant="outline" className="cursor-pointer" onClick={() => {
+                      loginForm.setValue('email', 'photographer@example.com');
+                      loginForm.setValue('password', 'password123');
+                      clearErrors();
+                    }}>
                       Photographer
                     </Badge>
-                    <Badge variant="outline" className="cursor-pointer" onClick={() => loginForm.setValue('email', 'editor@example.com')}>
+                    <Badge variant="outline" className="cursor-pointer" onClick={() => {
+                      loginForm.setValue('email', 'editor@example.com');
+                      loginForm.setValue('password', 'password123');
+                      clearErrors();
+                    }}>
                       Editor
                     </Badge>
-                    <Badge variant="outline" className="cursor-pointer" onClick={() => loginForm.setValue('email', 'superadmin@example.com')}>
+                    <Badge variant="outline" className="cursor-pointer" onClick={() => {
+                      loginForm.setValue('email', 'superadmin@example.com');
+                      loginForm.setValue('password', 'password123');
+                      clearErrors();
+                    }}>
                       SuperAdmin
                     </Badge>
                   </div>
@@ -314,7 +382,12 @@ export function LoginForm() {
                       className="w-full"
                       disabled={isLoading}
                     >
-                      {isLoading ? "Creating Account..." : "Create Account"}
+                      {isLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin h-4 w-4 border-2 border-t-transparent rounded-full" />
+                          <span>Creating Account...</span>
+                        </div>
+                      ) : "Create Account"}
                     </Button>
                   </form>
                 </Form>

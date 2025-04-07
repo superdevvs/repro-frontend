@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useAuthState } from '../../hooks/useAuthState';
+import { UserData } from '@/types/auth';
 
 // Define the Role type as a string literal union
 export type Role = 'admin' | 'photographer' | 'client' | 'editor' | 'superadmin';
@@ -54,16 +54,27 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const {
-    user,
-    setUser,
-    isAuthenticated,
-    setIsAuthenticated,
-    isLoading,
-    setIsLoading,
-    role,
-    setRole
-  } = useAuthState();
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [role, setRole] = useState<Role>('client');
+
+  // Initialize auth state from localStorage on component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+        setRole(parsedUser.role || 'client');
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('user');
+      }
+    }
+    setIsLoading(false);
+  }, []);
 
   // Login function
   const login = (userData: UserData) => {
@@ -71,7 +82,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
     setIsAuthenticated(true);
-    setRole(userData.role);
+    setRole(userData.role || 'client');
+    console.log('Login successful, user role:', userData.role);
   };
 
   // Logout function
@@ -81,6 +93,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     setIsAuthenticated(false);
     setRole('client');
+    console.log('User logged out');
   };
 
   const setUserRole = (newRole: Role) => {
@@ -91,6 +104,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const updatedUser = { ...user, role: newRole };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      console.log('User role updated to:', newRole);
     }
   };
 

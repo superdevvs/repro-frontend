@@ -1,5 +1,5 @@
 
-import { Role } from '@/components/auth/AuthProvider';
+import { Role } from '@/components/auth';
 
 export interface UserData {
   id: string;

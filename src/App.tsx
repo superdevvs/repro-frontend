@@ -5,7 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./components/auth/AuthProvider";
+import { AuthProvider, useAuth } from "./components/auth";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Shoots from "./pages/Shoots";
@@ -26,6 +26,7 @@ import { ShootsProvider } from './context/ShootsContext';
 import Profile from "./pages/Profile";
 import Accounting from "./pages/Accounting";
 import Integrations from "./pages/Integrations";
+import { toast } from "./components/ui/use-toast";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -39,9 +40,24 @@ const queryClient = new QueryClient({
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  // Show loading state if auth is still initializing
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
   
   if (!isAuthenticated) {
+    // Show a toast notification when redirecting
+    toast({
+      title: "Authentication Required",
+      description: "Please log in to access this page.",
+      variant: "destructive",
+    });
     return <Navigate to="/" replace />;
   }
   
@@ -123,9 +139,21 @@ const AppRoutes = () => {
           <Integrations />
         </ProtectedRoute>
       } />
-      <Route path="/photographer-history" element={<PhotographerShootHistory />} />
-      <Route path="/photographer-account" element={<PhotographerAccount />} />
-      <Route path="/photographer-availability" element={<PhotographerAvailability />} />
+      <Route path="/photographer-history" element={
+        <ProtectedRoute>
+          <PhotographerShootHistory />
+        </ProtectedRoute>
+      } />
+      <Route path="/photographer-account" element={
+        <ProtectedRoute>
+          <PhotographerAccount />
+        </ProtectedRoute>
+      } />
+      <Route path="/photographer-availability" element={
+        <ProtectedRoute>
+          <PhotographerAvailability />
+        </ProtectedRoute>
+      } />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -1,23 +1,42 @@
 
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useAuth } from '@/components/auth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ClientProfile } from '@/components/profile/ClientProfile';
 import { PhotographerProfile } from '@/components/profile/PhotographerProfile';
 import { EditorProfile } from '@/components/profile/EditorProfile';
 import { AdminProfile } from '@/components/profile/AdminProfile';
+import { toast } from '@/components/ui/use-toast';
 
 const Profile = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     // Log for debugging
     console.log('User role in Profile page:', user?.role);
   }, [user]);
 
+  // Show loading state while auth is initializing
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="container py-8 max-w-6xl">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
+    toast({
+      title: "Authentication Required",
+      description: "Please log in to view your profile.",
+      variant: "destructive",
+    });
     return <Navigate to="/" replace />;
   }
 

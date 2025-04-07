@@ -14,6 +14,7 @@ export const loginUser = (
   setUser(userData);
   setIsAuthenticated(true);
   setRole(userData.role || 'client');
+  console.log('Login successful via authService');
 };
 
 // Logout function that removes user data from localStorage
@@ -28,6 +29,7 @@ export const logoutUser = (
   setUser(null);
   setIsAuthenticated(false);
   setRole('client');
+  console.log('Logout successful via authService');
 };
 
 // Function to update user role
@@ -43,6 +45,7 @@ export const updateUserRole = (
     const updatedUser = { ...user, role: typedRole };
     localStorage.setItem('user', JSON.stringify(updatedUser));
     setUser(updatedUser);
+    console.log('User role updated via authService to:', role);
   }
   setRole(role);
 };

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { UserData } from '@/types/auth';
-import { Role } from '@/components/auth/AuthProvider';
+import { Role } from '@/components/auth';
 
 export function useAuthState() {
   const [user, setUser] = useState<UserData | null>(null);
