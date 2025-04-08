@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -79,6 +80,24 @@ const BookShoot = () => {
       });
     }
   }, [clientIdFromUrl, clientNameFromUrl, clientCompanyFromUrl, toast]);
+
+  // Ask for geolocation permission when the component mounts
+  useEffect(() => {
+    if (navigator.geolocation && !address) {
+      navigator.permissions
+        .query({ name: 'geolocation' })
+        .then(permissionStatus => {
+          if (permissionStatus.state === 'prompt') {
+            toast({
+              title: "Location Services",
+              description: "Allow location access to automatically fill your property address.",
+              variant: "default",
+            });
+          }
+        })
+        .catch(err => console.error("Permission check failed:", err));
+    }
+  }, [address, toast]);
 
   const getPackagePrice = () => {
     const pkg = packages.find(p => p.id === selectedPackage);
@@ -313,7 +332,7 @@ const BookShoot = () => {
 
   return (
     <DashboardLayout>
-      <div className="container max-w-5xl py-6">
+      <div className="container px-4 sm:px-6 max-w-5xl py-6">
         <Button 
           variant="ghost" 
           size="sm" 
@@ -337,7 +356,16 @@ const BookShoot = () => {
               <BookingStepIndicator currentStep={step} totalSteps={3} />
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div className="order-1 md:order-2 md:col-span-2">
+                {/* Summary always appears on top on mobile, side on desktop */}
+                <div className={`${isMobile ? "order-1 mb-4" : "order-1 md:order-1 row-span-2"} md:col-span-1`}>
+                  <BookingSummary 
+                    summaryInfo={summaryInfo} 
+                    selectedPackage={selectedPackage}
+                    packages={packages}
+                  />
+                </div>
+                
+                <div className="order-2 md:col-span-2">
                   <BookingContentArea
                     step={step}
                     formErrors={formErrors}
@@ -356,6 +384,10 @@ const BookShoot = () => {
                     city={city}
                     state={state}
                     zip={zip}
+                    setAddress={setAddress}
+                    setCity={setCity}
+                    setState={setState}
+                    setZip={setZip}
                     photographer={photographer}
                     setPhotographer={setPhotographer}
                     bypassPayment={bypassPayment}
@@ -370,14 +402,6 @@ const BookShoot = () => {
                     photographers={getAvailablePhotographers()}
                     handleSubmit={handleSubmit}
                     goBack={goBack}
-                  />
-                </div>
-                
-                <div className="order-0 md:order-1 md:col-span-1 mb-4 md:mb-0">
-                  <BookingSummary 
-                    summaryInfo={summaryInfo} 
-                    selectedPackage={selectedPackage}
-                    packages={packages}
                   />
                 </div>
               </div>

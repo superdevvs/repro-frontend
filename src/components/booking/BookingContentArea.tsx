@@ -23,6 +23,10 @@ interface BookingContentAreaProps {
   city: string;
   state: string;
   zip: string;
+  setAddress?: React.Dispatch<React.SetStateAction<string>>;
+  setCity?: React.Dispatch<React.SetStateAction<string>>;
+  setState?: React.Dispatch<React.SetStateAction<string>>;
+  setZip?: React.Dispatch<React.SetStateAction<string>>;
   photographer: string;
   setPhotographer: React.Dispatch<React.SetStateAction<string>>;
   bypassPayment: boolean;
@@ -57,6 +61,10 @@ export function BookingContentArea({
   city,
   state,
   zip,
+  setAddress,
+  setCity,
+  setState,
+  setZip,
   photographer,
   setPhotographer,
   bypassPayment,
@@ -107,6 +115,17 @@ export function BookingContentArea({
           formErrors={formErrors}
           setFormErrors={setFormErrors}
           selectedPackage={selectedPackage}
+          address={address}
+          city={city}
+          state={state}
+          zip={zip}
+          setAddress={setAddress}
+          setCity={setCity}
+          setState={setState}
+          setZip={setZip}
+          photographer={photographer}
+          setPhotographer={setPhotographer}
+          photographers={photographers}
           handleSubmit={handleSubmit}
           goBack={goBack}
         />

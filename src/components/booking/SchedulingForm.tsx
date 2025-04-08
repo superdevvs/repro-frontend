@@ -4,11 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { TimeSelect } from "@/components/ui/time-select";
 import { format } from "date-fns";
-import { MapPin, Calendar as CalendarIcon, Clock, User, Package, ChevronRight } from "lucide-react";
+import { MapPin, Calendar as CalendarIcon, Clock, User, Package, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWeatherData } from '@/hooks/useWeatherData';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useToast } from "@/hooks/use-toast";
 
 interface SchedulingFormProps {
   date: Date | undefined;
@@ -24,8 +37,13 @@ interface SchedulingFormProps {
   city?: string;
   state?: string;
   zip?: string;
+  setAddress?: React.Dispatch<React.SetStateAction<string>>;
+  setCity?: React.Dispatch<React.SetStateAction<string>>;
+  setState?: React.Dispatch<React.SetStateAction<string>>;
+  setZip?: React.Dispatch<React.SetStateAction<string>>;
   photographer?: string;
   photographers?: Array<{ id: string; name: string; avatar?: string }>;
+  setPhotographer?: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const SchedulingForm: React.FC<SchedulingFormProps> = ({
@@ -42,12 +60,22 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
   city = '',
   state = '',
   zip = '',
+  setAddress,
+  setCity,
+  setState,
+  setZip,
   photographer = '',
-  photographers = []
+  photographers = [],
+  setPhotographer
 }) => {
   const disabledDates = {
     before: new Date(),
   };
+  const { toast } = useToast();
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const [dateDialogOpen, setDateDialogOpen] = useState(false);
+  const [timeDialogOpen, setTimeDialogOpen] = useState(false);
+  const [photographerDialogOpen, setPhotographerDialogOpen] = useState(false);
 
   const onDateChange = (newDate: Date | undefined) => {
     setDate(newDate);
@@ -55,6 +83,7 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
       const { date, ...rest } = formErrors;
       setFormErrors(rest);
     }
+    setDateDialogOpen(false);
   };
 
   const onTimeChange = (newTime: string) => {
@@ -63,6 +92,87 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
       const { time, ...rest } = formErrors;
       setFormErrors(rest);
     }
+    setTimeDialogOpen(false);
+  };
+
+  const handleGetCurrentLocation = () => {
+    if (!setAddress || !setCity || !setState || !setZip) {
+      toast({
+        title: "Cannot update location",
+        description: "The location update functionality is not available.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLocationLoading(true);
+
+    if (!navigator.geolocation) {
+      toast({
+        title: "Geolocation not supported",
+        description: "Your browser doesn't support geolocation.",
+        variant: "destructive",
+      });
+      setIsLocationLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+          );
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch address');
+          }
+          
+          const data = await response.json();
+          
+          setAddress(data.principalSubdivision ? `${data.street || ''} ${data.housenumber || ''}`.trim() : 'Address not found');
+          setCity(data.city || data.locality || '');
+          setState(data.principalSubdivision || '');
+          setZip(data.postcode || '');
+          
+          toast({
+            title: "Location detected",
+            description: "Your current location has been filled in the form.",
+            variant: "default",
+          });
+        } catch (error) {
+          console.error('Error fetching location data:', error);
+          toast({
+            title: "Location detection failed",
+            description: "Could not retrieve your current location details.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLocationLoading(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        let errorMessage = "Could not detect your location.";
+        
+        if (error.code === 1) {
+          errorMessage = "Location permission denied. Please enable location access.";
+        } else if (error.code === 2) {
+          errorMessage = "Location unavailable. Please try again later.";
+        } else if (error.code === 3) {
+          errorMessage = "Location request timed out. Please try again.";
+        }
+        
+        toast({
+          title: "Location error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        setIsLocationLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   // Get selected photographer details
@@ -90,8 +200,35 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
       <div className="grid grid-cols-1 gap-6">
         {/* Location Section */}
         <div className="bg-[#0e1525] rounded-lg p-6 space-y-2">
-          <h2 className="text-xl font-semibold text-white mb-4">Location</h2>
-          <div className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-white">Location</h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border-blue-600/30"
+              onClick={handleGetCurrentLocation}
+              disabled={isLocationLoading}
+            >
+              {isLocationLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <MapPin size={14} />
+              )}
+              <span>Current Location</span>
+            </Button>
+          </div>
+          <div 
+            className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center cursor-pointer hover:bg-[#1a2842] transition-colors"
+            onClick={() => {
+              // This should open a dialog or modal for address entry
+              if (setAddress && setCity && setState && setZip) {
+                toast({
+                  title: "Location Entry",
+                  description: "You can enter your location using the current location button above, or enter it manually in step 1.",
+                });
+              }
+            }}
+          >
             <div>
               {fullAddress ? (
                 <>
@@ -111,32 +248,35 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
         {/* Date Selection Section */}
         <div className="bg-[#0e1525] rounded-lg p-6 space-y-2">
           <h2 className="text-xl font-semibold text-white mb-4">Date</h2>
-          <div className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center">
-            <div>
-              <p className="text-xl font-semibold text-white">
-                {date ? format(date, "MMMM d, yyyy") : "Select a date"}
-              </p>
-            </div>
-            <Button 
-              variant="ghost" 
-              className="rounded-lg p-2 text-blue-500 hover:bg-blue-500/20"
-              onClick={() => document.getElementById('date-picker-modal')?.click()}
-            >
-              <CalendarIcon size={32} />
-            </Button>
-          </div>
-          
-          {/* Hidden date picker wrapper */}
-          <div className="hidden">
-            <Button id="date-picker-modal" className="hidden">Open Date Picker</Button>
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={onDateChange}
-              disabled={disabledDates}
-              className="border rounded-md bg-card p-3"
-            />
-          </div>
+          <Dialog open={dateDialogOpen} onOpenChange={setDateDialogOpen}>
+            <DialogTrigger asChild>
+              <div className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center cursor-pointer hover:bg-[#1a2842] transition-colors">
+                <div>
+                  <p className="text-xl font-semibold text-white">
+                    {date ? format(date, "MMMM d, yyyy") : "Select a date"}
+                  </p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  className="rounded-lg p-2 text-blue-500 hover:bg-blue-500/20"
+                >
+                  <CalendarIcon size={32} />
+                </Button>
+              </div>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Select Date</DialogTitle>
+              </DialogHeader>
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={onDateChange}
+                disabled={disabledDates}
+                className="border rounded-md bg-card p-3 pointer-events-auto"
+              />
+            </DialogContent>
+          </Dialog>
           
           {formErrors['date'] && (
             <p className="text-sm font-medium text-destructive mt-1">{formErrors['date']}</p>
@@ -146,46 +286,49 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
         {/* Time Selection Section */}
         <div className="bg-[#0e1525] rounded-lg p-6 space-y-2">
           <h2 className="text-xl font-semibold text-white mb-4">Time</h2>
-          <div className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center">
-            <p className="text-xl font-semibold text-white">{time || "Select a time"}</p>
-            <Button 
-              variant="ghost" 
-              className="rounded-lg p-2 text-blue-500 hover:bg-blue-500/20"
-              onClick={() => document.getElementById('time-select-modal')?.click()}
-            >
-              <Clock size={32} />
-            </Button>
-          </div>
-          
-          {/* Time selection grid (hidden initially) */}
-          <div className="hidden">
-            <Button id="time-select-modal" className="hidden">Open Time Selector</Button>
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              {["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"].map((t) => (
-                <Button
-                  key={t}
-                  type="button"
-                  variant={time === t ? "default" : "outline"}
-                  onClick={() => onTimeChange(t)}
-                  className="w-full"
+          <Dialog open={timeDialogOpen} onOpenChange={setTimeDialogOpen}>
+            <DialogTrigger asChild>
+              <div className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center cursor-pointer hover:bg-[#1a2842] transition-colors">
+                <p className="text-xl font-semibold text-white">{time || "Select a time"}</p>
+                <Button 
+                  variant="ghost" 
+                  className="rounded-lg p-2 text-blue-500 hover:bg-blue-500/20"
                 >
-                  {t}
+                  <Clock size={32} />
                 </Button>
-              ))}
-            </div>
-            <div className="mt-4">
-              <h3 className="text-sm font-medium mb-2">Or Select Custom Time</h3>
-              <TimeSelect
-                value={time}
-                onChange={onTimeChange}
-                startHour={8}
-                endHour={18}
-                interval={30}
-                placeholder="Select a time"
-                className="w-full"
-              />
-            </div>
-          </div>
+              </div>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Select Time</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"].map((t) => (
+                  <Button
+                    key={t}
+                    type="button"
+                    variant={time === t ? "default" : "outline"}
+                    onClick={() => onTimeChange(t)}
+                    className="w-full"
+                  >
+                    {t}
+                  </Button>
+                ))}
+              </div>
+              <div className="mt-4">
+                <h3 className="text-sm font-medium mb-2">Or Select Custom Time</h3>
+                <TimeSelect
+                  value={time}
+                  onChange={onTimeChange}
+                  startHour={8}
+                  endHour={18}
+                  interval={30}
+                  placeholder="Select a time"
+                  className="w-full"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
           
           {formErrors['time'] && (
             <p className="text-sm font-medium text-destructive mt-1">{formErrors['time']}</p>
@@ -195,22 +338,61 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
         {/* Photographer Section */}
         <div className="bg-[#0e1525] rounded-lg p-6 space-y-2">
           <h2 className="text-xl font-semibold text-white mb-4">Photographer</h2>
-          <div className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center">
-            <div className="flex items-center">
-              {selectedPhotographer ? (
-                <>
-                  <Avatar className="h-12 w-12 mr-4">
-                    <AvatarImage src={selectedPhotographer.avatar} alt={selectedPhotographer.name} />
-                    <AvatarFallback>{selectedPhotographer.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-xl font-semibold text-white">{selectedPhotographer.name}</span>
-                </>
-              ) : (
-                <span className="text-gray-400">Select a photographer</span>
-              )}
-            </div>
-            <ChevronRight className="text-gray-400" size={24} />
-          </div>
+          <Dialog open={photographerDialogOpen} onOpenChange={setPhotographerDialogOpen}>
+            <DialogTrigger asChild>
+              <div className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center cursor-pointer hover:bg-[#1a2842] transition-colors">
+                <div className="flex items-center">
+                  {selectedPhotographer ? (
+                    <>
+                      <Avatar className="h-12 w-12 mr-4">
+                        <AvatarImage src={selectedPhotographer.avatar} alt={selectedPhotographer.name} />
+                        <AvatarFallback>{selectedPhotographer.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-xl font-semibold text-white">{selectedPhotographer.name}</span>
+                    </>
+                  ) : (
+                    <span className="text-gray-400">Select a photographer</span>
+                  )}
+                </div>
+                <ChevronRight className="text-gray-400" size={24} />
+              </div>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Select Photographer</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                {photographers.length > 0 ? (
+                  photographers.map((photographerItem) => (
+                    <Button
+                      key={photographerItem.id}
+                      variant="outline"
+                      className={cn(
+                        "flex items-center justify-start gap-4 h-auto p-4",
+                        photographer === photographerItem.id && "border-blue-500 bg-blue-500/10"
+                      )}
+                      onClick={() => {
+                        if (setPhotographer) {
+                          setPhotographer(photographerItem.id);
+                          setPhotographerDialogOpen(false);
+                        }
+                      }}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={photographerItem.avatar} alt={photographerItem.name} />
+                        <AvatarFallback>{photographerItem.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span>{photographerItem.name}</span>
+                    </Button>
+                  ))
+                ) : (
+                  <p className="text-center py-4 text-muted-foreground">
+                    No photographers available for the selected date and time.
+                  </p>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
         
         {/* Package Section */}
