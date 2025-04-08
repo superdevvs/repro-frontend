@@ -71,16 +71,18 @@ export function ShootsFilter({
       {isMobile ? (
         <div className="relative">
           <div className="absolute top-0 left-0 w-6 h-full bg-gradient-to-r from-background to-transparent pointer-events-none z-10"></div>
-          <ScrollArea className="w-full" orientation="horizontal">
-            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-max min-w-full">
-              <TabsList className="h-auto bg-muted/30 p-1 flex">
-                <TabsTrigger className="px-4 flex-shrink-0" value="all">All</TabsTrigger>
-                <TabsTrigger className="px-4 flex-shrink-0" value="scheduled">Scheduled</TabsTrigger>
-                <TabsTrigger className="px-4 flex-shrink-0" value="completed">Completed</TabsTrigger>
-                <TabsTrigger className="px-4 flex-shrink-0" value="pending">Pending</TabsTrigger>
-                <TabsTrigger className="px-4 flex-shrink-0" value="hold">On Hold</TabsTrigger>
-              </TabsList>
-            </Tabs>
+          <ScrollArea className="w-full">
+            <div className="pb-4">
+              <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-max min-w-full">
+                <TabsList className="h-auto bg-muted/30 p-1 flex">
+                  <TabsTrigger className="px-4 flex-shrink-0" value="all">All</TabsTrigger>
+                  <TabsTrigger className="px-4 flex-shrink-0" value="scheduled">Scheduled</TabsTrigger>
+                  <TabsTrigger className="px-4 flex-shrink-0" value="completed">Completed</TabsTrigger>
+                  <TabsTrigger className="px-4 flex-shrink-0" value="pending">Pending</TabsTrigger>
+                  <TabsTrigger className="px-4 flex-shrink-0" value="hold">On Hold</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </ScrollArea>
           <div className="absolute top-0 right-0 w-6 h-full bg-gradient-to-l from-background to-transparent pointer-events-none z-10"></div>
         </div>
