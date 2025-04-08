@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -18,8 +17,11 @@ import { BookingSummary } from '@/components/booking/BookingSummary';
 import { BookingContentArea } from '@/components/booking/BookingContentArea';
 import { packages, photographers } from '@/constants/bookingSteps';
 import { ShootData } from '@/types/shoots';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { BookingHeader } from '@/components/booking/BookingHeader';
 
 const BookShoot = () => {
+  const isMobile = useIsMobile();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const clientIdFromUrl = queryParams.get('clientId');
@@ -287,10 +289,31 @@ const BookShoot = () => {
   };
 
   const summaryInfo = getSummaryInfo();
+  
+  const getCurrentStepContent = () => {
+    const stepContent = {
+      1: {
+        title: "Client & Property Details",
+        description: "Select a client and enter the property information"
+      },
+      2: {
+        title: "Schedule",
+        description: "Choose a convenient date and time for the shoot"
+      },
+      3: {
+        title: "Review & Confirm",
+        description: "Verify all the details before confirming the booking"
+      }
+    };
+    
+    return stepContent[step as keyof typeof stepContent] || { title: '', description: '' };
+  };
+  
+  const currentStepContent = getCurrentStepContent();
 
   return (
     <DashboardLayout>
-      <div className="container max-w-5xl py-3">
+      <div className="container max-w-5xl py-6">
         <Button 
           variant="ghost" 
           size="sm" 
@@ -306,19 +329,15 @@ const BookShoot = () => {
             <BookingComplete date={date} time={time} resetForm={resetForm} />
           ) : (
             <>
+              <BookingHeader 
+                title={currentStepContent.title}
+                description={currentStepContent.description}
+              />
+              
               <BookingStepIndicator currentStep={step} totalSteps={3} />
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* On mobile show the summary first (at top), on desktop show it in the first column */}
-                <div className="order-1 md:order-1 md:col-span-1">
-                  <BookingSummary 
-                    summaryInfo={summaryInfo} 
-                    selectedPackage={selectedPackage}
-                    packages={packages}
-                  />
-                </div>
-                
-                <div className="order-2 md:order-2 md:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div className="order-1 md:order-2 md:col-span-2">
                   <BookingContentArea
                     step={step}
                     formErrors={formErrors}
@@ -351,6 +370,14 @@ const BookShoot = () => {
                     photographers={getAvailablePhotographers()}
                     handleSubmit={handleSubmit}
                     goBack={goBack}
+                  />
+                </div>
+                
+                <div className="order-0 md:order-1 md:col-span-1 mb-4 md:mb-0">
+                  <BookingSummary 
+                    summaryInfo={summaryInfo} 
+                    selectedPackage={selectedPackage}
+                    packages={packages}
                   />
                 </div>
               </div>

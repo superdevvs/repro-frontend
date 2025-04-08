@@ -4,7 +4,6 @@ import { Card } from '@/components/ui/card';
 import { ClientPropertyForm } from './ClientPropertyForm';
 import { SchedulingForm } from './SchedulingForm';
 import { ReviewForm } from './ReviewForm';
-import { stepContent } from '@/constants/bookingSteps';
 
 interface BookingContentAreaProps {
   step: number;
@@ -73,15 +72,9 @@ export function BookingContentArea({
   handleSubmit,
   goBack
 }: BookingContentAreaProps) {
-  const currentStepContent = stepContent[step as keyof typeof stepContent] || { title: '', description: '' };
   
   return (
-    <Card className="p-4 md:p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold">{currentStepContent.title}</h2>
-        <p className="text-muted-foreground">{currentStepContent.description}</p>
-      </div>
-      
+    <Card className="p-4 md:p-6 border-[#1e2d4a] bg-gradient-to-b from-background to-background/90">
       {step === 1 && clientPropertyFormData && (
         <ClientPropertyForm
           initialData={clientPropertyFormData.initialData || {

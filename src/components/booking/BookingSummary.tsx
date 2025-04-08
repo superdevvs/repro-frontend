@@ -27,7 +27,7 @@ export function BookingSummary({ summaryInfo, selectedPackage, packages }: Booki
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="bg-[#0e1525] rounded-lg border border-[#1e2d4a] shadow-lg p-6 sticky top-20"
+      className="bg-gradient-to-br from-[#0e1525] to-[#182135] rounded-lg border border-[#1e2d4a] shadow-lg p-6 sticky top-20"
     >
       <h2 className="text-xl font-bold mb-2 text-white">Booking Summary</h2>
       <p className="text-muted-foreground mb-6 text-sm">Complete all steps to schedule your shoot</p>
