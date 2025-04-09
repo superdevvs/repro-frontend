@@ -1,247 +1,201 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import React from 'react';
+import { 
+  Calendar as CalendarIcon, 
+  Download, 
+  Eye, 
+  MoreHorizontal, 
+  Printer, 
+  Send, 
+  Edit, 
+  Trash2 
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  FileTextIcon, 
-  SearchIcon, 
-  FilterIcon, 
-  CheckIcon,
-  CreditCardIcon,
-  DownloadIcon,
-  EyeIcon,
-  SendIcon
-} from 'lucide-react';
-import { InvoiceData } from '@/utils/invoiceUtils';
-import { cn } from '@/lib/utils';
+import { InvoiceViewDialog } from '@/components/invoices/InvoiceViewDialog';
 
-interface InvoiceListProps {
-  invoices: InvoiceData[];
-  onView: (invoice: InvoiceData) => void;
-  onDownload: (invoice: InvoiceData) => void;
-  onPay: (invoice: InvoiceData) => void;
-  onSendReminder: (invoice: InvoiceData) => void;
-}
+export function InvoiceList({ data }) {
+  const { toast } = useToast();
+  const [viewInvoiceDialogOpen, setViewInvoiceDialogOpen] = React.useState(false);
+  const [selectedInvoice, setSelectedInvoice] = React.useState(null);
 
-export function InvoiceList({ 
-  invoices, 
-  onView, 
-  onDownload, 
-  onPay,
-  onSendReminder
-}: InvoiceListProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const handleViewInvoice = (invoice) => {
+    setSelectedInvoice(invoice);
+    setViewInvoiceDialogOpen(true);
+  };
 
-  const filteredInvoices = searchQuery
-    ? invoices.filter(invoice => 
-        invoice.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        invoice.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        invoice.property.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : invoices;
+  const handleDownloadInvoice = (invoice) => {
+    toast({
+      title: "Invoice downloaded",
+      description: `Invoice #${invoice.number} has been downloaded.`
+    });
+  };
 
-  return (
-    <Card className="overflow-hidden border">
-      <CardHeader className="pb-2">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <CardTitle className="flex items-center gap-2">
-            <FileTextIcon className="h-5 w-5 text-primary" />
-            Invoices & Payments
-          </CardTitle>
-          
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:flex-none">
-              <SearchIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search invoices..." 
-                className="pl-9 w-full sm:w-[280px]"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Button variant="outline" size="icon" className="shrink-0">
-              <FilterIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="bg-muted/50 mb-4">
-            <TabsTrigger value="all" className="data-[state=active]:bg-background">All</TabsTrigger>
-            <TabsTrigger value="pending" className="data-[state=active]:bg-background">Pending</TabsTrigger>
-            <TabsTrigger value="paid" className="data-[state=active]:bg-background">Paid</TabsTrigger>
-            <TabsTrigger value="overdue" className="data-[state=active]:bg-background">Overdue</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="all" className="mt-0">
-            <InvoiceTable 
-              invoices={filteredInvoices} 
-              onView={onView}
-              onDownload={onDownload}
-              onPay={onPay}
-              onSendReminder={onSendReminder}
-            />
-          </TabsContent>
-          
-          <TabsContent value="pending" className="mt-0">
-            <InvoiceTable 
-              invoices={filteredInvoices.filter(invoice => invoice.status === 'pending')} 
-              onView={onView}
-              onDownload={onDownload}
-              onPay={onPay}
-              onSendReminder={onSendReminder}
-            />
-          </TabsContent>
-          
-          <TabsContent value="paid" className="mt-0">
-            <InvoiceTable 
-              invoices={filteredInvoices.filter(invoice => invoice.status === 'paid')} 
-              onView={onView}
-              onDownload={onDownload}
-              onPay={onPay}
-              onSendReminder={onSendReminder}
-            />
-          </TabsContent>
-          
-          <TabsContent value="overdue" className="mt-0">
-            <InvoiceTable 
-              invoices={filteredInvoices.filter(invoice => invoice.status === 'overdue')} 
-              onView={onView}
-              onDownload={onDownload}
-              onPay={onPay}
-              onSendReminder={onSendReminder}
-            />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
-}
+  const handleSendInvoice = (invoice) => {
+    toast({
+      title: "Invoice sent",
+      description: `Invoice #${invoice.number} has been sent to ${invoice.client}.`
+    });
+  };
 
-interface InvoiceTableProps {
-  invoices: InvoiceData[];
-  onView: (invoice: InvoiceData) => void;
-  onDownload: (invoice: InvoiceData) => void;
-  onPay: (invoice: InvoiceData) => void;
-  onSendReminder: (invoice: InvoiceData) => void;
-}
+  const handlePrintInvoice = (invoice) => {
+    toast({
+      title: "Printing invoice",
+      description: `Invoice #${invoice.number} sent to printer.`
+    });
+  };
 
-function InvoiceTable({ 
-  invoices,
-  onView,
-  onDownload,
-  onPay,
-  onSendReminder
-}: InvoiceTableProps) {
-  const getStatusStyles = (status: string) => {
-    switch(status) {
-      case 'paid':
-        return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-      case 'pending':
-        return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-      case 'overdue':
-        return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
+  const handleEditInvoice = (invoice) => {
+    toast({
+      title: "Edit invoice",
+      description: `Edit mode for invoice #${invoice.number}.`
+    });
+  };
+
+  const handleDeleteInvoice = (invoice) => {
+    toast({
+      title: "Invoice deleted",
+      description: `Invoice #${invoice.number} has been deleted.`,
+      variant: "destructive"
+    });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Paid':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'Overdue':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'Draft':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
       default:
-        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
     }
   };
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead>Invoice #</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead className="hidden md:table-cell">Property</TableHead>
-            <TableHead className="hidden sm:table-cell">Date</TableHead>
-            <TableHead className="hidden lg:table-cell">Due Date</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="text-center">Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {invoices.length > 0 ? (
-            invoices.map((invoice) => (
-              <TableRow key={invoice.id} className="group">
-                <TableCell className="font-medium">{invoice.id}</TableCell>
-                <TableCell>{invoice.client}</TableCell>
-                <TableCell className="max-w-[180px] truncate hidden md:table-cell">
-                  {invoice.property}
-                </TableCell>
-                <TableCell className="hidden sm:table-cell">{invoice.date}</TableCell>
-                <TableCell className="hidden lg:table-cell">{invoice.dueDate}</TableCell>
-                <TableCell className="text-right font-medium">
-                  ${invoice.amount.toFixed(2)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-center">
-                    <Badge className={cn(getStatusStyles(invoice.status))}>
-                      {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                    </Badge>
+    <div className="w-full">
+      <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
+        <div className="space-y-4">
+          {data.invoices.map((invoice) => (
+            <div key={invoice.id} className="flex flex-col bg-card rounded-lg shadow">
+              <div className="p-4 flex-row justify-between items-center border-b border-border hidden sm:flex">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <h3 className="font-medium">Invoice #{invoice.number}</h3>
+                    <div className="text-sm text-muted-foreground">{invoice.client}</div>
                   </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0"
-                      onClick={() => onView(invoice)}
-                      title="View Invoice"
-                    >
-                      <EyeIcon className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0"
-                      onClick={() => onDownload(invoice)}
-                      title="Download Invoice"
-                    >
-                      <DownloadIcon className="h-4 w-4" />
-                    </Button>
-                    {invoice.status === 'pending' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => onSendReminder(invoice)}
-                        title="Send Reminder"
-                      >
-                        <SendIcon className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {invoice.status !== 'paid' && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-8 hidden sm:flex ml-1"
-                        onClick={() => onPay(invoice)}
-                      >
-                        <CreditCardIcon className="h-4 w-4 mr-1" />
-                        Pay
-                      </Button>
-                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
+                  <div className="text-sm text-right">
+                    <div className="font-medium">${invoice.amount}</div>
+                    <div className="text-muted-foreground flex items-center gap-1">
+                      <CalendarIcon className="h-3 w-3" />
+                      <span>{format(new Date(invoice.date), 'MMM d, yyyy')}</span>
+                    </div>
                   </div>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
-                No invoices found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+                </div>
+              </div>
+
+              {/* Mobile view */}
+              <div className="p-4 flex-row justify-between items-center border-b border-border flex sm:hidden">
+                <div className="space-y-1">
+                  <h3 className="font-medium">Invoice #{invoice.number}</h3>
+                  <div className="text-sm text-muted-foreground">{invoice.client}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
+                    <div className="text-sm">${invoice.amount}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 flex justify-between items-center">
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleViewInvoice(invoice)}
+                    className="flex items-center gap-1"
+                  >
+                    <Eye className="h-4 w-4" /> View
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDownloadInvoice(invoice)}
+                    className="hidden sm:flex items-center gap-1"
+                  >
+                    <Download className="h-4 w-4" /> Download
+                  </Button>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleSendInvoice(invoice)}
+                    className="hidden sm:flex items-center gap-1"
+                  >
+                    <Send className="h-4 w-4" /> Send
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">More options</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => handleViewInvoice(invoice)} className="flex items-center gap-2">
+                        <Eye className="h-4 w-4" /> View
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleSendInvoice(invoice)} className="flex items-center gap-2">
+                        <Send className="h-4 w-4" /> Send
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownloadInvoice(invoice)} className="flex items-center gap-2">
+                        <Download className="h-4 w-4" /> Download
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePrintInvoice(invoice)} className="flex items-center gap-2">
+                        <Printer className="h-4 w-4" /> Print
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleEditInvoice(invoice)} className="flex items-center gap-2">
+                        <Edit className="h-4 w-4" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteInvoice(invoice)} className="text-red-500 flex items-center gap-2">
+                        <Trash2 className="h-4 w-4" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+      
+      {selectedInvoice && (
+        <InvoiceViewDialog
+          open={viewInvoiceDialogOpen}
+          onOpenChange={setViewInvoiceDialogOpen}
+          invoice={selectedInvoice}
+        />
+      )}
     </div>
   );
 }

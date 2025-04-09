@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { DollarSign, CalendarIcon, Clock, MapPin, User, CloudSun } from 'lucide-react';
+import { DollarSign, CalendarIcon, Clock, MapPin, User, CloudSun, Check } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface BookingSummaryProps {
   summaryInfo: {
@@ -17,9 +18,17 @@ interface BookingSummaryProps {
   };
   selectedPackage: string;
   packages: Array<{ id: string; name: string; description: string; price: number }>;
+  onSubmit?: () => void;
+  isLastStep?: boolean;
 }
 
-export function BookingSummary({ summaryInfo, selectedPackage, packages }: BookingSummaryProps) {
+export function BookingSummary({ 
+  summaryInfo, 
+  selectedPackage, 
+  packages, 
+  onSubmit, 
+  isLastStep = false 
+}: BookingSummaryProps) {
   const selectedPackageDetails = packages.find(p => p.id === selectedPackage);
   
   return (
@@ -106,6 +115,17 @@ export function BookingSummary({ summaryInfo, selectedPackage, packages }: Booki
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {isLastStep && (
+          <div className="pt-4 mt-4 border-t border-[#1e2d4a]">
+            <Button 
+              onClick={onSubmit} 
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition-colors"
+            >
+              <Check className="mr-2 h-4 w-4" /> Book Shoot
+            </Button>
           </div>
         )}
       </div>

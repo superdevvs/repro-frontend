@@ -1,292 +1,377 @@
 
-import React, { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from 'date-fns';
-import { cn } from "@/lib/utils";
+import React, { useState } from "react";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { Calendar } from "@/components/ui/calendar";
+import { Card } from "@/components/ui/card";
+import { format, parse, isValid } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogDescription 
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { CalendarIcon, Clock, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { PhotographerAvailability } from '@/types/shoots';
-import { v4 as uuidv4 } from 'uuid';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { photographers } from '@/constants/bookingSteps';
 
-interface AvailabilityForm {
-  startTime: string;
+// Sample availability periods
+const initialAvailabilities = [
+  {
+    id: "1",
+    date: "2025-04-10",
+    startTime: "09:00",
+    endTime: "17:00",
+    status: "available" as const,
+  },
+  {
+    id: "2",
+    date: "2025-04-11",
+    startTime: "09:00",
+    endTime: "17:00",
+    status: "available" as const,
+  },
+  {
+    id: "3",
+    date: "2025-04-12",
+    startTime: "10:00",
+    endTime: "15:00",
+    status: "booked" as const,
+    shootTitle: "Johnson Property Shoot",
+  },
+  {
+    id: "4",
+    date: "2025-04-15",
+    startTime: "13:00",
+    endTime: "18:00",
+    status: "available" as const,
+  },
+];
+
+type AvailabilityStatus = "available" | "booked" | "unavailable";
+
+interface Availability {
+  id: string;
+  date: string; // ISO format: YYYY-MM-DD
+  startTime: string; 
   endTime: string;
+  status: AvailabilityStatus;
+  shootTitle?: string;
 }
 
-const Availability = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>();
-  const [availability, setAvailability] = useState<PhotographerAvailability[]>([]);
-  const [selectedPhotographer, setSelectedPhotographer] = useState<string>('');
-  const [currentAvailability, setCurrentAvailability] = useState<PhotographerAvailability | null>(null);
-  const [availabilityForm, setAvailabilityForm] = useState<AvailabilityForm>({
-    startTime: '09:00',
-    endTime: '17:00'
+export default function Availability() {
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [availabilities, setAvailabilities] = useState<Availability[]>(initialAvailabilities);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newAvailability, setNewAvailability] = useState<Partial<Availability>>({
+    status: "available",
+    startTime: "09:00",
+    endTime: "17:00"
   });
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedAvailabilityId, setSelectedAvailabilityId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Fix the availability data to include timeSlots
-  const availabilityData: PhotographerAvailability[] = [
-    {
-      id: '1',
-      photographerId: '1',
-      photographerName: 'John Doe',
-      date: new Date(2025, 3, 7).toISOString().split('T')[0], // Convert to string format "YYYY-MM-DD"
-      timeSlots: [
-        { start: '09:00', end: '12:00', booked: false },
-        { start: '13:00', end: '17:00', booked: false }
-      ],
-      startTime: '09:00',
-      endTime: '17:00'
-    },
-    {
-      id: '2',
-      photographerId: '1',
-      photographerName: 'John Doe',
-      date: new Date(2025, 3, 8).toISOString().split('T')[0], // Convert to string format
-      timeSlots: [
-        { start: '09:00', end: '12:00', booked: false },
-        { start: '13:00', end: '17:00', booked: false }
-      ],
-      startTime: '09:00',
-      endTime: '17:00'
-    },
-    {
-      id: '3',
-      photographerId: '2',
-      photographerName: 'Jane Smith',
-      date: new Date(2025, 3, 7).toISOString().split('T')[0], // Convert to string format
-      timeSlots: [
-        { start: '10:00', end: '14:00', booked: false },
-        { start: '15:00', end: '18:00', booked: false }
-      ],
-      startTime: '10:00',
-      endTime: '18:00'
-    },
-    {
-      id: '4',
-      photographerId: '2',
-      photographerName: 'Jane Smith',
-      date: new Date(2025, 3, 9).toISOString().split('T')[0], // Convert to string format
-      timeSlots: [
-        { start: '10:00', end: '14:00', booked: false },
-        { start: '15:00', end: '18:00', booked: false }
-      ],
-      startTime: '10:00',
-      endTime: '18:00'
-    },
-    {
-      id: '5',
-      photographerId: '3',
-      photographerName: 'Mike Brown',
-      date: new Date(2025, 3, 10).toISOString().split('T')[0], // Convert to string format
-      timeSlots: [
-        { start: '08:00', end: '12:00', booked: false },
-        { start: '13:00', end: '16:00', booked: false }
-      ],
-      startTime: '08:00',
-      endTime: '16:00'
-    },
-  ];
+  // Get availabilities for the selected date
+  const getSelectedDateAvailabilities = () => {
+    if (!date) return [];
+    
+    const dateString = format(date, "yyyy-MM-dd");
+    return availabilities.filter(avail => avail.date === dateString);
+  };
 
-  useEffect(() => {
-    setAvailability(availabilityData);
-  }, []);
+  const selectedDateAvailabilities = getSelectedDateAvailabilities();
 
-  useEffect(() => {
-    if (selectedDate && selectedPhotographer) {
-      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-      const foundAvailability = availability.find(
-        (item) => item.photographerId === selectedPhotographer && item.date === formattedDate
-      );
-      setCurrentAvailability(foundAvailability || null);
-      if (foundAvailability) {
-        setAvailabilityForm({
-          startTime: foundAvailability.startTime || '09:00',
-          endTime: foundAvailability.endTime || '17:00'
-        });
-      } else {
-        setAvailabilityForm({ startTime: '09:00', endTime: '17:00' });
-      }
-    } else {
-      setCurrentAvailability(null);
-      setAvailabilityForm({ startTime: '09:00', endTime: '17:00' });
+  // Determine which dates have availabilities
+  const availabilityDates = availabilities.map(avail => {
+    if (isValid(new Date(avail.date))) {
+      return new Date(avail.date);
     }
-  }, [selectedDate, selectedPhotographer, availability]);
+    return undefined;
+  }).filter(Boolean) as Date[];
 
+  // Handle adding a new availability
   const handleAddAvailability = () => {
-    if (!selectedDate || !selectedPhotographer) {
-      toast({
-        title: "Missing information",
-        description: "Please select a date and photographer before adding availability.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const newAvailability: PhotographerAvailability = {
-      id: uuidv4(),
-      photographerId: selectedPhotographer,
-      photographerName: photographers.find(p => p.id === selectedPhotographer)?.name || '',
-      date: format(selectedDate, 'yyyy-MM-dd'),
-      timeSlots: [{
-        start: availabilityForm.startTime || '09:00',
-        end: availabilityForm.endTime || '17:00',
-        booked: false
-      }],
-      startTime: availabilityForm.startTime || '09:00',
-      endTime: availabilityForm.endTime || '17:00'
+    if (!date) return;
+    
+    const newAvail: Availability = {
+      id: Date.now().toString(),
+      date: format(date, "yyyy-MM-dd"),
+      startTime: newAvailability.startTime || "09:00",
+      endTime: newAvailability.endTime || "17:00",
+      status: newAvailability.status || "available",
+      shootTitle: newAvailability.status === "booked" ? newAvailability.shootTitle : undefined
     };
-
-    setAvailability([...availability, newAvailability]);
+    
+    setAvailabilities([...availabilities, newAvail]);
+    setIsAddDialogOpen(false);
+    setNewAvailability({
+      status: "available",
+      startTime: "09:00",
+      endTime: "17:00"
+    });
+    
     toast({
-      title: "Availability Added",
-      description: "New availability slot has been added.",
+      title: "Availability added",
+      description: `Added availability for ${format(date, "MMMM d, yyyy")}`,
     });
   };
 
-  const handleSave = () => {
-    if (!currentAvailability) return;
+  // Handle deleting an availability
+  const handleDeleteAvailability = () => {
+    if (!selectedAvailabilityId) return;
     
-    // Format the date properly
-    let dateToUse: string;
-    if (selectedDate instanceof Date) {
-      dateToUse = format(selectedDate, 'yyyy-MM-dd');
-    } else {
-      dateToUse = currentAvailability.date;
-    }
+    setAvailabilities(availabilities.filter(avail => avail.id !== selectedAvailabilityId));
+    setIsDeleteDialogOpen(false);
+    setSelectedAvailabilityId(null);
     
-    // Update the availability with proper timeSlots
-    const updatedAvailability: PhotographerAvailability = {
-      ...currentAvailability,
-      date: dateToUse,
-      photographerName: photographers.find(p => p.id === currentAvailability.photographerId)?.name || '',
-      startTime: availabilityForm.startTime,
-      endTime: availabilityForm.endTime,
-      timeSlots: [{
-        start: availabilityForm.startTime || currentAvailability.startTime || '09:00',
-        end: availabilityForm.endTime || currentAvailability.endTime || '17:00',
-        booked: false
-      }]
-    };
-
-    setAvailability(availability.map(item =>
-      item.id === currentAvailability.id ? updatedAvailability : item
-    ));
     toast({
-      title: "Availability Updated",
-      description: "Availability slot has been updated.",
+      title: "Availability removed",
+      description: "The availability slot has been removed.",
+      variant: "destructive",
     });
   };
 
-  const handleDelete = () => {
-    if (!currentAvailability) return;
-    setAvailability(availability.filter(item => item.id !== currentAvailability.id));
-    toast({
-      title: "Availability Deleted",
-      description: "Availability slot has been deleted.",
-    });
-    setCurrentAvailability(null);
+  // Custom day rendering to show availability indicators
+  const renderDay = (day: Date) => {
+    const dateString = format(day, "yyyy-MM-dd");
+    const dayAvailabilities = availabilities.filter(avail => avail.date === dateString);
+    
+    const hasAvailable = dayAvailabilities.some(avail => avail.status === "available");
+    const hasBooked = dayAvailabilities.some(avail => avail.status === "booked");
+    
+    return (
+      <div className="relative h-full w-full">
+        <div>{day.getDate()}</div>
+        {dayAvailabilities.length > 0 && (
+          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+            {hasAvailable && <div className="h-1.5 w-1.5 rounded-full bg-green-500" />}
+            {hasBooked && <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <DashboardLayout>
-      <div className="container max-w-4xl py-4 space-y-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Photographer Availability</h1>
-        <p className="text-muted-foreground">
-          Manage photographer availability and schedule shoots.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="photographer">Select Photographer</Label>
-            <Select value={selectedPhotographer} onValueChange={setSelectedPhotographer}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a photographer" />
-              </SelectTrigger>
-              <SelectContent>
-                {photographers.map((photographer) => (
-                  <SelectItem key={photographer.id} value={photographer.id}>{photographer.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Select Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !selectedDate && "text-muted-foreground"
-                  )}
+      <div className="container px-4 sm:px-6 py-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Availability Management</h1>
+          <p className="text-muted-foreground">Manage your availability for bookings</p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Calendar */}
+          <div className="lg:col-span-2">
+            <Card className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Schedule</h2>
+                <Button 
+                  onClick={() => {
+                    if (date) {
+                      setNewAvailability({
+                        ...newAvailability,
+                      });
+                      setIsAddDialogOpen(true);
+                    } else {
+                      toast({
+                        title: "Select a date first",
+                        description: "Please select a date before adding availability.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
                 >
-                  {selectedDate ? (
-                    format(selectedDate, "PPP")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
+                  <Plus className="mr-2 h-4 w-4" /> Add Availability
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  disabled={false}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+              </div>
+              
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                className="rounded-md border shadow p-3 pointer-events-auto"
+                showOutsideDays={true}
+                renderDay={renderDay}
+                modifiersClassNames={{
+                  selected: 'bg-primary text-primary-foreground',
+                }}
+              />
+            </Card>
+          </div>
+          
+          {/* Selected Date Availabilities */}
+          <div>
+            <Card className="p-4">
+              <h2 className="text-lg font-semibold mb-4">
+                {date ? format(date, "MMMM d, yyyy") : "Select a Date"}
+              </h2>
+              
+              {selectedDateAvailabilities.length > 0 ? (
+                <div className="space-y-3">
+                  {selectedDateAvailabilities.map((avail) => (
+                    <Card key={avail.id} className="p-3 relative">
+                      <Badge 
+                        className={`absolute top-2 right-2 ${
+                          avail.status === 'available' ? 'bg-green-500' : 
+                          avail.status === 'booked' ? 'bg-blue-500' : 'bg-gray-500'
+                        }`}
+                      >
+                        {avail.status}
+                      </Badge>
+                      
+                      <div className="flex items-center gap-2 mt-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span>{avail.startTime} - {avail.endTime}</span>
+                      </div>
+                      
+                      {avail.shootTitle && (
+                        <div className="text-sm mt-2 font-medium">
+                          {avail.shootTitle}
+                        </div>
+                      )}
+                      
+                      <div className="mt-3 flex justify-end">
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedAvailabilityId(avail.id);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
+                          <X className="h-4 w-4" /> Remove
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  {date ? (
+                    <>
+                      <p>No availability set for this date.</p>
+                      <Button 
+                        variant="outline" 
+                        className="mt-4" 
+                        onClick={() => {
+                          setNewAvailability({
+                            ...newAvailability,
+                          });
+                          setIsAddDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Add Availability
+                      </Button>
+                    </>
+                  ) : (
+                    <p>Select a date to view or add availability.</p>
+                  )}
+                </div>
+              )}
+            </Card>
           </div>
         </div>
-
-        {selectedDate && selectedPhotographer && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">Availability Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="startTime">Start Time</Label>
-                <Input
-                  type="time"
-                  id="startTime"
-                  value={availabilityForm.startTime}
-                  onChange={(e) => setAvailabilityForm({ ...availabilityForm, startTime: e.target.value })}
-                />
+        
+        {/* Add Availability Dialog */}
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Availability</DialogTitle>
+              <DialogDescription>
+                Set your availability for {date ? format(date, "MMMM d, yyyy") : "the selected date"}.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Start Time</label>
+                  <Input 
+                    type="time" 
+                    value={newAvailability.startTime || ""}
+                    onChange={e => setNewAvailability({...newAvailability, startTime: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">End Time</label>
+                  <Input 
+                    type="time" 
+                    value={newAvailability.endTime || ""}
+                    onChange={e => setNewAvailability({...newAvailability, endTime: e.target.value})}
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="endTime">End Time</Label>
-                <Input
-                  type="time"
-                  id="endTime"
-                  value={availabilityForm.endTime}
-                  onChange={(e) => setAvailabilityForm({ ...availabilityForm, endTime: e.target.value })}
-                />
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status</label>
+                <Select 
+                  value={newAvailability.status} 
+                  onValueChange={(value) => 
+                    setNewAvailability({
+                      ...newAvailability, 
+                      status: value as AvailabilityStatus
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="booked">Booked</SelectItem>
+                    <SelectItem value="unavailable">Unavailable</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              {currentAvailability ? (
-                <>
-                  <Button variant="secondary" onClick={handleSave}>Save Availability</Button>
-                  <Button variant="destructive" onClick={handleDelete}>Delete Availability</Button>
-                </>
-              ) : (
-                <Button onClick={handleAddAvailability}>Add Availability</Button>
+              
+              {newAvailability.status === "booked" && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Shoot Title</label>
+                  <Input 
+                    placeholder="Enter shoot title or client name"
+                    value={newAvailability.shootTitle || ""}
+                    onChange={e => setNewAvailability({...newAvailability, shootTitle: e.target.value})}
+                  />
+                </div>
               )}
             </div>
-          </div>
-        )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleAddAvailability}>Add Availability</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Remove Availability</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to remove this availability slot? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={handleDeleteAvailability}>Remove</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
-};
-
-export default Availability;
+}

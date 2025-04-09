@@ -362,6 +362,8 @@ const BookShoot = () => {
                     summaryInfo={summaryInfo} 
                     selectedPackage={selectedPackage}
                     packages={packages}
+                    onSubmit={step === 3 ? handleSubmit : undefined}
+                    isLastStep={step === 3}
                   />
                 </div>
                 
