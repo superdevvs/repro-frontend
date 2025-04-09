@@ -244,9 +244,8 @@ export default function Availability() {
               <Select 
                 value={selectedPhotographer} 
                 onValueChange={setSelectedPhotographer}
-                className="w-full md:w-[250px]"
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full md:w-[250px]">
                   <SelectValue placeholder="Select a photographer" />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,8 +265,8 @@ export default function Availability() {
           {/* Calendar and Weekly Schedule in the same row */}
           <div className="lg:col-span-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Calendar */}
-              <div className="lg:col-span-4">
+              {/* Calendar - takes 2/3 of the space */}
+              <div className="lg:col-span-8">
                 <Card className="p-4 h-full">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold">
@@ -355,8 +354,8 @@ export default function Availability() {
                 </Card>
               </div>
               
-              {/* Weekly schedule section - moved next to calendar */}
-              <div className="lg:col-span-8">
+              {/* Weekly schedule section - moved next to calendar but smaller */}
+              <div className="lg:col-span-4">
                 {selectedPhotographer !== "all" ? (
                   <Card className="p-4 h-full">
                     <div className="flex justify-between items-center mb-4">
@@ -368,16 +367,18 @@ export default function Availability() {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4">
+                    <div className="grid grid-cols-1 gap-2">
                       {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
-                        <Card key={day} className={`p-3 ${index > 4 ? 'bg-gray-50 dark:bg-gray-800/30' : ''}`}>
-                          <div className="font-medium mb-2">{day}</div>
-                          <div className="text-sm">
+                        <Card key={day} className={`p-2 ${index > 4 ? 'bg-gray-50 dark:bg-gray-800/30' : ''}`}>
+                          <div className="flex justify-between items-center">
+                            <div className="font-medium">{day}</div>
+                            <Badge className={`${index < 5 ? 'bg-green-500' : 'bg-gray-400'}`}>
+                              {index < 5 ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </div>
+                          <div className="text-sm mt-1">
                             {index < 5 ? '9:00 AM - 5:00 PM' : 'Not Available'}
                           </div>
-                          <Badge className={`mt-2 ${index < 5 ? 'bg-green-500' : 'bg-gray-400'}`}>
-                            {index < 5 ? 'Active' : 'Inactive'}
-                          </Badge>
                         </Card>
                       ))}
                     </div>
