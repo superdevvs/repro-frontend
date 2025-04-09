@@ -7,13 +7,13 @@ type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
   // Safely access theme - with default value in case ThemeProvider isn't available yet
-  let themeValue = "system";
+  let themeValue = "dark";
   
   try {
     const { theme } = useTheme();
     themeValue = theme;
   } catch (error) {
-    console.log("Theme provider not available, using system theme");
+    console.log("Theme provider not available, using dark theme");
   }
 
   return (
