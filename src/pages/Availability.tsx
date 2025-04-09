@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
-import { format, parse, isValid } from "date-fns";
+import { format, parse, isValid, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { 
   Select, 
@@ -240,18 +240,28 @@ export default function Availability() {
 
   // Function to determine if a date has availability based on selected photographer and status
   const getAvailabilityIndicator = (day: Date) => {
-    const dateString = format(day, "yyyy-MM-dd");
-    const dayAvailabilities = availabilities.filter(
-      avail => avail.date === dateString && 
-        (selectedPhotographer === "all" || avail.photographerId === selectedPhotographer)
-    );
+    // Ensure day is a valid Date object
+    if (!day || !isValid(day)) {
+      return { hasAvailable: false, hasBooked: false, hasUnavailable: false, hasPartiallyAvailable: false };
+    }
     
-    const hasAvailable = dayAvailabilities.some(avail => avail.status === "available");
-    const hasBooked = dayAvailabilities.some(avail => avail.status === "booked");
-    const hasUnavailable = dayAvailabilities.some(avail => avail.status === "unavailable");
-    const hasPartiallyAvailable = dayAvailabilities.some(avail => avail.status === "partially_available");
-    
-    return { hasAvailable, hasBooked, hasUnavailable, hasPartiallyAvailable };
+    try {
+      const dateString = format(day, "yyyy-MM-dd");
+      const dayAvailabilities = availabilities.filter(
+        avail => avail.date === dateString && 
+          (selectedPhotographer === "all" || avail.photographerId === selectedPhotographer)
+      );
+      
+      const hasAvailable = dayAvailabilities.some(avail => avail.status === "available");
+      const hasBooked = dayAvailabilities.some(avail => avail.status === "booked");
+      const hasUnavailable = dayAvailabilities.some(avail => avail.status === "unavailable");
+      const hasPartiallyAvailable = dayAvailabilities.some(avail => avail.status === "partially_available");
+      
+      return { hasAvailable, hasBooked, hasUnavailable, hasPartiallyAvailable };
+    } catch (error) {
+      console.error("Error in getAvailabilityIndicator:", error, "Day:", day);
+      return { hasAvailable: false, hasBooked: false, hasUnavailable: false, hasPartiallyAvailable: false };
+    }
   };
 
   // Get photographer name by id
@@ -395,8 +405,11 @@ export default function Availability() {
               className="rounded-md border shadow p-3 pointer-events-auto"
               showOutsideDays={true}
               components={{
-                Day: ({ day, ...props }) => {
-                  const { hasAvailable, hasBooked, hasUnavailable, hasPartiallyAvailable } = getAvailabilityIndicator(day);
+                Day: ({ date, ...props }) => {
+                  if (!date) return null;
+                  
+                  const { hasAvailable, hasBooked, hasUnavailable, hasPartiallyAvailable } = 
+                    getAvailabilityIndicator(date);
                   
                   let bgColorClass = "";
                   if (hasBooked) bgColorClass = "bg-blue-100 hover:bg-blue-200";
@@ -407,9 +420,9 @@ export default function Availability() {
                   return (
                     <button
                       {...props}
-                      className={`${props.className} ${bgColorClass}`}
+                      className={`${props.className || ''} ${bgColorClass}`}
                     >
-                      {day.getDate()}
+                      {date.getDate()}
                     </button>
                   );
                 },
@@ -672,3 +685,4 @@ export default function Availability() {
     </DashboardLayout>
   );
 }
+
