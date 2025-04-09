@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -22,12 +21,11 @@ export function CreateInvoiceDialog({ isOpen, onClose, onInvoiceCreate }: Create
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   
-  // Form state
   const [client, setClient] = useState('');
   const [property, setProperty] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState<Date>(new Date());
-  const [dueDate, setDueDate] = useState<Date>(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)); // Default due date: 15 days from now
+  const [dueDate, setDueDate] = useState<Date>(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000));
   const [services, setServices] = useState<string[]>(['Photography']);
   
   const handleAddService = () => {
@@ -58,17 +56,15 @@ export function CreateInvoiceDialog({ isOpen, onClose, onInvoiceCreate }: Create
     
     setLoading(true);
     
-    // Create a new invoice ID with format INV-XXX where XXX is a number between 100-999
     const randomNum = Math.floor(Math.random() * 900) + 100;
     const invoiceId = `INV-${randomNum}`;
     
-    // Format dates to string format YYYY-MM-DD
     const formattedDate = format(date, 'yyyy-MM-dd');
     const formattedDueDate = format(dueDate, 'yyyy-MM-dd');
     
-    // New invoice object
     const newInvoice: InvoiceData = {
       id: invoiceId,
+      number: invoiceId,
       client: client,
       property: property,
       date: formattedDate,
@@ -76,10 +72,9 @@ export function CreateInvoiceDialog({ isOpen, onClose, onInvoiceCreate }: Create
       amount: parseFloat(amount),
       status: 'pending' as const,
       services: services.filter(service => service !== ''),
-      paymentMethod: 'Pending',
+      paymentMethod: 'Pending'
     };
     
-    // Simulate API call delay
     setTimeout(() => {
       setLoading(false);
       onInvoiceCreate(newInvoice);
@@ -89,7 +84,6 @@ export function CreateInvoiceDialog({ isOpen, onClose, onInvoiceCreate }: Create
         variant: "default",
       });
       
-      // Reset form fields
       setClient('');
       setProperty('');
       setAmount('');

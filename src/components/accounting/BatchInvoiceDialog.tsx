@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -56,9 +55,11 @@ export function BatchInvoiceDialog({ isOpen, onClose, onCreateBatch }: BatchInvo
       dueDate.setDate(today.getDate() + 15); // Due in 15 days
       
       const totalAmount = selectedServices.reduce((sum, service) => sum + service.price, 0);
+      const invoiceId = `INV-BATCH-${Date.now()}-${index}`;
       
       return {
-        id: `INV-BATCH-${Date.now()}-${index}`,
+        id: invoiceId,
+        number: invoiceId,
         client: client.name,
         property: "Multiple Properties",
         date: today.toISOString().split('T')[0],
