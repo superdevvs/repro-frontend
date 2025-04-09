@@ -22,10 +22,25 @@ import {
   DialogDescription 
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon, Clock, Plus, X, User, ChevronDown, AlertCircle } from "lucide-react";
+import { 
+  CalendarIcon, 
+  Clock, 
+  Plus, 
+  X, 
+  User, 
+  ChevronDown, 
+  AlertCircle, 
+  Edit, 
+  Save, 
+  Calendar as CalendarIconOutlined,
+  Check
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { TimeSelect } from "@/components/ui/time-select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // Sample photographers data
 const samplePhotographers = [
@@ -142,8 +157,23 @@ export default function Availability() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedAvailabilityId, setSelectedAvailabilityId] = useState<string | null>(null);
   const [selectedPhotographer, setSelectedPhotographer] = useState<string>("all");
+  const [editingWeeklySchedule, setEditingWeeklySchedule] = useState(false);
+  const [editingAvailability, setEditingAvailability] = useState<string | null>(null);
+  const [editedAvailability, setEditedAvailability] = useState<Partial<Availability>>({});
+  const [editModeOpen, setEditModeOpen] = useState(false);
   const { toast } = useToast();
   const { user, role } = useAuth();
+  
+  // Weekly schedule data
+  const [weeklySchedule, setWeeklySchedule] = useState([
+    { day: 'Mon', active: true, startTime: '9:00', endTime: '17:00' },
+    { day: 'Tue', active: true, startTime: '9:00', endTime: '17:00' },
+    { day: 'Wed', active: true, startTime: '9:00', endTime: '17:00' },
+    { day: 'Thu', active: true, startTime: '9:00', endTime: '17:00' },
+    { day: 'Fri', active: true, startTime: '9:00', endTime: '17:00' },
+    { day: 'Sat', active: false, startTime: '10:00', endTime: '15:00' },
+    { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
+  ]);
   
   // Check if user has admin access
   const isAdmin = role === 'admin' || role === 'superadmin';
@@ -220,8 +250,9 @@ export default function Availability() {
     
     const hasAvailable = dayAvailabilities.some(avail => avail.status === "available");
     const hasBooked = dayAvailabilities.some(avail => avail.status === "booked");
+    const hasUnavailable = dayAvailabilities.some(avail => avail.status === "unavailable");
     
-    return { hasAvailable, hasBooked };
+    return { hasAvailable, hasBooked, hasUnavailable };
   };
 
   // Get photographer name by id
@@ -230,23 +261,103 @@ export default function Availability() {
     return photographer ? photographer.name : "Unknown";
   };
 
+  // Start editing an availability
+  const startEditingAvailability = (availId: string) => {
+    const availToEdit = availabilities.find(a => a.id === availId);
+    if (availToEdit) {
+      setEditingAvailability(availId);
+      setEditedAvailability({ ...availToEdit });
+    }
+  };
+
+  // Save edited availability
+  const saveEditedAvailability = () => {
+    if (!editingAvailability || !editedAvailability) return;
+    
+    setAvailabilities(prevAvails => 
+      prevAvails.map(avail => 
+        avail.id === editingAvailability
+          ? { 
+              ...avail, 
+              startTime: editedAvailability.startTime || avail.startTime,
+              endTime: editedAvailability.endTime || avail.endTime,
+              status: editedAvailability.status || avail.status,
+              shootTitle: editedAvailability.status === "booked" 
+                ? editedAvailability.shootTitle || avail.shootTitle 
+                : undefined
+            }
+          : avail
+      )
+    );
+    
+    setEditingAvailability(null);
+    setEditedAvailability({});
+    
+    toast({
+      title: "Availability updated",
+      description: "The availability slot has been updated successfully."
+    });
+  };
+
+  // Save weekly schedule changes
+  const saveWeeklySchedule = () => {
+    setEditingWeeklySchedule(false);
+    toast({
+      title: "Schedule saved",
+      description: `Weekly schedule for ${selectedPhotographer === "all" ? "all photographers" : getPhotographerName(selectedPhotographer)} has been updated.`,
+    });
+  };
+
+  // Toggle edit mode
+  const toggleEditMode = () => {
+    if (editModeOpen) {
+      // If closing edit mode, also close any open edits
+      setEditingAvailability(null);
+      setEditingWeeklySchedule(false);
+      setEditedAvailability({});
+    }
+    setEditModeOpen(!editModeOpen);
+  };
+
   // Check if the user can edit availability (admin)
   const canEditAvailability = isAdmin;
 
   return (
     <DashboardLayout>
       <div className="container px-4 sm:px-6 py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Photographer Availability Management</h1>
-          <p className="text-muted-foreground">Manage availability schedules for photographers</p>
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Photographer Availability Management</h1>
+            <p className="text-muted-foreground">Manage availability schedules for photographers</p>
+          </div>
           
-          {!canEditAvailability && (
-            <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-4 mt-4 flex items-start">
-              <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-              <p>You are in view-only mode. Only administrators can edit photographer availability.</p>
-            </div>
+          {canEditAvailability && (
+            <Button
+              variant={editModeOpen ? "default" : "outline"}
+              onClick={toggleEditMode}
+              className="gap-2"
+            >
+              {editModeOpen ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  <span>Exit Edit Mode</span>
+                </>
+              ) : (
+                <>
+                  <Edit className="h-4 w-4" />
+                  <span>Enter Edit Mode</span>
+                </>
+              )}
+            </Button>
           )}
         </div>
+        
+        {!canEditAvailability && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-4 mb-6 flex items-start">
+            <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+            <p>You are in view-only mode. Only administrators can edit photographer availability.</p>
+          </div>
+        )}
         
         <div className="mb-6">
           <Card className="p-4">
@@ -279,223 +390,407 @@ export default function Availability() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Calendar and Weekly Schedule in the same row */}
           <div className="lg:col-span-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Calendar - takes 2/3 of the space */}
-              <div className="lg:col-span-8">
-                <Card className="p-4 h-full">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-semibold">
-                      {selectedPhotographer === "all" 
-                        ? "All Photographers' Schedule" 
-                        : `${getPhotographerName(selectedPhotographer)}'s Schedule`}
-                    </h2>
-                  </div>
-                  
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    className="rounded-md border shadow p-3 pointer-events-auto"
-                    showOutsideDays={true}
-                    modifiersClassNames={{
-                      selected: 'bg-primary text-primary-foreground',
-                    }}
-                    modifiersStyles={{
-                      selected: {
-                        fontWeight: "bold"
-                      }
-                    }}
-                    components={{
-                      Day: ({ date: dayDate }) => {
-                        const { hasAvailable, hasBooked } = getAvailabilityIndicator(dayDate);
-                        
-                        return (
-                          <div className="relative w-full h-full">
-                            <div>{dayDate.getDate()}</div>
-                            {(hasAvailable || hasBooked) && (
-                              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-                                {hasAvailable && <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>}
-                                {hasBooked && <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>}
-                              </div>
-                            )}
-                          </div>
-                        )
-                      }
-                    }}
-                  />
-                  
-                  {/* Availability Legend */}
-                  <div className="flex items-center gap-4 justify-center mt-4">
-                    <div className="flex items-center gap-1">
-                      <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                      <span className="text-xs text-muted-foreground">Available</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                      <span className="text-xs text-muted-foreground">Booked</span>
-                    </div>
-                  </div>
-
-                  {canEditAvailability && (
-                    <div className="mt-4">
-                      <Button 
-                        onClick={() => {
-                          if (date) {
-                            if (selectedPhotographer === "all") {
-                              toast({
-                                title: "Select a photographer",
-                                description: "Please select a specific photographer before adding availability.",
-                                variant: "destructive",
-                              });
-                              return;
-                            }
-                            setNewAvailability({
-                              ...newAvailability,
-                              photographerId: selectedPhotographer
-                            });
-                            setIsAddDialogOpen(true);
-                          } else {
-                            toast({
-                              title: "Select a date first",
-                              description: "Please select a date before adding availability.",
-                              variant: "destructive",
-                            });
-                          }
-                        }}
-                        className="w-full"
-                      >
-                        <Plus className="mr-2 h-4 w-4" /> Add Availability
-                      </Button>
-                    </div>
-                  )}
-                </Card>
-              </div>
-              
-              {/* Weekly schedule section - moved next to calendar but smaller */}
-              <div className="lg:col-span-4">
-                {selectedPhotographer !== "all" ? (
-                  <Card className="p-4 h-full">
-                    <div className="flex justify-between items-center mb-4">
-                      <div>
-                        <h2 className="text-lg font-semibold">
-                          {getPhotographerName(selectedPhotographer)}'s Weekly Schedule
-                        </h2>
-                        <p className="text-sm text-muted-foreground">Regular working hours</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-2">
-                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
-                        <Card key={day} className={`p-2 ${index > 4 ? 'bg-gray-50 dark:bg-gray-800/30' : ''}`}>
-                          <div className="flex justify-between items-center">
-                            <div className="font-medium">{day}</div>
-                            <Badge className={`${index < 5 ? 'bg-green-500' : 'bg-gray-400'}`}>
-                              {index < 5 ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </div>
-                          <div className="text-sm mt-1">
-                            {index < 5 ? '9:00 AM - 5:00 PM' : 'Not Available'}
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </Card>
-                ) : (
-                  <Card className="p-4 h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <h2 className="text-lg font-semibold mb-2">Weekly Schedule</h2>
-                      <p className="text-muted-foreground">
-                        Select a specific photographer to view their weekly schedule
-                      </p>
-                    </div>
-                  </Card>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Selected Date Availabilities - take 4 columns */}
-          <div className="lg:col-span-4">
             <Card className="p-4 h-full">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold mb-4">
-                  {date ? format(date, "MMMM d, yyyy") : "Select a Date"}
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">
+                  {selectedPhotographer === "all" 
+                    ? "All Photographers' Schedule" 
+                    : `${getPhotographerName(selectedPhotographer)}'s Schedule`}
                 </h2>
               </div>
               
-              {selectedDateAvailabilities.length > 0 ? (
-                <div className="space-y-3">
-                  {selectedDateAvailabilities.map((avail) => (
-                    <Card key={avail.id} className="p-3 relative">
-                      <Badge 
-                        className={`absolute top-2 right-2 ${
-                          avail.status === 'available' ? 'bg-green-500' : 
-                          avail.status === 'booked' ? 'bg-blue-500' : 'bg-gray-500'
-                        }`}
-                      >
-                        {avail.status}
-                      </Badge>
-                      
-                      <div className="mt-1 font-medium">
-                        {getPhotographerName(avail.photographerId)}
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                className="rounded-md border shadow p-3 pointer-events-auto"
+                showOutsideDays={true}
+                modifiersClassNames={{
+                  selected: 'bg-primary text-primary-foreground',
+                }}
+                modifiersStyles={{
+                  selected: {
+                    fontWeight: "bold"
+                  }
+                }}
+                components={{
+                  Day: ({ date: dayDate }) => {
+                    const { hasAvailable, hasBooked, hasUnavailable } = getAvailabilityIndicator(dayDate);
+                    
+                    return (
+                      <div className="relative w-full h-full flex flex-col items-center justify-center">
+                        <div>{dayDate.getDate()}</div>
+                        {(hasAvailable || hasBooked || hasUnavailable) && (
+                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+                            {hasAvailable && <div className="h-2 w-2 rounded-full bg-green-500"></div>}
+                            {hasBooked && <div className="h-2 w-2 rounded-full bg-blue-500"></div>}
+                            {hasUnavailable && <div className="h-2 w-2 rounded-full bg-red-500"></div>}
+                          </div>
+                        )}
                       </div>
-                      
-                      <div className="flex items-center gap-2 mt-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{avail.startTime} - {avail.endTime}</span>
-                      </div>
-                      
-                      {avail.shootTitle && (
-                        <div className="text-sm mt-2 font-medium">
-                          {avail.shootTitle}
-                        </div>
-                      )}
-                      
-                      {canEditAvailability && (
-                        <div className="mt-3 flex justify-end">
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            onClick={() => {
-                              setSelectedAvailabilityId(avail.id);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            <X className="h-4 w-4" /> Remove
-                          </Button>
-                        </div>
-                      )}
-                    </Card>
-                  ))}
+                    )
+                  }
+                }}
+              />
+              
+              {/* Availability Legend */}
+              <div className="flex items-center gap-4 justify-center mt-4">
+                <div className="flex items-center gap-1">
+                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                  <span className="text-xs text-muted-foreground">Available</span>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground h-full flex flex-col items-center justify-center">
-                  {date ? (
-                    <>
-                      <p>No availability set for this date.</p>
-                      {canEditAvailability && selectedPhotographer !== "all" && (
-                        <Button 
-                          variant="outline" 
-                          className="mt-4" 
-                          onClick={() => {
-                            setNewAvailability({
-                              ...newAvailability,
-                              photographerId: selectedPhotographer
-                            });
-                            setIsAddDialogOpen(true);
-                          }}
-                        >
-                          <Plus className="mr-2 h-4 w-4" /> Add Availability
-                        </Button>
-                      )}
-                    </>
-                  ) : (
-                    <p>Select a date to view or add availability.</p>
-                  )}
+                <div className="flex items-center gap-1">
+                  <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                  <span className="text-xs text-muted-foreground">Booked</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                  <span className="text-xs text-muted-foreground">Unavailable</span>
+                </div>
+              </div>
+
+              {canEditAvailability && editModeOpen && (
+                <div className="mt-4">
+                  <Button 
+                    onClick={() => {
+                      if (date) {
+                        if (selectedPhotographer === "all") {
+                          toast({
+                            title: "Select a photographer",
+                            description: "Please select a specific photographer before adding availability.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        setNewAvailability({
+                          ...newAvailability,
+                          photographerId: selectedPhotographer
+                        });
+                        setIsAddDialogOpen(true);
+                      } else {
+                        toast({
+                          title: "Select a date first",
+                          description: "Please select a date before adding availability.",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    className="w-full"
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Add Availability
+                  </Button>
                 </div>
               )}
             </Card>
           </div>
+          
+          {/* Weekly schedule in a secondary card beside the calendar */}
+          <div className="lg:col-span-4">
+            {selectedPhotographer !== "all" ? (
+              <Card className="p-4 h-full">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold">
+                      {getPhotographerName(selectedPhotographer)}'s Weekly Schedule
+                    </h2>
+                    <p className="text-sm text-muted-foreground">Regular working hours</p>
+                  </div>
+                  
+                  {canEditAvailability && editModeOpen && (
+                    <Button 
+                      variant={editingWeeklySchedule ? "default" : "outline"} 
+                      size="sm"
+                      onClick={() => setEditingWeeklySchedule(!editingWeeklySchedule)}
+                    >
+                      {editingWeeklySchedule ? (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save
+                        </>
+                      ) : (
+                        <>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 gap-2 mt-2">
+                  {weeklySchedule.map((day, index) => (
+                    <div 
+                      key={day.day} 
+                      className={`border rounded-lg p-2 ${index > 4 ? 'bg-gray-50 dark:bg-gray-800/30' : ''}`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="font-medium">{day.day}</div>
+                        
+                        {editingWeeklySchedule ? (
+                          <Switch 
+                            checked={day.active}
+                            onCheckedChange={(checked) => {
+                              setWeeklySchedule(prev => 
+                                prev.map((d, i) => i === index ? {...d, active: checked} : d)
+                              );
+                            }}
+                          />
+                        ) : (
+                          <Badge className={`${day.active ? 'bg-green-500' : 'bg-gray-400'}`}>
+                            {day.active ? 'Active' : 'Inactive'}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      {editingWeeklySchedule && day.active ? (
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          <div>
+                            <Label className="text-xs">Start</Label>
+                            <TimeSelect 
+                              value={day.startTime}
+                              onChange={(time) => {
+                                setWeeklySchedule(prev => 
+                                  prev.map((d, i) => i === index ? {...d, startTime: time} : d)
+                                );
+                              }}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">End</Label>
+                            <TimeSelect 
+                              value={day.endTime}
+                              onChange={(time) => {
+                                setWeeklySchedule(prev => 
+                                  prev.map((d, i) => i === index ? {...d, endTime: time} : d)
+                                );
+                              }}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm mt-1 text-muted-foreground">
+                          {day.active ? `${day.startTime} - ${day.endTime}` : 'Not Available'}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {editingWeeklySchedule && (
+                  <Button 
+                    className="w-full mt-4" 
+                    onClick={saveWeeklySchedule}
+                  >
+                    <Save className="h-4 w-4 mr-2" /> 
+                    Save Weekly Schedule
+                  </Button>
+                )}
+              </Card>
+            ) : (
+              <Card className="p-4 h-full flex items-center justify-center">
+                <div className="text-center">
+                  <CalendarIconOutlined className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <h2 className="text-lg font-semibold mb-2">Weekly Schedule</h2>
+                  <p className="text-muted-foreground">
+                    Select a specific photographer to view their weekly schedule
+                  </p>
+                </div>
+              </Card>
+            )}
+          </div>
+        </div>
+        
+        {/* Selected Date Availabilities Section */}
+        <div className="mt-6">
+          <Card className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">
+                {date ? format(date, "MMMM d, yyyy") : "Select a Date"}
+              </h2>
+              
+              {canEditAvailability && editModeOpen && selectedPhotographer !== "all" && date && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setNewAvailability({
+                      ...newAvailability,
+                      photographerId: selectedPhotographer
+                    });
+                    setIsAddDialogOpen(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" /> 
+                  Add Slot
+                </Button>
+              )}
+            </div>
+            
+            {selectedDateAvailabilities.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {selectedDateAvailabilities.map((avail) => (
+                  <div key={avail.id}>
+                    {editingAvailability === avail.id ? (
+                      // Edit mode
+                      <Card className="p-3">
+                        <div className="space-y-3">
+                          <div>
+                            <Label>Status</Label>
+                            <Select 
+                              value={editedAvailability.status || avail.status}
+                              onValueChange={(val) => 
+                                setEditedAvailability({...editedAvailability, status: val as AvailabilityStatus})
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="available">Available</SelectItem>
+                                <SelectItem value="booked">Booked</SelectItem>
+                                <SelectItem value="unavailable">Unavailable</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label>Start Time</Label>
+                              <TimeSelect 
+                                value={editedAvailability.startTime || avail.startTime}
+                                onChange={(time) => 
+                                  setEditedAvailability({...editedAvailability, startTime: time})
+                                }
+                              />
+                            </div>
+                            <div>
+                              <Label>End Time</Label>
+                              <TimeSelect 
+                                value={editedAvailability.endTime || avail.endTime}
+                                onChange={(time) => 
+                                  setEditedAvailability({...editedAvailability, endTime: time})
+                                }
+                              />
+                            </div>
+                          </div>
+                          
+                          {(editedAvailability.status || avail.status) === "booked" && (
+                            <div>
+                              <Label>Shoot Title</Label>
+                              <Input 
+                                value={editedAvailability.shootTitle || avail.shootTitle || ""}
+                                onChange={(e) => 
+                                  setEditedAvailability({...editedAvailability, shootTitle: e.target.value})
+                                }
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setEditingAvailability(null)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={saveEditedAvailability}
+                            >
+                              <Save className="h-4 w-4 mr-1" />
+                              Save
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ) : (
+                      // View mode
+                      <Card 
+                        className={`p-3 relative border-l-4 ${
+                          avail.status === 'available' ? 'border-l-green-500' : 
+                          avail.status === 'booked' ? 'border-l-blue-500' : 'border-l-red-500'
+                        }`}
+                      >
+                        <Badge 
+                          className={`absolute top-2 right-2 ${
+                            avail.status === 'available' ? 'bg-green-500' : 
+                            avail.status === 'booked' ? 'bg-blue-500' : 'bg-red-500'
+                          }`}
+                        >
+                          {avail.status}
+                        </Badge>
+                        
+                        <div className="mt-1 font-medium">
+                          {getPhotographerName(avail.photographerId)}
+                        </div>
+                        
+                        <div className="flex items-center gap-2 mt-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span>{avail.startTime} - {avail.endTime}</span>
+                        </div>
+                        
+                        {avail.shootTitle && (
+                          <div className="text-sm mt-2 font-medium">
+                            {avail.shootTitle}
+                          </div>
+                        )}
+                        
+                        {canEditAvailability && editModeOpen && (
+                          <div className="mt-3 flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => startEditingAvailability(avail.id)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedAvailabilityId(avail.id);
+                                setIsDeleteDialogOpen(true);
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </Card>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                {date ? (
+                  <>
+                    <p>No availability set for this date.</p>
+                    {canEditAvailability && editModeOpen && selectedPhotographer !== "all" && (
+                      <Button 
+                        variant="outline" 
+                        className="mt-4" 
+                        onClick={() => {
+                          setNewAvailability({
+                            ...newAvailability,
+                            photographerId: selectedPhotographer
+                          });
+                          setIsAddDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Add Availability
+                      </Button>
+                    )}
+                  </>
+                ) : (
+                  <p>Select a date to view or add availability.</p>
+                )}
+              </div>
+            )}
+          </Card>
         </div>
         
         {/* Add Availability Dialog */}
@@ -509,57 +804,59 @@ export default function Availability() {
             </DialogHeader>
             
             <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Start Time</label>
-                  <Input 
-                    type="time" 
-                    value={newAvailability.startTime || ""}
-                    onChange={e => setNewAvailability({...newAvailability, startTime: e.target.value})}
-                  />
+                  <Label>Status</Label>
+                  <Select 
+                    value={newAvailability.status} 
+                    onValueChange={(value) => 
+                      setNewAvailability({
+                        ...newAvailability, 
+                        status: value as AvailabilityStatus
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="available">Available</SelectItem>
+                      <SelectItem value="booked">Booked</SelectItem>
+                      <SelectItem value="unavailable">Unavailable</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">End Time</label>
-                  <Input 
-                    type="time" 
-                    value={newAvailability.endTime || ""}
-                    onChange={e => setNewAvailability({...newAvailability, endTime: e.target.value})}
-                  />
-                </div>
-              </div>
               
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select 
-                  value={newAvailability.status} 
-                  onValueChange={(value) => 
-                    setNewAvailability({
-                      ...newAvailability, 
-                      status: value as AvailabilityStatus
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="available">Available</SelectItem>
-                    <SelectItem value="booked">Booked</SelectItem>
-                    <SelectItem value="unavailable">Unavailable</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {newAvailability.status === "booked" && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Shoot Title</label>
-                  <Input 
-                    placeholder="Enter shoot title or client name"
-                    value={newAvailability.shootTitle || ""}
-                    onChange={e => setNewAvailability({...newAvailability, shootTitle: e.target.value})}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Start Time</Label>
+                    <TimeSelect 
+                      value={newAvailability.startTime || ""}
+                      onChange={(time) => setNewAvailability({...newAvailability, startTime: time})}
+                      placeholder="Select start time"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>End Time</Label>
+                    <TimeSelect 
+                      value={newAvailability.endTime || ""}
+                      onChange={(time) => setNewAvailability({...newAvailability, endTime: time})}
+                      placeholder="Select end time"
+                    />
+                  </div>
                 </div>
-              )}
+              
+                {newAvailability.status === "booked" && (
+                  <div className="space-y-2">
+                    <Label>Shoot Title</Label>
+                    <Input 
+                      placeholder="Enter shoot title or client name"
+                      value={newAvailability.shootTitle || ""}
+                      onChange={e => setNewAvailability({...newAvailability, shootTitle: e.target.value})}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
             
             <DialogFooter>
