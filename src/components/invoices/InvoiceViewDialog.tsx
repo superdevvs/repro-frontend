@@ -10,11 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 
 interface InvoiceViewDialogProps {
   invoice: InvoiceData | null;
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function InvoiceViewDialog({ invoice, isOpen, onClose }: InvoiceViewDialogProps) {
+export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDialogProps) {
   const { toast } = useToast();
 
   if (!invoice) return null;
@@ -51,7 +51,7 @@ export function InvoiceViewDialog({ invoice, isOpen, onClose }: InvoiceViewDialo
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">
@@ -103,7 +103,7 @@ export function InvoiceViewDialog({ invoice, isOpen, onClose }: InvoiceViewDialo
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Close</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
           <Button onClick={handleDownloadInvoice}>
             <DownloadIcon className="h-4 w-4 mr-2" />
             Download PDF

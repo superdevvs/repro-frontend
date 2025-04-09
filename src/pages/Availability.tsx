@@ -142,25 +142,31 @@ export default function Availability() {
     });
   };
 
-  // Custom day rendering to show availability indicators
-  const renderDay = (day: Date) => {
+  // Function to determine if a date has availability
+  const getAvailabilityIndicator = (day: Date) => {
     const dateString = format(day, "yyyy-MM-dd");
     const dayAvailabilities = availabilities.filter(avail => avail.date === dateString);
     
     const hasAvailable = dayAvailabilities.some(avail => avail.status === "available");
     const hasBooked = dayAvailabilities.some(avail => avail.status === "booked");
     
-    return (
-      <div className="relative h-full w-full">
-        <div>{day.getDate()}</div>
-        {dayAvailabilities.length > 0 && (
-          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-            {hasAvailable && <div className="h-1.5 w-1.5 rounded-full bg-green-500" />}
-            {hasBooked && <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
-          </div>
-        )}
-      </div>
-    );
+    return { hasAvailable, hasBooked };
+  };
+
+  // Create styles for calendar days
+  const getDayClassName = (day: Date) => {
+    const { hasAvailable, hasBooked } = getAvailabilityIndicator(day);
+    const baseClass = "relative";
+    const indicatorClass = hasAvailable || hasBooked ? 
+      "after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:flex after:gap-1" : "";
+    
+    const availableDotClass = hasAvailable ? 
+      "after:content-[''] after:h-1.5 after:w-1.5 after:rounded-full after:bg-green-500 after:inline-block" : "";
+    
+    const bookedDotClass = hasBooked ? 
+      "after:content-[''] after:h-1.5 after:w-1.5 after:rounded-full after:bg-blue-500 after:inline-block after:ml-1" : "";
+    
+    return `${baseClass} ${indicatorClass} ${availableDotClass} ${bookedDotClass}`;
   };
 
   return (
@@ -203,11 +209,27 @@ export default function Availability() {
                 onSelect={setDate}
                 className="rounded-md border shadow p-3 pointer-events-auto"
                 showOutsideDays={true}
-                renderDay={renderDay}
                 modifiersClassNames={{
                   selected: 'bg-primary text-primary-foreground',
                 }}
+                modifiersStyles={{
+                  selected: {
+                    fontWeight: "bold"
+                  }
+                }}
               />
+              
+              {/* Availability Legend */}
+              <div className="flex items-center gap-4 justify-center mt-4">
+                <div className="flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  <span className="text-xs text-muted-foreground">Available</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                  <span className="text-xs text-muted-foreground">Booked</span>
+                </div>
+              </div>
             </Card>
           </div>
           

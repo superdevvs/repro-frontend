@@ -24,14 +24,14 @@ interface RoleChangeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
-  onSubmit: (userId: string, roles: Role[]) => void;
+  onSubmit?: (userId: string, roles: Role[]) => void;
 }
 
 export function RoleChangeDialog({
   open,
   onOpenChange,
   user,
-  onSubmit,
+  onSubmit = () => {},
 }: RoleChangeDialogProps) {
   const [primaryRole, setPrimaryRole] = useState<Role>(user?.role || 'client');
   

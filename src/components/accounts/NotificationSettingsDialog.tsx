@@ -70,14 +70,14 @@ interface NotificationSettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
-  onSubmit: (userId: string, notificationSettings: Record<string, boolean>) => void;
+  onSubmit?: (userId: string, notificationSettings: Record<string, boolean>) => void;
 }
 
 export function NotificationSettingsDialog({
   open,
   onOpenChange,
   user,
-  onSubmit,
+  onSubmit = () => {},
 }: NotificationSettingsDialogProps) {
   const [settings, setSettings] = useState<Record<string, boolean>>(
     availableNotifications.reduce((acc, notification) => {

@@ -125,11 +125,7 @@ const AccountingPage = () => {
           </div>
           
           <InvoiceList 
-            invoices={invoices}
-            onView={handleViewInvoice}
-            onDownload={handleDownloadInvoice}
-            onPay={handlePayInvoice}
-            onSendReminder={handleSendReminder}
+            data={{ invoices }}
           />
           
           <UpcomingPayments invoices={invoices} />
@@ -138,8 +134,8 @@ const AccountingPage = () => {
 
       {selectedInvoice && (
         <InvoiceViewDialog
-          isOpen={viewDialogOpen}
-          onClose={closeViewDialog}
+          open={viewDialogOpen}
+          onOpenChange={setViewDialogOpen}
           invoice={selectedInvoice}
         />
       )}

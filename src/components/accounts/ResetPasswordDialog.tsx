@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { User } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,17 +17,17 @@ import { toast } from "sonner";
 interface ResetPasswordDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: User | null;
-  onSendResetLink: (userId: string, email: string) => void;
-  onUpdatePassword: (userId: string, password: string) => void;
+  user: { id: string; email: string; name: string } | null;
+  onSendResetLink?: (userId: string, email: string) => void;
+  onUpdatePassword?: (userId: string, password: string) => void;
 }
 
 export function ResetPasswordDialog({
   open,
   onOpenChange,
   user,
-  onSendResetLink,
-  onUpdatePassword,
+  onSendResetLink = () => {},
+  onUpdatePassword = () => {},
 }: ResetPasswordDialogProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

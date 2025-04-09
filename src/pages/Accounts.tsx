@@ -155,6 +155,48 @@ export default function Accounts() {
     setSelectedUser(user);
     setUserProfileDialogOpen(true);
   };
+  
+  const handleUpdateRoles = (userId: string, roles: Role[]) => {
+    // Update user role in state
+    setUsers(
+      users.map((u) =>
+        u.id === userId ? { ...u, role: roles[0] } : u
+      )
+    );
+    
+    toast({
+      title: "Role updated",
+      description: `User role has been updated to ${roles.join(", ")}.`,
+    });
+  };
+  
+  const handleUpdateNotifications = (userId: string, settings: Record<string, boolean>) => {
+    toast({
+      title: "Notification preferences updated",
+      description: "Notification settings have been saved successfully.",
+    });
+  };
+  
+  const handleUpdateClientBranding = (userId: string, data: any) => {
+    toast({
+      title: "Client branding updated",
+      description: "Client associations and branding settings have been saved.",
+    });
+  };
+  
+  const handleSendResetLink = (userId: string, email: string) => {
+    toast({
+      title: "Reset link sent",
+      description: `Password reset link has been sent to ${email}.`,
+    });
+  };
+  
+  const handleUpdatePassword = (userId: string, password: string) => {
+    toast({
+      title: "Password updated",
+      description: "The user's password has been changed successfully.",
+    });
+  };
 
   return (
     <AccountsLayout activeTab="clients">
@@ -211,13 +253,16 @@ export default function Accounts() {
             open={userProfileDialogOpen} 
             onOpenChange={setUserProfileDialogOpen}
             user={selectedUser}
+            onEdit={handleEditUser}
           />
           
           {/* Reset Password Dialog */}
           <ResetPasswordDialog
             open={resetPasswordDialogOpen}
             onOpenChange={setResetPasswordDialogOpen}
-            email={selectedUser.email}
+            user={selectedUser}
+            onSendResetLink={handleSendResetLink}
+            onUpdatePassword={handleUpdatePassword}
           />
           
           {/* Role Change Dialog */}
@@ -225,7 +270,7 @@ export default function Accounts() {
             open={roleChangeDialogOpen}
             onOpenChange={setRoleChangeDialogOpen}
             user={selectedUser}
-            currentRole={selectedUser.role}
+            onSubmit={handleUpdateRoles}
           />
           
           {/* Notification Settings Dialog */}
@@ -233,6 +278,7 @@ export default function Accounts() {
             open={notificationSettingsDialogOpen}
             onOpenChange={setNotificationSettingsDialogOpen}
             user={selectedUser}
+            onSubmit={handleUpdateNotifications}
           />
           
           {/* Link Client/Branding Dialog */}
@@ -240,6 +286,7 @@ export default function Accounts() {
             open={linkClientBrandingDialogOpen}
             onOpenChange={setLinkClientBrandingDialogOpen}
             user={selectedUser}
+            onSubmit={handleUpdateClientBranding}
           />
         </>
       )}

@@ -24,46 +24,53 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { InvoiceViewDialog } from '@/components/invoices/InvoiceViewDialog';
+import { InvoiceData } from '@/utils/invoiceUtils';
 
-export function InvoiceList({ data }) {
+interface InvoiceListProps {
+  data: {
+    invoices: InvoiceData[];
+  };
+}
+
+export function InvoiceList({ data }: InvoiceListProps) {
   const { toast } = useToast();
   const [viewInvoiceDialogOpen, setViewInvoiceDialogOpen] = React.useState(false);
-  const [selectedInvoice, setSelectedInvoice] = React.useState(null);
+  const [selectedInvoice, setSelectedInvoice] = React.useState<InvoiceData | null>(null);
 
-  const handleViewInvoice = (invoice) => {
+  const handleViewInvoice = (invoice: InvoiceData) => {
     setSelectedInvoice(invoice);
     setViewInvoiceDialogOpen(true);
   };
 
-  const handleDownloadInvoice = (invoice) => {
+  const handleDownloadInvoice = (invoice: InvoiceData) => {
     toast({
       title: "Invoice downloaded",
       description: `Invoice #${invoice.number} has been downloaded.`
     });
   };
 
-  const handleSendInvoice = (invoice) => {
+  const handleSendInvoice = (invoice: InvoiceData) => {
     toast({
       title: "Invoice sent",
       description: `Invoice #${invoice.number} has been sent to ${invoice.client}.`
     });
   };
 
-  const handlePrintInvoice = (invoice) => {
+  const handlePrintInvoice = (invoice: InvoiceData) => {
     toast({
       title: "Printing invoice",
       description: `Invoice #${invoice.number} sent to printer.`
     });
   };
 
-  const handleEditInvoice = (invoice) => {
+  const handleEditInvoice = (invoice: InvoiceData) => {
     toast({
       title: "Edit invoice",
       description: `Edit mode for invoice #${invoice.number}.`
     });
   };
 
-  const handleDeleteInvoice = (invoice) => {
+  const handleDeleteInvoice = (invoice: InvoiceData) => {
     toast({
       title: "Invoice deleted",
       description: `Invoice #${invoice.number} has been deleted.`,
@@ -71,7 +78,7 @@ export function InvoiceList({ data }) {
     });
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'Paid':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';

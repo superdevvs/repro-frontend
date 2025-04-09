@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { User } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ interface LinkClientBrandingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
-  onSubmit: (
+  onSubmit?: (
     userId: string, 
     data: { 
       linkedClients: string[],
@@ -51,7 +52,7 @@ export function LinkClientBrandingDialog({
   open,
   onOpenChange,
   user,
-  onSubmit,
+  onSubmit = () => {},
 }: LinkClientBrandingDialogProps) {
   const [linkedClients, setLinkedClients] = useState<string[]>([]);
   const [selectedClient, setSelectedClient] = useState<string>("");

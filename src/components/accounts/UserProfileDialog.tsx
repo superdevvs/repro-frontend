@@ -51,14 +51,14 @@ interface UserProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
-  onEdit: () => void;
+  onEdit?: () => void;
 }
 
 export function UserProfileDialog({
   open,
   onOpenChange,
   user,
-  onEdit,
+  onEdit = () => {},
 }: UserProfileDialogProps) {
   if (!user) return null;
 
