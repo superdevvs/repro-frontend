@@ -22,9 +22,10 @@ import {
   DialogDescription 
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon, Clock, Plus, X, User, ChevronDown } from "lucide-react";
+import { CalendarIcon, Clock, Plus, X, User, ChevronDown, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 // Sample photographers data
 const samplePhotographers = [
@@ -142,6 +143,10 @@ export default function Availability() {
   const [selectedAvailabilityId, setSelectedAvailabilityId] = useState<string | null>(null);
   const [selectedPhotographer, setSelectedPhotographer] = useState<string>("all");
   const { toast } = useToast();
+  const { user, role } = useAuth();
+  
+  // Check if user has admin access
+  const isAdmin = role === 'admin' || role === 'superadmin';
 
   // Get availabilities for the selected date and photographer
   const getSelectedDateAvailabilities = () => {
@@ -225,12 +230,22 @@ export default function Availability() {
     return photographer ? photographer.name : "Unknown";
   };
 
+  // Check if the user can edit availability (admin)
+  const canEditAvailability = isAdmin;
+
   return (
     <DashboardLayout>
       <div className="container px-4 sm:px-6 py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Photographer Availability Management</h1>
           <p className="text-muted-foreground">Manage availability schedules for photographers</p>
+          
+          {!canEditAvailability && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-4 mt-4 flex items-start">
+              <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+              <p>You are in view-only mode. Only administrators can edit photographer availability.</p>
+            </div>
+          )}
         </div>
         
         <div className="mb-6">
@@ -321,36 +336,38 @@ export default function Availability() {
                     </div>
                   </div>
 
-                  <div className="mt-4">
-                    <Button 
-                      onClick={() => {
-                        if (date) {
-                          if (selectedPhotographer === "all") {
+                  {canEditAvailability && (
+                    <div className="mt-4">
+                      <Button 
+                        onClick={() => {
+                          if (date) {
+                            if (selectedPhotographer === "all") {
+                              toast({
+                                title: "Select a photographer",
+                                description: "Please select a specific photographer before adding availability.",
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            setNewAvailability({
+                              ...newAvailability,
+                              photographerId: selectedPhotographer
+                            });
+                            setIsAddDialogOpen(true);
+                          } else {
                             toast({
-                              title: "Select a photographer",
-                              description: "Please select a specific photographer before adding availability.",
+                              title: "Select a date first",
+                              description: "Please select a date before adding availability.",
                               variant: "destructive",
                             });
-                            return;
                           }
-                          setNewAvailability({
-                            ...newAvailability,
-                            photographerId: selectedPhotographer
-                          });
-                          setIsAddDialogOpen(true);
-                        } else {
-                          toast({
-                            title: "Select a date first",
-                            description: "Please select a date before adding availability.",
-                            variant: "destructive",
-                          });
-                        }
-                      }}
-                      className="w-full"
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> Add Availability
-                    </Button>
-                  </div>
+                        }}
+                        className="w-full"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Add Availability
+                      </Button>
+                    </div>
+                  )}
                 </Card>
               </div>
               
@@ -434,18 +451,20 @@ export default function Availability() {
                         </div>
                       )}
                       
-                      <div className="mt-3 flex justify-end">
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedAvailabilityId(avail.id);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                        >
-                          <X className="h-4 w-4" /> Remove
-                        </Button>
-                      </div>
+                      {canEditAvailability && (
+                        <div className="mt-3 flex justify-end">
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedAvailabilityId(avail.id);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                          >
+                            <X className="h-4 w-4" /> Remove
+                          </Button>
+                        </div>
+                      )}
                     </Card>
                   ))}
                 </div>
@@ -454,7 +473,7 @@ export default function Availability() {
                   {date ? (
                     <>
                       <p>No availability set for this date.</p>
-                      {selectedPhotographer !== "all" && (
+                      {canEditAvailability && selectedPhotographer !== "all" && (
                         <Button 
                           variant="outline" 
                           className="mt-4" 
