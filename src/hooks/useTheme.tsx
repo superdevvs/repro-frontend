@@ -18,16 +18,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       // Check for saved theme preference
       const savedTheme = localStorage.getItem('theme') as Theme;
       
-      // If no saved preference, default to dark mode
+      // If no saved preference, check system preference
       if (!savedTheme) {
-        return 'dark';
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
       
       return savedTheme;
     }
     
     // Default theme for SSR
-    return 'dark';
+    return 'light';
   });
 
   useEffect(() => {
