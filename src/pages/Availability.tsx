@@ -410,7 +410,7 @@ export default function Availability() {
                   
                   const { hasAvailable, hasBooked, hasUnavailable, hasPartiallyAvailable } = 
                     getAvailabilityIndicator(date);
-                  
+                   
                   let bgColorClass = "";
                   if (hasBooked) bgColorClass = "bg-blue-100 hover:bg-blue-200";
                   else if (hasAvailable) bgColorClass = "bg-green-100 hover:bg-green-200";
@@ -419,8 +419,9 @@ export default function Availability() {
                   
                   return (
                     <button
+                      type="button"
+                      className={`${bgColorClass}`}
                       {...props}
-                      className={`${props.className || ''} ${bgColorClass}`}
                     >
                       {date.getDate()}
                     </button>
@@ -685,4 +686,3 @@ export default function Availability() {
     </DashboardLayout>
   );
 }
-
