@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Calendar } from "@/components/ui/calendar";
@@ -261,9 +260,8 @@ export default function Availability() {
               <Select 
                 value={selectedPhotographer} 
                 onValueChange={setSelectedPhotographer}
-                className="w-full md:w-[250px]"
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full md:w-[250px]">
                   <SelectValue placeholder="Select a photographer" />
                 </SelectTrigger>
                 <SelectContent>
