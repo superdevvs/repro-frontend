@@ -45,6 +45,15 @@ const AccountingPage = () => {
     setSelectedInvoice(invoice);
     setPaymentDialogOpen(true);
   };
+  
+  const handleEditInvoice = (invoice: InvoiceData) => {
+    toast({
+      title: "Edit Invoice",
+      description: `Editing invoice ${invoice.id}.`,
+      variant: "default",
+    });
+    // In a real app, this would open an edit dialog
+  };
 
   const closeViewDialog = () => {
     setViewDialogOpen(false);
@@ -126,6 +135,11 @@ const AccountingPage = () => {
           
           <InvoiceList 
             data={{ invoices }}
+            onView={handleViewInvoice}
+            onEdit={handleEditInvoice}
+            onDownload={handleDownloadInvoice}
+            onPay={handlePayInvoice}
+            onSendReminder={handleSendReminder}
           />
           
           <UpcomingPayments invoices={invoices} />
@@ -134,8 +148,8 @@ const AccountingPage = () => {
 
       {selectedInvoice && (
         <InvoiceViewDialog
-          open={viewDialogOpen}
-          onOpenChange={setViewDialogOpen}
+          isOpen={viewDialogOpen}
+          onClose={closeViewDialog}
           invoice={selectedInvoice}
         />
       )}

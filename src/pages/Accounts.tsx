@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { AccountsLayout } from "@/components/layout/AccountsLayout";
 import { AccountCard } from "@/components/accounts/AccountCard";
@@ -192,7 +193,7 @@ export default function Accounts() {
   };
 
   return (
-    <AccountsLayout activeTab="clients">
+    <AccountsLayout>
       <div className="container px-4 sm:px-6 pb-6">
         <AccountsHeader
           onAddAccount={handleAddAccount}
@@ -202,7 +203,7 @@ export default function Accounts() {
           selectedFilter={filterRole}
         />
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {filteredUsers.map((user) => (
             <AccountCard
               key={user.id}

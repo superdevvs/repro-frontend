@@ -118,16 +118,14 @@ export function BookingSummary({
           </div>
         )}
 
-        {isLastStep && (
-          <div className="pt-4 mt-4 border-t border-[#1e2d4a]">
-            <Button 
-              onClick={onSubmit} 
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition-colors"
-            >
-              <Check className="mr-2 h-4 w-4" /> Book Shoot
-            </Button>
-          </div>
-        )}
+        <div className="pt-4 mt-4 border-t border-[#1e2d4a]">
+          <Button 
+            onClick={onSubmit} 
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition-colors"
+          >
+            <Check className="mr-2 h-4 w-4" /> Book Shoot
+          </Button>
+        </div>
       </div>
     </motion.div>
   );

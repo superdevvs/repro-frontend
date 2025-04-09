@@ -22,13 +22,34 @@ import {
   DialogDescription 
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon, Clock, Plus, X } from "lucide-react";
+import { CalendarIcon, Clock, Plus, X, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Sample photographers data
+const samplePhotographers = [
+  {
+    id: "1",
+    name: "John Smith",
+    avatar: "/placeholder.svg",
+  },
+  {
+    id: "2", 
+    name: "Sarah Wilson",
+    avatar: "/placeholder.svg",
+  },
+  {
+    id: "3",
+    name: "Michael Brown",
+    avatar: "/placeholder.svg",
+  }
+];
 
 // Sample availability periods
 const initialAvailabilities = [
   {
     id: "1",
+    photographerId: "1",
     date: "2025-04-10",
     startTime: "09:00",
     endTime: "17:00",
@@ -36,6 +57,7 @@ const initialAvailabilities = [
   },
   {
     id: "2",
+    photographerId: "1",
     date: "2025-04-11",
     startTime: "09:00",
     endTime: "17:00",
@@ -43,6 +65,7 @@ const initialAvailabilities = [
   },
   {
     id: "3",
+    photographerId: "2",
     date: "2025-04-12",
     startTime: "10:00",
     endTime: "15:00",
@@ -51,6 +74,7 @@ const initialAvailabilities = [
   },
   {
     id: "4",
+    photographerId: "2",
     date: "2025-04-15",
     startTime: "13:00",
     endTime: "18:00",
@@ -62,6 +86,7 @@ type AvailabilityStatus = "available" | "booked" | "unavailable";
 
 interface Availability {
   id: string;
+  photographerId: string;
   date: string; // ISO format: YYYY-MM-DD
   startTime: string; 
   endTime: string;
@@ -80,25 +105,19 @@ export default function Availability() {
   });
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedAvailabilityId, setSelectedAvailabilityId] = useState<string | null>(null);
+  const [selectedPhotographer, setSelectedPhotographer] = useState<string>("1");
   const { toast } = useToast();
 
-  // Get availabilities for the selected date
+  // Get availabilities for the selected date and photographer
   const getSelectedDateAvailabilities = () => {
     if (!date) return [];
     
     const dateString = format(date, "yyyy-MM-dd");
-    return availabilities.filter(avail => avail.date === dateString);
+    return availabilities.filter(avail => 
+      avail.date === dateString && avail.photographerId === selectedPhotographer);
   };
 
   const selectedDateAvailabilities = getSelectedDateAvailabilities();
-
-  // Determine which dates have availabilities
-  const availabilityDates = availabilities.map(avail => {
-    if (isValid(new Date(avail.date))) {
-      return new Date(avail.date);
-    }
-    return undefined;
-  }).filter(Boolean) as Date[];
 
   // Handle adding a new availability
   const handleAddAvailability = () => {
@@ -106,6 +125,7 @@ export default function Availability() {
     
     const newAvail: Availability = {
       id: Date.now().toString(),
+      photographerId: selectedPhotographer,
       date: format(date, "yyyy-MM-dd"),
       startTime: newAvailability.startTime || "09:00",
       endTime: newAvailability.endTime || "17:00",
@@ -142,10 +162,12 @@ export default function Availability() {
     });
   };
 
-  // Function to determine if a date has availability
+  // Function to determine if a date has availability for the selected photographer
   const getAvailabilityIndicator = (day: Date) => {
     const dateString = format(day, "yyyy-MM-dd");
-    const dayAvailabilities = availabilities.filter(avail => avail.date === dateString);
+    const dayAvailabilities = availabilities.filter(
+      avail => avail.date === dateString && avail.photographerId === selectedPhotographer
+    );
     
     const hasAvailable = dayAvailabilities.some(avail => avail.status === "available");
     const hasBooked = dayAvailabilities.some(avail => avail.status === "booked");
@@ -153,158 +175,184 @@ export default function Availability() {
     return { hasAvailable, hasBooked };
   };
 
-  // Create styles for calendar days
-  const getDayClassName = (day: Date) => {
+  // Day content renderer for the calendar
+  const renderDay = (day: Date) => {
     const { hasAvailable, hasBooked } = getAvailabilityIndicator(day);
-    const baseClass = "relative";
-    const indicatorClass = hasAvailable || hasBooked ? 
-      "after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:flex after:gap-1" : "";
     
-    const availableDotClass = hasAvailable ? 
-      "after:content-[''] after:h-1.5 after:w-1.5 after:rounded-full after:bg-green-500 after:inline-block" : "";
-    
-    const bookedDotClass = hasBooked ? 
-      "after:content-[''] after:h-1.5 after:w-1.5 after:rounded-full after:bg-blue-500 after:inline-block after:ml-1" : "";
-    
-    return `${baseClass} ${indicatorClass} ${availableDotClass} ${bookedDotClass}`;
+    return (
+      <div className="relative w-full h-full">
+        <div>{day.getDate()}</div>
+        {(hasAvailable || hasBooked) && (
+          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+            {hasAvailable && <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>}
+            {hasBooked && <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <DashboardLayout>
       <div className="container px-4 sm:px-6 py-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">Availability Management</h1>
-          <p className="text-muted-foreground">Manage your availability for bookings</p>
+          <h1 className="text-2xl font-bold">Photographer Availability Management</h1>
+          <p className="text-muted-foreground">Manage availability schedules for photographers</p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Calendar */}
-          <div className="lg:col-span-2">
-            <Card className="p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Schedule</h2>
-                <Button 
-                  onClick={() => {
-                    if (date) {
-                      setNewAvailability({
-                        ...newAvailability,
-                      });
-                      setIsAddDialogOpen(true);
-                    } else {
-                      toast({
-                        title: "Select a date first",
-                        description: "Please select a date before adding availability.",
-                        variant: "destructive",
-                      });
-                    }
-                  }}
+        <Tabs defaultValue="1" className="w-full mb-6">
+          <div className="mb-4">
+            <h2 className="text-sm font-medium mb-2">Select Photographer</h2>
+            <TabsList className="grid grid-cols-3 gap-2">
+              {samplePhotographers.map(photographer => (
+                <TabsTrigger 
+                  key={photographer.id} 
+                  value={photographer.id}
+                  onClick={() => setSelectedPhotographer(photographer.id)}
+                  className="flex items-center gap-2"
                 >
-                  <Plus className="mr-2 h-4 w-4" /> Add Availability
-                </Button>
-              </div>
-              
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="rounded-md border shadow p-3 pointer-events-auto"
-                showOutsideDays={true}
-                modifiersClassNames={{
-                  selected: 'bg-primary text-primary-foreground',
-                }}
-                modifiersStyles={{
-                  selected: {
-                    fontWeight: "bold"
-                  }
-                }}
-              />
-              
-              {/* Availability Legend */}
-              <div className="flex items-center gap-4 justify-center mt-4">
-                <div className="flex items-center gap-1">
-                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                  <span className="text-xs text-muted-foreground">Available</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                  <span className="text-xs text-muted-foreground">Booked</span>
-                </div>
-              </div>
-            </Card>
+                  <User className="h-4 w-4" />
+                  {photographer.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
           </div>
-          
-          {/* Selected Date Availabilities */}
-          <div>
-            <Card className="p-4">
-              <h2 className="text-lg font-semibold mb-4">
-                {date ? format(date, "MMMM d, yyyy") : "Select a Date"}
-              </h2>
-              
-              {selectedDateAvailabilities.length > 0 ? (
-                <div className="space-y-3">
-                  {selectedDateAvailabilities.map((avail) => (
-                    <Card key={avail.id} className="p-3 relative">
-                      <Badge 
-                        className={`absolute top-2 right-2 ${
-                          avail.status === 'available' ? 'bg-green-500' : 
-                          avail.status === 'booked' ? 'bg-blue-500' : 'bg-gray-500'
-                        }`}
-                      >
-                        {avail.status}
-                      </Badge>
-                      
-                      <div className="flex items-center gap-2 mt-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{avail.startTime} - {avail.endTime}</span>
-                      </div>
-                      
-                      {avail.shootTitle && (
-                        <div className="text-sm mt-2 font-medium">
-                          {avail.shootTitle}
-                        </div>
-                      )}
-                      
-                      <div className="mt-3 flex justify-end">
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedAvailabilityId(avail.id);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                        >
-                          <X className="h-4 w-4" /> Remove
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  {date ? (
-                    <>
-                      <p>No availability set for this date.</p>
+
+          {samplePhotographers.map(photographer => (
+            <TabsContent key={photographer.id} value={photographer.id} className="p-0">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Calendar */}
+                <div className="lg:col-span-2">
+                  <Card className="p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-lg font-semibold">{photographer.name}'s Schedule</h2>
                       <Button 
-                        variant="outline" 
-                        className="mt-4" 
                         onClick={() => {
-                          setNewAvailability({
-                            ...newAvailability,
-                          });
-                          setIsAddDialogOpen(true);
+                          if (date) {
+                            setNewAvailability({
+                              ...newAvailability,
+                            });
+                            setIsAddDialogOpen(true);
+                          } else {
+                            toast({
+                              title: "Select a date first",
+                              description: "Please select a date before adding availability.",
+                              variant: "destructive",
+                            });
+                          }
                         }}
                       >
                         <Plus className="mr-2 h-4 w-4" /> Add Availability
                       </Button>
-                    </>
-                  ) : (
-                    <p>Select a date to view or add availability.</p>
-                  )}
+                    </div>
+                    
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                      className="rounded-md border shadow p-3 pointer-events-auto"
+                      showOutsideDays={true}
+                      modifiersClassNames={{
+                        selected: 'bg-primary text-primary-foreground',
+                      }}
+                      modifiersStyles={{
+                        selected: {
+                          fontWeight: "bold"
+                        }
+                      }}
+                    />
+                    
+                    {/* Availability Legend */}
+                    <div className="flex items-center gap-4 justify-center mt-4">
+                      <div className="flex items-center gap-1">
+                        <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                        <span className="text-xs text-muted-foreground">Available</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                        <span className="text-xs text-muted-foreground">Booked</span>
+                      </div>
+                    </div>
+                  </Card>
                 </div>
-              )}
-            </Card>
-          </div>
-        </div>
+                
+                {/* Selected Date Availabilities */}
+                <div>
+                  <Card className="p-4">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-lg font-semibold mb-4">
+                        {date ? format(date, "MMMM d, yyyy") : "Select a Date"}
+                      </h2>
+                    </div>
+                    
+                    {selectedDateAvailabilities.length > 0 ? (
+                      <div className="space-y-3">
+                        {selectedDateAvailabilities.map((avail) => (
+                          <Card key={avail.id} className="p-3 relative">
+                            <Badge 
+                              className={`absolute top-2 right-2 ${
+                                avail.status === 'available' ? 'bg-green-500' : 
+                                avail.status === 'booked' ? 'bg-blue-500' : 'bg-gray-500'
+                              }`}
+                            >
+                              {avail.status}
+                            </Badge>
+                            
+                            <div className="flex items-center gap-2 mt-2">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span>{avail.startTime} - {avail.endTime}</span>
+                            </div>
+                            
+                            {avail.shootTitle && (
+                              <div className="text-sm mt-2 font-medium">
+                                {avail.shootTitle}
+                              </div>
+                            )}
+                            
+                            <div className="mt-3 flex justify-end">
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedAvailabilityId(avail.id);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                              >
+                                <X className="h-4 w-4" /> Remove
+                              </Button>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        {date ? (
+                          <>
+                            <p>No availability set for this date.</p>
+                            <Button 
+                              variant="outline" 
+                              className="mt-4" 
+                              onClick={() => {
+                                setNewAvailability({
+                                  ...newAvailability,
+                                });
+                                setIsAddDialogOpen(true);
+                              }}
+                            >
+                              <Plus className="mr-2 h-4 w-4" /> Add Availability
+                            </Button>
+                          </>
+                        ) : (
+                          <p>Select a date to view or add availability.</p>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
         
         {/* Add Availability Dialog */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -312,7 +360,7 @@ export default function Availability() {
             <DialogHeader>
               <DialogTitle>Add Availability</DialogTitle>
               <DialogDescription>
-                Set your availability for {date ? format(date, "MMMM d, yyyy") : "the selected date"}.
+                Set availability for {date ? format(date, "MMMM d, yyyy") : "the selected date"}.
               </DialogDescription>
             </DialogHeader>
             

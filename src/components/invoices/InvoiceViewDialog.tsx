@@ -1,114 +1,75 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { DownloadIcon } from "lucide-react";
-import { InvoiceData, generateInvoicePDF } from '@/utils/invoiceUtils';
-import { format } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InvoiceData } from '@/utils/invoiceUtils';
 
 interface InvoiceViewDialogProps {
-  invoice: InvoiceData | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  invoice: InvoiceData;
 }
 
-export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDialogProps) {
-  const { toast } = useToast();
-
-  if (!invoice) return null;
-
-  const handleDownloadInvoice = () => {
-    try {
-      generateInvoicePDF(invoice);
-      toast({
-        title: "Invoice Generated",
-        description: `Invoice ${invoice.id} has been downloaded successfully.`,
-        variant: "default",
-      });
-    } catch (error) {
-      console.error("Error generating invoice:", error);
-      toast({
-        title: "Error Generating Invoice",
-        description: "There was a problem generating the invoice. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Paid</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending</Badge>;
-      case 'overdue':
-        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Overdue</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
-
+export function InvoiceViewDialog({ isOpen, onClose, invoice }: InvoiceViewDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex justify-between items-center">
-            <span>Invoice #{invoice.id}</span>
-            {getStatusBadge(invoice.status)}
-          </DialogTitle>
+          <DialogTitle>Invoice #{invoice.number}</DialogTitle>
         </DialogHeader>
-        
-        <div className="space-y-4 py-4">
-          <div className="space-y-1">
-            <h3 className="font-medium text-sm">Client</h3>
-            <p>{invoice.client}</p>
-          </div>
-          
-          <div className="space-y-1">
-            <h3 className="font-medium text-sm">Property</h3>
-            <p>{invoice.property}</p>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <h3 className="font-medium text-sm">Invoice Date</h3>
-              <p>{format(new Date(invoice.date), "MM/dd/yyyy")}</p>
+        <div className="py-4">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Client</p>
+                <p>{invoice.client}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Property</p>
+                <p>{invoice.property}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Date</p>
+                <p>{invoice.date}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Due Date</p>
+                <p>{invoice.dueDate}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Status</p>
+                <p className={`capitalize ${
+                  invoice.status === 'paid' 
+                    ? 'text-green-600 dark:text-green-400'
+                    : invoice.status === 'overdue' 
+                      ? 'text-red-600 dark:text-red-400'
+                      : 'text-yellow-600 dark:text-yellow-400'
+                }`}>
+                  {invoice.status}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Amount</p>
+                <p className="font-medium">${invoice.amount}</p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <h3 className="font-medium text-sm">Due Date</h3>
-              <p>{format(new Date(invoice.dueDate), "MM/dd/yyyy")}</p>
+
+            <div className="pt-4 border-t">
+              <p className="text-sm font-medium text-muted-foreground mb-2">Services</p>
+              <ul className="list-disc list-inside space-y-1">
+                {invoice.services.map((service, i) => (
+                  <li key={i} className="text-sm">{service}</li>
+                ))}
+              </ul>
             </div>
-          </div>
-          
-          <div className="space-y-1">
-            <h3 className="font-medium text-sm">Services</h3>
-            <ul className="list-disc pl-5">
-              {invoice.services.map((service, index) => (
-                <li key={index}>{service}</li>
-              ))}
-            </ul>
-          </div>
-          
-          <div className="space-y-1">
-            <h3 className="font-medium text-sm">Payment Method</h3>
-            <p>{invoice.paymentMethod}</p>
-          </div>
-          
-          <div className="space-y-1">
-            <h3 className="font-medium text-sm">Amount</h3>
-            <p className="text-lg font-bold">${invoice.amount.toFixed(2)}</p>
+
+            {invoice.status === 'paid' && (
+              <div className="pt-4 border-t">
+                <p className="text-sm font-medium text-muted-foreground">Payment Method</p>
+                <p>{invoice.paymentMethod}</p>
+              </div>
+            )}
           </div>
         </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-          <Button onClick={handleDownloadInvoice}>
-            <DownloadIcon className="h-4 w-4 mr-2" />
-            Download PDF
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
