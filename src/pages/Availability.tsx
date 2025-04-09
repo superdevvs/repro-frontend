@@ -145,6 +145,14 @@ interface Availability {
   shootTitle?: string;
 }
 
+// New interface to store weekly schedules by photographer ID
+interface WeeklyScheduleItem {
+  day: string;
+  active: boolean;
+  startTime: string;
+  endTime: string;
+}
+
 export default function Availability() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [availabilities, setAvailabilities] = useState<Availability[]>(initialAvailabilities);
@@ -164,16 +172,79 @@ export default function Availability() {
   const { toast } = useToast();
   const { user, role } = useAuth();
   
-  // Weekly schedule data
-  const [weeklySchedule, setWeeklySchedule] = useState([
-    { day: 'Mon', active: true, startTime: '9:00', endTime: '17:00' },
-    { day: 'Tue', active: true, startTime: '9:00', endTime: '17:00' },
-    { day: 'Wed', active: true, startTime: '9:00', endTime: '17:00' },
-    { day: 'Thu', active: true, startTime: '9:00', endTime: '17:00' },
-    { day: 'Fri', active: true, startTime: '9:00', endTime: '17:00' },
-    { day: 'Sat', active: false, startTime: '10:00', endTime: '15:00' },
-    { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
-  ]);
+  // Store weekly schedules by photographer ID
+  const [photographerWeeklySchedules, setPhotographerWeeklySchedules] = useState<Record<string, WeeklyScheduleItem[]>>({
+    "1": [
+      { day: 'Mon', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Tue', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Wed', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Thu', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Fri', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Sat', active: false, startTime: '10:00', endTime: '15:00' },
+      { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
+    ],
+    "2": [
+      { day: 'Mon', active: true, startTime: '8:00', endTime: '16:00' },
+      { day: 'Tue', active: true, startTime: '8:00', endTime: '16:00' },
+      { day: 'Wed', active: true, startTime: '8:00', endTime: '16:00' },
+      { day: 'Thu', active: true, startTime: '8:00', endTime: '16:00' },
+      { day: 'Fri', active: true, startTime: '8:00', endTime: '16:00' },
+      { day: 'Sat', active: true, startTime: '10:00', endTime: '14:00' },
+      { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
+    ],
+    "3": [
+      { day: 'Mon', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Tue', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Wed', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Thu', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Fri', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Sat', active: false, startTime: '10:00', endTime: '15:00' },
+      { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
+    ],
+    "4": [
+      { day: 'Mon', active: true, startTime: '10:00', endTime: '18:00' },
+      { day: 'Tue', active: true, startTime: '10:00', endTime: '18:00' },
+      { day: 'Wed', active: true, startTime: '10:00', endTime: '18:00' },
+      { day: 'Thu', active: true, startTime: '10:00', endTime: '18:00' },
+      { day: 'Fri', active: true, startTime: '10:00', endTime: '18:00' },
+      { day: 'Sat', active: false, startTime: '10:00', endTime: '15:00' },
+      { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
+    ],
+    "5": [
+      { day: 'Mon', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Tue', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Wed', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Thu', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Fri', active: true, startTime: '9:00', endTime: '17:00' },
+      { day: 'Sat', active: false, startTime: '10:00', endTime: '15:00' },
+      { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
+    ],
+  });
+  
+  // Get current weekly schedule for selected photographer
+  const getCurrentWeeklySchedule = () => {
+    if (selectedPhotographer === "all") {
+      return [
+        { day: 'Mon', active: false, startTime: '9:00', endTime: '17:00' },
+        { day: 'Tue', active: false, startTime: '9:00', endTime: '17:00' },
+        { day: 'Wed', active: false, startTime: '9:00', endTime: '17:00' },
+        { day: 'Thu', active: false, startTime: '9:00', endTime: '17:00' },
+        { day: 'Fri', active: false, startTime: '9:00', endTime: '17:00' },
+        { day: 'Sat', active: false, startTime: '10:00', endTime: '15:00' },
+        { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
+      ];
+    }
+    
+    return photographerWeeklySchedules[selectedPhotographer] || [
+      { day: 'Mon', active: false, startTime: '9:00', endTime: '17:00' },
+      { day: 'Tue', active: false, startTime: '9:00', endTime: '17:00' },
+      { day: 'Wed', active: false, startTime: '9:00', endTime: '17:00' },
+      { day: 'Thu', active: false, startTime: '9:00', endTime: '17:00' },
+      { day: 'Fri', active: false, startTime: '9:00', endTime: '17:00' },
+      { day: 'Sat', active: false, startTime: '10:00', endTime: '15:00' },
+      { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
+    ];
+  };
   
   // Check if user has admin access
   const isAdmin = role === 'admin' || role === 'superadmin';
@@ -301,10 +372,28 @@ export default function Availability() {
 
   // Save weekly schedule changes
   const saveWeeklySchedule = () => {
+    if (selectedPhotographer === "all") {
+      toast({
+        title: "Select a photographer",
+        description: "Please select a specific photographer before saving schedule.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Get current weekly schedule being edited
+    const currentSchedule = getCurrentWeeklySchedule();
+    
+    // Update weekly schedule for the selected photographer only
+    setPhotographerWeeklySchedules(prev => ({
+      ...prev,
+      [selectedPhotographer]: currentSchedule
+    }));
+    
     setEditingWeeklySchedule(false);
     toast({
       title: "Schedule saved",
-      description: `Weekly schedule for ${selectedPhotographer === "all" ? "all photographers" : getPhotographerName(selectedPhotographer)} has been updated.`,
+      description: `Weekly schedule for ${getPhotographerName(selectedPhotographer)} has been updated.`,
     });
   };
 
@@ -321,6 +410,37 @@ export default function Availability() {
 
   // Check if the user can edit availability (admin)
   const canEditAvailability = isAdmin;
+  
+  // Update weekly schedule for the current photographer
+  const updateCurrentWeeklySchedule = (index: number, field: keyof WeeklyScheduleItem, value: any) => {
+    if (selectedPhotographer === "all") return;
+    
+    const updatedSchedules = {...photographerWeeklySchedules};
+    if (!updatedSchedules[selectedPhotographer]) {
+      // Initialize default schedule if not exists
+      updatedSchedules[selectedPhotographer] = [
+        { day: 'Mon', active: false, startTime: '9:00', endTime: '17:00' },
+        { day: 'Tue', active: false, startTime: '9:00', endTime: '17:00' },
+        { day: 'Wed', active: false, startTime: '9:00', endTime: '17:00' },
+        { day: 'Thu', active: false, startTime: '9:00', endTime: '17:00' },
+        { day: 'Fri', active: false, startTime: '9:00', endTime: '17:00' },
+        { day: 'Sat', active: false, startTime: '10:00', endTime: '15:00' },
+        { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
+      ];
+    }
+    
+    // Update specific field
+    updatedSchedules[selectedPhotographer] = [
+      ...updatedSchedules[selectedPhotographer].slice(0, index),
+      {
+        ...updatedSchedules[selectedPhotographer][index],
+        [field]: value
+      },
+      ...updatedSchedules[selectedPhotographer].slice(index + 1)
+    ];
+    
+    setPhotographerWeeklySchedules(updatedSchedules);
+  };
 
   return (
     <DashboardLayout>
@@ -369,7 +489,13 @@ export default function Availability() {
               
               <Select 
                 value={selectedPhotographer} 
-                onValueChange={setSelectedPhotographer}
+                onValueChange={(value) => {
+                  setSelectedPhotographer(value);
+                  // Reset editing states when changing photographer
+                  setEditingAvailability(null);
+                  setEditedAvailability({});
+                  setEditingWeeklySchedule(false);
+                }}
               >
                 <SelectTrigger className="w-full md:w-[250px]">
                   <SelectValue placeholder="Select a photographer" />
@@ -449,7 +575,7 @@ export default function Availability() {
                 </div>
               </div>
 
-              {canEditAvailability && editModeOpen && (
+              {canEditAvailability && editModeOpen && selectedPhotographer !== "all" && date && (
                 <div className="mt-4">
                   <Button 
                     onClick={() => {
@@ -518,7 +644,7 @@ export default function Availability() {
                 </div>
                 
                 <div className="grid grid-cols-1 gap-2 mt-2">
-                  {weeklySchedule.map((day, index) => (
+                  {getCurrentWeeklySchedule().map((day, index) => (
                     <div 
                       key={day.day} 
                       className={`border rounded-lg p-2 ${index > 4 ? 'bg-gray-50 dark:bg-gray-800/30' : ''}`}
@@ -530,9 +656,7 @@ export default function Availability() {
                           <Switch 
                             checked={day.active}
                             onCheckedChange={(checked) => {
-                              setWeeklySchedule(prev => 
-                                prev.map((d, i) => i === index ? {...d, active: checked} : d)
-                              );
+                              updateCurrentWeeklySchedule(index, 'active', checked);
                             }}
                           />
                         ) : (
@@ -549,9 +673,7 @@ export default function Availability() {
                             <TimeSelect 
                               value={day.startTime}
                               onChange={(time) => {
-                                setWeeklySchedule(prev => 
-                                  prev.map((d, i) => i === index ? {...d, startTime: time} : d)
-                                );
+                                updateCurrentWeeklySchedule(index, 'startTime', time);
                               }}
                               className="mt-1"
                             />
@@ -561,9 +683,7 @@ export default function Availability() {
                             <TimeSelect 
                               value={day.endTime}
                               onChange={(time) => {
-                                setWeeklySchedule(prev => 
-                                  prev.map((d, i) => i === index ? {...d, endTime: time} : d)
-                                );
+                                updateCurrentWeeklySchedule(index, 'endTime', time);
                               }}
                               className="mt-1"
                             />
