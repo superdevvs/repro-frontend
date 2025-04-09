@@ -1,9 +1,11 @@
+
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 
 // Invoice data type
 export interface InvoiceData {
   id: string;
+  number: string; // Adding the number property that's being used in InvoiceList.tsx
   client: string;
   property: string;
   date: string;

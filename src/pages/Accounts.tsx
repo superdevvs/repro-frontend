@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { AccountsLayout } from "@/components/layout/AccountsLayout";
 import { AccountCard } from "@/components/accounts/AccountCard";
@@ -12,7 +11,6 @@ import { LinkClientBrandingDialog } from "@/components/accounts/LinkClientBrandi
 import { UserProfileDialog } from "@/components/accounts/UserProfileDialog";
 import { useAuth } from "@/components/auth/AuthProvider";
 
-// Sample users data - in a real app, this would come from an API or context
 const sampleUsersData = [
   {
     id: "1",
@@ -72,7 +70,6 @@ export default function Accounts() {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   
-  // Dialog states
   const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
   const [roleChangeDialogOpen, setRoleChangeDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
@@ -81,7 +78,6 @@ export default function Accounts() {
   const [userProfileDialogOpen, setUserProfileDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   
-  // Filter users based on role and search query
   const filteredUsers = users.filter((user) => {
     const roleMatch = filterRole === "all" || user.role === filterRole;
     const searchMatch = searchQuery === "" || 
@@ -91,7 +87,6 @@ export default function Accounts() {
     return roleMatch && searchMatch;
   });
 
-  // Event handlers
   const handleAddAccount = () => {
     setSelectedUser(null);
     setEditUserDialogOpen(true);
@@ -115,7 +110,6 @@ export default function Accounts() {
   };
 
   const handleToggleStatus = (user: any) => {
-    // Update user status in the state
     setUsers(
       users.map((u) =>
         u.id === user.id ? { ...u, active: !u.active } : u
@@ -157,7 +151,6 @@ export default function Accounts() {
   };
   
   const handleUpdateRoles = (userId: string, roles: Role[]) => {
-    // Update user role in state
     setUsers(
       users.map((u) =>
         u.id === userId ? { ...u, role: roles[0] } : u
@@ -245,18 +238,15 @@ export default function Accounts() {
         </div>
       </div>
       
-      {/* Dialogs */}
       {selectedUser && (
         <>
-          {/* User Profile Dialog */}
           <UserProfileDialog 
             open={userProfileDialogOpen} 
             onOpenChange={setUserProfileDialogOpen}
             user={selectedUser}
-            onEdit={handleEditUser}
+            onEdit={() => handleEditUser(selectedUser)}
           />
           
-          {/* Reset Password Dialog */}
           <ResetPasswordDialog
             open={resetPasswordDialogOpen}
             onOpenChange={setResetPasswordDialogOpen}
@@ -265,7 +255,6 @@ export default function Accounts() {
             onUpdatePassword={handleUpdatePassword}
           />
           
-          {/* Role Change Dialog */}
           <RoleChangeDialog
             open={roleChangeDialogOpen}
             onOpenChange={setRoleChangeDialogOpen}
@@ -273,7 +262,6 @@ export default function Accounts() {
             onSubmit={handleUpdateRoles}
           />
           
-          {/* Notification Settings Dialog */}
           <NotificationSettingsDialog
             open={notificationSettingsDialogOpen}
             onOpenChange={setNotificationSettingsDialogOpen}
@@ -281,7 +269,6 @@ export default function Accounts() {
             onSubmit={handleUpdateNotifications}
           />
           
-          {/* Link Client/Branding Dialog */}
           <LinkClientBrandingDialog
             open={linkClientBrandingDialogOpen}
             onOpenChange={setLinkClientBrandingDialogOpen}

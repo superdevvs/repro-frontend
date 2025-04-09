@@ -5,6 +5,7 @@ import { InvoiceData } from '@/utils/invoiceUtils';
 export const initialInvoices: InvoiceData[] = [
   {
     id: 'INV-001',
+    number: 'INV-001',
     client: 'ABC Properties',
     property: '123 Main Street, Anytown',
     date: '2023-05-15',
@@ -16,6 +17,7 @@ export const initialInvoices: InvoiceData[] = [
   },
   {
     id: 'INV-002',
+    number: 'INV-002',
     client: 'XYZ Realty',
     property: '456 Park Avenue, Somewhere',
     date: '2023-05-16',
@@ -27,6 +29,7 @@ export const initialInvoices: InvoiceData[] = [
   },
   {
     id: 'INV-003',
+    number: 'INV-003',
     client: 'John Smith Homes',
     property: '789 Ocean Drive, Beachtown',
     date: '2023-05-17',
@@ -38,6 +41,7 @@ export const initialInvoices: InvoiceData[] = [
   },
   {
     id: 'INV-004',
+    number: 'INV-004',
     client: 'Coastal Properties',
     property: '101 Forest Lane, Woodland',
     date: '2023-05-18',
@@ -49,6 +53,7 @@ export const initialInvoices: InvoiceData[] = [
   },
   {
     id: 'INV-005',
+    number: 'INV-005',
     client: 'ABC Properties',
     property: '202 Hill Avenue, Heights',
     date: '2023-05-19',
@@ -60,6 +65,7 @@ export const initialInvoices: InvoiceData[] = [
   },
   {
     id: 'INV-006',
+    number: 'INV-006',
     client: 'United Real Estate',
     property: '505 River Road, Lakeside',
     date: '2023-05-20',
@@ -71,6 +77,7 @@ export const initialInvoices: InvoiceData[] = [
   },
   {
     id: 'INV-007',
+    number: 'INV-007',
     client: 'Summit Properties',
     property: '807 Mountain View, Highland',
     date: '2023-05-21',
@@ -82,6 +89,7 @@ export const initialInvoices: InvoiceData[] = [
   },
   {
     id: 'INV-008',
+    number: 'INV-008',
     client: 'Golden Gate Realty',
     property: '909 Golden Avenue, Westside',
     date: '2023-05-22',
@@ -93,6 +101,7 @@ export const initialInvoices: InvoiceData[] = [
   },
   {
     id: 'INV-009',
+    number: 'INV-009',
     client: 'Modern Homes Agency',
     property: '1010 Modern Lane, Newtown',
     date: '2023-05-23',
@@ -104,6 +113,7 @@ export const initialInvoices: InvoiceData[] = [
   },
   {
     id: 'INV-010',
+    number: 'INV-010',
     client: 'Luxury Living',
     property: '1212 Luxury Drive, Highend',
     date: '2023-05-24',
