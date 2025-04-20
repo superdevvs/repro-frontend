@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
@@ -93,7 +92,7 @@
   }
 
   html, body, #root {
-    @apply h-full w-full overflow-hidden;
+    @apply h-full w-full;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -121,7 +120,6 @@
     @apply text-lg md:text-xl;
   }
 
-  /* Custom utility classes */
   .text-balance {
     text-wrap: balance;
   }
@@ -134,7 +132,6 @@
     @apply shadow-glass-hover;
   }
 
-  /* New glass button utilities */
   .glass-button {
     @apply backdrop-blur-lg bg-background/20 border border-white/20 shadow-lg text-primary-foreground;
     @apply hover:bg-background/30 hover:border-white/30 transition-all duration-300;
@@ -153,7 +150,6 @@
     @apply shadow-neo-inset;
   }
 
-  /* Page transition styles */
   .page-enter {
     @apply opacity-0;
   }
@@ -170,7 +166,6 @@
     @apply opacity-0 transition-opacity duration-300;
   }
 
-  /* Calendar styles inspired by Cal.com */
   .calendar-day {
     @apply h-12 w-12 flex items-center justify-center rounded-full transition-all duration-200;
   }
@@ -204,47 +199,42 @@
   }
 }
 
-/* Add custom modifiers for the calendar day picker in dark mode */
 .rdp-day_today:not(.rdp-day_outside) {
   @apply dark:bg-gray-700/70 dark:text-gray-100;
 }
 
-/* Availability status colors with better contrast and lighter colors */
 .dark .bg-green-100 {
-  background-color: rgba(74, 222, 128, 0.25) !important; /* Lighter green with transparency for dark mode */
+  background-color: rgba(74, 222, 128, 0.25) !important;
 }
 
 .dark .bg-yellow-100 {
-  background-color: rgba(250, 204, 21, 0.25) !important; /* Lighter yellow with transparency for dark mode */
+  background-color: rgba(250, 204, 21, 0.25) !important;
 }
 
 .dark .bg-red-100 {
-  background-color: rgba(248, 113, 113, 0.25) !important; /* Lighter red with transparency for dark mode */
+  background-color: rgba(248, 113, 113, 0.25) !important;
 }
 
-/* Light mode colors - even lighter and more pastel */
 .bg-green-100 {
-  background-color: rgba(240, 253, 244, 1) !important; /* Very light pastel green */
+  background-color: rgba(240, 253, 244, 1) !important;
 }
 
 .bg-yellow-100 {
-  background-color: rgba(254, 252, 232, 1) !important; /* Very light pastel yellow */
+  background-color: rgba(254, 252, 232, 1) !important;
 }
 
 .bg-red-100 {
-  background-color: rgba(254, 242, 242, 1) !important; /* Very light pastel red */
+  background-color: rgba(254, 242, 242, 1) !important;
 }
 
-/* Mobile-specific styles */
 @media (max-width: 767px) {
-  /* Base mobile styles */
   body, html {
     @apply text-base;
   }
   
   input, button, select, textarea {
     @apply text-base;
-    font-size: 16px !important; /* Prevent iOS zoom on focus */
+    font-size: 16px !important;
   }
   
   .mobile-hidden {
@@ -272,16 +262,14 @@
     justify-content: center;
   }
   
-  /* Enhanced scrollable areas */  
   .mobile-scrollable {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
-    max-height: 100%;
-    padding-bottom: 60px; /* Add extra padding at the bottom for mobile */
+    max-height: 100vh;
+    padding-bottom: 60px;
     scroll-behavior: smooth;
   }
   
-  /* Form enhancements for mobile */
   .mobile-compact-form .glass-card {
     padding: 1rem !important;
   }
@@ -307,18 +295,15 @@
     margin-bottom: 0.5rem !important;
   }
   
-  /* Improved login and registration form on mobile */
   .form-control-touch {
-    min-height: 48px; /* Larger touch targets */
+    min-height: 48px;
   }
   
-  /* Improved mobile button styles */
   .button-touch {
     @apply h-12 min-w-[100px];
     touch-action: manipulation;
   }
   
-  /* Enhanced mobile bottom nav */
   .mobile-bottom-nav {
     @apply fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border z-50;
     height: 60px;
@@ -330,21 +315,19 @@
     touch-action: manipulation;
   }
   
-  /* Fix for form elements and touch targets */
   input[type="text"], 
   input[type="email"], 
   input[type="password"], 
   textarea, 
   select {
     @apply appearance-none;
-    font-size: 16px !important; /* Prevents zoom on iOS */
+    font-size: 16px !important;
   }
   
   button {
     touch-action: manipulation;
   }
   
-  /* Enhanced typography for mobile */
   .mobile-heading-lg {
     @apply text-2xl font-bold;
   }
@@ -357,7 +340,6 @@
     @apply text-lg font-semibold;
   }
   
-  /* Login page specific mobile enhancements */
   .login-page-mobile {
     @apply pt-4 pb-8 px-4;
   }
@@ -366,7 +348,6 @@
     @apply shadow-lg border border-border/30;
   }
   
-  /* Improved card and panel layouts for mobile */
   .mobile-card {
     @apply rounded-lg overflow-hidden shadow-md;
   }
@@ -376,7 +357,6 @@
   }
 }
 
-/* Add a custom animation specifically for the stroke effect */
 @keyframes pulse-slow {
   0%, 100% { 
     opacity: 0.2;
@@ -392,19 +372,16 @@
   animation: pulse-slow 3s infinite ease-in-out;
 }
 
-/* Light mode specific glass button */
 .light .glass-button-light, .glass-button-light {
   @apply bg-white/80 border border-gray-200 text-gray-800;
   @apply hover:bg-white/90 hover:border-gray-300 transition-all duration-300;
 }
 
-/* Light mode specific glass stroke */
 .light .glass-stroke-light, .glass-stroke-light {
   @apply relative before:absolute before:inset-0 before:rounded-[inherit] before:border-2 before:border-primary/30;
   @apply before:animate-pulse-slow;
 }
 
-/* Safe area insets for modern mobile browsers */
 @supports (padding: max(0px)) {
   .safe-bottom {
     padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);

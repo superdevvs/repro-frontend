@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -191,14 +190,13 @@ export function LoginForm() {
     }, 1000);
   };
 
-  // React to tab changes to clear errors
   React.useEffect(() => {
     clearErrors();
   }, [activeTab]);
 
   return (
     <motion.div 
-      className={`w-full max-w-md mx-auto ${isMobile ? 'px-4' : ''}`}
+      className={`w-full max-w-md mx-auto ${isMobile ? 'px-4 pb-8' : ''}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}

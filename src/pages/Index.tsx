@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { motion } from 'framer-motion';
@@ -101,9 +100,9 @@ const Index = () => {
         </motion.div>
       )}
       
-      {/* Right side with login form */}
+      {/* Right side with login form - make scrollable */}
       <motion.div 
-        className={`w-full ${!isMobile ? 'md:w-1/2' : ''} flex items-center justify-center ${isMobile ? 'py-2 pb-8' : 'p-8'} bg-background/50 backdrop-blur-sm ${!isMobile ? 'border-l border-border' : ''}`}
+        className={`w-full ${!isMobile ? 'md:w-1/2' : ''} flex items-center justify-center ${isMobile ? 'py-2 pb-8' : 'p-8'} bg-background/50 backdrop-blur-sm ${!isMobile ? 'border-l border-border' : ''} overflow-y-auto mobile-scrollable`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
