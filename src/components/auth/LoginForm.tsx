@@ -15,6 +15,7 @@ import { motion } from 'framer-motion';
 import { UserData } from '@/types/auth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AlertCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -24,6 +25,9 @@ const loginSchema = z.object({
 const registerSchema = loginSchema.extend({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
   company: z.string().optional(),
+  role: z.enum(['client', 'photographer', 'editor', 'admin'], {
+    required_error: "Please select a role",
+  }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -52,6 +56,7 @@ export function LoginForm() {
       email: '',
       password: '',
       company: '',
+      role: 'client',
     },
   });
   
@@ -160,7 +165,7 @@ export function LoginForm() {
           id: `user-${Date.now()}`,
           name: values.name,
           email: values.email,
-          role: 'client',
+          role: values.role,
           company: values.company,
           isActive: true,
           metadata: {
@@ -356,6 +361,30 @@ export function LoginForm() {
                           <FormControl>
                             <Input type="password" placeholder="••••••••" {...field} />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Register as</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select your role" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="client">Client</SelectItem>
+                              <SelectItem value="photographer">Photographer</SelectItem>
+                              <SelectItem value="editor">Editor</SelectItem>
+                              <SelectItem value="admin">Administrator</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
