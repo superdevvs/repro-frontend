@@ -63,7 +63,7 @@ export function MessagesMobileMenu({ isOpen, onClose, filters }: MessagesMobileM
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
       initial="hidden"
       animate="visible"
       exit="hidden"
@@ -72,17 +72,15 @@ export function MessagesMobileMenu({ isOpen, onClose, filters }: MessagesMobileM
     >
       <motion.div 
         className={cn(
-          "absolute bottom-16 left-0 right-0 mx-4 rounded-xl overflow-hidden border border-[#403E43] shadow-xl glass-morphism",
-          theme === 'light' 
-            ? "bg-white border-gray-200 shadow-lg" 
-            : "bg-[#1A1F2C]/95 border-[#403E43] shadow-xl text-[#ccc]"
+          "absolute bottom-16 left-0 right-0 mx-4 rounded-lg overflow-hidden border shadow-lg",
+          isLightMode ? "bg-white border-gray-200" : "bg-slate-900 border-slate-800 text-white"
         )}
         variants={menuVariants}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-3 border-b flex items-center justify-between">
-          <h3 className="font-medium text-[#9b87f5]">Message Filters</h3>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-[#9b87f5]">
+          <h3 className="font-medium">Message Filters</h3>
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -95,11 +93,11 @@ export function MessagesMobileMenu({ isOpen, onClose, filters }: MessagesMobileM
               folders={folders}
             />
             
-            <Separator className="my-3 border-[#403E43]" />
+            <Separator className="my-3" />
             
             <LabelsSection labels={labels} />
             
-            <Separator className="my-3 border-[#403E43]" />
+            <Separator className="my-3" />
             
             <FilterOptionsSection 
               filter={filter}
@@ -109,7 +107,7 @@ export function MessagesMobileMenu({ isOpen, onClose, filters }: MessagesMobileM
             <Button 
               variant="outline" 
               size="sm" 
-              className="w-full justify-center text-xs mt-2 border-[#9b87f5] text-[#9b87f5]"
+              className="w-full justify-center text-xs mt-2"
               onClick={handleClearFilters}
             >
               Clear All Filters

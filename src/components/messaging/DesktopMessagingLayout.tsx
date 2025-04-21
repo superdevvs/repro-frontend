@@ -47,12 +47,7 @@ export function DesktopMessagingLayout({
   return (
     <ResizablePanelGroup
       direction="horizontal"
-      className="rounded-xl overflow-hidden border border-[#403E43] shadow-xl glass-morphism"
-      style={{
-        background:
-          "linear-gradient(111.4deg, #1A1F2C 0%, #403E43 100%)",
-        boxShadow: "0 12px 48px rgba(44, 38, 87, 0.3), 0 1.5px 0 #403E43"
-      }}
+      className="rounded-lg overflow-hidden border"
     >
       {!isConversationsCollapsed && (
         <>
@@ -60,7 +55,7 @@ export function DesktopMessagingLayout({
             defaultSize={25} 
             minSize={15}
             maxSize={40}
-            className="bg-gradient-to-b from-[#26293B] to-[#1A1F2C] border-r border-[#403E43] shadow-glass-card"
+            className="bg-white dark:bg-slate-900 border-r"
           >
             <ConversationList 
               conversations={conversations}
@@ -77,9 +72,9 @@ export function DesktopMessagingLayout({
       )}
       
       <ResizablePanel defaultSize={isConversationsCollapsed ? 65 : 45}
-        className="bg-[#1A1F2C] dark:bg-[#1A1F2C]/95 backdrop-blur-lg"
+        className="bg-white dark:bg-slate-900"
       >
-        <div className="flex flex-col h-full text-[#ccc]">
+        <div className="flex flex-col h-full">
           {selectedConversation && currentConversation ? (
             <>
               <MessageHeader 
@@ -88,7 +83,7 @@ export function DesktopMessagingLayout({
                 toggleConversations={toggleConversations}
               />
               
-              <div className="flex-1 flex flex-col overflow-hidden border-t border-[#403E43]">
+              <div className="flex-1 flex flex-col overflow-hidden border-t">
                 <MessageList 
                   messages={currentMessages} 
                   currentUserId="me"
@@ -99,7 +94,6 @@ export function DesktopMessagingLayout({
                 <MessageInput 
                   onSendMessage={onSendMessage}
                   templates={messageTemplates}
-                  className="bg-[#26293B]"
                 />
               </div>
             </>
@@ -119,11 +113,11 @@ export function DesktopMessagingLayout({
             defaultSize={30}
             minSize={20}
             maxSize={40}
-            className="hidden md:block border-l border-[#403E43] bg-gradient-to-br from-[#2C2657] to-[#1A1F2C]"
+            className="hidden md:block border-l bg-white dark:bg-slate-900"
           >
             <ProjectContextBar 
               conversation={currentConversation}
-              className="p-5 glass-morphism text-[#ddd]"
+              className="p-5"
             />
           </ResizablePanel>
         </>

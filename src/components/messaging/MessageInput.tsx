@@ -81,12 +81,12 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
   };
   
   return (
-    <div className="border-t p-4 bg-white">
+    <div className="border-t p-4 bg-white dark:bg-slate-800">
       {attachments.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
           {attachments.map((file, index) => (
-            <div key={index} className="flex items-center gap-2 bg-slate-100 rounded-md px-2 py-1">
-              <Paperclip className="h-3.5 w-3.5 text-slate-500" />
+            <div key={index} className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 rounded-md px-2 py-1">
+              <Paperclip className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
               <span className="text-xs truncate max-w-[120px]">{file.name}</span>
               <Button 
                 variant="ghost" 
@@ -102,22 +102,22 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
       )}
       
       <div className="flex items-start gap-2">
-        <div className="relative flex-1 border rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+        <div className="relative flex-1 border rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:border-primary dark:border-slate-700">
           <Textarea
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Start typing to reply..."
-            className="min-h-[40px] max-h-[120px] resize-none px-3 py-2 border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="min-h-[40px] max-h-[120px] resize-none px-3 py-2 border-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-slate-800"
           />
           
-          <div className="flex items-center px-2 py-1.5 bg-slate-50 border-t">
+          <div className="flex items-center px-2 py-1.5 bg-slate-50 dark:bg-slate-700 border-t dark:border-slate-600">
             <div className="flex items-center gap-1.5">
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-7 w-7 rounded-full hover:bg-slate-200"
+                className="h-7 w-7 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <input
@@ -133,7 +133,7 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-7 w-7 rounded-full hover:bg-slate-200"
+                className="h-7 w-7 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600"
               >
                 <Image className="h-4 w-4" />
               </Button>
@@ -142,7 +142,7 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-7 w-7 rounded-full hover:bg-slate-200"
+                  className="h-7 w-7 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600"
                 >
                   <SmilePlus className="h-4 w-4" />
                 </Button>
@@ -155,7 +155,7 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    className="h-7 w-7 ml-1 rounded-full hover:bg-slate-200"
+                    className="h-7 w-7 ml-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600"
                   >
                     <FileText className="h-4 w-4" />
                   </Button>
