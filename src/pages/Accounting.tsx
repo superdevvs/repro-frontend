@@ -78,6 +78,7 @@ const AccountingPage = () => {
       description: `Invoice ${invoiceId} has been marked as paid.`,
       variant: "default",
     });
+    setPaymentDialogOpen(false);
   };
 
   const handleCreateInvoice = (newInvoice: InvoiceData) => {

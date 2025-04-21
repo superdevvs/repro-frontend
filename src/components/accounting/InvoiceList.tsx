@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Calendar as CalendarIcon, 
@@ -135,6 +134,7 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
                     onEdit={handleEditInvoice}
                     onDelete={handleDeleteInvoice}
                     getStatusColor={getStatusColor}
+                    onPay={onPay}
                   />
                 ))}
                 {filteredInvoices.length === 0 && (
@@ -160,6 +160,7 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
                     onEdit={handleEditInvoice}
                     onDelete={handleDeleteInvoice}
                     getStatusColor={getStatusColor}
+                    onPay={onPay}
                   />
                 ))}
                 {filteredInvoices.length === 0 && (
@@ -185,6 +186,7 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
                     onEdit={handleEditInvoice}
                     onDelete={handleDeleteInvoice}
                     getStatusColor={getStatusColor}
+                    onPay={onPay}
                   />
                 ))}
                 {filteredInvoices.length === 0 && (
@@ -210,6 +212,7 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
                     onEdit={handleEditInvoice}
                     onDelete={handleDeleteInvoice}
                     getStatusColor={getStatusColor}
+                    onPay={onPay}
                   />
                 ))}
                 {filteredInvoices.length === 0 && (
@@ -243,9 +246,11 @@ interface InvoiceItemProps {
   onEdit: (invoice: InvoiceData) => void;
   onDelete: (invoice: InvoiceData) => void;
   getStatusColor: (status: string) => string;
+  onPay: (invoice: InvoiceData) => void;
 }
 
-function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onDelete, getStatusColor }: InvoiceItemProps) {
+function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onDelete, getStatusColor, onPay }: InvoiceItemProps) {
+  const showMarkAsPaid = invoice.status === 'pending' || invoice.status === 'overdue';
   return (
     <div className="flex flex-col bg-card rounded-lg shadow">
       <div className="p-4 flex-row justify-between items-center border-b border-border hidden sm:flex">
@@ -267,7 +272,6 @@ function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onD
         </div>
       </div>
 
-      {/* Mobile view */}
       <div className="p-4 flex-row justify-between items-center border-b border-border flex sm:hidden">
         <div className="space-y-1">
           <h3 className="font-medium">Invoice #{invoice.number}</h3>
@@ -297,6 +301,16 @@ function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onD
           >
             <Download className="h-4 w-4" /> Download
           </Button>
+          {showMarkAsPaid && (
+            <Button
+              variant="accent"
+              size="sm"
+              onClick={() => onPay(invoice)}
+              className="flex items-center gap-1"
+            >
+              <Check className="h-4 w-4" /> Mark as Paid
+            </Button>
+          )}
         </div>
 
         <div className="flex gap-2">
