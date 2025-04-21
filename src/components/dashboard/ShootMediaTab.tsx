@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import {
   PresentationIcon
 } from 'lucide-react';
 
-// Define media types
 type MediaType = 'images' | 'videos' | 'files' | 'slideshows';
 
 interface ShootMediaTabProps {
@@ -24,7 +22,6 @@ interface ShootMediaTabProps {
 export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const [activeTab, setActiveTab] = useState<MediaType>('images');
   
-  // Helper function to get all media images regardless of format
   const getMediaImages = (): string[] => {
     if (!shoot.media) return [];
     if (shoot.media.images && shoot.media.images.length > 0) {
@@ -36,7 +33,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
     return [];
   };
   
-  // Helper function to get slideshows
   const getSlideshows = () => {
     return shoot.media?.slideshows || [];
   };
@@ -56,7 +52,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
     // This would delete the media in a real app
   };
   
-  // Check if any media exists
   const hasMedia = (): boolean => {
     if (!shoot.media) return false;
     
@@ -68,7 +63,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
     return images.length > 0 || videos.length > 0 || files.length > 0 || slideshows.length > 0;
   };
   
-  // Check if specific media type exists
   const hasMediaType = (type: MediaType): boolean => {
     if (!shoot.media) return false;
     
@@ -86,10 +80,8 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
     }
   };
   
-  // Generate placeholder items for no media state
   const emptyItems = Array(3).fill(0);
   
-  // Empty state component
   const EmptyState = ({ type, canUpload }: { type: MediaType, canUpload: boolean }) => (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       {type === 'images' && <ImageIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />}
@@ -113,7 +105,19 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       )}
     </div>
   );
-  
+
+  const shouldShowWatermark =
+    shoot.status === "completed" &&
+    (!shoot.payment.totalPaid || shoot.payment.totalPaid < shoot.payment.totalQuote);
+
+  const WatermarkOverlay = () => (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+      <span className="text-3xl md:text-4xl font-bold text-white/70 bg-black/30 rounded-lg px-8 py-2 rotate-[-25deg] tracking-wide" style={{letterSpacing: 2, userSelect: 'none'}}>
+        REPro Co. Watermark
+      </span>
+    </div>
+  );
+
   return (
     <div>
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MediaType)}>
@@ -175,6 +179,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                     alt={`Property image ${index + 1}`}
                     className="h-full w-full object-cover"
                   />
+                  {shouldShowWatermark && <WatermarkOverlay />}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <Button 
                       size="sm" 
