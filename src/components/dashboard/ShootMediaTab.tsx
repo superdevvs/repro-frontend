@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -22,22 +23,34 @@ interface ShootMediaTabProps {
   isPhotographer: boolean;
 }
 
+// Demo images from Unsplash
+const demoImages = [
+  "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&q=80",
+  "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&q=80",
+  "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80",
+  "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80",
+  "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&q=80",
+];
+
 export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const [activeTab, setActiveTab] = useState<MediaType>('images');
   
   const getMediaImages = (): string[] => {
-    if (!shoot.media) return [];
+    if (!shoot.media) return demoImages.slice(0, 3); // Return demo images if no media
     if (shoot.media.images && shoot.media.images.length > 0) {
       return shoot.media.images.map(img => img.url);
     }
     if (shoot.media.photos && shoot.media.photos.length > 0) {
       return shoot.media.photos;
     }
-    return [];
+    return demoImages.slice(0, 3); // Return demo images as fallback
   };
   
   const getSlideshows = () => {
-    return shoot.media?.slideshows || [];
+    return shoot.media?.slideshows || [
+      { id: "demo-1", title: "Property Virtual Tour", url: demoImages[0] },
+      { id: "demo-2", title: "Kitchen & Dining Highlights", url: demoImages[1] }
+    ];
   };
   
   const handleMediaUpload = (type: MediaType) => {
@@ -78,7 +91,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   };
 
   const hasMedia = (): boolean => {
-    if (!shoot.media) return false;
+    if (!shoot.media) return true; // Always return true with demo images
     
     const images = getMediaImages();
     const videos = shoot.media.videos || [];
@@ -89,7 +102,10 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   };
   
   const hasMediaType = (type: MediaType): boolean => {
-    if (!shoot.media) return false;
+    if (!shoot.media) {
+      // With demo data, always return true for images and slideshows
+      return type === 'images' || type === 'slideshows';
+    }
     
     switch (type) {
       case 'images':
@@ -142,6 +158,14 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       </span>
     </div>
   );
+
+  // Debug method to check why images aren't displaying
+  const debugImageLoad = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.log("Image loaded:", event.currentTarget.src);
+    if (event.currentTarget.naturalWidth === 0) {
+      console.error("Image failed to load properly:", event.currentTarget.src);
+    }
+  };
 
   return (
     <div>
@@ -203,6 +227,8 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                     src={imageUrl} 
                     alt={`Property image ${index + 1}`}
                     className="h-full w-full object-cover"
+                    onLoad={debugImageLoad}
+                    onError={(e) => console.error("Image failed to load:", e.currentTarget.src)}
                   />
                   {shouldShowWatermark && <WatermarkOverlay />}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -245,6 +271,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                       src={video.thumbnail} 
                       alt={`Video thumbnail ${index + 1}`}
                       className="h-full w-full object-cover"
+                      onLoad={debugImageLoad}
                     />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center">

@@ -16,6 +16,15 @@ import { toast } from "@/components/ui/use-toast";
 
 const ITEMS_PER_PAGE = 6;
 
+// Sample demo images from Unsplash
+const demoImages = [
+  "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&q=80",
+  "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&q=80",
+  "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80",
+  "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80",
+  "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&q=80",
+];
+
 const Shoots = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTab, setSelectedTab] = useState('scheduled');
@@ -73,9 +82,14 @@ const Shoots = () => {
   const handleUploadComplete = (files: File[]) => {
     if (!selectedShoot) return;
     
+    // Create valid image URLs from demo images for testing purposes
+    // In a real app, you would upload these files to a server and get real URLs back
     const photoUrls = files
       .filter(file => file.type.startsWith('image/'))
-      .map(() => '/placeholder.svg');
+      .map((_, index) => {
+        // Use Unsplash demo images that actually load
+        return demoImages[index % demoImages.length];
+      });
     
     updateShoot(selectedShoot.id, {
       media: {
@@ -89,6 +103,8 @@ const Shoots = () => {
       title: "Upload Complete",
       description: `${files.length} files have been uploaded successfully.`
     });
+    
+    console.log("Upload complete. New photos:", photoUrls);
   };
 
   const handlePageChange = (page: number) => {
