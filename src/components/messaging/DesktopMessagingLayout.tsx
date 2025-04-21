@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Conversation, Message, MessageTemplate } from '@/types/messages';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
@@ -47,11 +46,11 @@ export function DesktopMessagingLayout({
   return (
     <ResizablePanelGroup
       direction="horizontal"
-      className="rounded-lg overflow-hidden border"
+      className="rounded-xl overflow-hidden border border-[#E5DEFF]/60 shadow-xl glass-morphism"
       style={{
         background:
-          "linear-gradient(100deg, #f9faff 60%, #e5deff 100%)",
-        boxShadow: "0 4px 32px rgba(159,164,230,0.09)"
+          "linear-gradient(111.4deg,#f9f8ff 64%,#e5deff 100%)",
+        boxShadow: "0 12px 48px rgba(159,140,230,0.09), 0 1.5px 0 #e5deff"
       }}
     >
       {!isConversationsCollapsed && (
@@ -60,7 +59,8 @@ export function DesktopMessagingLayout({
             defaultSize={25} 
             minSize={15}
             maxSize={40}
-            className="bg-gradient-to-br from-[#E5DEFF]/90 to-[#D3E4FD]/70 dark:from-[#1A1F2C] dark:to-[#403E43] border-r"
+            className="bg-gradient-to-b from-[#F1F0FB]/95 to-[#E5DEFF]/85 
+                       dark:from-[#26293B]/90 dark:to-[#201F20]/85 border-r border-[#e5deff] shadow-glass-card"
           >
             <ConversationList 
               conversations={conversations}
@@ -72,13 +72,12 @@ export function DesktopMessagingLayout({
               onFilterChange={onFilterChange}
             />
           </ResizablePanel>
-          
           <ResizableHandle withHandle />
         </>
       )}
       
       <ResizablePanel defaultSize={isConversationsCollapsed ? 65 : 45}
-        className="bg-white/80 dark:bg-[#221F26]/90"
+        className="bg-white/85 dark:bg-[#221F26]/95 backdrop-blur-md"
       >
         <div className="flex flex-col h-full">
           {selectedConversation && currentConversation ? (
@@ -115,16 +114,15 @@ export function DesktopMessagingLayout({
       {selectedConversation && currentConversation && (
         <>
           <ResizableHandle withHandle />
-          
           <ResizablePanel 
             defaultSize={30}
             minSize={20}
             maxSize={40}
-            className="hidden md:block border-l bg-gradient-to-tl from-[#E5DEFF]/80 to-[#FFFFFF]/80 dark:from-[#1A1F2C] dark:to-[#403E43]"
+            className="hidden md:block border-l bg-gradient-to-br from-[#EBE6FF]/60 to-[#F1F7FF]/90 dark:from-[#221A29]/80 dark:to-[#26293B]/80"
           >
             <ProjectContextBar 
               conversation={currentConversation}
-              className="p-4"
+              className="p-5 glass-morphism"
             />
           </ResizablePanel>
         </>

@@ -25,19 +25,18 @@ export function MessageList({ messages, currentUserId, onMarkAsTask, selectedMes
   
   // Group messages by date
   const groupedMessages = groupMessagesByDate(messages);
-  
+
   return (
-    <ScrollArea className="h-full">
+    <ScrollArea className="h-full bg-gradient-to-b from-transparent via-[#F1F0FB]/70 to-[#E5DEFF]/30 dark:via-[#26293B]/60 dark:to-[#201F20]/30 transition">
       {hasNoMessages(messages) ? (
-        <div className="flex flex-col items-center justify-center h-full p-8 text-center text-muted-foreground">
-          <p>No messages in this conversation</p>
+        <div className="flex flex-col items-center justify-center h-full p-8 text-center text-[#7E69AB] dark:text-[#d3cafd] font-medium">
+          <p>No messages yet</p>
         </div>
       ) : (
         <div>
-          {Object.keys(groupedMessages).map((date, index) => (
-            <div key={date} className="border-b last:border-b-0">
+          {Object.keys(groupedMessages).map((date) => (
+            <div key={date} className="border-b last:border-b-0 border-[#E5DEFF]/50">
               <MessageDateHeader date={date} />
-              
               {groupedMessages[date].map((message) => (
                 <MessageItem
                   key={message.id}

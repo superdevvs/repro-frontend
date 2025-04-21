@@ -41,49 +41,39 @@ export function ConversationList({
 }: ConversationListProps) {
   const [showFolders, setShowFolders] = useState(true);
   
-  // Filter conversations based on current filter criteria
   const filteredConversations = conversations.filter((convo) => {
-    // Filter by search query
     const matchesSearch = convo.participant.name.toLowerCase().includes(filter.searchQuery.toLowerCase()) ||
       convo.lastMessage.toLowerCase().includes(filter.searchQuery.toLowerCase()) ||
       (convo.shoot?.title && convo.shoot.title.toLowerCase().includes(filter.searchQuery.toLowerCase())) ||
       (convo.shoot?.address && convo.shoot.address.toLowerCase().includes(filter.searchQuery.toLowerCase()));
     
-    // Filter by service type
     const matchesServiceType = !filter.serviceType?.length || 
       (convo.shoot?.serviceTypes && filter.serviceType.some(type => convo.shoot.serviceTypes.includes(type)));
     
-    // Filter by status
     const matchesStatus = !filter.status?.length || 
       (convo.shoot?.status && filter.status.includes(convo.shoot.status));
     
-    // Filter by user type
     const matchesUserType = !filter.userType?.length || 
       filter.userType.includes(convo.participant.role as any);
     
     return matchesSearch && matchesServiceType && matchesStatus && matchesUserType;
   });
 
-  // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     
-    // If today, show time
     if (format(date, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd')) {
       return format(date, 'h:mm a');
     }
     
-    // If this year, show month and day
     if (date.getFullYear() === now.getFullYear()) {
       return format(date, 'd MMM');
     }
     
-    // Otherwise show date
     return format(date, 'd MMM yyyy');
   };
 
-  // Get status icon based on shoot status
   const getStatusIcon = (status?: string) => {
     switch (status) {
       case 'scheduled':
@@ -101,7 +91,6 @@ export function ConversationList({
     }
   };
 
-  // Folders list
   const folders = [
     { id: 'inbox', name: 'Inbox', count: conversations.filter(c => c.unreadCount > 0).length },
     { id: 'starred', name: 'Starred', count: 0 },
@@ -111,7 +100,6 @@ export function ConversationList({
     { id: 'trash', name: 'Trash', count: 0 },
   ];
   
-  // Labels/tags list
   const labels = [
     { id: 'clients', name: 'Clients', color: 'bg-blue-500' },
     { id: 'photographers', name: 'Photographers', color: 'bg-green-500' },
@@ -120,13 +108,13 @@ export function ConversationList({
   ];
 
   return (
-    <Card className="h-full flex flex-col border-none shadow-none">
-      <div className="p-3 border-b flex-shrink-0">
+    <Card className="h-full flex flex-col border-none shadow-none glass-morphism bg-gradient-to-br from-[#F1F0FB] to-[#E5DEFF]/80 dark:from-[#26293B]/90 dark:to-[#181926]/90">
+      <div className="p-4 border-b border-[#E5DEFF]/65 bg-gradient-to-r from-[#F1F0FB]/80 to-[#E5DEFF]/80 dark:from-[#211728] dark:to-[#403E43] shadow-glass-card">
         <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6E59A5] dark:text-[#E5DEFF]" />
           <Input 
             placeholder="Search conversations..." 
-            className="pl-9"
+            className="pl-10 bg-white/80 border border-[#ebe5fd]/60 shadow-inner rounded-xl focus:border-[#a092dd]"
             value={filter.searchQuery}
             onChange={(e) => onFilterChange({ ...filter, searchQuery: e.target.value })}
           />
@@ -138,17 +126,17 @@ export function ConversationList({
           onValueChange={onTabChange} 
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-2 h-8 mb-1">
-            <TabsTrigger value="inbox" className="text-xs">Primary</TabsTrigger>
-            <TabsTrigger value="archived" className="text-xs">Archive</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 h-8 mb-2 rounded-lg bg-white/50 shadow-inner">
+            <TabsTrigger value="inbox" className="text-xs font-semibold">Primary</TabsTrigger>
+            <TabsTrigger value="archived" className="text-xs font-semibold">Archive</TabsTrigger>
           </TabsList>
         </Tabs>
         
         <div className="flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 text-xs">
-                <Filter className="h-3.5 w-3.5 mr-1" />
+              <Button variant="glass" size="sm" className="h-7 text-xs bg-white/60 border border-[#e5deff]/60 rounded-xl shadow">
+                <Filter className="h-4 w-4 mr-1 text-primary" />
                 Filter
               </Button>
             </DropdownMenuTrigger>
@@ -244,7 +232,7 @@ export function ConversationList({
         </div>
       </div>
       
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 bg-gradient-to-t from-[#E5DEFF]/0 to-[#F1F0FB]/40 dark:from-[#232339] dark:to-[#232339]/20 rounded-b-xl">
         <div className="p-3">
           <div className="mb-3">
             <div className="flex items-center justify-between mb-1.5">
