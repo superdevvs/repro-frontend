@@ -304,14 +304,14 @@ export default function Availability() {
   const getAvailabilityIndicator = (day: Date) => {
     const dateString = format(day, "yyyy-MM-dd");
     const dayAvailabilities = availabilities.filter(
-      avail => avail.date === dateString && 
+      avail => avail.date === dateString &&
         (selectedPhotographer === "all" || avail.photographerId === selectedPhotographer)
     );
-    
+
     const hasAvailable = dayAvailabilities.some(avail => avail.status === "available");
     const hasBooked = dayAvailabilities.some(avail => avail.status === "booked");
     const hasUnavailable = dayAvailabilities.some(avail => avail.status === "unavailable");
-    
+
     return { hasAvailable, hasBooked, hasUnavailable };
   };
 
@@ -500,45 +500,52 @@ export default function Availability() {
                 className="rounded-2xl border-none shadow transition ring-1 ring-[#e5deff]/60 dark:ring-[#403E43]/30 pointer-events-auto mx-auto w-full max-w-[400px] md:max-w-[80%] p-4 bg-[#fff]/60 dark:bg-[#1A1F2C]/70"
                 showOutsideDays={true}
                 modifiersClassNames={{
-                  selected: 'bg-primary text-primary-foreground scale-110 font-bold shadow-lg border-2 border-[#9b87f5] dark:border-[#8B5CF6] rounded-xl',
-                  today: 'bg-[#fff7cd] dark:bg-[#222733] text-[#9b87f5] font-bold',
-                }}
-                modifiersStyles={{
-                  selected: {
-                    fontWeight: "bold",
-                  }
+                  selected: 'bg-[#8B5CF6] text-white scale-110 font-bold shadow-lg border-2 border-[#9b87f5] dark:border-[#8B5CF6] rounded-xl',
+                  today: 'bg-[#FEF7CD] dark:bg-[#222733] text-[#ab8bfa] font-bold ring-2 ring-[#8B5CF6]/30',
                 }}
                 components={{
                   Day: ({ date: dayDate }) => {
                     const { hasAvailable, hasBooked, hasUnavailable } = getAvailabilityIndicator(dayDate);
 
                     return (
-                      <div className="relative w-full h-full flex flex-col items-center justify-center px-2 py-1">
-                        <span className="inline-flex items-center justify-center transition-all w-7 h-7 md:w-9 md:h-9 text-base rounded-xl hover:bg-[#E5DEFF]/70 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/40">
+                      <div className="relative py-1 w-full h-full flex flex-col items-center justify-center px-2 group transition">
+                        <span className="inline-flex items-center justify-center w-8 h-8 text-base rounded-xl group-hover:bg-[#f3f0fa] dark:group-hover:bg-[#2d225a] transition">
                           {dayDate.getDate()}
                         </span>
                         {(hasAvailable || hasBooked || hasUnavailable) && (
-                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5 md:gap-1 z-10">
+                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
                             {hasAvailable && (
                               <span
-                                className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-1 ring-white"
-                                style={{ background: '#98e89e', border: '2px solid #f3f3f3' }}
+                                className="rounded-full w-2.5 h-2.5 shadow-badge"
+                                style={{
+                                  background: '#98e89e',
+                                  border: '2px solid #fff',
+                                  boxShadow: '0 0 4px 1px #8ece94c0',
+                                }}
                                 title="Available"
-                              ></span>
+                              />
                             )}
                             {hasBooked && (
                               <span
-                                className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-1 ring-white"
-                                style={{ background: '#aad4fe', border: '2px solid #f3f3f3' }}
+                                className="rounded-full w-2.5 h-2.5 shadow-badge"
+                                style={{
+                                  background: '#aad4fe',
+                                  border: '2px solid #fff',
+                                  boxShadow: '0 0 4px 1px #7baadac0',
+                                }}
                                 title="Booked"
-                              ></span>
+                              />
                             )}
                             {hasUnavailable && (
                               <span
-                                className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-1 ring-white"
-                                style={{ background: '#f89ba2', border: '2px solid #f3f3f3' }}
+                                className="rounded-full w-2.5 h-2.5 shadow-badge"
+                                style={{
+                                  background: '#f89ba2',
+                                  border: '2px solid #fff',
+                                  boxShadow: '0 0 4px 1px #c86374b5',
+                                }}
                                 title="Unavailable"
-                              ></span>
+                              />
                             )}
                           </div>
                         )}
@@ -548,18 +555,30 @@ export default function Availability() {
                 }}
               />
 
-              <div className="flex items-center gap-6 justify-center mt-6">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-4 w-4 rounded-full" style={{ background: '#98e89e', border: '1.5px solid #e0f6e9' }}></span>
-                  <span className="text-xs text-muted-foreground">Available</span>
+              <div className="flex flex-wrap gap-4 justify-center items-center mt-5">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-4 h-4 rounded-full" style={{
+                    background: "#98e89e",
+                    border: "2px solid #fff",
+                    boxShadow: '0 0 4px 1px #8ece94c0'
+                  }} />
+                  <span className="text-xs font-medium text-green-800">Available</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="h-4 w-4 rounded-full" style={{ background: '#aad4fe', border: '1.5px solid #e7f1ff' }}></span>
-                  <span className="text-xs text-muted-foreground">Booked</span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-4 h-4 rounded-full" style={{
+                    background: "#aad4fe",
+                    border: "2px solid #fff",
+                    boxShadow: '0 0 4px 1px #7baadac0'
+                  }} />
+                  <span className="text-xs font-medium text-blue-700">Booked</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="h-4 w-4 rounded-full" style={{ background: '#f89ba2', border: '1.5px solid #fde9eb' }}></span>
-                  <span className="text-xs text-muted-foreground">Unavailable</span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-4 h-4 rounded-full" style={{
+                    background: "#f89ba2",
+                    border: "2px solid #fff",
+                    boxShadow: '0 0 4px 1px #c86374b5'
+                  }} />
+                  <span className="text-xs font-medium text-red-700">Unavailable</span>
                 </div>
               </div>
 
