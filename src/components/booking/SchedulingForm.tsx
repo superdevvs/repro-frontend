@@ -78,7 +78,20 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
   const [photographerDialogOpen, setPhotographerDialogOpen] = useState(false);
 
   const onDateChange = (newDate: Date | undefined) => {
-    setDate(newDate);
+    // Make sure we're working with the correct date without timezone issues
+    if (newDate) {
+      // Adjust the date to ensure it's the same as what the user selected
+      // This fixes the issue where the date might be off by one day
+      const year = newDate.getFullYear();
+      const month = newDate.getMonth();
+      const day = newDate.getDate();
+      const adjustedDate = new Date(year, month, day, 12, 0, 0); // Set to noon to avoid timezone issues
+      
+      setDate(adjustedDate);
+    } else {
+      setDate(undefined);
+    }
+    
     if (newDate && formErrors['date']) {
       const { date, ...rest } = formErrors;
       setFormErrors(rest);

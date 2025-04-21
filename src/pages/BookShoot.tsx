@@ -182,9 +182,19 @@ const BookShoot = () => {
       
       const bookingStatus: ShootData['status'] = 'booked';
       
+      // Make sure date is properly formatted to avoid timezone issues
+      const shootDate = date ? new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        12, // Set to noon to avoid timezone issues
+        0,
+        0
+      ) : new Date();
+      
       const newShoot: ShootData = {
         id: uuidv4(),
-        scheduledDate: date.toISOString().split('T')[0],
+        scheduledDate: shootDate.toISOString().split('T')[0],
         time: time,
         client: {
           name: selectedClientData?.name || 'Unknown Client',

@@ -34,8 +34,20 @@ export const filterShootsByDateRange = (shoots: ShootData[], timeRange: TimeRang
   });
 };
 
+// Ensure the date is normalized to avoid timezone issues
+export const normalizeDate = (date: Date): Date => {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    12, // Set to noon to avoid timezone issues
+    0,
+    0
+  );
+};
+
 export const getScheduledTodayShoots = (shoots: ShootData[]): ShootData[] => {
-  const today = new Date();
+  const today = normalizeDate(new Date());
   return shoots.filter(shoot => {
     const shootDate = typeof shoot.scheduledDate === 'string'
       ? parseISO(shoot.scheduledDate)

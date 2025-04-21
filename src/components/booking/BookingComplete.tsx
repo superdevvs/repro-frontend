@@ -12,6 +12,14 @@ interface BookingCompleteProps {
 }
 
 export function BookingComplete({ date, time, resetForm }: BookingCompleteProps) {
+  // Format the date properly to ensure correct display
+  const formattedDate = date ? format(new Date(
+    date.getFullYear(),
+    date.getMonth(), 
+    date.getDate(),
+    12 // Set to noon to avoid timezone issues
+  ), 'MMMM d, yyyy') : '';
+
   return (
     <motion.div
       key="complete"
@@ -26,7 +34,7 @@ export function BookingComplete({ date, time, resetForm }: BookingCompleteProps)
       </div>
       <h2 className="text-2xl font-bold mb-2">Booking Complete!</h2>
       <p className="text-muted-foreground mb-6">
-        The shoot has been successfully scheduled for {date ? format(date, 'MMMM d, yyyy') : ''} at {time}.
+        The shoot has been successfully scheduled for {formattedDate} at {time}.
       </p>
       <div className="flex flex-col sm:flex-row gap-3">
         <Button onClick={resetForm} variant="outline">Book Another Shoot</Button>
