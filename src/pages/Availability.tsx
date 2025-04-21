@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Calendar } from "@/components/ui/calendar";
@@ -42,7 +41,6 @@ import { TimeSelect } from "@/components/ui/time-select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-// Sample photographers data
 const samplePhotographers = [
   {
     id: "1",
@@ -71,7 +69,6 @@ const samplePhotographers = [
   }
 ];
 
-// Sample availability periods
 const initialAvailabilities = [
   {
     id: "1",
@@ -145,7 +142,6 @@ interface Availability {
   shootTitle?: string;
 }
 
-// New interface to store weekly schedules by photographer ID
 interface WeeklyScheduleItem {
   day: string;
   active: boolean;
@@ -172,7 +168,6 @@ export default function Availability() {
   const { toast } = useToast();
   const { user, role } = useAuth();
   
-  // Store weekly schedules by photographer ID
   const [photographerWeeklySchedules, setPhotographerWeeklySchedules] = useState<Record<string, WeeklyScheduleItem[]>>({
     "1": [
       { day: 'Mon', active: true, startTime: '9:00', endTime: '17:00' },
@@ -220,8 +215,7 @@ export default function Availability() {
       { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
     ],
   });
-  
-  // Get current weekly schedule for selected photographer
+
   const getCurrentWeeklySchedule = () => {
     if (selectedPhotographer === "all") {
       return [
@@ -245,11 +239,9 @@ export default function Availability() {
       { day: 'Sun', active: false, startTime: '10:00', endTime: '15:00' },
     ];
   };
-  
-  // Check if user has admin access
+
   const isAdmin = role === 'admin' || role === 'superadmin';
 
-  // Get availabilities for the selected date and photographer
   const getSelectedDateAvailabilities = () => {
     if (!date) return [];
     
@@ -261,7 +253,6 @@ export default function Availability() {
 
   const selectedDateAvailabilities = getSelectedDateAvailabilities();
 
-  // Handle adding a new availability
   const handleAddAvailability = () => {
     if (!date || selectedPhotographer === "all") {
       toast({
@@ -296,7 +287,6 @@ export default function Availability() {
     });
   };
 
-  // Handle deleting an availability
   const handleDeleteAvailability = () => {
     if (!selectedAvailabilityId) return;
     
@@ -311,7 +301,6 @@ export default function Availability() {
     });
   };
 
-  // Function to determine if a date has availability based on selected photographer
   const getAvailabilityIndicator = (day: Date) => {
     const dateString = format(day, "yyyy-MM-dd");
     const dayAvailabilities = availabilities.filter(
@@ -326,13 +315,11 @@ export default function Availability() {
     return { hasAvailable, hasBooked, hasUnavailable };
   };
 
-  // Get photographer name by id
   const getPhotographerName = (id: string) => {
     const photographer = samplePhotographers.find(p => p.id === id);
     return photographer ? photographer.name : "Unknown";
   };
 
-  // Start editing an availability
   const startEditingAvailability = (availId: string) => {
     const availToEdit = availabilities.find(a => a.id === availId);
     if (availToEdit) {
@@ -341,7 +328,6 @@ export default function Availability() {
     }
   };
 
-  // Save edited availability
   const saveEditedAvailability = () => {
     if (!editingAvailability || !editedAvailability) return;
     
@@ -370,7 +356,6 @@ export default function Availability() {
     });
   };
 
-  // Save weekly schedule changes
   const saveWeeklySchedule = () => {
     if (selectedPhotographer === "all") {
       toast({
@@ -381,10 +366,8 @@ export default function Availability() {
       return;
     }
     
-    // Get current weekly schedule being edited
     const currentSchedule = getCurrentWeeklySchedule();
     
-    // Update weekly schedule for the selected photographer only
     setPhotographerWeeklySchedules(prev => ({
       ...prev,
       [selectedPhotographer]: currentSchedule
@@ -397,10 +380,8 @@ export default function Availability() {
     });
   };
 
-  // Toggle edit mode
   const toggleEditMode = () => {
     if (editModeOpen) {
-      // If closing edit mode, also close any open edits
       setEditingAvailability(null);
       setEditingWeeklySchedule(false);
       setEditedAvailability({});
@@ -408,16 +389,13 @@ export default function Availability() {
     setEditModeOpen(!editModeOpen);
   };
 
-  // Check if the user can edit availability (admin)
   const canEditAvailability = isAdmin;
   
-  // Update weekly schedule for the current photographer
   const updateCurrentWeeklySchedule = (index: number, field: keyof WeeklyScheduleItem, value: any) => {
     if (selectedPhotographer === "all") return;
     
     const updatedSchedules = {...photographerWeeklySchedules};
     if (!updatedSchedules[selectedPhotographer]) {
-      // Initialize default schedule if not exists
       updatedSchedules[selectedPhotographer] = [
         { day: 'Mon', active: false, startTime: '9:00', endTime: '17:00' },
         { day: 'Tue', active: false, startTime: '9:00', endTime: '17:00' },
@@ -429,7 +407,6 @@ export default function Availability() {
       ];
     }
     
-    // Update specific field
     updatedSchedules[selectedPhotographer] = [
       ...updatedSchedules[selectedPhotographer].slice(0, index),
       {
@@ -450,54 +427,46 @@ export default function Availability() {
             <h1 className="text-2xl font-bold">Photographer Availability Management</h1>
             <p className="text-muted-foreground">Manage availability schedules for photographers</p>
           </div>
-          
+
           {canEditAvailability && (
             <Button
-              variant={editModeOpen ? "default" : "outline"}
+              variant={editModeOpen ? "default" : "primary"}
               onClick={toggleEditMode}
-              className="gap-2"
+              className="gap-2 rounded-full px-6 py-2 shadow-md transition-all hover:scale-105 text-base"
             >
               {editModeOpen ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  <span>Exit Edit Mode</span>
-                </>
+                <>Exit Edit Mode</>
               ) : (
-                <>
-                  <Edit className="h-4 w-4" />
-                  <span>Enter Edit Mode</span>
-                </>
+                <>Edit Mode</>
               )}
             </Button>
           )}
         </div>
-        
+
         {!canEditAvailability && (
           <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-4 mb-6 flex items-start">
             <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
             <p>You are in view-only mode. Only administrators can edit photographer availability.</p>
           </div>
         )}
-        
+
         <div className="mb-6">
-          <Card className="p-4">
+          <Card className="p-4 bg-gradient-to-br from-[#f1f0fb] to-[#e5deff] dark:from-[#221F26] dark:to-[#333] shadow-xl glass-morphism border-2 border-[#e5deff]/40 dark:border-[#222]/60">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <User className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium">Select Photographer:</span>
               </div>
-              
               <Select 
                 value={selectedPhotographer} 
                 onValueChange={(value) => {
                   setSelectedPhotographer(value);
-                  // Reset editing states when changing photographer
                   setEditingAvailability(null);
                   setEditedAvailability({});
                   setEditingWeeklySchedule(false);
                 }}
               >
-                <SelectTrigger className="w-full md:w-[250px]">
+                <SelectTrigger className="w-full md:w-[250px] rounded-lg shadow-lg border-2 border-[#9b87f5]/20 dark:border-[#2d225a] focus:ring-2 focus:ring-primary/50 transition">
                   <SelectValue placeholder="Select a photographer" />
                 </SelectTrigger>
                 <SelectContent>
@@ -512,11 +481,10 @@ export default function Availability() {
             </div>
           </Card>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Calendar and Weekly Schedule in the same row */}
           <div className="lg:col-span-8">
-            <Card className="p-4 h-full">
+            <Card className="p-4 h-full bg-gradient-to-br from-[#F1F0FB] to-[#E5DEFF] dark:from-[#1A1F2C] dark:to-[#222733] backdrop-blur-[2px] border-2 border-[#d6bcfa] dark:border-[#403E43] shadow-lg rounded-2xl">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">
                   {selectedPhotographer === "all" 
@@ -524,33 +492,54 @@ export default function Availability() {
                     : `${getPhotographerName(selectedPhotographer)}'s Schedule`}
                 </h2>
               </div>
-              
+
               <Calendar
                 mode="single"
                 selected={date}
                 onSelect={setDate}
-                className="rounded-md border shadow p-3 pointer-events-auto"
+                className="rounded-2xl border-none shadow transition ring-1 ring-[#e5deff]/60 dark:ring-[#403E43]/30 pointer-events-auto mx-auto w-full max-w-[400px] md:max-w-[80%] p-4 bg-[#fff]/60 dark:bg-[#1A1F2C]/70"
                 showOutsideDays={true}
                 modifiersClassNames={{
-                  selected: 'bg-primary text-primary-foreground',
+                  selected: 'bg-primary text-primary-foreground scale-110 font-bold shadow-lg border-2 border-[#9b87f5] dark:border-[#8B5CF6] rounded-xl',
+                  today: 'bg-[#fff7cd] dark:bg-[#222733] text-[#9b87f5] font-bold',
                 }}
                 modifiersStyles={{
                   selected: {
-                    fontWeight: "bold"
+                    fontWeight: "bold",
                   }
                 }}
                 components={{
                   Day: ({ date: dayDate }) => {
                     const { hasAvailable, hasBooked, hasUnavailable } = getAvailabilityIndicator(dayDate);
-                    
+
                     return (
-                      <div className="relative w-full h-full flex flex-col items-center justify-center">
-                        <div>{dayDate.getDate()}</div>
+                      <div className="relative w-full h-full flex flex-col items-center justify-center px-2 py-1">
+                        <span className="inline-flex items-center justify-center transition-all w-7 h-7 md:w-9 md:h-9 text-base rounded-xl hover:bg-[#E5DEFF]/70 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/40">
+                          {dayDate.getDate()}
+                        </span>
                         {(hasAvailable || hasBooked || hasUnavailable) && (
-                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
-                            {hasAvailable && <div className="h-2 w-2 rounded-full bg-green-500"></div>}
-                            {hasBooked && <div className="h-2 w-2 rounded-full bg-blue-500"></div>}
-                            {hasUnavailable && <div className="h-2 w-2 rounded-full bg-red-500"></div>}
+                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5 md:gap-1 z-10">
+                            {hasAvailable && (
+                              <span
+                                className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-1 ring-white"
+                                style={{ background: '#98e89e', border: '2px solid #f3f3f3' }}
+                                title="Available"
+                              ></span>
+                            )}
+                            {hasBooked && (
+                              <span
+                                className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-1 ring-white"
+                                style={{ background: '#aad4fe', border: '2px solid #f3f3f3' }}
+                                title="Booked"
+                              ></span>
+                            )}
+                            {hasUnavailable && (
+                              <span
+                                className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-1 ring-white"
+                                style={{ background: '#f89ba2', border: '2px solid #f3f3f3' }}
+                                title="Unavailable"
+                              ></span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -558,25 +547,24 @@ export default function Availability() {
                   }
                 }}
               />
-              
-              {/* Availability Legend */}
-              <div className="flex items-center gap-4 justify-center mt-4">
-                <div className="flex items-center gap-1">
-                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
+
+              <div className="flex items-center gap-6 justify-center mt-6">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-4 w-4 rounded-full" style={{ background: '#98e89e', border: '1.5px solid #e0f6e9' }}></span>
                   <span className="text-xs text-muted-foreground">Available</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                <div className="flex items-center gap-1.5">
+                  <span className="h-4 w-4 rounded-full" style={{ background: '#aad4fe', border: '1.5px solid #e7f1ff' }}></span>
                   <span className="text-xs text-muted-foreground">Booked</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                <div className="flex items-center gap-1.5">
+                  <span className="h-4 w-4 rounded-full" style={{ background: '#f89ba2', border: '1.5px solid #fde9eb' }}></span>
                   <span className="text-xs text-muted-foreground">Unavailable</span>
                 </div>
               </div>
 
               {canEditAvailability && editModeOpen && selectedPhotographer !== "all" && date && (
-                <div className="mt-4">
+                <div className="mt-8">
                   <Button 
                     onClick={() => {
                       if (date) {
@@ -601,16 +589,15 @@ export default function Availability() {
                         });
                       }
                     }}
-                    className="w-full"
+                    className="w-full rounded-xl bg-[#9b87f5] hover:bg-[#8B5CF6] text-white font-semibold py-3 text-base shadow-md transition-all"
                   >
-                    <Plus className="mr-2 h-4 w-4" /> Add Availability
+                    Add Availability
                   </Button>
                 </div>
               )}
             </Card>
           </div>
-          
-          {/* Weekly schedule in a secondary card beside the calendar */}
+
           <div className="lg:col-span-4">
             {selectedPhotographer !== "all" ? (
               <Card className="p-4 h-full">
@@ -721,8 +708,7 @@ export default function Availability() {
             )}
           </div>
         </div>
-        
-        {/* Selected Date Availabilities Section */}
+
         <div className="mt-6">
           <Card className="p-4">
             <div className="flex justify-between items-center mb-4">
@@ -753,7 +739,6 @@ export default function Availability() {
                 {selectedDateAvailabilities.map((avail) => (
                   <div key={avail.id}>
                     {editingAvailability === avail.id ? (
-                      // Edit mode
                       <Card className="p-3">
                         <div className="space-y-3">
                           <div>
@@ -827,7 +812,6 @@ export default function Availability() {
                         </div>
                       </Card>
                     ) : (
-                      // View mode
                       <Card 
                         className={`p-3 relative border-l-4 ${
                           avail.status === 'available' ? 'border-l-green-500' : 
@@ -912,8 +896,7 @@ export default function Availability() {
             )}
           </Card>
         </div>
-        
-        {/* Add Availability Dialog */}
+
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -985,8 +968,7 @@ export default function Availability() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        
-        {/* Delete Confirmation Dialog */}
+
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
