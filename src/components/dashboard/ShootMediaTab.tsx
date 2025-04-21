@@ -9,7 +9,10 @@ import {
   UploadIcon, 
   CheckIcon,
   Trash2Icon,
-  PresentationIcon
+  PresentationIcon,
+  View as ViewIcon,
+  Download as DownloadIcon,
+  Plus as PlusIcon,
 } from 'lucide-react';
 
 type MediaType = 'images' | 'videos' | 'files' | 'slideshows';
@@ -52,6 +55,28 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
     // This would delete the media in a real app
   };
   
+  const handleViewSlideshow = (url: string) => {
+    window.open(url, '_blank');
+  };
+
+  const handleDownloadSlideshow = (url: string, title: string) => {
+    // Simulate download by opening the link as slideshow URLs might be direct file links
+    const link = document.createElement('a');
+    link.href = url;
+    // Try to suggest the file name
+    link.download = `${title.replace(/\s+/g, "_") || "slideshow"}.mp4`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCreateSlideshow = () => {
+    console.log("Create New Slideshow clicked");
+    // Show form/dialog to create slideshow here in a real app
+    // For now, just toast or log
+    alert("New Slideshow creation coming soon!");
+  };
+
   const hasMedia = (): boolean => {
     if (!shoot.media) return false;
     
@@ -302,6 +327,14 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
         </TabsContent>
         
         <TabsContent value="slideshows" className="mt-0">
+          <div>
+            {isPhotographer && (
+              <Button variant="accent" className="mb-4" onClick={handleCreateSlideshow}>
+                <PlusIcon className="h-4 w-4 mr-2" />
+                New Slideshow
+              </Button>
+            )}
+          </div>
           {hasMediaType('slideshows') ? (
             <div className="space-y-2">
               {getSlideshows().map(slideshow => (
@@ -319,9 +352,18 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(slideshow.url, '_blank')}
+                      onClick={() => handleViewSlideshow(slideshow.url)}
                     >
+                      <ViewIcon className="h-4 w-4 mr-1" />
                       View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadSlideshow(slideshow.url, slideshow.title)}
+                    >
+                      <DownloadIcon className="h-4 w-4 mr-1" />
+                      Download
                     </Button>
                     {isPhotographer && (
                       <Button
