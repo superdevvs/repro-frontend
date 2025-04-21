@@ -430,10 +430,9 @@ export default function Availability() {
 
           {canEditAvailability && (
             <Button
-              variant={editModeOpen ? "default" : "accent"}
+              variant={editModeOpen ? "default" : "primary"}
               onClick={toggleEditMode}
-              className="gap-2 rounded-full px-8 py-2 shadow-lg transition-all hover:scale-105 text-base font-semibold"
-              style={{ minWidth: 130, marginLeft: 12 }}
+              className="gap-2 rounded-full px-6 py-2 shadow-md transition-all hover:scale-105 text-base"
             >
               {editModeOpen ? (
                 <>Exit Edit Mode</>
@@ -485,8 +484,8 @@ export default function Availability() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8">
-            <Card className="p-6 h-full bg-gradient-to-br from-[#F1F0FB] to-[#E5DEFF] dark:from-[#1A1F2C] dark:to-[#222733] border-2 border-[#d6bcfa] dark:border-[#403E43] shadow-xl rounded-2xl">
-              <div className="flex justify-between items-center mb-6">
+            <Card className="p-4 h-full bg-gradient-to-br from-[#F1F0FB] to-[#E5DEFF] dark:from-[#1A1F2C] dark:to-[#222733] backdrop-blur-[2px] border-2 border-[#d6bcfa] dark:border-[#403E43] shadow-lg rounded-2xl">
+              <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">
                   {selectedPhotographer === "all" 
                     ? "All Photographers' Schedule" 
@@ -494,87 +493,73 @@ export default function Availability() {
                 </h2>
               </div>
 
-              <div className="flex justify-center mb-4">
-                <div className="rounded-3xl shadow-md border border-[#ebe9f3] bg-white/70 p-2">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    className="rounded-2xl border-none shadow ring-1 ring-[#e5deff]/60 dark:ring-[#403E43]/30 pointer-events-auto w-full max-w-[400px] md:max-w-[80%] px-4 py-4 bg-[#fff]/60 dark:bg-[#1A1F2C]/70"
-                    showOutsideDays={true}
-                    modifiersClassNames={{
-                      selected: 'bg-primary text-primary-foreground font-bold shadow-lg border-2 border-[#9b87f5] dark:border-[#8B5CF6] rounded-xl',
-                      today: 'bg-[#fff7cd] dark:bg-[#222733] text-[#9b87f5] font-bold',
-                    }}
-                    modifiersStyles={{
-                      selected: {
-                        fontWeight: "bold",
-                      }
-                    }}
-                    components={{
-                      Day: ({ date: dayDate }) => {
-                        const { hasAvailable, hasBooked, hasUnavailable } = getAvailabilityIndicator(dayDate);
-                        const dots = [
-                          hasAvailable && (
-                            <span
-                              key="green"
-                              className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-2 ring-[#d2ebcb] shadow-sm"
-                              style={{ background: '#F2FCE2', marginRight: 3 }}
-                              title="Available"
-                            ></span>
-                          ),
-                          hasBooked && (
-                            <span
-                              key="orange"
-                              className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-2 ring-[#ffd8b0] shadow-sm"
-                              style={{ background: '#FEC6A1', marginRight: 3 }}
-                              title="Booked"
-                            ></span>
-                          ),
-                          hasUnavailable && (
-                            <span
-                              key="gray"
-                              className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-2 ring-[#e3e3eb] shadow-sm"
-                              style={{ background: '#F1F0FB' }}
-                              title="Unavailable"
-                            ></span>
-                          ),
-                        ].filter(Boolean);
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                className="rounded-2xl border-none shadow transition ring-1 ring-[#e5deff]/60 dark:ring-[#403E43]/30 pointer-events-auto mx-auto w-full max-w-[400px] md:max-w-[80%] p-4 bg-[#fff]/60 dark:bg-[#1A1F2C]/70"
+                showOutsideDays={true}
+                modifiersClassNames={{
+                  selected: 'bg-primary text-primary-foreground scale-110 font-bold shadow-lg border-2 border-[#9b87f5] dark:border-[#8B5CF6] rounded-xl',
+                  today: 'bg-[#fff7cd] dark:bg-[#222733] text-[#9b87f5] font-bold',
+                }}
+                modifiersStyles={{
+                  selected: {
+                    fontWeight: "bold",
+                  }
+                }}
+                components={{
+                  Day: ({ date: dayDate }) => {
+                    const { hasAvailable, hasBooked, hasUnavailable } = getAvailabilityIndicator(dayDate);
 
-                        return (
-                          <div
-                            className="relative w-full h-full flex flex-col items-center justify-center px-2 py-2 transition rounded-xl hover:bg-[#F1F0FB]/70 focus:outline-none focus:ring-2 focus:ring-primary/40 group"
-                            style={{
-                              minHeight: 48,
-                              minWidth: 36,
-                            }}
-                          >
-                            <span className="inline-flex items-center justify-center w-8 h-8 md:w-10 md:h-10 text-base rounded-xl group-hover:bg-[#E5DEFF]/50 group-hover:text-primary font-medium">
-                              {dayDate.getDate()}
-                            </span>
-                            <div className={`mt-1 flex flex-row gap-0.5 md:gap-1 z-10`}>
-                              {dots}
-                            </div>
+                    return (
+                      <div className="relative w-full h-full flex flex-col items-center justify-center px-2 py-1">
+                        <span className="inline-flex items-center justify-center transition-all w-7 h-7 md:w-9 md:h-9 text-base rounded-xl hover:bg-[#E5DEFF]/70 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/40">
+                          {dayDate.getDate()}
+                        </span>
+                        {(hasAvailable || hasBooked || hasUnavailable) && (
+                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5 md:gap-1 z-10">
+                            {hasAvailable && (
+                              <span
+                                className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-1 ring-white"
+                                style={{ background: '#98e89e', border: '2px solid #f3f3f3' }}
+                                title="Available"
+                              ></span>
+                            )}
+                            {hasBooked && (
+                              <span
+                                className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-1 ring-white"
+                                style={{ background: '#aad4fe', border: '2px solid #f3f3f3' }}
+                                title="Booked"
+                              ></span>
+                            )}
+                            {hasUnavailable && (
+                              <span
+                                className="rounded-full w-2.5 h-2.5 md:w-3 md:h-3 ring-1 ring-white"
+                                style={{ background: '#f89ba2', border: '2px solid #f3f3f3' }}
+                                title="Unavailable"
+                              ></span>
+                            )}
                           </div>
-                        )
-                      }
-                    }}
-                  />
-                </div>
-              </div>
+                        )}
+                      </div>
+                    )
+                  }
+                }}
+              />
 
-              <div className="flex items-center gap-6 justify-center mt-7">
-                <div className="flex items-center gap-2">
-                  <span className="h-4 w-4 rounded-full shadow-sm ring-2 ring-[#d2ebcb] border" style={{ background: '#F2FCE2' }} />
-                  <span className="text-xs text-muted-foreground font-medium">Available</span>
+              <div className="flex items-center gap-6 justify-center mt-6">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-4 w-4 rounded-full" style={{ background: '#98e89e', border: '1.5px solid #e0f6e9' }}></span>
+                  <span className="text-xs text-muted-foreground">Available</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-4 w-4 rounded-full shadow-sm ring-2 ring-[#ffd8b0] border" style={{ background: '#FEC6A1' }} />
-                  <span className="text-xs text-muted-foreground font-medium">Booked</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="h-4 w-4 rounded-full" style={{ background: '#aad4fe', border: '1.5px solid #e7f1ff' }}></span>
+                  <span className="text-xs text-muted-foreground">Booked</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-4 w-4 rounded-full shadow-sm ring-2 ring-[#e3e3eb] border" style={{ background: '#F1F0FB' }} />
-                  <span className="text-xs text-muted-foreground font-medium">Unavailable</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="h-4 w-4 rounded-full" style={{ background: '#f89ba2', border: '1.5px solid #fde9eb' }}></span>
+                  <span className="text-xs text-muted-foreground">Unavailable</span>
                 </div>
               </div>
 
@@ -604,8 +589,7 @@ export default function Availability() {
                         });
                       }
                     }}
-                    className="w-full rounded-xl bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6] hover:brightness-110 text-white font-semibold py-3 text-[1rem] shadow-md transition-all"
-                    style={{marginTop: 6}}
+                    className="w-full rounded-xl bg-[#9b87f5] hover:bg-[#8B5CF6] text-white font-semibold py-3 text-base shadow-md transition-all"
                   >
                     Add Availability
                   </Button>
@@ -744,7 +728,7 @@ export default function Availability() {
                     setIsAddDialogOpen(true);
                   }}
                 >
-                  <Plus className="mr-2 h-4 w-4" /> 
+                  <Plus className="h-4 w-4 mr-2" /> 
                   Add Slot
                 </Button>
               )}
