@@ -1,16 +1,9 @@
+
 import React, { useState } from 'react';
 import { 
-  Calendar as CalendarIcon, 
-  Download, 
-  Eye, 
-  MoreHorizontal, 
-  Printer, 
-  Send, 
-  Edit, 
+  Calendar as CalendarIcon,
+  MoreHorizontal,
   Trash2,
-  Check,
-  List,
-  LayoutGrid
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -125,10 +118,10 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
           </Tabs>
           <div className="flex gap-1 ml-4">
             <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" aria-label="List view" onClick={() => setViewMode('list')}>
-              <List className="h-5 w-5" />
+              List View
             </Button>
             <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" aria-label="Grid view" onClick={() => setViewMode('grid')}>
-              <LayoutGrid className="h-5 w-5" />
+              Grid View
             </Button>
           </div>
         </div>
@@ -159,12 +152,8 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
                       <td className="py-2 px-3">{format(new Date(invoice.date), 'MMM d, yyyy')}</td>
                       <td className="py-2 px-3">
                         <div className="flex gap-1">
-                          <Button variant="outline" size="icon" onClick={() => handleViewInvoice(invoice)} aria-label="View">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="icon" onClick={() => handleDownloadInvoice(invoice)} aria-label="Download">
-                            <Download className="h-4 w-4" />
-                          </Button>
+                          <Button variant="outline" size="icon" onClick={() => handleViewInvoice(invoice)} aria-label="View">View</Button>
+                          <Button variant="outline" size="icon" onClick={() => handleDownloadInvoice(invoice)} aria-label="Download">Download</Button>
                           {(invoice.status === "pending" || invoice.status === "overdue") && (
                             <Button
                               variant="accent"
@@ -173,12 +162,10 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
                               className="!px-2"
                               aria-label="Mark as Paid"
                             >
-                              <Check className="h-4 w-4" />
+                              Mark Paid
                             </Button>
                           )}
-                          <Button variant="outline" size="icon" onClick={() => handleEditInvoice(invoice)} aria-label="Edit">
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <Button variant="outline" size="icon" onClick={() => handleEditInvoice(invoice)} aria-label="Edit">Edit</Button>
                         </div>
                       </td>
                     </tr>
@@ -286,26 +273,26 @@ function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onD
             variant="outline" 
             size="sm" 
             onClick={() => onView(invoice)}
-            className="flex items-center gap-1"
+            className="flex items-center"
           >
-            <Eye className="h-4 w-4" /> View
+            View
           </Button>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => onDownload(invoice)}
-            className="hidden sm:flex items-center gap-1"
+            className="hidden sm:flex items-center"
           >
-            <Download className="h-4 w-4" /> Download
+            Download
           </Button>
           {showMarkAsPaid && (
             <Button
               variant="accent"
               size="sm"
               onClick={() => onPay(invoice)}
-              className="flex items-center gap-1"
+              className="flex items-center"
             >
-              <Check className="h-4 w-4" /> Mark as Paid
+              Mark as Paid
             </Button>
           )}
         </div>
@@ -315,38 +302,26 @@ function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onD
             variant="outline" 
             size="sm" 
             onClick={() => onEdit(invoice)}
-            className="flex items-center gap-1"
+            className="flex items-center"
           >
-            <Edit className="h-4 w-4" /> Edit
+            Edit
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
+                More
                 <span className="sr-only">More options</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onView(invoice)} className="flex items-center gap-2">
-                <Eye className="h-4 w-4" /> View
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onSend(invoice)} className="flex items-center gap-2">
-                <Send className="h-4 w-4" /> Send
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDownload(invoice)} className="flex items-center gap-2">
-                <Download className="h-4 w-4" /> Download
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onPrint(invoice)} className="flex items-center gap-2">
-                <Printer className="h-4 w-4" /> Print
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onView(invoice)}>View</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onSend(invoice)}>Send</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDownload(invoice)}>Download</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onPrint(invoice)}>Print</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onEdit(invoice)} className="flex items-center gap-2">
-                <Edit className="h-4 w-4" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(invoice)} className="text-red-500 flex items-center gap-2">
-                <Trash2 className="h-4 w-4" /> Delete
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(invoice)}>Edit</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDelete(invoice)} className="text-red-500">Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
