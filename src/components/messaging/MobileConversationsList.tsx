@@ -48,35 +48,48 @@ export function MobileConversationsList({
   );
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-4 py-3 border-b flex-shrink-0">
+    <div className={cn(
+      "flex flex-col h-full",
+      "bg-gradient-to-br from-[#F1F0FB]/90 to-[#E5DEFF]/90 dark:from-[#1A1F2C] dark:to-[#403E43]"
+    )}>
+      <div className="px-4 py-3 border-b flex-shrink-0"
+        style={{
+          borderBottom: "1.5px solid rgba(139, 131, 210, 0.09)",
+          background: "linear-gradient(90deg, #E5DEFF 60%, #D3E4FD 100%)",
+          backdropFilter: 'blur(8px)'
+        }}
+      >
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">Messages</h2>
-          <Button variant="outline" size="sm" className="rounded-full">
+          <h2 className="text-base font-semibold text-[#7E69AB]">
+            Messages
+          </h2>
+          <Button variant="glass" size="sm" className="rounded-full shadow-glass-card">
             <PlusCircle className="h-4 w-4" />
           </Button>
         </div>
       </div>
       
-      <div className="p-3 border-b flex-shrink-0">
+      <div className="p-3 border-b flex-shrink-0 bg-white/60 dark:bg-[#221F26]/80 transition"
+        style={{ borderBottom: "1.5px solid #e5deff55" }}
+      >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search conversations..." 
-            className="pl-9"
+            className="pl-9 glass-card border-primary/20"
             value={filter.searchQuery}
             onChange={(e) => setFilter({ ...filter, searchQuery: e.target.value })}
           />
         </div>
         
         <div className="flex items-center justify-between mt-3">
-          <div className="flex bg-muted rounded-md p-1 flex-1">
+          <div className="flex bg-[#F1F0FB] dark:bg-[#2D2C40] rounded-md p-1 flex-1 border border-primary/10">
             <button
               onClick={() => setActiveTab('inbox')}
               className={cn(
                 "flex-1 px-3 py-1 text-xs font-medium rounded-sm transition-colors",
                 activeTab === 'inbox' 
-                  ? "bg-background text-foreground" 
+                  ? "bg-white shadow-glass-card text-[#6E59A5]" 
                   : "text-muted-foreground"
               )}
             >
@@ -87,7 +100,7 @@ export function MobileConversationsList({
               className={cn(
                 "flex-1 px-3 py-1 text-xs font-medium rounded-sm transition-colors",
                 activeTab === 'archived' 
-                  ? "bg-background text-foreground" 
+                  ? "bg-white shadow-glass-card text-[#6E59A5]" 
                   : "text-muted-foreground"
               )}
             >
@@ -96,12 +109,12 @@ export function MobileConversationsList({
           </div>
           
           <Button 
-            variant="outline" 
+            variant="glass" 
             size="sm" 
             className="ml-2 h-8 w-8 p-0"
             onClick={toggleMobileMenu}
           >
-            <FilterIcon className="h-4 w-4" />
+            <FilterIcon className="h-4 w-4 text-[#7E69AB]" />
           </Button>
         </div>
       </div>
@@ -111,13 +124,16 @@ export function MobileConversationsList({
           <div
             key={conversation.id}
             className={cn(
-              "cursor-pointer p-3 border-b transition-colors",
-              selectedConversation === conversation.id ? "bg-muted/50" : ""
+              "cursor-pointer p-3 border-b transition-colors bg-white/70 dark:bg-[#2D2C40]/40 hover:bg-[#e5deff]/90",
+              selectedConversation === conversation.id
+                ? "bg-[#e5deff] dark:bg-[#403E43]/70 border-l-4 border-[#9b87f5]"
+                : ""
             )}
             onClick={() => onSelectConversation(conversation.id)}
+            style={{ borderBottom: "1.5px solid #E5DEFF" }}
           >
             <div className="flex items-start gap-3">
-              <Avatar className="h-10 w-10">
+              <Avatar className="h-10 w-10 shadow-glass-card">
                 <AvatarImage src={conversation.participant.avatar} />
                 <AvatarFallback>{conversation.participant.name.charAt(0)}</AvatarFallback>
               </Avatar>
@@ -125,7 +141,7 @@ export function MobileConversationsList({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <p className={cn(
-                    "font-medium truncate",
+                    "font-medium truncate text-[#6E59A5]",
                     conversation.unreadCount > 0 && "font-bold"
                   )}>
                     {conversation.participant.name}
@@ -142,8 +158,8 @@ export function MobileConversationsList({
                 )}
                 
                 <p className={cn(
-                  "text-sm text-muted-foreground truncate mt-0.5",
-                  conversation.unreadCount > 0 && "font-medium text-foreground"
+                  "text-sm truncate mt-0.5",
+                  conversation.unreadCount > 0 ? "font-medium text-[#22225c]" : "text-muted-foreground"
                 )}>
                   {conversation.lastMessage}
                 </p>
@@ -172,3 +188,4 @@ export function MobileConversationsList({
     </div>
   );
 }
+

@@ -48,6 +48,11 @@ export function DesktopMessagingLayout({
     <ResizablePanelGroup
       direction="horizontal"
       className="rounded-lg overflow-hidden border"
+      style={{
+        background:
+          "linear-gradient(100deg, #f9faff 60%, #e5deff 100%)",
+        boxShadow: "0 4px 32px rgba(159,164,230,0.09)"
+      }}
     >
       {!isConversationsCollapsed && (
         <>
@@ -55,6 +60,7 @@ export function DesktopMessagingLayout({
             defaultSize={25} 
             minSize={15}
             maxSize={40}
+            className="bg-gradient-to-br from-[#E5DEFF]/90 to-[#D3E4FD]/70 dark:from-[#1A1F2C] dark:to-[#403E43] border-r"
           >
             <ConversationList 
               conversations={conversations}
@@ -71,7 +77,9 @@ export function DesktopMessagingLayout({
         </>
       )}
       
-      <ResizablePanel defaultSize={isConversationsCollapsed ? 65 : 45}>
+      <ResizablePanel defaultSize={isConversationsCollapsed ? 65 : 45}
+        className="bg-white/80 dark:bg-[#221F26]/90"
+      >
         <div className="flex flex-col h-full">
           {selectedConversation && currentConversation ? (
             <>
@@ -112,7 +120,7 @@ export function DesktopMessagingLayout({
             defaultSize={30}
             minSize={20}
             maxSize={40}
-            className="hidden md:block border-l"
+            className="hidden md:block border-l bg-gradient-to-tl from-[#E5DEFF]/80 to-[#FFFFFF]/80 dark:from-[#1A1F2C] dark:to-[#403E43]"
           >
             <ProjectContextBar 
               conversation={currentConversation}
