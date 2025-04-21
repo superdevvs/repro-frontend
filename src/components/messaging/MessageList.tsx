@@ -27,15 +27,15 @@ export function MessageList({ messages, currentUserId, onMarkAsTask, selectedMes
   const groupedMessages = groupMessagesByDate(messages);
 
   return (
-    <ScrollArea className="h-full bg-gradient-to-b from-transparent via-[#F1F0FB]/70 to-[#E5DEFF]/30 dark:via-[#26293B]/60 dark:to-[#201F20]/30 transition">
+    <ScrollArea className="h-full bg-gradient-to-b from-transparent via-[#222638]/70 to-[#1A1F2C]/90 dark:via-[#26293B]/90 dark:to-[#1A1F2C]/90 transition">
       {hasNoMessages(messages) ? (
-        <div className="flex flex-col items-center justify-center h-full p-8 text-center text-[#7E69AB] dark:text-[#d3cafd] font-medium">
+        <div className="flex flex-col items-center justify-center h-full p-8 text-center text-[#9b87f5] font-semibold">
           <p>No messages yet</p>
         </div>
       ) : (
         <div>
           {Object.keys(groupedMessages).map((date) => (
-            <div key={date} className="border-b last:border-b-0 border-[#E5DEFF]/50">
+            <div key={date} className="border-b border-[#403E43] last:border-b-0">
               <MessageDateHeader date={date} />
               {groupedMessages[date].map((message) => (
                 <MessageItem
