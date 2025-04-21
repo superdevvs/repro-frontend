@@ -23,69 +23,96 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+const demoImages = [
+  {
+    url: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
+    name: "Deer Beside Trees",
+    size: "4.2 MB",
+    dimensions: "3634 x 5998",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1466721591366-2d5fba72006d",
+    name: "Antelope & Zebra Field",
+    size: "3.8 MB",
+    dimensions: "4221 x 2980",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1493962853295-0fd70327578a",
+    name: "Ox On Mountain",
+    size: "6.0 MB",
+    dimensions: "6000 x 4000",
+  },
+  {
+    url: "https://images.unsplash.com/photo-1465379944081-7f47de8d74ac",
+    name: "Cattle In Forest",
+    size: "5.5 MB",
+    dimensions: "5472 x 3648",
+  }
+];
+
 const mediaItems = [
   {
     id: '1',
     type: 'image',
-    name: '123_main_st_front.jpg',
-    thumbnail: 'https://placehold.co/600x400/png',
+    name: demoImages[0].name,
+    thumbnail: `${demoImages[0].url}?w=600&h=400&fit=crop`,
     date: '2023-05-10',
-    size: '4.2 MB',
-    dimensions: '4000 x 3000',
+    size: demoImages[0].size,
+    dimensions: demoImages[0].dimensions,
     property: '123 Main Street, Anytown',
     status: 'approved',
   },
   {
     id: '2',
     type: 'image',
-    name: '123_main_st_kitchen.jpg',
-    thumbnail: 'https://placehold.co/600x400/png',
+    name: demoImages[1].name,
+    thumbnail: `${demoImages[1].url}?w=600&h=400&fit=crop`,
     date: '2023-05-10',
-    size: '3.8 MB',
-    dimensions: '4000 x 3000',
+    size: demoImages[1].size,
+    dimensions: demoImages[1].dimensions,
     property: '123 Main Street, Anytown',
     status: 'approved',
   },
   {
     id: '3',
-    type: 'video',
-    name: '123_main_st_walkthrough.mp4',
-    thumbnail: 'https://placehold.co/600x400/png',
-    date: '2023-05-10',
-    size: '24.6 MB',
-    duration: '1:32',
-    property: '123 Main Street, Anytown',
-    status: 'pending',
+    type: 'image',
+    name: demoImages[2].name,
+    thumbnail: `${demoImages[2].url}?w=600&h=400&fit=crop`,
+    date: '2023-05-12',
+    size: demoImages[2].size,
+    dimensions: demoImages[2].dimensions,
+    property: '456 Park Avenue, Somewhere',
+    status: 'approved',
   },
   {
     id: '4',
     type: 'image',
-    name: '456_park_ave_front.jpg',
-    thumbnail: 'https://placehold.co/600x400/png',
+    name: demoImages[3].name,
+    thumbnail: `${demoImages[3].url}?w=600&h=400&fit=crop`,
     date: '2023-05-12',
-    size: '4.5 MB',
-    dimensions: '4000 x 3000',
+    size: demoImages[3].size,
+    dimensions: demoImages[3].dimensions,
     property: '456 Park Avenue, Somewhere',
     status: 'approved',
   },
   {
     id: '5',
-    type: 'image',
-    name: '456_park_ave_living.jpg',
-    thumbnail: 'https://placehold.co/600x400/png',
-    date: '2023-05-12',
-    size: '3.9 MB',
-    dimensions: '4000 x 3000',
-    property: '456 Park Avenue, Somewhere',
-    status: 'rejected',
+    type: 'video',
+    name: 'Mountain Walkthrough.mp4',
+    thumbnail: `${demoImages[2].url}?w=600&h=400&fit=crop`,
+    date: '2023-05-14',
+    size: '24.6 MB',
+    duration: '1:32',
+    property: '234 Mountain View Ave',
+    status: 'pending',
   },
   {
     id: '6',
     type: 'document',
-    name: '456_park_ave_floorplan.pdf',
+    name: 'Sample Plan.pdf',
     date: '2023-05-12',
     size: '1.2 MB',
-    property: '456 Park Avenue, Somewhere',
+    property: '234 Mountain View Ave',
     status: 'approved',
   },
 ];
@@ -138,6 +165,10 @@ const MediaPage = () => {
     setNewFolderDialogOpen(false);
   };
 
+  const handleCreateSlideshow = () => {
+    alert('New Slideshow creation coming soon!');
+  };
+
   const currentFolders = folders.filter(folder => folder.parent === currentFolder);
 
   return (
@@ -170,6 +201,14 @@ const MediaPage = () => {
               >
                 <UploadIcon className="h-4 w-4" />
                 Upload Media
+              </Button>
+              <Button
+                variant="secondary"
+                className="gap-2"
+                onClick={handleCreateSlideshow}
+              >
+                <PlusIcon className="h-4 w-4" />
+                New Slideshow
               </Button>
             </div>
           </div>
