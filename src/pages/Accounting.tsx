@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -14,6 +13,7 @@ import { PaymentDialog } from '@/components/invoices/PaymentDialog';
 import { BatchInvoiceDialog } from '@/components/accounting/BatchInvoiceDialog';
 import { InvoiceData } from '@/utils/invoiceUtils';
 import { useToast } from '@/hooks/use-toast';
+import { EditInvoiceDialog } from '@/components/invoices/EditInvoiceDialog';
 
 // We're reusing the existing initial invoices data for now
 import { initialInvoices } from '@/components/accounting/data';
@@ -27,6 +27,7 @@ const AccountingPage = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
   const [timeFilter, setTimeFilter] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleDownloadInvoice = (invoice: InvoiceData) => {
     toast({
@@ -47,12 +48,8 @@ const AccountingPage = () => {
   };
   
   const handleEditInvoice = (invoice: InvoiceData) => {
-    toast({
-      title: "Edit Invoice",
-      description: `Editing invoice ${invoice.id}.`,
-      variant: "default",
-    });
-    // In a real app, this would open an edit dialog
+    setSelectedInvoice(invoice);
+    setEditDialogOpen(true);
   };
 
   const closeViewDialog = () => {
@@ -107,6 +104,15 @@ const AccountingPage = () => {
       description: `Payment reminder sent to ${invoice.client} for invoice ${invoice.id}.`,
       variant: "default",
     });
+  };
+
+  const handleInvoiceEdit = (updatedInvoice: InvoiceData) => {
+    setInvoices(prev =>
+      prev.map(inv =>
+        inv.id === updatedInvoice.id ? { ...inv, ...updatedInvoice } : inv
+      )
+    );
+    setEditDialogOpen(false);
   };
 
   return (
@@ -174,6 +180,15 @@ const AccountingPage = () => {
         onClose={() => setBatchDialogOpen(false)}
         onCreateBatch={handleCreateBatchInvoices}
       />
+
+      {selectedInvoice && (
+        <EditInvoiceDialog
+          isOpen={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          invoice={selectedInvoice}
+          onInvoiceEdit={handleInvoiceEdit}
+        />
+      )}
     </DashboardLayout>
   );
 };
