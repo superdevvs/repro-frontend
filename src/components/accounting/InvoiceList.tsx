@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Calendar as CalendarIcon, 
@@ -9,7 +8,9 @@ import {
   Send, 
   Edit, 
   Trash2,
-  Check 
+  Check,
+  List,
+  LayoutGrid
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -45,6 +46,7 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
   const [viewInvoiceDialogOpen, setViewInvoiceDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'paid' | 'overdue'>('all');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const filteredInvoices = activeTab === 'all' 
     ? data.invoices 
@@ -112,120 +114,113 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
   return (
     <div className="w-full">
       <Card className="mb-6">
-        <Tabs defaultValue="all" className="w-full" onValueChange={(value) => setActiveTab(value as any)}>
-          <div className="p-4 border-b">
-            <TabsList className="grid grid-cols-4 w-full">
+        <div className="flex items-center justify-between p-4 border-b">
+          <Tabs defaultValue="all" className="w-auto" onValueChange={(value) => setActiveTab(value as any)}>
+            <TabsList className="grid grid-cols-4 w-full min-w-[320px]">
               <TabsTrigger value="all">All Invoices</TabsTrigger>
               <TabsTrigger value="pending">Pending</TabsTrigger>
               <TabsTrigger value="paid">Paid</TabsTrigger>
               <TabsTrigger value="overdue">Overdue</TabsTrigger>
             </TabsList>
+          </Tabs>
+          <div className="flex gap-1 ml-4">
+            <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" aria-label="List view" onClick={() => setViewMode('list')}>
+              <List className="h-5 w-5" />
+            </Button>
+            <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" aria-label="Grid view" onClick={() => setViewMode('grid')}>
+              <LayoutGrid className="h-5 w-5" />
+            </Button>
           </div>
+        </div>
 
-          <TabsContent value="all" className="p-0">
-            <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
-              <div className="space-y-4 p-4">
-                {filteredInvoices.map((invoice) => (
-                  <InvoiceItem 
-                    key={invoice.id} 
-                    invoice={invoice}
-                    onView={handleViewInvoice}
-                    onDownload={handleDownloadInvoice}
-                    onSend={handleSendInvoice}
-                    onPrint={handlePrintInvoice}
-                    onEdit={handleEditInvoice}
-                    onDelete={handleDeleteInvoice}
-                    getStatusColor={getStatusColor}
-                    onPay={onPay}
-                  />
-                ))}
-                {filteredInvoices.length === 0 && (
-                  <div className="py-8 text-center">
-                    <p className="text-muted-foreground">No invoices found</p>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </TabsContent>
-          
-          <TabsContent value="pending" className="p-0">
-            <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
-              <div className="space-y-4 p-4">
-                {filteredInvoices.map((invoice) => (
-                  <InvoiceItem 
-                    key={invoice.id} 
-                    invoice={invoice}
-                    onView={handleViewInvoice}
-                    onDownload={handleDownloadInvoice}
-                    onSend={handleSendInvoice}
-                    onPrint={handlePrintInvoice}
-                    onEdit={handleEditInvoice}
-                    onDelete={handleDeleteInvoice}
-                    getStatusColor={getStatusColor}
-                    onPay={onPay}
-                  />
-                ))}
-                {filteredInvoices.length === 0 && (
-                  <div className="py-8 text-center">
-                    <p className="text-muted-foreground">No pending invoices found</p>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </TabsContent>
-          
-          <TabsContent value="paid" className="p-0">
-            <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
-              <div className="space-y-4 p-4">
-                {filteredInvoices.map((invoice) => (
-                  <InvoiceItem 
-                    key={invoice.id} 
-                    invoice={invoice}
-                    onView={handleViewInvoice}
-                    onDownload={handleDownloadInvoice}
-                    onSend={handleSendInvoice}
-                    onPrint={handlePrintInvoice}
-                    onEdit={handleEditInvoice}
-                    onDelete={handleDeleteInvoice}
-                    getStatusColor={getStatusColor}
-                    onPay={onPay}
-                  />
-                ))}
-                {filteredInvoices.length === 0 && (
-                  <div className="py-8 text-center">
-                    <p className="text-muted-foreground">No paid invoices found</p>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </TabsContent>
-          
-          <TabsContent value="overdue" className="p-0">
-            <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
-              <div className="space-y-4 p-4">
-                {filteredInvoices.map((invoice) => (
-                  <InvoiceItem 
-                    key={invoice.id} 
-                    invoice={invoice}
-                    onView={handleViewInvoice}
-                    onDownload={handleDownloadInvoice}
-                    onSend={handleSendInvoice}
-                    onPrint={handlePrintInvoice}
-                    onEdit={handleEditInvoice}
-                    onDelete={handleDeleteInvoice}
-                    getStatusColor={getStatusColor}
-                    onPay={onPay}
-                  />
-                ))}
-                {filteredInvoices.length === 0 && (
-                  <div className="py-8 text-center">
-                    <p className="text-muted-foreground">No overdue invoices found</p>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
+        <div>
+          {viewMode === 'list' ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="py-2 px-3 text-left">Invoice #</th>
+                    <th className="py-2 px-3 text-left">Client</th>
+                    <th className="py-2 px-3 text-left">Status</th>
+                    <th className="py-2 px-3 text-left">Amount</th>
+                    <th className="py-2 px-3 text-left">Date</th>
+                    <th className="py-2 px-3 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredInvoices.map((invoice) => (
+                    <tr key={invoice.id} className="border-b hover:bg-muted/30 transition">
+                      <td className="py-2 px-3 font-medium">#{invoice.number}</td>
+                      <td className="py-2 px-3">{invoice.client}</td>
+                      <td className="py-2 px-3">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(invoice.status)}`}>{invoice.status}</span>
+                      </td>
+                      <td className="py-2 px-3">${invoice.amount}</td>
+                      <td className="py-2 px-3">{format(new Date(invoice.date), 'MMM d, yyyy')}</td>
+                      <td className="py-2 px-3">
+                        <div className="flex gap-1">
+                          <Button variant="outline" size="icon" onClick={() => handleViewInvoice(invoice)} aria-label="View">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="icon" onClick={() => handleDownloadInvoice(invoice)} aria-label="Download">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          {(invoice.status === "pending" || invoice.status === "overdue") && (
+                            <Button
+                              variant="accent"
+                              size="icon"
+                              onClick={() => onPay(invoice)}
+                              className="!px-2"
+                              aria-label="Mark as Paid"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button variant="outline" size="icon" onClick={() => handleEditInvoice(invoice)} aria-label="Edit">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredInvoices.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                        No invoices found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <TabsContent value={activeTab} className="p-0">
+              <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
+                <div className="space-y-4 p-4">
+                  {filteredInvoices.map((invoice) => (
+                    <InvoiceItem 
+                      key={invoice.id} 
+                      invoice={invoice}
+                      onView={handleViewInvoice}
+                      onDownload={handleDownloadInvoice}
+                      onSend={handleSendInvoice}
+                      onPrint={handlePrintInvoice}
+                      onEdit={handleEditInvoice}
+                      onDelete={handleDeleteInvoice}
+                      getStatusColor={getStatusColor}
+                      onPay={onPay}
+                    />
+                  ))}
+                  {filteredInvoices.length === 0 && (
+                    <div className="py-8 text-center">
+                      <p className="text-muted-foreground">No invoices found</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          )}
+        </div>
       </Card>
       
       {selectedInvoice && (
