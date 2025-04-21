@@ -2,8 +2,6 @@
 import React, { useState } from 'react';
 import { 
   Calendar as CalendarIcon,
-  MoreHorizontal,
-  Trash2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -107,20 +105,20 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
   return (
     <div className="w-full">
       <Card className="mb-6">
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-3 border-b">
           <Tabs defaultValue="all" className="w-auto" onValueChange={(value) => setActiveTab(value as any)}>
             <TabsList className="grid grid-cols-4 w-full min-w-[320px]">
-              <TabsTrigger value="all">All Invoices</TabsTrigger>
-              <TabsTrigger value="pending">Pending</TabsTrigger>
-              <TabsTrigger value="paid">Paid</TabsTrigger>
-              <TabsTrigger value="overdue">Overdue</TabsTrigger>
+              <TabsTrigger value="all" className="py-1 text-sm">All Invoices</TabsTrigger>
+              <TabsTrigger value="pending" className="py-1 text-sm">Pending</TabsTrigger>
+              <TabsTrigger value="paid" className="py-1 text-sm">Paid</TabsTrigger>
+              <TabsTrigger value="overdue" className="py-1 text-sm">Overdue</TabsTrigger>
             </TabsList>
           </Tabs>
-          <div className="flex gap-1 ml-4">
-            <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" aria-label="List view" onClick={() => setViewMode('list')}>
+          <div className="flex gap-1 ml-4 text-xs">
+            <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="sm" aria-label="List view" onClick={() => setViewMode('list')}>
               List View
             </Button>
-            <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" aria-label="Grid view" onClick={() => setViewMode('grid')}>
+            <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="sm" aria-label="Grid view" onClick={() => setViewMode('grid')}>
               Grid View
             </Button>
           </div>
@@ -132,47 +130,47 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="py-2 px-3 text-left">Invoice #</th>
-                    <th className="py-2 px-3 text-left">Client</th>
-                    <th className="py-2 px-3 text-left">Status</th>
-                    <th className="py-2 px-3 text-left">Amount</th>
-                    <th className="py-2 px-3 text-left">Date</th>
-                    <th className="py-2 px-3 text-left">Actions</th>
+                    <th className="py-1 px-2 text-left">Invoice #</th>
+                    <th className="py-1 px-2 text-left">Client</th>
+                    <th className="py-1 px-2 text-left">Status</th>
+                    <th className="py-1 px-2 text-left">Amount</th>
+                    <th className="py-1 px-2 text-left">Date</th>
+                    <th className="py-1 px-2 text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredInvoices.map((invoice) => (
                     <tr key={invoice.id} className="border-b hover:bg-muted/30 transition">
-                      <td className="py-2 px-3 font-medium">#{invoice.number}</td>
-                      <td className="py-2 px-3">{invoice.client}</td>
-                      <td className="py-2 px-3">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(invoice.status)}`}>{invoice.status}</span>
+                      <td className="py-1 px-2 font-medium text-xs">#{invoice.number}</td>
+                      <td className="py-1 px-2 text-xs">{invoice.client}</td>
+                      <td className="py-1 px-2">
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${getStatusColor(invoice.status)}`}>{invoice.status}</span>
                       </td>
-                      <td className="py-2 px-3">${invoice.amount}</td>
-                      <td className="py-2 px-3">{format(new Date(invoice.date), 'MMM d, yyyy')}</td>
-                      <td className="py-2 px-3">
-                        <div className="flex gap-1">
-                          <Button variant="outline" size="icon" onClick={() => handleViewInvoice(invoice)} aria-label="View">View</Button>
-                          <Button variant="outline" size="icon" onClick={() => handleDownloadInvoice(invoice)} aria-label="Download">Download</Button>
+                      <td className="py-1 px-2 text-xs">${invoice.amount}</td>
+                      <td className="py-1 px-2 text-xs">{format(new Date(invoice.date), 'MMM d, yyyy')}</td>
+                      <td className="py-1 px-2">
+                        <div className="flex flex-wrap gap-1">
+                          <Button variant="outline" size="sm" onClick={() => handleViewInvoice(invoice)} aria-label="View" className="px-3 py-1 text-xs">View</Button>
+                          <Button variant="outline" size="sm" onClick={() => handleDownloadInvoice(invoice)} aria-label="Download" className="px-3 py-1 text-xs">Download</Button>
                           {(invoice.status === "pending" || invoice.status === "overdue") && (
                             <Button
                               variant="accent"
-                              size="icon"
+                              size="sm"
                               onClick={() => onPay(invoice)}
-                              className="!px-2"
+                              className="!px-3 py-1 text-xs"
                               aria-label="Mark as Paid"
                             >
                               Mark Paid
                             </Button>
                           )}
-                          <Button variant="outline" size="icon" onClick={() => handleEditInvoice(invoice)} aria-label="Edit">Edit</Button>
+                          <Button variant="outline" size="sm" onClick={() => handleEditInvoice(invoice)} aria-label="Edit" className="px-3 py-1 text-xs">Edit</Button>
                         </div>
                       </td>
                     </tr>
                   ))}
                   {filteredInvoices.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={6} className="py-4 text-center text-muted-foreground text-sm">
                         No invoices found
                       </td>
                     </tr>
@@ -183,7 +181,7 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
           ) : (
             <TabsContent value={activeTab} className="p-0">
               <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
-                <div className="space-y-4 p-4">
+                <div className="space-y-3 p-3">
                   {filteredInvoices.map((invoice) => (
                     <InvoiceItem 
                       key={invoice.id} 
@@ -200,7 +198,7 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
                   ))}
                   {filteredInvoices.length === 0 && (
                     <div className="py-8 text-center">
-                      <p className="text-muted-foreground">No invoices found</p>
+                      <p className="text-muted-foreground text-sm">No invoices found</p>
                     </div>
                   )}
                 </div>
@@ -236,17 +234,17 @@ interface InvoiceItemProps {
 function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onDelete, getStatusColor, onPay }: InvoiceItemProps) {
   const showMarkAsPaid = invoice.status === 'pending' || invoice.status === 'overdue';
   return (
-    <div className="flex flex-col bg-card rounded-lg shadow">
-      <div className="p-4 flex-row justify-between items-center border-b border-border hidden sm:flex">
+    <div className="flex flex-col bg-card rounded-lg shadow-sm">
+      <div className="p-3 flex-row justify-between items-center border-b border-border hidden sm:flex">
         <div className="flex items-center gap-3">
           <div>
-            <h3 className="font-medium">Invoice #{invoice.number}</h3>
-            <div className="text-sm text-muted-foreground">{invoice.client}</div>
+            <h3 className="font-medium text-sm">Invoice #{invoice.number}</h3>
+            <div className="text-xs text-muted-foreground truncate max-w-xs">{invoice.client}</div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 text-xs">
           <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
-          <div className="text-sm text-right">
+          <div className="text-right">
             <div className="font-medium">${invoice.amount}</div>
             <div className="text-muted-foreground flex items-center gap-1">
               <CalendarIcon className="h-3 w-3" />
@@ -256,24 +254,24 @@ function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onD
         </div>
       </div>
 
-      <div className="p-4 flex-row justify-between items-center border-b border-border flex sm:hidden">
+      <div className="p-3 flex-row justify-between items-center border-b border-border flex sm:hidden">
         <div className="space-y-1">
-          <h3 className="font-medium">Invoice #{invoice.number}</h3>
-          <div className="text-sm text-muted-foreground">{invoice.client}</div>
+          <h3 className="font-medium text-sm">Invoice #{invoice.number}</h3>
+          <div className="text-xs text-muted-foreground truncate max-w-xs">{invoice.client}</div>
           <div className="flex items-center gap-2 mt-1">
             <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
-            <div className="text-sm">${invoice.amount}</div>
+            <div className="text-xs">${invoice.amount}</div>
           </div>
         </div>
       </div>
 
-      <div className="p-4 flex justify-between items-center">
-        <div className="flex gap-2">
+      <div className="p-3 flex justify-between items-center">
+        <div className="flex flex-wrap gap-2 text-xs">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => onView(invoice)}
-            className="flex items-center"
+            className="px-3 py-1"
           >
             View
           </Button>
@@ -281,7 +279,7 @@ function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onD
             variant="outline" 
             size="sm" 
             onClick={() => onDownload(invoice)}
-            className="hidden sm:flex items-center"
+            className="px-3 py-1 hidden sm:inline-block"
           >
             Download
           </Button>
@@ -290,30 +288,30 @@ function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onD
               variant="accent"
               size="sm"
               onClick={() => onPay(invoice)}
-              className="flex items-center"
+              className="px-3 py-1"
             >
               Mark as Paid
             </Button>
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 text-xs">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => onEdit(invoice)}
-            className="flex items-center"
+            className="px-3 py-1"
           >
             Edit
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="px-3 py-1">
                 More
                 <span className="sr-only">More options</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="text-sm">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => onView(invoice)}>View</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onSend(invoice)}>Send</DropdownMenuItem>
