@@ -430,7 +430,7 @@ export default function Availability() {
 
           {canEditAvailability && (
             <Button
-              variant={editModeOpen ? "default" : "primary"}
+              variant={editModeOpen ? "default" : "accent"}
               onClick={toggleEditMode}
               className="gap-2 rounded-full px-6 py-2 shadow-md transition-all hover:scale-105 text-base"
             >
