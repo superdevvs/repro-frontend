@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, SmilePlus, Image, FileText, Mic } from 'lucide-react';
+import { Send, Paperclip, SmilePlus, Image, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -8,8 +7,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
 import { MessageTemplate } from '@/types/messages';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -27,12 +24,11 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMobile = useIsMobile();
   
-  // Handle textarea auto-resize
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      const newHeight = Math.min(textarea.scrollHeight, 120); // Max height
+      const newHeight = Math.min(textarea.scrollHeight, 120);
       textarea.style.height = `${newHeight}px`;
     }
   }, [content]);
@@ -44,7 +40,6 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
     setContent('');
     setAttachments([]);
     
-    // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
@@ -61,7 +56,7 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
       const validFiles = newFiles.filter(file => {
-        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        if (file.size > 10 * 1024 * 1024) {
           toast.error(`File ${file.name} exceeds 10MB limit`);
           return false;
         }
@@ -81,17 +76,17 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
   };
   
   return (
-    <div className="border-t p-4 bg-white dark:bg-slate-800">
+    <div className="border-t p-4 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/90">
       {attachments.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
           {attachments.map((file, index) => (
-            <div key={index} className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 rounded-md px-2 py-1">
-              <Paperclip className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+            <div key={index} className="flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 rounded-xl px-3 py-1.5 border border-[#E5DEFF] dark:border-slate-700 shadow-sm">
+              <Paperclip className="h-3.5 w-3.5 text-[#6E59A5] dark:text-[#9b87f5]" />
               <span className="text-xs truncate max-w-[120px]">{file.name}</span>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-5 w-5 p-0 rounded-full"
+                className="h-5 w-5 p-0 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700"
                 onClick={() => handleRemoveAttachment(index)}
               >
                 &times;
@@ -101,23 +96,23 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
         </div>
       )}
       
-      <div className="flex items-start gap-2">
-        <div className="relative flex-1 border rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:border-primary dark:border-slate-700">
+      <div className="flex items-start gap-3">
+        <div className="relative flex-1 overflow-hidden rounded-2xl border border-[#E5DEFF] dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.2)]">
           <Textarea
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Start typing to reply..."
-            className="min-h-[40px] max-h-[120px] resize-none px-3 py-2 border-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:bg-slate-800"
+            placeholder="Type your message..."
+            className="min-h-[40px] max-h-[120px] resize-none px-4 py-3 border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
           
-          <div className="flex items-center px-2 py-1.5 bg-slate-50 dark:bg-slate-700 border-t dark:border-slate-600">
+          <div className="flex items-center px-3 py-2 bg-slate-50/80 dark:bg-slate-800/50 border-t border-[#E5DEFF]/60 dark:border-slate-700/60">
             <div className="flex items-center gap-1.5">
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-7 w-7 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600"
+                className="h-8 w-8 rounded-xl hover:bg-white dark:hover:bg-slate-700"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <input
@@ -127,24 +122,24 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
                   className="hidden"
                   multiple
                 />
-                <Paperclip className="h-4 w-4" />
+                <Paperclip className="h-4 w-4 text-[#6E59A5] dark:text-[#9b87f5]" />
               </Button>
               
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-7 w-7 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600"
+                className="h-8 w-8 rounded-xl hover:bg-white dark:hover:bg-slate-700"
               >
-                <Image className="h-4 w-4" />
+                <Image className="h-4 w-4 text-[#6E59A5] dark:text-[#9b87f5]" />
               </Button>
               
               {!isMobile && (
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-7 w-7 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600"
+                  className="h-8 w-8 rounded-xl hover:bg-white dark:hover:bg-slate-700"
                 >
-                  <SmilePlus className="h-4 w-4" />
+                  <SmilePlus className="h-4 w-4 text-[#6E59A5] dark:text-[#9b87f5]" />
                 </Button>
               )}
             </div>
@@ -155,21 +150,21 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    className="h-7 w-7 ml-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600"
+                    className="h-8 w-8 ml-1 rounded-xl hover:bg-white dark:hover:bg-slate-700"
                   >
-                    <FileText className="h-4 w-4" />
+                    <FileText className="h-4 w-4 text-[#6E59A5] dark:text-[#9b87f5]" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-60 p-0">
-                  <div className="p-2 font-medium text-sm border-b">
+                <PopoverContent align="end" className="w-64 p-0">
+                  <div className="p-2 font-medium text-sm border-b dark:border-slate-700">
                     Message Templates
                   </div>
-                  <div className="max-h-60 overflow-auto divide-y">
+                  <div className="max-h-60 overflow-auto divide-y dark:divide-slate-700">
                     {templates.map((template) => (
                       <Button
                         key={template.id}
                         variant="ghost"
-                        className="w-full justify-start p-2 h-auto text-left font-normal text-sm"
+                        className="w-full justify-start p-3 h-auto text-left font-normal text-sm hover:bg-slate-50 dark:hover:bg-slate-800"
                         onClick={() => handleInsertTemplate(template)}
                       >
                         {template.title}
@@ -184,11 +179,11 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
         
         <Button
           size="icon"
-          className="h-10 w-10 rounded-full"
+          className="h-12 w-12 rounded-2xl bg-[#6E59A5] hover:bg-[#9b87f5] dark:bg-[#9b87f5] dark:hover:bg-[#7E69AB] shadow-lg hover:shadow-xl transition-all"
           disabled={isLoading || (!content.trim() && attachments.length === 0)}
           onClick={handleSend}
         >
-          <Send className="h-4 w-4" />
+          <Send className="h-5 w-5" />
         </Button>
       </div>
     </div>
