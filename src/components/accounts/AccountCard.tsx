@@ -2,12 +2,7 @@
 import { useState } from "react";
 import { User, Role } from "@/components/auth/AuthProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Card, 
-  CardHeader, 
-  CardContent, 
-  CardFooter 
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -17,13 +12,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   MoreVertical,
-  Edit,
+  Pencil,
   UserCog,
-  Ban,
-  Key,
+  Power,
+  KeyRound,
   LogIn,
   Bell,
-  Link
+  Link,
+  Check,
+  X
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDistance } from "date-fns";
@@ -57,11 +54,11 @@ export function AccountCard({
 
   const getRoleBadgeColor = (role: Role) => {
     switch (role) {
-      case 'admin': return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-      case 'photographer': return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case 'client': return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case 'editor': return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
+      case 'admin': return "bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 border-purple-200 dark:border-purple-800";
+      case 'photographer': return "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 border-blue-200 dark:border-blue-800";
+      case 'client': return "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200 border-green-200 dark:border-green-800";
+      case 'editor': return "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 border-amber-200 dark:border-amber-800";
+      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 border-gray-200 dark:border-gray-800";
     }
   };
 
@@ -76,38 +73,40 @@ export function AccountCard({
 
   return (
     <Card 
-      className={`overflow-hidden transition-all ${
+      className={`overflow-hidden transition-all duration-200 hover:shadow-md dark:shadow-none ${
         isActive ? "" : "opacity-60"
       } ${
-        hovering ? "shadow-md" : "shadow-sm"
+        hovering ? "transform-gpu -translate-y-1" : ""
       }`}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       onClick={() => onViewProfile(user)}
     >
-      <CardHeader className="p-4 pb-0">
+      <div className="p-4 space-y-4">
         <div className="flex justify-between items-start">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-12 w-12">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-12 w-12 rounded-xl border-2 border-[#E5DEFF] dark:border-slate-700">
               <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+              <AvatarFallback className="bg-[#F1F0FB] dark:bg-slate-800 text-[#6E59A5] dark:text-[#9b87f5] font-medium">
+                {getInitials(user.name)}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-medium text-lg">{user.name}</h3>
+              <h3 className="font-medium text-base">{user.name}</h3>
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
           </div>
           
           <DropdownMenu>
-            <DropdownMenuTrigger className="p-1 rounded-full hover:bg-muted" onClick={(e) => e.stopPropagation()}>
-              <MoreVertical className="h-5 w-5" />
+            <DropdownMenuTrigger className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={(e) => e.stopPropagation()}>
+              <MoreVertical className="h-4 w-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem onClick={(e) => { 
                 e.stopPropagation();
                 onEdit(user);
               }}>
-                <Edit className="mr-2 h-4 w-4" /> Edit User
+                <Pencil className="mr-2 h-4 w-4" /> Edit User
               </DropdownMenuItem>
               <DropdownMenuItem onClick={(e) => { 
                 e.stopPropagation();
@@ -119,14 +118,14 @@ export function AccountCard({
                 e.stopPropagation();
                 onToggleStatus(user);
               }}>
-                <Ban className="mr-2 h-4 w-4" /> {isActive ? "Deactivate" : "Activate"} Account
+                <Power className="mr-2 h-4 w-4" /> {isActive ? "Deactivate" : "Activate"} Account
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={(e) => { 
                 e.stopPropagation();
                 onResetPassword(user);
               }}>
-                <Key className="mr-2 h-4 w-4" /> Reset Password
+                <KeyRound className="mr-2 h-4 w-4" /> Reset Password
               </DropdownMenuItem>
               <DropdownMenuItem onClick={(e) => { 
                 e.stopPropagation();
@@ -149,32 +148,46 @@ export function AccountCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </CardHeader>
-      
-      <CardContent className="p-4">
-        {user.company && (
-          <p className="text-sm mb-2">
-            <span className="font-medium">Company:</span> {user.company}
-          </p>
-        )}
-        {user.phone && (
-          <p className="text-sm mb-2">
-            <span className="font-medium">Phone:</span> {user.phone}
-          </p>
-        )}
-        {user.lastLogin && (
-          <p className="text-sm text-muted-foreground">
-            Last login: {formatDistance(new Date(user.lastLogin), new Date(), { addSuffix: true })}
-          </p>
-        )}
-      </CardContent>
-      
-      <CardFooter className="p-4 pt-0 flex justify-between">
-        <Badge className={getRoleBadgeColor(user.role)}>
-          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-        </Badge>
-        {!isActive && <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Inactive</Badge>}
-      </CardFooter>
+        
+        <div className="space-y-3">
+          {user.company && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium">Company:</span>
+              <span className="text-muted-foreground">{user.company}</span>
+            </div>
+          )}
+          {user.phone && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium">Phone:</span>
+              <span className="text-muted-foreground">{user.phone}</span>
+            </div>
+          )}
+          {user.lastLogin && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Last active {formatDistance(new Date(user.lastLogin), new Date(), { addSuffix: true })}</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex items-center justify-between pt-2 border-t dark:border-slate-800">
+          <Badge 
+            variant="outline" 
+            className={`${getRoleBadgeColor(user.role)} border`}
+          >
+            {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+          </Badge>
+          
+          {isActive ? (
+            <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 border-green-200 dark:border-green-800">
+              <Check className="mr-1 h-3 w-3" /> Active
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200 border-red-200 dark:border-red-800">
+              <X className="mr-1 h-3 w-3" /> Inactive
+            </Badge>
+          )}
+        </div>
+      </div>
     </Card>
   );
 }
