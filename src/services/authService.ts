@@ -23,10 +23,11 @@ export const loginUser = (
     refresh_token: 'mock-refresh-token',
     expires_in: 3600,
     expires_at: Math.floor(Date.now() / 1000) + 3600,
+    token_type: 'bearer',
     user: {
       id: userData.id,
       app_metadata: {},
-      user_metadata: {},
+      user_metadata: { role: userData.role },
       aud: 'authenticated',
       email: userData.email,
       role: userData.role,
@@ -77,7 +78,11 @@ export const updateUserRole = (
         ...session,
         user: {
           ...session.user,
-          role: typedRole
+          role: typedRole,
+          user_metadata: {
+            ...session.user.user_metadata,
+            role: typedRole
+          }
         }
       });
     }

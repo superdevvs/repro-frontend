@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
-import { supabase, getAuthenticatedClient } from '@/integrations/supabase/client';
+import { getAuthenticatedClient } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { CouponCard } from './CouponCard';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -37,18 +37,13 @@ export function CouponsList() {
     enabled: !!session?.access_token, // Only run query if we have an access token
   });
 
-  if (error) {
-    // Show error in toast and UI
-    React.useEffect(() => {
+  // Handle errors - but make sure this is outside of conditional rendering
+  // to maintain consistent hook call ordering
+  React.useEffect(() => {
+    if (error) {
       toast.error(`Failed to load coupons: ${(error as Error).message}`);
-    }, [error]);
-    
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
-        <p>Error loading coupons. Please try again later.</p>
-      </div>
-    );
-  }
+    }
+  }, [error]);
 
   if (isLoading) {
     return (

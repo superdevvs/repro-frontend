@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { UserData } from '@/types/auth';
 import { Session } from '@supabase/supabase-js';
@@ -78,6 +79,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           refresh_token: `mock-refresh-token-${Date.now()}`,
           expires_in: 3600,
           expires_at: Math.floor(Date.now() / 1000) + 3600,
+          token_type: 'bearer',
           user: {
             id: parsedUser.id,
             app_metadata: {},
@@ -122,6 +124,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       refresh_token: `mock-refresh-token-${Date.now()}`,
       expires_in: 3600,
       expires_at: Math.floor(Date.now() / 1000) + 3600,
+      token_type: 'bearer',
       user: {
         id: updatedUserData.id,
         app_metadata: {},
@@ -165,7 +168,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           ...session,
           user: {
             ...session.user,
-            role: newRole
+            role: newRole,
+            user_metadata: {
+              ...session.user.user_metadata,
+              role: newRole
+            }
           }
         });
       }
