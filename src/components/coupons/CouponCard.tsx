@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tables } from '@/integrations/supabase/types';
+import { Database } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { 
@@ -22,8 +22,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+type Coupon = Database['public']['Tables']['coupons']['Row'];
+
 interface CouponCardProps {
-  coupon: Tables['coupons']['Row'];
+  coupon: Coupon;
 }
 
 export function CouponCard({ coupon }: CouponCardProps) {

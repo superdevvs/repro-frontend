@@ -3,8 +3,10 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { Tables } from '@/integrations/supabase/types';
+import { Database } from '@/integrations/supabase/types';
 import { CouponCard } from './CouponCard';
+
+type Coupon = Database['public']['Tables']['coupons']['Row'];
 
 export function CouponsList() {
   const { data: coupons, isLoading } = useQuery({
@@ -16,7 +18,7 @@ export function CouponsList() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Tables['coupons']['Row'][];
+      return data as Coupon[];
     },
   });
 
