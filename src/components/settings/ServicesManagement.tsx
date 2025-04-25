@@ -54,9 +54,21 @@ export function ServicesManagement() {
 
   const handleSubmit = async () => {
     try {
+      // Find the category name based on the selected category_id
+      const selectedCategory = categories?.find(cat => cat.id === formData.category_id);
+      if (!selectedCategory) {
+        toast({
+          title: "Error",
+          description: "Please select a valid category",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const serviceData = {
         name: formData.name,
         category_id: formData.category_id,
+        category: selectedCategory.name, // Add the category name
         price: parseFloat(formData.price),
         description: formData.description || `Professional ${formData.name} service for real estate marketing.`
       };
