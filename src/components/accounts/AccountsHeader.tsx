@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Download, Search, Filter } from "lucide-react";
+import { PlusCircle, Download, Search, LayoutGrid, LayoutList } from "lucide-react";
 import { Role } from "@/components/auth/AuthProvider";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
@@ -12,6 +12,8 @@ interface AccountsHeaderProps {
   onSearch: (query: string) => void;
   onFilterChange: (role: Role | 'all') => void;
   selectedFilter: Role | 'all';
+  viewMode: 'grid' | 'list';
+  onViewModeChange: (mode: 'grid' | 'list') => void;
 }
 
 export function AccountsHeader({
@@ -19,7 +21,9 @@ export function AccountsHeader({
   onExport,
   onSearch,
   onFilterChange,
-  selectedFilter
+  selectedFilter,
+  viewMode,
+  onViewModeChange
 }: AccountsHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -41,6 +45,24 @@ export function AccountsHeader({
               </p>
             </div>
             <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 border rounded-lg p-1 mr-2">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => onViewModeChange('grid')}
+                  className="h-8 w-8 p-0"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => onViewModeChange('list')}
+                  className="h-8 w-8 p-0"
+                >
+                  <LayoutList className="h-4 w-4" />
+                </Button>
+              </div>
               <Button variant="outline" size="sm" onClick={onExport} className="h-9">
                 <Download className="mr-2 h-4 w-4" />
                 Export

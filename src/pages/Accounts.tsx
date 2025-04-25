@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { AccountsLayout } from "@/components/layout/AccountsLayout";
 import { AccountCard } from "@/components/accounts/AccountCard";
+import { AccountList } from "@/components/accounts/AccountList";
 import { AccountsHeader } from "@/components/accounts/AccountsHeader";
 import { Role } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -68,6 +69,7 @@ export default function Accounts() {
   const [users, setUsers] = useState(sampleUsersData);
   const [filterRole, setFilterRole] = useState<Role | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   
@@ -194,49 +196,65 @@ export default function Accounts() {
 
   return (
     <AccountsLayout>
-      <div className="container px-4 sm:px-6 pb-6">
+      <div className="container px-4 sm:px-6 pb-6 space-y-6">
         <AccountsHeader
           onAddAccount={handleAddAccount}
           onExport={handleExport}
           onSearch={setSearchQuery}
           onFilterChange={setFilterRole}
           selectedFilter={filterRole}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {filteredUsers.map((user) => (
-            <AccountCard
-              key={user.id}
-              user={user}
-              onEdit={handleEditUser}
-              onChangeRole={handleChangeRole}
-              onToggleStatus={handleToggleStatus}
-              onResetPassword={handleResetPassword}
-              onImpersonate={handleImpersonate}
-              onManageNotifications={handleManageNotifications}
-              onLinkClientBranding={handleLinkClientBranding}
-              onViewProfile={handleViewProfile}
-              isActive={user.active}
-            />
-          ))}
-          
-          {filteredUsers.length === 0 && (
-            <div className="col-span-full bg-muted/30 p-8 rounded-lg text-center">
-              <h3 className="text-lg font-medium mb-2">No accounts found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchQuery
-                  ? "Try adjusting your search or filter criteria."
-                  : "Get started by adding a new account."}
-              </p>
-              <button
-                onClick={handleAddAccount}
-                className="inline-flex items-center justify-center px-4 py-2 bg-primary text-white rounded-md"
-              >
-                Add Account
-              </button>
-            </div>
-          )}
-        </div>
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredUsers.map((user) => (
+              <AccountCard
+                key={user.id}
+                user={user}
+                onEdit={handleEditUser}
+                onChangeRole={handleChangeRole}
+                onToggleStatus={handleToggleStatus}
+                onResetPassword={handleResetPassword}
+                onImpersonate={handleImpersonate}
+                onManageNotifications={handleManageNotifications}
+                onLinkClientBranding={handleLinkClientBranding}
+                onViewProfile={handleViewProfile}
+                isActive={user.active}
+              />
+            ))}
+            
+            {filteredUsers.length === 0 && (
+              <div className="col-span-full bg-muted/30 p-8 rounded-lg text-center">
+                <h3 className="text-lg font-medium mb-2">No accounts found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchQuery
+                    ? "Try adjusting your search or filter criteria."
+                    : "Get started by adding a new account."}
+                </p>
+                <button
+                  onClick={handleAddAccount}
+                  className="inline-flex items-center justify-center px-4 py-2 bg-primary text-white rounded-md"
+                >
+                  Add Account
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <AccountList
+            users={filteredUsers}
+            onEdit={handleEditUser}
+            onChangeRole={handleChangeRole}
+            onToggleStatus={handleToggleStatus}
+            onResetPassword={handleResetPassword}
+            onImpersonate={handleImpersonate}
+            onManageNotifications={handleManageNotifications}
+            onLinkClientBranding={handleLinkClientBranding}
+            onViewProfile={handleViewProfile}
+          />
+        )}
       </div>
       
       {selectedUser && (
