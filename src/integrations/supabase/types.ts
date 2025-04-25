@@ -111,54 +111,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles: {
-        Row: {
-          avatar: string | null
-          bio: string | null
-          company: string | null
-          created_at: string | null
-          email: string | null
-          id: string
-          is_active: boolean | null
-          last_login: string | null
-          metadata: Json | null
-          name: string | null
-          phone: string | null
-          role: string | null
-          username: string | null
-        }
-        Insert: {
-          avatar?: string | null
-          bio?: string | null
-          company?: string | null
-          created_at?: string | null
-          email?: string | null
-          id: string
-          is_active?: boolean | null
-          last_login?: string | null
-          metadata?: Json | null
-          name?: string | null
-          phone?: string | null
-          role?: string | null
-          username?: string | null
-        }
-        Update: {
-          avatar?: string | null
-          bio?: string | null
-          company?: string | null
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_login?: string | null
-          metadata?: Json | null
-          name?: string | null
-          phone?: string | null
-          role?: string | null
-          username?: string | null
-        }
-        Relationships: []
-      }
       services: {
         Row: {
           category: string
