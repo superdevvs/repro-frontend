@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { AccountsLayout } from "@/components/layout/AccountsLayout";
 import { AccountCard } from "@/components/accounts/AccountCard";
@@ -11,67 +10,16 @@ import { RoleChangeDialog } from "@/components/accounts/RoleChangeDialog";
 import { NotificationSettingsDialog } from "@/components/accounts/NotificationSettingsDialog";
 import { LinkClientBrandingDialog } from "@/components/accounts/LinkClientBrandingDialog";
 import { UserProfileDialog } from "@/components/accounts/UserProfileDialog";
-import { useAuth } from "@/components/auth/AuthProvider";
-
-const sampleUsersData = [
-  {
-    id: "1",
-    name: "John Smith",
-    email: "john@example.com",
-    role: "admin" as Role,
-    avatar: "/placeholder.svg",
-    lastLogin: "2023-04-01T08:30:00Z",
-    active: true,
-  },
-  {
-    id: "2",
-    name: "Sarah Wilson",
-    email: "sarah@photostudio.com",
-    role: "photographer" as Role,
-    avatar: "/placeholder.svg",
-    phone: "555-123-4567",
-    lastLogin: "2023-04-02T14:20:00Z",
-    active: true,
-  },
-  {
-    id: "3",
-    name: "Michael Brown",
-    email: "michael@editing.com",
-    role: "editor" as Role,
-    avatar: "/placeholder.svg",
-    phone: "555-987-6543",
-    lastLogin: "2023-03-28T09:15:00Z",
-    active: true,
-  },
-  {
-    id: "4",
-    name: "Emily Davis",
-    email: "emily@realestate.com",
-    role: "client" as Role,
-    company: "Davis Realty",
-    avatar: "/placeholder.svg",
-    phone: "555-456-7890",
-    lastLogin: "2023-04-03T11:40:00Z",
-    active: true,
-  },
-  {
-    id: "5",
-    name: "Robert Johnson",
-    email: "robert@inactive.com",
-    role: "client" as Role,
-    avatar: "/placeholder.svg",
-    lastLogin: "2023-02-15T10:10:00Z",
-    active: false,
-  },
-];
+import { useProfiles } from "@/hooks/useProfiles";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Accounts() {
-  const [users, setUsers] = useState(sampleUsersData);
   const [filterRole, setFilterRole] = useState<Role | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { toast } = useToast();
-  const { user: currentUser } = useAuth();
+  
+  const { data: users = [], isLoading } = useProfiles();
   
   const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
   const [roleChangeDialogOpen, setRoleChangeDialogOpen] = useState(false);
@@ -89,6 +37,53 @@ export default function Accounts() {
       (user.company && user.company.toLowerCase().includes(searchQuery.toLowerCase()));
     return roleMatch && searchMatch;
   });
+
+  const handleToggleStatus = async (user: any) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_active: !user.is_active })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      
+      toast({
+        title: `User ${user.is_active ? "deactivated" : "activated"}`,
+        description: `${user.name} has been ${user.is_active ? "deactivated" : "activated"} successfully.`,
+        variant: user.is_active ? "destructive" : "default",
+      });
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update user status.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateRoles = async (userId: string, roles: Role[]) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: roles[0] })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Role updated",
+        description: `User role has been updated to ${roles.join(", ")}.`,
+      });
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update user role.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleAddAccount = () => {
     setSelectedUser(null);
@@ -110,20 +105,6 @@ export default function Accounts() {
   const handleChangeRole = (user: any) => {
     setSelectedUser(user);
     setRoleChangeDialogOpen(true);
-  };
-
-  const handleToggleStatus = (user: any) => {
-    setUsers(
-      users.map((u) =>
-        u.id === user.id ? { ...u, active: !u.active } : u
-      )
-    );
-    
-    toast({
-      title: `User ${user.active ? "deactivated" : "activated"}`,
-      description: `${user.name} has been ${user.active ? "deactivated" : "activated"} successfully.`,
-      variant: user.active ? "destructive" : "default",
-    });
   };
 
   const handleResetPassword = (user: any) => {
@@ -151,19 +132,6 @@ export default function Accounts() {
   const handleViewProfile = (user: any) => {
     setSelectedUser(user);
     setUserProfileDialogOpen(true);
-  };
-  
-  const handleUpdateRoles = (userId: string, roles: Role[]) => {
-    setUsers(
-      users.map((u) =>
-        u.id === userId ? { ...u, role: roles[0] } : u
-      )
-    );
-    
-    toast({
-      title: "Role updated",
-      description: `User role has been updated to ${roles.join(", ")}.`,
-    });
   };
   
   const handleUpdateNotifications = (userId: string, settings: Record<string, boolean>) => {
@@ -194,6 +162,16 @@ export default function Accounts() {
     });
   };
 
+  if (isLoading) {
+    return (
+      <AccountsLayout>
+        <div className="container flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </AccountsLayout>
+    );
+  }
+
   return (
     <AccountsLayout>
       <div className="container px-4 sm:px-6 pb-6 space-y-6">
@@ -221,7 +199,7 @@ export default function Accounts() {
                 onManageNotifications={handleManageNotifications}
                 onLinkClientBranding={handleLinkClientBranding}
                 onViewProfile={handleViewProfile}
-                isActive={user.active}
+                isActive={user.is_active}
               />
             ))}
             
