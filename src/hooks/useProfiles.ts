@@ -17,7 +17,22 @@ export function useProfiles() {
         throw error;
       }
 
-      return data as UserData[];
+      // Map database fields to UserData fields
+      return data.map(profile => ({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        role: profile.role,
+        avatar: profile.avatar,
+        phone: profile.phone,
+        company: profile.company,
+        bio: profile.bio,
+        username: profile.username,
+        lastLogin: profile.last_login,
+        createdAt: profile.created_at,
+        isActive: profile.is_active,
+        metadata: profile.metadata
+      })) as UserData[];
     }
   });
 }

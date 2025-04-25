@@ -42,15 +42,15 @@ export default function Accounts() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ is_active: !user.is_active })
+        .update({ is_active: !user.isActive })
         .eq('id', user.id);
 
       if (error) throw error;
       
       toast({
-        title: `User ${user.is_active ? "deactivated" : "activated"}`,
-        description: `${user.name} has been ${user.is_active ? "deactivated" : "activated"} successfully.`,
-        variant: user.is_active ? "destructive" : "default",
+        title: `User ${user.isActive ? "deactivated" : "activated"}`,
+        description: `${user.name} has been ${user.isActive ? "deactivated" : "activated"} successfully.`,
+        variant: user.isActive ? "destructive" : "default",
       });
     } catch (error) {
       console.error('Error updating user status:', error);
@@ -199,7 +199,7 @@ export default function Accounts() {
                 onManageNotifications={handleManageNotifications}
                 onLinkClientBranding={handleLinkClientBranding}
                 onViewProfile={handleViewProfile}
-                isActive={user.is_active}
+                isActive={user.isActive}
               />
             ))}
             
