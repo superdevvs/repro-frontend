@@ -1,7 +1,12 @@
+
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { DialogClose } from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   DialogContent,
   DialogHeader,
@@ -33,8 +38,11 @@ const formSchema = z.object({
   valid_until: z.date().optional(),
 });
 
+type FormData = z.infer<typeof formSchema>;
+
 export function CreateCouponDialog() {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const queryClient = useQueryClient();
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       code: '',
@@ -43,9 +51,34 @@ export function CreateCouponDialog() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
-    // TODO: Implement coupon creation logic
+  const createCouponMutation = useMutation({
+    mutationFn: async (values: FormData) => {
+      const { data, error } = await supabase
+        .from('coupons')
+        .insert([{
+          ...values,
+          is_active: true,
+          current_uses: 0,
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['coupons'] });
+      toast.success('Coupon created successfully');
+      form.reset();
+    },
+    onError: (error) => {
+      toast.error('Failed to create coupon');
+      console.error('Error creating coupon:', error);
+    },
+  });
+
+  const onSubmit = async (values: FormData) => {
+    await createCouponMutation.mutate(values);
   };
 
   return (
@@ -134,6 +167,7 @@ export function CreateCouponDialog() {
                           ) : (
                             <span>Valid Thru</span>
                           )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
@@ -172,7 +206,15 @@ export function CreateCouponDialog() {
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="submit" className="w-full">Create Code</Button>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button 
+              type="submit" 
+              disabled={createCouponMutation.isPending}
+            >
+              {createCouponMutation.isPending ? 'Creating...' : 'Create Code'}
+            </Button>
           </div>
         </form>
       </Form>

@@ -9,7 +9,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 
 export function CouponsHeader() {
   const { role } = useAuth();
-  const isSuperAdmin = role === 'superadmin';
+  const canCreateCoupons = ['admin', 'superadmin'].includes(role);
 
   return (
     <div className="flex flex-col gap-6">
@@ -24,7 +24,7 @@ export function CouponsHeader() {
           </p>
         </div>
 
-        {isSuperAdmin && (
+        {canCreateCoupons && (
           <Dialog>
             <DialogTrigger asChild>
               <Button>
