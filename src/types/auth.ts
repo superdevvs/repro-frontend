@@ -1,5 +1,6 @@
 
 import { Role } from '@/components/auth';
+import { Session } from '@supabase/supabase-js';
 
 export interface UserData {
   id: string;
@@ -15,4 +16,5 @@ export interface UserData {
   createdAt?: string;
   isActive?: boolean;
   metadata?: Record<string, any>;
+  session?: Session;
 }
