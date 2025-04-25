@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/popover';
 import { MessageTemplate } from '@/types/messages';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from '@/hooks/use-toast';
 
 interface MessageInputProps {
   onSendMessage: (content: string, attachments?: File[]) => void;
@@ -57,7 +58,11 @@ export function MessageInput({ onSendMessage, isLoading = false, templates = [] 
       const newFiles = Array.from(e.target.files);
       const validFiles = newFiles.filter(file => {
         if (file.size > 10 * 1024 * 1024) {
-          toast.error(`File ${file.name} exceeds 10MB limit`);
+          toast({
+            title: "File too large",
+            description: `File ${file.name} exceeds 10MB limit`,
+            variant: "destructive"
+          });
           return false;
         }
         return true;
