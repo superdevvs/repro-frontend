@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export type IntegrationStatus = 'connected' | 'not_connected' | 'coming_soon';
 
@@ -48,6 +49,9 @@ export function IntegrationCard({
   onDisconnect,
   onConfigure
 }: IntegrationCardProps) {
+  const { role } = useAuth();
+  const isSuperAdmin = role === 'superadmin';
+
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
       <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
@@ -63,49 +67,51 @@ export function IntegrationCard({
           </div>
         </div>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            
-            {status === 'connected' && onDisconnect && (
-              <DropdownMenuItem onClick={onDisconnect}>
-                Disconnect
-              </DropdownMenuItem>
-            )}
-            
-            {status === 'connected' && onConfigure && (
-              <DropdownMenuItem onClick={onConfigure}>
-                Configure
-              </DropdownMenuItem>
-            )}
-            
-            {status === 'not_connected' && onConnect && (
-              <DropdownMenuItem onClick={onConnect}>
-                Connect
-              </DropdownMenuItem>
-            )}
-            
-            {status === 'coming_soon' && (
-              <DropdownMenuItem disabled>
-                Coming Soon
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {isSuperAdmin && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              
+              {status === 'connected' && onDisconnect && (
+                <DropdownMenuItem onClick={onDisconnect}>
+                  Disconnect
+                </DropdownMenuItem>
+              )}
+              
+              {status === 'connected' && onConfigure && (
+                <DropdownMenuItem onClick={onConfigure}>
+                  Configure
+                </DropdownMenuItem>
+              )}
+              
+              {status === 'not_connected' && onConnect && (
+                <DropdownMenuItem onClick={onConnect}>
+                  Connect
+                </DropdownMenuItem>
+              )}
+              
+              {status === 'coming_soon' && (
+                <DropdownMenuItem disabled>
+                  Coming Soon
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </CardHeader>
       
       <CardContent className="p-4 pt-0">
         <div className="flex items-center justify-between">
           <StatusBadge status={status} />
           
-          {toggleOption && status === 'connected' && (
+          {toggleOption && status === 'connected' && isSuperAdmin && (
             <div className="flex items-center gap-2">
               <TooltipProvider>
                 <Tooltip>
@@ -124,7 +130,7 @@ export function IntegrationCard({
             </div>
           )}
           
-          {status === 'not_connected' && onConnect && (
+          {status === 'not_connected' && onConnect && isSuperAdmin && (
             <Button
               size="sm"
               variant="outline"
