@@ -26,6 +26,7 @@ import Profile from "./pages/Profile";
 import Accounting from "./pages/Accounting";
 import Integrations from "./pages/Integrations";
 import { toast } from "./components/ui/use-toast";
+import Coupons from "./pages/Coupons";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -151,6 +152,11 @@ const AppRoutes = () => {
       <Route path="/photographer-availability" element={
         <ProtectedRoute>
           <PhotographerAvailability />
+        </ProtectedRoute>
+      } />
+      <Route path="/coupons" element={
+        <ProtectedRoute>
+          <Coupons />
         </ProtectedRoute>
       } />
       <Route path="*" element={<NotFound />} />

@@ -11,6 +11,7 @@ import {
   CalendarIcon,
   BarChart3Icon,
   PlugIcon,
+  TicketIcon,
 } from 'lucide-react';
 
 interface SidebarLinksProps {
@@ -82,13 +83,22 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
       
       {/* Show Accounts link only for admin roles */}
       {['admin', 'superadmin'].includes(role) && (
-        <NavLink
-          to="/accounts"
-          icon={<BuildingIcon className="h-5 w-5" />}
-          label="Accounts"
-          isCollapsed={isCollapsed}
-          isActive={pathname === '/accounts'}
-        />
+        <>
+          <NavLink
+            to="/accounts"
+            icon={<BuildingIcon className="h-5 w-5" />}
+            label="Accounts"
+            isCollapsed={isCollapsed}
+            isActive={pathname === '/accounts'}
+          />
+          <NavLink
+            to="/coupons"
+            icon={<TicketIcon className="h-5 w-5" />}
+            label="Coupons"
+            isCollapsed={isCollapsed}
+            isActive={pathname === '/coupons'}
+          />
+        </>
       )}
       
       {/* Replace Invoices with Accounting */}
