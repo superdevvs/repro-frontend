@@ -2,6 +2,28 @@
 import { UserData } from '@/types/auth';
 import { Session } from '@supabase/supabase-js';
 
+// Generate a properly formatted mock JWT token
+const generateMockJWT = (userId: string, role: string): string => {
+  // Create a base64 encoded header
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  
+  // Create a base64 encoded payload with standard JWT claims
+  const payload = btoa(JSON.stringify({
+    sub: userId,
+    role: role,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    iss: 'mock-issuer',
+    aud: 'authenticated'
+  }));
+  
+  // Create a mock signature (third part of JWT)
+  const signature = btoa('mocksignature');
+  
+  // Combine all parts with dots to form a valid JWT structure
+  return `${header}.${payload}.${signature}`;
+};
+
 // Login function that stores user data in localStorage
 export const loginUser = (
   userData: UserData, 
@@ -17,9 +39,12 @@ export const loginUser = (
   setIsAuthenticated(true);
   setRole(userData.role || 'client');
   
+  // Create a proper JWT token structure
+  const mockToken = generateMockJWT(userData.id, userData.role || 'client');
+  
   // Set a mock session for development purposes
   const mockSession = {
-    access_token: 'mock-access-token',
+    access_token: mockToken,
     refresh_token: 'mock-refresh-token',
     expires_in: 3600,
     expires_at: Math.floor(Date.now() / 1000) + 3600,
@@ -74,8 +99,12 @@ export const updateUserRole = (
     
     // Update session if it exists
     if (session) {
+      // Generate a new JWT with the updated role
+      const mockToken = generateMockJWT(user.id, typedRole);
+      
       setSession({
         ...session,
+        access_token: mockToken,
         user: {
           ...session.user,
           role: typedRole,

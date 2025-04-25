@@ -53,6 +53,28 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+// Generate a properly formatted mock JWT token
+const generateMockJWT = (userId: string, role: string): string => {
+  // Create a base64 encoded header
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  
+  // Create a base64 encoded payload with standard JWT claims
+  const payload = btoa(JSON.stringify({
+    sub: userId,
+    role: role,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    iss: 'mock-issuer',
+    aud: 'authenticated'
+  }));
+  
+  // Create a mock signature (third part of JWT)
+  const signature = btoa('mocksignature');
+  
+  // Combine all parts with dots to form a valid JWT structure
+  return `${header}.${payload}.${signature}`;
+};
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -74,8 +96,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setRole(parsedUser.role || 'admin');
         
         // Set a mock session for development purposes with proper role claim
+        const mockToken = generateMockJWT(parsedUser.id, parsedUser.role || 'admin');
+        
         const mockSession = {
-          access_token: `mock-access-token-${Date.now()}`,
+          access_token: mockToken,
           refresh_token: `mock-refresh-token-${Date.now()}`,
           expires_in: 3600,
           expires_at: Math.floor(Date.now() / 1000) + 3600,
@@ -118,9 +142,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsAuthenticated(true);
     setRole(roleToUse);
     
+    // Generate a proper JWT token structure for development
+    const mockToken = generateMockJWT(updatedUserData.id, roleToUse);
+    
     // Set a mock session for development purposes with proper role claim
     const mockSession = {
-      access_token: `mock-access-token-${Date.now()}`,
+      access_token: mockToken,
       refresh_token: `mock-refresh-token-${Date.now()}`,
       expires_in: 3600,
       expires_at: Math.floor(Date.now() / 1000) + 3600,
@@ -164,8 +191,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       // Update session if it exists
       if (session) {
+        // Generate new JWT with updated role
+        const mockToken = generateMockJWT(user.id, newRole);
+        
         setSession({
           ...session,
+          access_token: mockToken,
           user: {
             ...session.user,
             role: newRole,
