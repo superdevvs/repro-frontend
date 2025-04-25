@@ -1,24 +1,16 @@
 
 import React from 'react';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Database } from '@/integrations/supabase/types';
-import { format } from 'date-fns';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { 
-  MoreVertical, 
-  Ticket, 
-  Calendar,
-  Hash,
-  RefreshCw 
-} from 'lucide-react';
+import { CircularProgress } from './CircularProgress';
+import { MoreVertical, Edit, Power, Trash } from 'lucide-react';
+import { Infinity } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -32,67 +24,69 @@ export function CouponCard({ coupon }: CouponCardProps) {
   const { role } = useAuth();
   const isSuperAdmin = role === 'superadmin';
 
-  return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-md bg-primary/10 p-2">
-            <Ticket className="h-full w-full text-primary" />
-          </div>
-          <div>
-            <h4 className="font-semibold">{coupon.code}</h4>
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <Hash className="h-3 w-3" />
-              {coupon.type} - {coupon.amount}
-              {coupon.type === 'percentage' ? '%' : ' USD'} off
-            </p>
-          </div>
-        </div>
+  const formatValue = (type: string, amount: number) => {
+    if (type === 'percentage') {
+      return `-${amount}%`;
+    }
+    return `-$${amount}`;
+  };
 
+  return (
+    <Card className="relative overflow-hidden">
+      <div className="absolute top-4 right-4">
         {isSuperAdmin && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Edit Coupon</DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Power className="mr-2 h-4 w-4" />
+                {coupon.is_active ? 'Deactivate' : 'Activate'}
+              </DropdownMenuItem>
               <DropdownMenuItem className="text-destructive">
-                Delete Coupon
+                <Trash className="mr-2 h-4 w-4" />
+                Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-      </CardHeader>
+      </div>
 
-      <CardContent className="pb-3">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <RefreshCw className="h-4 w-4" />
-            <span>
-              {coupon.current_uses ?? 0} / {coupon.max_uses ?? '∞'} uses
-            </span>
-          </div>
-          {coupon.valid_until && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              <span>
-                Expires: {format(new Date(coupon.valid_until), 'MMM d, yyyy')}
-              </span>
+      <CardContent className="pt-6">
+        <div className="text-2xl font-bold mb-2">{coupon.code}</div>
+        <div className="flex justify-center mb-6">
+          <CircularProgress 
+            value={formatValue(coupon.type, coupon.amount)} 
+            color="#3B82F6"
+          />
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+          <div>
+            <div className="font-medium">Valid Thru</div>
+            <div className="flex items-center gap-1">
+              {coupon.valid_until ? (
+                coupon.valid_until
+              ) : (
+                <Infinity className="h-4 w-4" />
+              )}
             </div>
-          )}
+          </div>
+          <div>
+            <div className="font-medium">Uses</div>
+            <div className="flex items-center gap-1">
+              {coupon.current_uses ?? 0} / {coupon.max_uses ?? <Infinity className="h-4 w-4" />}
+            </div>
+          </div>
         </div>
       </CardContent>
-
-      <CardFooter className="pt-1">
-        <Badge variant={coupon.is_active ? "default" : "secondary"}>
-          {coupon.is_active ? "Active" : "Inactive"}
-        </Badge>
-      </CardFooter>
     </Card>
   );
 }

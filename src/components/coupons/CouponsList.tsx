@@ -24,16 +24,16 @@ export function CouponsList() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="h-[180px] animate-pulse bg-muted" />
+          <Card key={i} className="h-[250px] animate-pulse bg-muted" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {coupons?.map((coupon) => (
         <CouponCard key={coupon.id} coupon={coupon} />
       ))}
