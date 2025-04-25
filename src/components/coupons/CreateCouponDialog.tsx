@@ -53,13 +53,25 @@ export function CreateCouponDialog() {
 
   const createCouponMutation = useMutation({
     mutationFn: async (values: FormData) => {
+      // Format the date for Postgres if it exists
+      const formattedDate = values.valid_until 
+        ? values.valid_until.toISOString() 
+        : null;
+      
+      // Create a properly formatted coupon object
+      const couponData = {
+        code: values.code,
+        type: values.type,
+        amount: values.amount,
+        max_uses: values.max_uses,
+        valid_until: formattedDate,
+        is_active: true,
+        current_uses: 0,
+      };
+
       const { data, error } = await supabase
         .from('coupons')
-        .insert([{
-          ...values,
-          is_active: true,
-          current_uses: 0,
-        }])
+        .insert(couponData)
         .select()
         .single();
 
