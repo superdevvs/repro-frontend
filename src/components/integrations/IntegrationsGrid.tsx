@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { IntegrationCard } from './IntegrationCard';
 import { PaymentsSection } from './sections/PaymentsSection';
 import { StorageSection } from './sections/StorageSection';
 import { VideoHostingSection } from './sections/VideoHostingSection';

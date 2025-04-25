@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { NavLink } from './NavLink';
@@ -113,7 +112,7 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
       )}
       
       {/* Show Integrations only for superadmin */}
-      {role === 'superadmin' && (
+      {['admin', 'superadmin'].includes(role) && (
         <NavLink
           to="/integrations"
           icon={<PlugIcon className="h-5 w-5" />}

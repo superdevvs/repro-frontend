@@ -10,8 +10,8 @@ import { Navigate } from 'react-router-dom';
 const Integrations = () => {
   const { role } = useAuth();
   
-  // Only allow superadmin to access this page
-  if (role !== 'superadmin') {
+  // Only allow admin and superadmin to access this page
+  if (!['admin', 'superadmin'].includes(role)) {
     return <Navigate to="/dashboard" replace />;
   }
   

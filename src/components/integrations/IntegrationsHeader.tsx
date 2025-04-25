@@ -10,7 +10,7 @@ export function IntegrationsHeader() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <Badge className="mb-2 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
-            SuperAdmin
+            Admin Settings
           </Badge>
           <h1 className="text-3xl font-bold">Integrations</h1>
           <p className="text-muted-foreground">
