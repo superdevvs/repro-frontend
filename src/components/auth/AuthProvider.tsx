@@ -53,13 +53,24 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+// Helper function to convert string to base64url format (JWT compatible)
+const toBase64Url = (str: string): string => {
+  // First encode to base64
+  const base64 = btoa(str)
+    // Then convert to base64url by replacing characters
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+  return base64;
+};
+
 // Generate a properly formatted mock JWT token
 const generateMockJWT = (userId: string, role: string): string => {
-  // Create a base64 encoded header
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  // Create a base64url encoded header
+  const header = toBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   
-  // Create a base64 encoded payload with standard JWT claims
-  const payload = btoa(JSON.stringify({
+  // Create a base64url encoded payload with standard JWT claims
+  const payload = toBase64Url(JSON.stringify({
     sub: userId,
     role: role,
     iat: Math.floor(Date.now() / 1000),
@@ -69,7 +80,7 @@ const generateMockJWT = (userId: string, role: string): string => {
   }));
   
   // Create a mock signature (third part of JWT)
-  const signature = btoa('mocksignature');
+  const signature = toBase64Url('mocksignature');
   
   // Combine all parts with dots to form a valid JWT structure
   return `${header}.${payload}.${signature}`;
