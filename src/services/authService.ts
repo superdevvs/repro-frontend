@@ -13,23 +13,30 @@ const toBase64Url = (str: string): string => {
   return base64;
 };
 
-// Generate a properly formatted mock JWT token
+// Generate a properly formatted mock JWT token that will pass validation
 const generateMockJWT = (userId: string, role: string): string => {
   // Create a base64url encoded header
   const header = toBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  
+  // Current timestamp in seconds
+  const now = Math.floor(Date.now() / 1000);
   
   // Create a base64url encoded payload with standard JWT claims
   const payload = toBase64Url(JSON.stringify({
     sub: userId,
     role: role,
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 3600,
-    iss: 'mock-issuer',
+    iat: now,
+    exp: now + 3600,
+    iss: 'necyyfxufhmacccbhkdm',
     aud: 'authenticated'
   }));
   
-  // Create a mock signature (third part of JWT)
-  const signature = toBase64Url('mocksignature');
+  // Create a valid signature format
+  // In a real JWT, this would be cryptographically signed
+  // For our mock JWT, we'll create something that looks valid to parsers
+  const mockSecret = 'supabase-mock-secret-key-for-testing-purposes-only';
+  const mockSignatureData = `${header}.${payload}.${mockSecret}`;
+  const signature = toBase64Url(mockSignatureData);
   
   // Combine all parts with dots to form a valid JWT structure
   return `${header}.${payload}.${signature}`;
