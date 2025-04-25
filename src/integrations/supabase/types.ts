@@ -111,11 +111,85 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar: string | null
+          bio: string | null
+          company: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          last_login: string | null
+          metadata: Json | null
+          name: string | null
+          phone: string | null
+          role: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar?: string | null
+          bio?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          id: string
+          is_active?: boolean | null
+          last_login?: string | null
+          metadata?: Json | null
+          name?: string | null
+          phone?: string | null
+          role?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar?: string | null
+          bio?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          metadata?: Json | null
+          name?: string | null
+          phone?: string | null
+          role?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      service_categories: {
+        Row: {
+          created_at: string | null
+          display_order: number
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           category: string
+          category_id: string | null
           created_at: string | null
           description: string | null
+          display_order: number | null
           duration: number | null
           id: string
           is_active: boolean | null
@@ -125,8 +199,10 @@ export type Database = {
         }
         Insert: {
           category: string
+          category_id?: string | null
           created_at?: string | null
           description?: string | null
+          display_order?: number | null
           duration?: number | null
           id?: string
           is_active?: boolean | null
@@ -136,8 +212,10 @@ export type Database = {
         }
         Update: {
           category?: string
+          category_id?: string | null
           created_at?: string | null
           description?: string | null
+          display_order?: number | null
           duration?: number | null
           id?: string
           is_active?: boolean | null
@@ -145,7 +223,15 @@ export type Database = {
           price?: number
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shoot_reschedule_requests: {
         Row: {
