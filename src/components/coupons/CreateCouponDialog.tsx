@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DialogClose } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getAuthenticatedClient } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { 
   DialogContent,
@@ -70,7 +70,7 @@ export function CreateCouponDialog() {
         code: values.code,
         type: values.type,
         amount: values.amount,
-        max_uses: values.max_uses,
+        max_uses: values.max_uses || null,
         valid_until: formattedDate,
         is_active: true,
         current_uses: 0,
@@ -78,7 +78,9 @@ export function CreateCouponDialog() {
 
       console.log("Creating coupon with data:", couponData);
       
-      const { data, error } = await supabase
+      // Use authenticated client
+      const client = getAuthenticatedClient(session);
+      const { data, error } = await client
         .from('coupons')
         .insert(couponData)
         .select()

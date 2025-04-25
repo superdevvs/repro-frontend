@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { UserData } from '@/types/auth';
 import { Session } from '@supabase/supabase-js';
@@ -23,14 +22,12 @@ export interface User {
   metadata?: Record<string, any>;
 }
 
-// We don't need to redefine UserData here since we're importing it from @/types/auth
-
 interface AuthContextType {
   user: UserData | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   role: Role;
-  session: Session | null; // Add session property
+  session: Session | null;
   login: (userData: UserData) => void;
   logout: () => void;
   setUserRole: (role: Role) => void;
@@ -42,7 +39,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
   role: 'client',
-  session: null, // Initialize with null
+  session: null,
   login: () => {},
   logout: () => {},
   setUserRole: () => {},
@@ -60,7 +57,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [role, setRole] = useState<Role>('client');
-  const [session, setSession] = useState<Session | null>(null); // Add session state
+  const [session, setSession] = useState<Session | null>(null);
 
   // Initialize auth state from localStorage on component mount
   useEffect(() => {
@@ -70,25 +67,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
         setIsAuthenticated(true);
-        setRole(parsedUser.role || 'client');
         
-        // Set a mock session for development purposes
-        // In a real app, this would come from Supabase auth.getSession()
-        setSession({
-          access_token: 'mock-access-token',
-          refresh_token: 'mock-refresh-token',
+        // For development purposes, set admin role if none is defined
+        // This will help with testing RLS policies
+        setRole(parsedUser.role || 'admin');
+        
+        // Set a mock session for development purposes with proper role claim
+        const mockSession = {
+          access_token: `mock-access-token-${Date.now()}`,
+          refresh_token: `mock-refresh-token-${Date.now()}`,
           expires_in: 3600,
           expires_at: Math.floor(Date.now() / 1000) + 3600,
           user: {
             id: parsedUser.id,
             app_metadata: {},
-            user_metadata: {},
+            user_metadata: { role: parsedUser.role || 'admin' },
             aud: 'authenticated',
             email: parsedUser.email,
-            role: parsedUser.role,
+            role: parsedUser.role || 'admin',
             created_at: parsedUser.createdAt || new Date().toISOString(),
           }
-        } as Session);
+        } as Session;
+        
+        setSession(mockSession);
+        
       } catch (error) {
         console.error('Error parsing stored user:', error);
         localStorage.removeItem('user');
@@ -99,30 +101,41 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Login function
   const login = (userData: UserData) => {
-    // Store the user data in localStorage
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
-    setIsAuthenticated(true);
-    setRole(userData.role || 'client');
+    // Default to admin role if not specified (for development purposes)
+    const roleToUse = userData.role || 'admin';
     
-    // Set a mock session for development purposes
-    setSession({
-      access_token: 'mock-access-token',
-      refresh_token: 'mock-refresh-token',
+    // Update userData with the role
+    const updatedUserData = {
+      ...userData,
+      role: roleToUse
+    };
+    
+    // Store the user data in localStorage
+    localStorage.setItem('user', JSON.stringify(updatedUserData));
+    setUser(updatedUserData);
+    setIsAuthenticated(true);
+    setRole(roleToUse);
+    
+    // Set a mock session for development purposes with proper role claim
+    const mockSession = {
+      access_token: `mock-access-token-${Date.now()}`,
+      refresh_token: `mock-refresh-token-${Date.now()}`,
       expires_in: 3600,
       expires_at: Math.floor(Date.now() / 1000) + 3600,
       user: {
-        id: userData.id,
+        id: updatedUserData.id,
         app_metadata: {},
-        user_metadata: {},
+        user_metadata: { role: roleToUse },
         aud: 'authenticated',
-        email: userData.email,
-        role: userData.role,
-        created_at: userData.createdAt || new Date().toISOString(),
+        email: updatedUserData.email,
+        role: roleToUse,
+        created_at: updatedUserData.createdAt || new Date().toISOString(),
       }
-    } as Session);
+    } as Session;
     
-    console.log('Login successful, user role:', userData.role);
+    setSession(mockSession);
+    
+    console.log('Login successful, user role:', roleToUse);
   };
 
   // Logout function
@@ -132,7 +145,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     setIsAuthenticated(false);
     setRole('client');
-    setSession(null); // Clear session
+    setSession(null);
     console.log('User logged out');
   };
 
@@ -165,7 +178,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isAuthenticated,
     isLoading,
     role,
-    session, // Add session to context
+    session,
     login,
     logout,
     setUserRole,

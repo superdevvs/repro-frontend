@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getAuthenticatedClient } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { CouponCard } from './CouponCard';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -21,7 +21,9 @@ export function CouponsList() {
         throw new Error('Authentication required to view coupons');
       }
       
-      const { data, error } = await supabase
+      // Use authenticated client
+      const client = getAuthenticatedClient(session);
+      const { data, error } = await client
         .from('coupons')
         .select('*')
         .order('created_at', { ascending: false });
