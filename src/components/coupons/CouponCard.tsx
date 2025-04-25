@@ -7,6 +7,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { CircularProgress } from './CircularProgress';
 import { MoreVertical, Edit, Power, Trash } from 'lucide-react';
 import { Infinity } from 'lucide-react';
+import { format } from 'date-fns';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +30,16 @@ export function CouponCard({ coupon }: CouponCardProps) {
       return `-${amount}%`;
     }
     return `-$${amount}`;
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return null;
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
   };
 
   return (
@@ -73,7 +84,7 @@ export function CouponCard({ coupon }: CouponCardProps) {
             <div className="font-medium">Valid Thru</div>
             <div className="flex items-center gap-1">
               {coupon.valid_until ? (
-                coupon.valid_until
+                formatDate(coupon.valid_until)
               ) : (
                 <Infinity className="h-4 w-4" />
               )}

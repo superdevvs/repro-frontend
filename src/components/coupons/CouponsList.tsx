@@ -5,22 +5,48 @@ import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { CouponCard } from './CouponCard';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { toast } from 'sonner';
 
 type Coupon = Database['public']['Tables']['coupons']['Row'];
 
 export function CouponsList() {
-  const { data: coupons, isLoading } = useQuery({
+  const { session } = useAuth();
+
+  const { data: coupons, isLoading, error } = useQuery({
     queryKey: ['coupons'],
     queryFn: async () => {
+      // Make sure we have an access token before making the request
+      if (!session?.access_token) {
+        throw new Error('Authentication required to view coupons');
+      }
+      
       const { data, error } = await supabase
         .from('coupons')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching coupons:', error);
+        throw error;
+      }
       return data as Coupon[];
     },
+    enabled: !!session?.access_token, // Only run query if we have an access token
   });
+
+  if (error) {
+    // Show error in toast and UI
+    React.useEffect(() => {
+      toast.error(`Failed to load coupons: ${(error as Error).message}`);
+    }, [error]);
+    
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
+        <p>Error loading coupons. Please try again later.</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -32,9 +58,18 @@ export function CouponsList() {
     );
   }
 
+  if (!coupons?.length) {
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-md p-8 text-center text-gray-500">
+        <p className="text-lg font-medium mb-2">No Coupons Found</p>
+        <p>Create your first coupon by clicking the "Create Coupon" button above.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {coupons?.map((coupon) => (
+      {coupons.map((coupon) => (
         <CouponCard key={coupon.id} coupon={coupon} />
       ))}
     </div>

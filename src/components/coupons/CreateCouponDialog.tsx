@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DialogClose } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { 
   DialogContent,
   DialogHeader,
@@ -42,6 +43,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export function CreateCouponDialog() {
   const queryClient = useQueryClient();
+  const { role, session } = useAuth();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -53,6 +55,11 @@ export function CreateCouponDialog() {
 
   const createCouponMutation = useMutation({
     mutationFn: async (values: FormData) => {
+      // Ensure user is authenticated
+      if (!session?.access_token) {
+        throw new Error("You must be logged in to create coupons");
+      }
+      
       // Format the date for Postgres if it exists
       const formattedDate = values.valid_until 
         ? values.valid_until.toISOString() 
@@ -69,6 +76,8 @@ export function CreateCouponDialog() {
         current_uses: 0,
       };
 
+      console.log("Creating coupon with data:", couponData);
+      
       const { data, error } = await supabase
         .from('coupons')
         .insert(couponData)
@@ -84,8 +93,8 @@ export function CreateCouponDialog() {
       form.reset();
     },
     onError: (error) => {
-      toast.error('Failed to create coupon');
       console.error('Error creating coupon:', error);
+      toast.error(`Failed to create coupon: ${error.message || 'Unknown error'}`);
     },
   });
 
