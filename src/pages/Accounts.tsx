@@ -1,9 +1,9 @@
-
 import React, { useState } from "react";
 import { AccountsLayout } from "@/components/layout/AccountsLayout";
 import { AccountCard } from "@/components/accounts/AccountCard";
 import { AccountList } from "@/components/accounts/AccountList";
 import { AccountsHeader } from "@/components/accounts/AccountsHeader";
+import { AccountForm } from "@/components/accounts/AccountForm";
 import { Role } from "@/components/auth/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { ResetPasswordDialog } from "@/components/accounts/ResetPasswordDialog";
@@ -70,16 +70,16 @@ export default function Accounts() {
   const [filterRole, setFilterRole] = useState<Role | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   
-  const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
   const [roleChangeDialogOpen, setRoleChangeDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [notificationSettingsDialogOpen, setNotificationSettingsDialogOpen] = useState(false);
   const [linkClientBrandingDialogOpen, setLinkClientBrandingDialogOpen] = useState(false);
   const [userProfileDialogOpen, setUserProfileDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
   
   const filteredUsers = users.filter((user) => {
     const roleMatch = filterRole === "all" || user.role === filterRole;
@@ -194,6 +194,17 @@ export default function Accounts() {
     });
   };
 
+  const handleUpdateUser = (values: any) => {
+    setUsers(users.map((u) => 
+      u.id === selectedUser?.id ? { ...u, ...values } : u
+    ));
+    
+    toast({
+      title: "Account updated",
+      description: "The user account has been updated successfully.",
+    });
+  };
+
   return (
     <AccountsLayout>
       <div className="container px-4 sm:px-6 pb-6 space-y-6">
@@ -259,11 +270,11 @@ export default function Accounts() {
       
       {selectedUser && (
         <>
-          <UserProfileDialog 
-            open={userProfileDialogOpen} 
-            onOpenChange={setUserProfileDialogOpen}
-            user={selectedUser}
-            onEdit={() => handleEditUser(selectedUser)}
+          <AccountForm
+            open={editUserDialogOpen}
+            onOpenChange={setEditUserDialogOpen}
+            initialData={selectedUser}
+            onSubmit={handleUpdateUser}
           />
           
           <ResetPasswordDialog
@@ -293,6 +304,13 @@ export default function Accounts() {
             onOpenChange={setLinkClientBrandingDialogOpen}
             user={selectedUser}
             onSubmit={handleUpdateClientBranding}
+          />
+          
+          <UserProfileDialog 
+            open={userProfileDialogOpen} 
+            onOpenChange={setUserProfileDialogOpen}
+            user={selectedUser}
+            onEdit={() => handleEditUser(selectedUser)}
           />
         </>
       )}

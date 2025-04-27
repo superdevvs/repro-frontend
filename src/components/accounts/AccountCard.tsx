@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { User, Role } from "@/components/auth/AuthProvider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
