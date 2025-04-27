@@ -1,15 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Plus, Save } from 'lucide-react';
 import { ServiceCard } from './ServiceCard';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Service = {
   id: string;
@@ -76,12 +75,17 @@ export function ServicesTab() {
     try {
       const { data, error } = await supabase
         .from('services')
-        .select('*')
-        .order('name');
+        .select(`
+          *,
+          service_categories (
+            id,
+            name
+          )
+        `)
+        .order('category');
       
       if (error) throw error;
       
-      // Map database fields to our Service type
       const mappedServices: Service[] = (data || []).map(item => ({
         id: item.id,
         name: item.name,
@@ -90,7 +94,7 @@ export function ServicesTab() {
         delivery_time: item.duration,
         active: item.is_active || false,
         category: item.category,
-        photographer_required: false // Default value since this isn't in the database
+        photographer_required: false
       }));
       
       setServices(mappedServices);
@@ -177,12 +181,11 @@ export function ServicesTab() {
   return (
     <div className="space-y-6">
       <div className="max-w-md mx-auto">
-        <Label htmlFor="category-select" className="mb-1 block">Service Category</Label>
         <Select 
           value={selectedCategory || ''} 
           onValueChange={handleCategoryChange}
         >
-          <SelectTrigger id="category-select" className="w-full">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a category" />
           </SelectTrigger>
           <SelectContent>
@@ -269,6 +272,24 @@ export function ServicesTab() {
                       placeholder="24"
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select 
+                    value={newService.category} 
+                    onValueChange={(value) => setNewService(prev => ({ ...prev, category: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(category => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <DialogFooter>
