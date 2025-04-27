@@ -20,6 +20,7 @@ type ServiceProps = {
     delivery_time?: number;
     photographer_required?: boolean;
     active: boolean;
+    category?: string; // Added category property
   };
   onUpdate: () => void;
 };
