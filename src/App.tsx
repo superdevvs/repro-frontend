@@ -1,3 +1,4 @@
+
 import React from 'react'
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -12,6 +13,7 @@ import BookShoot from "./pages/BookShoot";
 import Clients from "./pages/Clients";
 import Invoices from "./pages/Invoices";
 import Settings from "./pages/Settings";
+import SchedulingSettings from "./pages/SchedulingSettings";
 import Accounts from "./pages/Accounts";
 import Availability from "./pages/Availability";
 import Reports from "./pages/Reports";
@@ -59,6 +61,40 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
       variant: "destructive",
     });
     return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
+
+// Admin route component
+const AdminRoute = ({ children }: { children: JSX.Element }) => {
+  const { role, isAuthenticated, isLoading } = useAuth();
+  
+  // Show loading state if auth is still initializing
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    toast({
+      title: "Authentication Required",
+      description: "Please log in to access this page.",
+      variant: "destructive",
+    });
+    return <Navigate to="/" replace />;
+  }
+  
+  if (!['admin', 'superadmin'].includes(role)) {
+    toast({
+      title: "Access Denied",
+      description: "You don't have permission to access this page.",
+      variant: "destructive",
+    });
+    return <Navigate to="/dashboard" replace />;
   }
   
   return children;
@@ -128,6 +164,11 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <Settings />
         </ProtectedRoute>
+      } />
+      <Route path="/scheduling-settings" element={
+        <AdminRoute>
+          <SchedulingSettings />
+        </AdminRoute>
       } />
       <Route path="/profile" element={
         <ProtectedRoute>

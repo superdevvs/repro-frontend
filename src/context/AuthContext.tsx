@@ -8,10 +8,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   role: string;
-  session: Session | null; // Add session property
+  session: Session | null;
   login: (userData: UserData) => void;
   logout: () => void;
   setUserRole: (role: string) => void;
+  setUser: (userData: UserData) => void; // Add setUser method
 }
 
 // Create context with default values
@@ -20,10 +21,11 @@ export const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isLoading: true,
   role: 'client',
-  session: null, // Initialize with null
+  session: null,
   login: () => {},
   logout: () => {},
   setUserRole: () => {},
+  setUser: () => {}, // Initialize with empty function
 });
 
 // Hook for using the auth context

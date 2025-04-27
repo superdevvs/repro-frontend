@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { UserData } from '@/types/auth';
 import { Session } from '@supabase/supabase-js';
@@ -32,6 +31,7 @@ interface AuthContextType {
   login: (userData: UserData) => void;
   logout: () => void;
   setUserRole: (role: Role) => void;
+  setUser: (userData: UserData) => void;
 }
 
 // Create a context object
@@ -44,6 +44,7 @@ const AuthContext = createContext<AuthContextType>({
   login: () => {},
   logout: () => {},
   setUserRole: () => {},
+  setUser: () => {},
 });
 
 // Custom hook to use the auth context
@@ -228,6 +229,46 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  // Update user data function
+  const updateUser = (userData: UserData) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      // Keep the role if not provided in userData
+      if (!userData.role) {
+        updatedUser.role = user.role;
+      }
+      
+      // Store updated user data in localStorage
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      
+      // Update role state if it changed
+      if (userData.role && userData.role !== role) {
+        setRole(userData.role as Role);
+      }
+      
+      // Update session if it exists
+      if (session) {
+        const mockToken = generateMockJWT(updatedUser.id, updatedUser.role || role);
+        
+        setSession({
+          ...session,
+          access_token: mockToken,
+          user: {
+            ...session.user,
+            role: updatedUser.role,
+            user_metadata: {
+              ...session.user.user_metadata,
+              role: updatedUser.role
+            }
+          }
+        });
+      }
+      
+      console.log('User data updated');
+    }
+  };
+
   // Context value
   const contextValue: AuthContextType = {
     user,
@@ -238,6 +279,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     login,
     logout,
     setUserRole,
+    setUser: updateUser,
   };
 
   return (

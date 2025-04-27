@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { NavLink } from './NavLink';
@@ -12,6 +13,7 @@ import {
   BarChart3Icon,
   PlugIcon,
   TicketIcon,
+  Settings2Icon,
 } from 'lucide-react';
 
 interface SidebarLinksProps {
@@ -97,6 +99,13 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
             label="Coupons"
             isCollapsed={isCollapsed}
             isActive={pathname === '/coupons'}
+          />
+          <NavLink
+            to="/scheduling-settings"
+            icon={<Settings2Icon className="h-5 w-5" />}
+            label="Scheduling"
+            isCollapsed={isCollapsed}
+            isActive={pathname === '/scheduling-settings'}
           />
         </>
       )}
