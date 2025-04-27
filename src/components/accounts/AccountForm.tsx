@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { User, Role } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ImageUpload } from "@/components/profile/ImageUpload";
-import { useAuth } from "@/components/auth/AuthProvider";
 
 // Define allowed roles for the form
 type FormRole = 'admin' | 'photographer' | 'client' | 'editor';
@@ -80,8 +80,6 @@ export function AccountForm({
     },
   });
 
-  const { user: currentUser, setUser } = useAuth();
-
   useEffect(() => {
     if (initialData) {
       // Convert Role to FormRole if needed
@@ -118,16 +116,10 @@ export function AccountForm({
     }
   }, [initialData, form, open]);
 
-  const handleSubmit = async (values: AccountFormValues) => {
+  const handleSubmit = (values: AccountFormValues) => {
     if (avatarUrl) {
       values.avatar = avatarUrl;
     }
-    
-    // If updating own profile, update auth context
-    if (currentUser && initialData && currentUser.id === initialData.id) {
-      setUser(prev => prev ? { ...prev, ...values } : prev);
-    }
-    
     onSubmit(values);
     onOpenChange(false);
   };

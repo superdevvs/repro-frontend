@@ -12,7 +12,6 @@ import { NotificationSettingsDialog } from "@/components/accounts/NotificationSe
 import { LinkClientBrandingDialog } from "@/components/accounts/LinkClientBrandingDialog";
 import { UserProfileDialog } from "@/components/accounts/UserProfileDialog";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { supabase } from "@/integrations/supabase/client"; // Import supabase client
 
 const sampleUsersData = [
   {
@@ -195,26 +194,10 @@ export default function Accounts() {
     });
   };
 
-  const handleUpdateUser = async (values: any) => {
+  const handleUpdateUser = (values: any) => {
     setUsers(users.map((u) => 
       u.id === selectedUser?.id ? { ...u, ...values } : u
     ));
-    
-    if (selectedUser?.id) {
-      const { error } = await supabase
-        .from('profiles')
-        .update(values)
-        .eq('id', selectedUser.id);
-
-      if (error) {
-        toast({
-          title: "Update failed",
-          description: "There was an error updating the account.",
-          variant: "destructive"
-        });
-        return;
-      }
-    }
     
     toast({
       title: "Account updated",

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,12 +19,13 @@ export function ImageUpload({ onChange, initialImage, className }: ImageUploadPr
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check file type
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Invalid file type",
@@ -33,6 +35,7 @@ export function ImageUpload({ onChange, initialImage, className }: ImageUploadPr
       return;
     }
 
+    // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",
@@ -45,10 +48,12 @@ export function ImageUpload({ onChange, initialImage, className }: ImageUploadPr
     try {
       setUploading(true);
       
+      // Create a unique file name
       const fileExt = file.name.split('.').pop();
       const fileName = `${user?.id || 'user'}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
       
+      // Upload file to Supabase Storage
       const { error: uploadError, data } = await supabase.storage
         .from('user-files')
         .upload(filePath, file);
@@ -57,25 +62,14 @@ export function ImageUpload({ onChange, initialImage, className }: ImageUploadPr
         throw uploadError;
       }
       
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('user-files')
         .getPublicUrl(filePath);
       
+      // Update preview and callback
       setPreview(publicUrl);
       onChange(publicUrl);
-
-      if (user) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ avatar: publicUrl })
-          .eq('id', user.id);
-
-        if (updateError) {
-          console.error('Error updating profile:', updateError);
-        } else {
-          setUser(prev => prev ? { ...prev, avatar: publicUrl } : prev);
-        }
-      }
       
       toast({
         title: "Image uploaded",
@@ -84,6 +78,7 @@ export function ImageUpload({ onChange, initialImage, className }: ImageUploadPr
     } catch (error) {
       console.error('Error uploading image:', error);
       
+      // Fallback to object URL if Supabase upload fails
       const objectUrl = URL.createObjectURL(file);
       setPreview(objectUrl);
       onChange(objectUrl);
@@ -105,11 +100,14 @@ export function ImageUpload({ onChange, initialImage, className }: ImageUploadPr
   const handleClearImage = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
+    // If the preview URL is from Supabase, try to delete the file
     if (preview && preview.includes('supabase')) {
       try {
+        // Extract path from URL
         const url = new URL(preview);
         const path = url.pathname.split('/').slice(-2).join('/');
         
+        // Delete from storage
         await supabase.storage
           .from('user-files')
           .remove([path]);

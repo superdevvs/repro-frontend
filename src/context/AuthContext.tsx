@@ -12,7 +12,6 @@ interface AuthContextType {
   login: (userData: UserData) => void;
   logout: () => void;
   setUserRole: (role: string) => void;
-  setUser: (updater: ((prevUser: UserData | null) => UserData | null)) => void; // Add setUser property
 }
 
 // Create context with default values
@@ -25,7 +24,6 @@ export const AuthContext = createContext<AuthContextType>({
   login: () => {},
   logout: () => {},
   setUserRole: () => {},
-  setUser: () => {}, // Add setUser default implementation
 });
 
 // Hook for using the auth context
