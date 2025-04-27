@@ -1,14 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Plus, Save } from 'lucide-react';
 import { ServiceCard } from './ServiceCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CategorySelect } from '@/components/settings/CategorySelect';
+import { useServiceCategories } from '@/hooks/useServiceCategories';
 
 type Service = {
   id: string;
@@ -21,16 +24,9 @@ type Service = {
   category?: string;
 };
 
-type ServiceCategory = {
-  id: string;
-  name: string;
-  display_order: number;
-};
-
 export function ServicesTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [services, setServices] = useState<Service[]>([]);
-  const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newService, setNewService] = useState({
@@ -41,34 +37,16 @@ export function ServicesTab() {
     category: '',
   });
   const { toast } = useToast();
+  const { data: categories, isLoading: categoriesLoading } = useServiceCategories();
 
   useEffect(() => {
-    fetchCategories();
     fetchServices();
-  }, []);
-
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('service_categories')
-        .select('*')
-        .order('display_order');
-      
-      if (error) throw error;
-      
-      setCategories(data || []);
-      if (data && data.length > 0) {
-        setSelectedCategory(data[0].id);
-      }
-    } catch (error) {
-      console.error('Error fetching service categories:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load service categories',
-        variant: 'destructive',
-      });
+    
+    // Set default selected category when categories are loaded
+    if (categories && categories.length > 0 && !selectedCategory) {
+      setSelectedCategory(categories[0].id);
     }
-  };
+  }, [categories]);
 
   const fetchServices = async () => {
     setIsLoading(true);
@@ -124,7 +102,7 @@ export function ServicesTab() {
 
   const handleSaveService = async () => {
     try {
-      const selectedCategoryData = categories.find(cat => cat.id === selectedCategory);
+      const selectedCategoryData = categories?.find(cat => cat.id === newService.category);
       if (!selectedCategoryData) {
         toast({
           title: 'Error',
@@ -142,7 +120,7 @@ export function ServicesTab() {
             description: newService.description,
             price: parseFloat(newService.price),
             duration: parseInt(newService.delivery_time),
-            category_id: selectedCategory,
+            category_id: newService.category,
             category: selectedCategoryData.name,
             is_active: true
           }
@@ -175,27 +153,33 @@ export function ServicesTab() {
   };
 
   const filteredServices = selectedCategory 
-    ? services.filter(service => service.category === categories.find(cat => cat.id === selectedCategory)?.name)
+    ? services.filter(service => service.category === categories?.find(cat => cat.id === selectedCategory)?.name)
     : services;
 
   return (
     <div className="space-y-6">
       <div className="max-w-md mx-auto">
-        <Select 
-          value={selectedCategory || ''} 
-          onValueChange={handleCategoryChange}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map(category => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {categoriesLoading ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <Select 
+            value={selectedCategory || ''}
+            onValueChange={handleCategoryChange}
+          >
+            <SelectTrigger className="w-full bg-background">
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories && categories.map(category => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {isLoading ? (
@@ -277,11 +261,11 @@ export function ServicesTab() {
                     value={newService.category} 
                     onValueChange={(value) => setNewService(prev => ({ ...prev, category: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-background">
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map(category => (
+                      {categories?.map(category => (
                         <SelectItem key={category.id} value={category.id}>
                           {category.name}
                         </SelectItem>
