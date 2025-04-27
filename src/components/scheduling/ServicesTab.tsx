@@ -81,7 +81,19 @@ export function ServicesTab() {
       
       if (error) throw error;
       
-      setServices(data || []);
+      // Map database fields to our Service type
+      const mappedServices: Service[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        price: item.price,
+        delivery_time: item.duration,
+        active: item.is_active || false,
+        category: item.category,
+        photographer_required: false // Default value since this isn't in the database
+      }));
+      
+      setServices(mappedServices);
     } catch (error) {
       console.error('Error fetching services:', error);
       toast({
