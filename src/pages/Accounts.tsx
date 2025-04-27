@@ -12,6 +12,7 @@ import { NotificationSettingsDialog } from "@/components/accounts/NotificationSe
 import { LinkClientBrandingDialog } from "@/components/accounts/LinkClientBrandingDialog";
 import { UserProfileDialog } from "@/components/accounts/UserProfileDialog";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { supabase } from "@/integrations/supabase/client"; // Import supabase client
 
 const sampleUsersData = [
   {

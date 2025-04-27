@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { UserData } from '@/types/auth';
 import { Session } from '@supabase/supabase-js';
@@ -32,6 +31,7 @@ interface AuthContextType {
   login: (userData: UserData) => void;
   logout: () => void;
   setUserRole: (role: Role) => void;
+  setUser: (updater: ((prevUser: UserData | null) => UserData | null)) => void; // Add setUser function
 }
 
 // Create a context object
@@ -44,6 +44,7 @@ const AuthContext = createContext<AuthContextType>({
   login: () => {},
   logout: () => {},
   setUserRole: () => {},
+  setUser: () => {}, // Add default implementation
 });
 
 // Custom hook to use the auth context
@@ -238,6 +239,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     login,
     logout,
     setUserRole,
+    setUser, // Add setUser to the context
   };
 
   return (
