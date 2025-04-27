@@ -50,7 +50,6 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
   const handleSaveService = async () => {
     setIsSubmitting(true);
     try {
-      // Map our Service type back to what Supabase expects
       const { error } = await supabase
         .from('services')
         .update({
@@ -59,6 +58,7 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
           price: Number(editedService.price),
           duration: Number(editedService.delivery_time),
           is_active: editedService.active,
+          category: editedService.category
         })
         .eq('id', service.id);
       

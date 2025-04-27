@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,6 @@ type Service = {
   category?: string;
 };
 
-// This type represents the actual shape of data from Supabase
 type SupabaseService = {
   id: string;
   name: string;
@@ -64,7 +62,7 @@ export function ServicesTab() {
       const { data, error } = await supabase
         .from('service_categories')
         .select('*')
-        .order('name');
+        .order('display_order');
       
       if (error) throw error;
       
@@ -92,15 +90,14 @@ export function ServicesTab() {
       
       if (error) throw error;
       
-      // Map Supabase service data to our Service type
       const mappedServices: Service[] = (data || []).map((item: SupabaseService) => ({
         id: item.id,
         name: item.name,
         description: item.description || '',
         price: item.price,
         delivery_time: item.duration,
-        photographer_required: false, // Default value since it's not in the database
-        active: item.is_active !== false, // Default to true if undefined
+        photographer_required: false,
+        active: item.is_active !== false,
         category: item.category,
       }));
       
@@ -128,37 +125,14 @@ export function ServicesTab() {
   return (
     <div className="space-y-6">
       <div className="text-center mx-auto max-w-3xl">
-        <h2 className="text-xl font-semibold mb-2">Select a service category to add/remove/modify services that your company provides.</h2>
+        <h2 className="text-xl font-semibold mb-2">Manage your service offerings by category</h2>
         <p className="text-muted-foreground mb-4">
-          Services are not required, but they help you save time when scheduling appointments.
+          Select a category to view, add, edit, or remove services within that group
         </p>
-        <Button variant="link" className="text-blue-500">
-          Want to change the service category order?
-        </Button>
       </div>
       
-      <div className="flex justify-center">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                className="flex items-center gap-2"
-                onClick={() => setIsEditingPricing(!isEditingPricing)}
-              >
-                <HelpCircle size={16} />
-                Bulk Edit Pricing
-                <HelpCircle size={16} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Quickly update pricing for multiple services</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-
       <div className="max-w-md mx-auto">
-        <Label htmlFor="category-select" className="mb-1 block">Category</Label>
+        <Label htmlFor="category-select" className="mb-1 block">Service Category</Label>
         <Select 
           value={selectedCategory || ''} 
           onValueChange={handleCategoryChange}
