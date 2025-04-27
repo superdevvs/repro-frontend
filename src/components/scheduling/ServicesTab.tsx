@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Plus, Save } from 'lucide-react';
@@ -213,17 +213,15 @@ export function ServicesTab() {
           ))}
           
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Card className="border-2 border-dashed border-muted-foreground/20 h-full flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
-                <CardContent className="flex flex-col items-center justify-center p-6 h-full">
-                  <Plus className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium">Add New Service</h3>
-                  <p className="text-muted-foreground text-center mt-2">
-                    Create a new service for this category
-                  </p>
-                </CardContent>
-              </Card>
-            </DialogTrigger>
+            <Card className="border-2 border-dashed border-muted-foreground/20 h-full flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setIsAddDialogOpen(true)}>
+              <CardContent className="flex flex-col items-center justify-center p-6 h-full">
+                <Plus className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium">Add New Service</h3>
+                <p className="text-muted-foreground text-center mt-2">
+                  Create a new service for this category
+                </p>
+              </CardContent>
+            </Card>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Add New Service</DialogTitle>
