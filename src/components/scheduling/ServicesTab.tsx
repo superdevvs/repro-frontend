@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,15 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, PlusCircle, Edit, Trash2, HelpCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Loader2, Plus, Save } from 'lucide-react';
 import { ServiceCard } from './ServiceCard';
-import { useAuth } from '@/components/auth/AuthProvider';
 
 type Service = {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   delivery_time?: number;
   photographer_required?: boolean;
@@ -23,23 +22,10 @@ type Service = {
   category?: string;
 };
 
-type SupabaseService = {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  duration?: number;
-  is_active?: boolean;
-  category: string;
-  category_id?: string;
-  display_order?: number;
-  created_at?: string;
-  updated_at?: string;
-};
-
 type ServiceCategory = {
   id: string;
   name: string;
+  display_order: number;
 };
 
 export function ServicesTab() {
@@ -48,9 +34,14 @@ export function ServicesTab() {
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditingPricing, setIsEditingPricing] = useState(false);
+  const [newService, setNewService] = useState({
+    name: '',
+    description: '',
+    price: '',
+    delivery_time: '',
+    category: '',
+  });
   const { toast } = useToast();
-  const { session } = useAuth();
 
   useEffect(() => {
     fetchCategories();
@@ -90,18 +81,7 @@ export function ServicesTab() {
       
       if (error) throw error;
       
-      const mappedServices: Service[] = (data || []).map((item: SupabaseService) => ({
-        id: item.id,
-        name: item.name,
-        description: item.description || '',
-        price: item.price,
-        delivery_time: item.duration,
-        photographer_required: false,
-        active: item.is_active !== false,
-        category: item.category,
-      }));
-      
-      setServices(mappedServices);
+      setServices(data || []);
     } catch (error) {
       console.error('Error fetching services:', error);
       toast({
@@ -118,19 +98,72 @@ export function ServicesTab() {
     setSelectedCategory(categoryId);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewService(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveService = async () => {
+    try {
+      const selectedCategoryData = categories.find(cat => cat.id === selectedCategory);
+      if (!selectedCategoryData) {
+        toast({
+          title: 'Error',
+          description: 'Please select a category',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('services')
+        .insert([
+          {
+            name: newService.name,
+            description: newService.description,
+            price: parseFloat(newService.price),
+            duration: parseInt(newService.delivery_time),
+            category_id: selectedCategory,
+            category: selectedCategoryData.name,
+            is_active: true
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Service saved successfully',
+      });
+
+      setIsAddDialogOpen(false);
+      setNewService({
+        name: '',
+        description: '',
+        price: '',
+        delivery_time: '',
+        category: '',
+      });
+      fetchServices();
+    } catch (error) {
+      console.error('Error saving service:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save service',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const filteredServices = selectedCategory 
-    ? services.filter(service => service.category === selectedCategory)
+    ? services.filter(service => service.category === categories.find(cat => cat.id === selectedCategory)?.name)
     : services;
 
   return (
     <div className="space-y-6">
-      <div className="text-center mx-auto max-w-3xl">
-        <h2 className="text-xl font-semibold mb-2">Manage your service offerings by category</h2>
-        <p className="text-muted-foreground mb-4">
-          Select a category to view, add, edit, or remove services within that group
-        </p>
-      </div>
-      
       <div className="max-w-md mx-auto">
         <Label htmlFor="category-select" className="mb-1 block">Service Category</Label>
         <Select 
@@ -168,7 +201,7 @@ export function ServicesTab() {
             <DialogTrigger asChild>
               <Card className="border-2 border-dashed border-muted-foreground/20 h-full flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
                 <CardContent className="flex flex-col items-center justify-center p-6 h-full">
-                  <PlusCircle className="h-12 w-12 text-muted-foreground mb-4" />
+                  <Plus className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium">Add New Service</h3>
                   <p className="text-muted-foreground text-center mt-2">
                     Create a new service for this category
@@ -182,21 +215,47 @@ export function ServicesTab() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="service-name">Service Name</Label>
-                  <Input id="service-name" placeholder="e.g., HDR Photos" />
+                  <Label htmlFor="name">Service Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={newService.name}
+                    onChange={handleInputChange}
+                    placeholder="e.g., HDR Photos"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="service-description">Description</Label>
-                  <Input id="service-description" placeholder="Service description" />
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    name="description"
+                    value={newService.description}
+                    onChange={handleInputChange}
+                    placeholder="Service description"
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="service-price">Price</Label>
-                    <Input id="service-price" type="number" placeholder="0.00" />
+                    <Label htmlFor="price">Price ($)</Label>
+                    <Input
+                      id="price"
+                      name="price"
+                      type="number"
+                      value={newService.price}
+                      onChange={handleInputChange}
+                      placeholder="0.00"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="delivery-time">Delivery Time (hours)</Label>
-                    <Input id="delivery-time" type="number" placeholder="24" />
+                    <Label htmlFor="delivery_time">Delivery Time (hours)</Label>
+                    <Input
+                      id="delivery_time"
+                      name="delivery_time"
+                      type="number"
+                      value={newService.delivery_time}
+                      onChange={handleInputChange}
+                      placeholder="24"
+                    />
                   </div>
                 </div>
               </div>
@@ -204,7 +263,10 @@ export function ServicesTab() {
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Save Service</Button>
+                <Button onClick={handleSaveService}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Service
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
