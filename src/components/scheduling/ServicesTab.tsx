@@ -99,7 +99,15 @@ export function ServicesTab() {
             {services?.map(service => (
               <ServiceCard 
                 key={service.id} 
-                service={service} 
+                service={{
+                  id: service.id,
+                  name: service.name,
+                  description: service.description,
+                  price: service.price,
+                  delivery_time: service.duration,
+                  active: service.is_active || false,
+                  category: service.category
+                }} 
                 onUpdate={() => refetchServices()}
               />
             ))}
