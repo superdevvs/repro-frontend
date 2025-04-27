@@ -62,6 +62,8 @@ export function AccountCard({
   };
 
   const getInitials = (name: string) => {
+    if (!name) return 'U';
+    
     return name
       .split(' ')
       .map(part => part[0])
@@ -85,8 +87,14 @@ export function AccountCard({
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12 rounded-xl border-2 border-[#E5DEFF] dark:border-slate-700">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="bg-[#F1F0FB] dark:bg-slate-800 text-[#6E59A5] dark:text-[#9b87f5] font-medium">
+              <AvatarImage 
+                src={user.avatar} 
+                alt={user.name} 
+              />
+              <AvatarFallback 
+                className="bg-[#F1F0FB] dark:bg-slate-800 text-[#6E59A5] dark:text-[#9b87f5] font-semibold"
+                delayMs={100}
+              >
                 {getInitials(user.name)}
               </AvatarFallback>
             </Avatar>
