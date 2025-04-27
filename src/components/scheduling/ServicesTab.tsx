@@ -18,10 +18,25 @@ type Service = {
   name: string;
   description: string;
   price: number;
-  delivery_time: number;
-  photographer_required: boolean;
+  delivery_time?: number;
+  photographer_required?: boolean;
   active: boolean;
   category?: string;
+};
+
+// This type represents the actual shape of data from Supabase
+type SupabaseService = {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  duration?: number;
+  is_active?: boolean;
+  category: string;
+  category_id?: string;
+  display_order?: number;
+  created_at?: string;
+  updated_at?: string;
 };
 
 type ServiceCategory = {
@@ -77,7 +92,19 @@ export function ServicesTab() {
       
       if (error) throw error;
       
-      setServices(data || []);
+      // Map Supabase service data to our Service type
+      const mappedServices: Service[] = (data || []).map((item: SupabaseService) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        price: item.price,
+        delivery_time: item.duration,
+        photographer_required: false, // Default value since it's not in the database
+        active: item.is_active !== false, // Default to true if undefined
+        category: item.category,
+      }));
+      
+      setServices(mappedServices);
     } catch (error) {
       console.error('Error fetching services:', error);
       toast({
