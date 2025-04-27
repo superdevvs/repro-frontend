@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -256,22 +255,10 @@ export function ServicesTab() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select 
-                    value={newService.category} 
-                    onValueChange={(value) => setNewService(prev => ({ ...prev, category: value }))}
-                  >
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories?.map(category => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CategorySelect 
+                    value={newService.category}
+                    onChange={(value) => setNewService(prev => ({ ...prev, category: value }))}
+                  />
                 </div>
               </div>
               <DialogFooter>

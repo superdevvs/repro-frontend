@@ -2,6 +2,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+export type Service = {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  delivery_time?: number;
+  active: boolean;
+  category?: string;
+  category_id?: string;
+  photographer_required?: boolean;
+};
+
 export const useServices = () => {
   return useQuery({
     queryKey: ['services'],
@@ -19,7 +31,19 @@ export const useServices = () => {
         .order('display_order');
       
       if (error) throw error;
-      return data;
+      
+      // Map database fields to component expected fields
+      return data?.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        price: item.price,
+        delivery_time: item.duration,
+        active: item.is_active || false,
+        category: item.category,
+        category_id: item.category_id,
+        photographer_required: false
+      }));
     }
   });
 };
