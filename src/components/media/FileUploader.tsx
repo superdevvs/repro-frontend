@@ -21,6 +21,7 @@ import {
   MonitorIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface FileUploaderProps {
   shootId?: string;
@@ -42,11 +43,16 @@ export function FileUploader({
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropzoneRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  
+  // Determine initial upload type based on user role
+  // Photographers see raw/unedited, editors see edited/final
+  const initialUploadType = user?.role === 'editor' ? 'edited' : 'raw';
+  const [uploadType, setUploadType] = useState<'raw' | 'edited'>(initialUploadType);
   
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [uploadType, setUploadType] = useState<'raw' | 'edited'>('raw');
   const [notes, setNotes] = useState('');
   const [uploadMethod, setUploadMethod] = useState<'local' | 'dropbox' | 'google'>('local');
   
@@ -218,6 +224,10 @@ export function FileUploader({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
   
+  // Determine which tab to show based on user role
+  const showRawTab = user?.role === 'photographer' || user?.role === 'admin' || user?.role === 'superadmin';
+  const showEditedTab = user?.role === 'editor' || user?.role === 'admin' || user?.role === 'superadmin';
+  
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border">
@@ -234,22 +244,41 @@ export function FileUploader({
       </CardHeader>
       
       <CardContent className="p-4">
-        <Tabs value={uploadType} onValueChange={(v: any) => setUploadType(v)} className="mb-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="raw">Raw/Unedited Files</TabsTrigger>
-            <TabsTrigger value="edited">Edited/Final Files</TabsTrigger>
-          </TabsList>
-          <TabsContent value="raw" className="pt-4">
-            <div className="text-sm text-muted-foreground mb-4">
-              Upload RAW, unedited files for processing. Supported formats: JPG, PNG, TIFF, NEF, CR2, CR3, ARW, DNG (photos), MP4, MOV (videos), ZIP (iGuide).
-            </div>
-          </TabsContent>
-          <TabsContent value="edited" className="pt-4">
-            <div className="text-sm text-muted-foreground mb-4">
-              Upload final, edited files ready for client delivery. Supported formats: JPG, PNG (photos), MP4 (videos), ZIP (packages).
-            </div>
-          </TabsContent>
-        </Tabs>
+        {/* Only show tabs if both raw and edited tabs are available (admin) */}
+        {showRawTab && showEditedTab ? (
+          <Tabs value={uploadType} onValueChange={(v: any) => setUploadType(v)} className="mb-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="raw">Raw/Unedited Files</TabsTrigger>
+              <TabsTrigger value="edited">Edited/Final Files</TabsTrigger>
+            </TabsList>
+            <TabsContent value="raw" className="pt-4">
+              <div className="text-sm text-muted-foreground mb-4">
+                Upload RAW, unedited files for processing. Supported formats: JPG, PNG, TIFF, NEF, CR2, CR3, ARW, DNG (photos), MP4, MOV (videos), ZIP (iGuide).
+              </div>
+            </TabsContent>
+            <TabsContent value="edited" className="pt-4">
+              <div className="text-sm text-muted-foreground mb-4">
+                Upload final, edited files ready for client delivery. Supported formats: JPG, PNG (photos), MP4 (videos), ZIP (packages).
+              </div>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          // Show only one tab description based on user role
+          <div className="mb-4">
+            {showRawTab && (
+              <div className="text-sm text-muted-foreground mb-4">
+                <h3 className="font-medium text-base mb-1">Raw/Unedited Files</h3>
+                Upload RAW, unedited files for processing. Supported formats: JPG, PNG, TIFF, NEF, CR2, CR3, ARW, DNG (photos), MP4, MOV (videos), ZIP (iGuide).
+              </div>
+            )}
+            {showEditedTab && !showRawTab && (
+              <div className="text-sm text-muted-foreground mb-4">
+                <h3 className="font-medium text-base mb-1">Edited/Final Files</h3>
+                Upload final, edited files ready for client delivery. Supported formats: JPG, PNG (photos), MP4 (videos), ZIP (packages).
+              </div>
+            )}
+          </div>
+        )}
         
         <div className="flex flex-wrap gap-2 mb-4">
           <Button 
@@ -473,27 +502,28 @@ export function FileUploader({
           </div>
         )}
         
-        {!uploading && (
-          <>
-            <Button variant="outline" onClick={handleClearFiles} disabled={files.length === 0}>
-              Cancel
+        <div className="mt-6 flex justify-end gap-3">
+          {!uploading && (
+            <>
+              <Button variant="outline" onClick={handleClearFiles} disabled={files.length === 0}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpload} disabled={files.length === 0}>
+                <UploadCloudIcon className="h-4 w-4 mr-2" />
+                Upload {files.length > 0 ? `(${files.length} files)` : ''}
+              </Button>
+            </>
+          )}
+          
+          {uploading && (
+            <Button variant="outline" disabled>
+              Uploading...
             </Button>
-            <Button onClick={handleUpload} disabled={files.length === 0}>
-              <UploadCloudIcon className="h-4 w-4 mr-2" />
-              Upload {files.length > 0 ? `(${files.length} files)` : ''}
-            </Button>
-          </>
-        )}
-        
-        {uploading && (
-          <Button variant="outline" disabled>
-            Uploading...
-          </Button>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
 export default FileUploader;
-
