@@ -121,6 +121,13 @@ export function ShootNotesTab({
     }
   }
 
+  // Function to display the current note value, respecting the edit state
+  function displayNoteValue(noteType: string): string {
+    return activeEdits[noteType as keyof typeof activeEdits] 
+      ? editableNotes[noteType as keyof typeof editableNotes] 
+      : getNotes(noteType);
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -147,7 +154,7 @@ export function ShootNotesTab({
         </div>
         <Textarea 
           placeholder="No shoot notes available" 
-          value={activeEdits.shootNotes ? editableNotes.shootNotes : getNotes('shootNotes')}
+          value={displayNoteValue('shootNotes')}
           onChange={(e) => handleNoteChange(e, 'shootNotes')}
           readOnly={!activeEdits.shootNotes}
           className="resize-none min-h-[100px]"
@@ -178,7 +185,7 @@ export function ShootNotesTab({
         </div>
         <Textarea 
           placeholder="No photographer notes available" 
-          value={activeEdits.photographerNotes ? editableNotes.photographerNotes : getNotes('photographerNotes')}
+          value={displayNoteValue('photographerNotes')}
           onChange={(e) => handleNoteChange(e, 'photographerNotes')}
           readOnly={!activeEdits.photographerNotes}
           className="resize-none min-h-[100px]"
@@ -209,7 +216,7 @@ export function ShootNotesTab({
         </div>
         <Textarea 
           placeholder="No company notes available" 
-          value={activeEdits.companyNotes ? editableNotes.companyNotes : getNotes('companyNotes')}
+          value={displayNoteValue('companyNotes')}
           onChange={(e) => handleNoteChange(e, 'companyNotes')}
           readOnly={!activeEdits.companyNotes}
           className="resize-none min-h-[100px]"
@@ -240,7 +247,7 @@ export function ShootNotesTab({
         </div>
         <Textarea 
           placeholder="No editing notes available" 
-          value={activeEdits.editingNotes ? editableNotes.editingNotes : getNotes('editingNotes')}
+          value={displayNoteValue('editingNotes')}
           onChange={(e) => handleNoteChange(e, 'editingNotes')}
           readOnly={!activeEdits.editingNotes}
           className="resize-none min-h-[100px]"
