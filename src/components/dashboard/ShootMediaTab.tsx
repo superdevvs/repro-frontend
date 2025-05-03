@@ -11,7 +11,7 @@ import {
   CheckIcon,
   Trash2Icon,
   PresentationIcon,
-  View as ViewIcon,
+  Eye as ViewIcon,
   Download as DownloadIcon,
   Plus as PlusIcon,
 } from 'lucide-react';
@@ -461,30 +461,4 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       </Tabs>
     </div>
   );
-  
-  function EmptyState({ type, canUpload }: { type: MediaType, canUpload: boolean }) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        {type === 'images' && <ImageIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />}
-        {type === 'videos' && <VideoIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />}
-        {type === 'files' && <FileIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />}
-        {type === 'slideshows' && <PresentationIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />}
-        
-        <h3 className="text-lg font-medium mb-2">No {type} available</h3>
-        <p className="text-muted-foreground mb-6 max-w-sm">
-          {type === 'images' && "No images have been uploaded for this shoot yet."}
-          {type === 'videos' && "No videos have been uploaded for this shoot yet."}
-          {type === 'files' && "No files have been uploaded for this shoot yet."}
-          {type === 'slideshows' && "No slideshows have been created for this shoot yet."}
-        </p>
-        
-        {canUpload && (
-          <Button onClick={() => handleMediaUpload(type)}>
-            <UploadIcon className="h-4 w-4 mr-2" />
-            Upload {type === 'images' ? 'Images' : type === 'videos' ? 'Videos' : type === 'files' ? 'Files' : 'Slideshows'}
-          </Button>
-        )}
-      </div>
-    );
-  }
 }
