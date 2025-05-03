@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -18,16 +19,20 @@ import {
   CloudIcon,
   PlusIcon,
   BoxIcon,
-  MonitorIcon
+  MonitorIcon,
+  SaveIcon,
+  SendIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useShoots } from '@/context/ShootsContext';
 
 interface FileUploaderProps {
   shootId?: string;
-  onUploadComplete?: (files: File[]) => void;
+  onUploadComplete?: (files: File[], notes: string) => void;
   allowedFileTypes?: string[];
   className?: string;
+  initialNotes?: string;
 }
 
 export function FileUploader({
@@ -38,9 +43,11 @@ export function FileUploader({
     'video/mp4', 'video/quicktime',
     'application/zip', 'application/x-zip-compressed'
   ],
-  className
+  className,
+  initialNotes = ''
 }: FileUploaderProps) {
   const { toast } = useToast();
+  const { updateShoot } = useShoots();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropzoneRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
@@ -53,8 +60,70 @@ export function FileUploader({
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(initialNotes);
+  const [notesChanged, setNotesChanged] = useState(false);
   const [uploadMethod, setUploadMethod] = useState<'local' | 'dropbox' | 'google'>('local');
+
+  // Update notes from props if it changes
+  useEffect(() => {
+    if (initialNotes !== undefined && initialNotes !== notes && !notesChanged) {
+      setNotes(initialNotes);
+    }
+  }, [initialNotes]);
+
+  // Handle notes change
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNotes(e.target.value);
+    setNotesChanged(true);
+  };
+
+  // Save notes to the shoot independently of upload
+  const handleSaveNotes = async () => {
+    if (!shootId) {
+      toast({
+        title: "Cannot save notes",
+        description: "No shoot ID provided",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Determine which note field to update based on user role
+      let notesUpdate: any = {};
+      
+      if (user?.role === 'photographer') {
+        notesUpdate = { notes: { photographerNotes: notes } };
+      } else if (user?.role === 'editor') {
+        notesUpdate = { notes: { editingNotes: notes } };
+      } else if (user?.role === 'admin' || user?.role === 'superadmin') {
+        // For admin, determine based on the active tab
+        if (uploadType === 'raw') {
+          notesUpdate = { notes: { photographerNotes: notes } };
+        } else {
+          notesUpdate = { notes: { editingNotes: notes } };
+        }
+      } else {
+        notesUpdate = { notes: { shootNotes: notes } };
+      }
+      
+      await updateShoot(shootId, notesUpdate);
+      
+      toast({
+        title: "Notes saved",
+        description: "Your upload notes have been saved successfully",
+      });
+      
+      setNotesChanged(false);
+    } catch (error) {
+      console.error("Error saving notes:", error);
+      toast({
+        title: "Error saving notes",
+        description: "There was a problem saving your notes",
+        variant: "destructive"
+      });
+    }
+  };
   
   const validateFiles = (fileList: FileList | File[]) => {
     const validFiles: File[] = [];
@@ -186,8 +255,35 @@ export function FileUploader({
       const videoFiles = files.filter(f => f.type.startsWith('video/')).length;
       const zipFiles = files.filter(f => f.type.includes('zip')).length;
       
+      // If there's a ShootID and notes, save them to the shoot
+      if (shootId && notes) {
+        try {
+          // Determine which note field to update based on user role
+          let notesUpdate: any = {};
+          
+          if (user?.role === 'photographer') {
+            notesUpdate = { notes: { photographerNotes: notes } };
+          } else if (user?.role === 'editor') {
+            notesUpdate = { notes: { editingNotes: notes } };
+          } else if (user?.role === 'admin' || user?.role === 'superadmin') {
+            // For admin, determine based on the active tab
+            if (uploadType === 'raw') {
+              notesUpdate = { notes: { photographerNotes: notes } };
+            } else {
+              notesUpdate = { notes: { editingNotes: notes } };
+            }
+          } else {
+            notesUpdate = { notes: { shootNotes: notes } };
+          }
+          
+          updateShoot(shootId, notesUpdate);
+        } catch (error) {
+          console.error("Error saving notes during upload:", error);
+        }
+      }
+      
       if (onUploadComplete) {
-        onUploadComplete(files);
+        onUploadComplete(files, notes);
       }
       
       toast({
@@ -198,7 +294,8 @@ export function FileUploader({
       setUploading(false);
       setProgress(0);
       setFiles([]);
-      setNotes('');
+      setNotesChanged(false);
+      // Don't reset notes as they might be useful for the next upload
     }, 4000);
   };
   
@@ -227,6 +324,32 @@ export function FileUploader({
   // Determine which tab to show based on user role
   const showRawTab = user?.role === 'photographer' || user?.role === 'admin' || user?.role === 'superadmin';
   const showEditedTab = user?.role === 'editor' || user?.role === 'admin' || user?.role === 'superadmin';
+  
+  // Get placeholder text based on user role and upload type
+  const getNotesPlaceholder = () => {
+    if (user?.role === 'photographer') {
+      return "Add your notes about the shoot or specific instructions for the editor...";
+    } else if (user?.role === 'editor') {
+      return "Add your notes about the edited files or any delivery instructions...";
+    } else if (uploadType === 'raw') {
+      return "Add photographer notes or instructions for the editor...";
+    } else {
+      return "Add editor notes or delivery instructions...";
+    }
+  };
+  
+  // Get notes section title based on user role
+  const getNotesTitle = () => {
+    if (user?.role === 'photographer') {
+      return "Photographer Notes";
+    } else if (user?.role === 'editor') {
+      return "Editor Notes";
+    } else if (uploadType === 'raw') {
+      return "Photographer Upload Notes";
+    } else {
+      return "Editor Upload Notes";
+    }
+  };
   
   return (
     <Card className={className}>
@@ -265,7 +388,7 @@ export function FileUploader({
         ) : (
           // Show only one tab description based on user role
           <div className="mb-4">
-            {showRawTab && (
+            {showRawTab && !showEditedTab && (
               <div className="text-sm text-muted-foreground mb-4">
                 <h3 className="font-medium text-base mb-1">Raw/Unedited Files</h3>
                 Upload RAW, unedited files for processing. Supported formats: JPG, PNG, TIFF, NEF, CR2, CR3, ARW, DNG (photos), MP4, MOV (videos), ZIP (iGuide).
@@ -432,17 +555,43 @@ export function FileUploader({
         )}
         
         <div className="mt-4">
-          <label htmlFor="notes" className="text-sm font-medium block mb-2">
-            Upload Notes (optional)
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="notes" className="text-sm font-medium block">
+              {getNotesTitle()}
+            </label>
+            
+            {shootId && notesChanged && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSaveNotes}
+                className="flex gap-1 items-center"
+              >
+                <SaveIcon className="h-3.5 w-3.5 mr-1" />
+                Save Notes Only
+              </Button>
+            )}
+          </div>
+          
           <textarea
             id="notes"
             className="w-full min-h-[100px] p-3 rounded-md border border-border resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
-            placeholder="Add notes for the editor about these files..."
+            placeholder={getNotesPlaceholder()}
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={handleNotesChange}
             disabled={uploading}
           ></textarea>
+          
+          {shootId && (
+            <p className="text-xs text-muted-foreground mt-2">
+              {user?.role === 'photographer' ? 
+                "These notes will be visible to editors and admins." : 
+                user?.role === 'editor' ? 
+                "These notes will be visible to the client and admins." :
+                "These notes will be attached to the uploaded files."
+              }
+            </p>
+          )}
         </div>
         
         {files.length > 0 && (
@@ -508,9 +657,12 @@ export function FileUploader({
               <Button variant="outline" onClick={handleClearFiles} disabled={files.length === 0}>
                 Cancel
               </Button>
-              <Button onClick={handleUpload} disabled={files.length === 0}>
-                <UploadCloudIcon className="h-4 w-4 mr-2" />
-                Upload {files.length > 0 ? `(${files.length} files)` : ''}
+              <Button onClick={handleUpload} disabled={files.length === 0} className="flex items-center gap-1">
+                <UploadCloudIcon className="h-4 w-4 mr-1" />
+                {files.length > 0
+                  ? `Upload ${files.length} ${files.length === 1 ? 'file' : 'files'}`
+                  : 'Upload'
+                }
               </Button>
             </>
           )}
