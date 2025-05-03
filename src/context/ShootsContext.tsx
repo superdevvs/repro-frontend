@@ -136,6 +136,7 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const updateShoot = async (shootId: string, updates: Partial<ShootData>) => {
+    // Update the local state first
     setShoots(prevShoots =>
       prevShoots.map(shoot =>
         shoot.id === shootId ? { ...shoot, ...updates } : shoot
@@ -150,34 +151,39 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (updates.client) supabaseUpdates.client = updates.client;
     if (updates.location) supabaseUpdates.location = updates.location;
     if (updates.photographer) supabaseUpdates.photographer = updates.photographer;
-    if (updates.editor) supabaseUpdates.editor = updates.editor;
+    if (updates.editor !== undefined) supabaseUpdates.editor = updates.editor;
     if (updates.services) supabaseUpdates.services = updates.services;
     if (updates.payment) supabaseUpdates.payment = updates.payment;
     if (updates.status) supabaseUpdates.status = updates.status;
-    if (updates.notes) supabaseUpdates.notes = updates.notes;
+    if (updates.notes !== undefined) supabaseUpdates.notes = updates.notes;
     if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate;
-    if (updates.media) supabaseUpdates.media = updates.media;
+    if (updates.media !== undefined) supabaseUpdates.media = updates.media;
     if (updates.tourLinks) supabaseUpdates.tour_links = updates.tourLinks;
     
-    // Try to update in Supabase if available
-    try {
-      const { error } = await supabase
-        .from('shoots' as any)
-        .update(supabaseUpdates)
-        .eq('id', shootId);
+    // Try to update in Supabase if available and there are fields to update
+    if (Object.keys(supabaseUpdates).length > 0) {
+      try {
+        console.log('Updating shoot in Supabase with ID:', shootId);
+        console.log('Update data:', supabaseUpdates);
         
-      if (error) {
-        console.error('Error updating shoot in Supabase:', error);
-        toast({
-          title: 'Error updating shoot',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } else {
-        console.log('Shoot updated in Supabase successfully');
+        const { error } = await supabase
+          .from('shoots' as any)
+          .update(supabaseUpdates)
+          .eq('id', shootId);
+          
+        if (error) {
+          console.error('Error updating shoot in Supabase:', error);
+          toast({
+            title: 'Error updating shoot',
+            description: error.message,
+            variant: 'destructive',
+          });
+        } else {
+          console.log('Shoot updated in Supabase successfully');
+        }
+      } catch (error) {
+        console.error('Error in Supabase shoot update:', error);
       }
-    } catch (error) {
-      console.error('Error in Supabase shoot update:', error);
     }
   };
 

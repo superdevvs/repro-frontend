@@ -164,8 +164,6 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
     }
   };
   
-  const emptyItems = Array(3).fill(0);
-  
   const EmptyState = ({ type, canUpload }: { type: MediaType, canUpload: boolean }) => (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       {type === 'images' && <ImageIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />}
@@ -261,6 +259,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           )}
         </div>
         
+        {/* Images Tab Content */}
         <TabsContent value="images" className="mt-0">
           {hasMediaType('images') ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -270,16 +269,10 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                     src={imageUrl} 
                     alt={`Property image ${index + 1}`}
                     className="h-full w-full object-cover"
-                    onLoad={(e) => console.log("Image loaded:", e.currentTarget.src)}
+                    onLoad={debugImageLoad}
                     onError={(e) => console.error("Image failed to load:", e.currentTarget.src)}
                   />
-                  {shouldShowWatermark && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-                      <span className="text-3xl md:text-4xl font-bold text-white/70 bg-black/30 rounded-lg px-8 py-2 rotate-[-25deg] tracking-wide" style={{letterSpacing: 2, userSelect: 'none'}}>
-                        REPro Co. Watermark
-                      </span>
-                    </div>
-                  )}
+                  {shouldShowWatermark && <WatermarkOverlay />}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <Button 
                       size="sm" 
@@ -310,6 +303,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           )}
         </TabsContent>
         
+        {/* Videos Tab Content */}
         <TabsContent value="videos" className="mt-0">
           {hasMediaType('videos') ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -320,7 +314,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                       src={video.thumbnail} 
                       alt={`Video thumbnail ${index + 1}`}
                       className="h-full w-full object-cover"
-                      onLoad={(e) => console.log("Image loaded:", e.currentTarget.src)}
+                      onLoad={debugImageLoad}
                     />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center">
@@ -359,6 +353,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           )}
         </TabsContent>
         
+        {/* Files Tab Content */}
         <TabsContent value="files" className="mt-0">
           {hasMediaType('files') ? (
             <div className="space-y-2">
@@ -402,6 +397,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
           )}
         </TabsContent>
         
+        {/* Slideshows Tab Content */}
         <TabsContent value="slideshows" className="mt-0">
           <div>
             {isPhotographer && (

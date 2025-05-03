@@ -67,6 +67,8 @@ export function ShootNotesTab({
   }
   
   function handleSaveNotes(noteType: string) {
+    console.log(`Saving ${noteType} with content: ${editableNotes[noteType as keyof typeof editableNotes]}`);
+    
     // Create a new notes object based on existing notes
     let updatedNotes: any = {};
     
@@ -79,6 +81,9 @@ export function ShootNotesTab({
     
     // Update the specific note type
     updatedNotes[noteType] = editableNotes[noteType as keyof typeof editableNotes];
+    
+    console.log("Updated notes object:", updatedNotes);
+    console.log("Shoot ID:", shoot.id);
     
     // Save to database
     updateShoot(shoot.id, { notes: updatedNotes });
