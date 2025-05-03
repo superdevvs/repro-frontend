@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ShootData } from '@/types/shoots';
 import { v4 as uuidv4 } from 'uuid';
@@ -137,12 +138,19 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const updateShoot = async (shootId: string, updates: Partial<ShootData>): Promise<void> => {
+    console.log("updateShoot called with ID:", shootId, "and updates:", updates);
+    
     // Update the local state first to ensure immediate UI feedback
-    setShoots(prevShoots =>
-      prevShoots.map(shoot =>
+    setShoots(prevShoots => {
+      const updatedShoots = prevShoots.map(shoot =>
         shoot.id === shootId ? { ...shoot, ...updates } : shoot
-      )
-    );
+      );
+      
+      // Update localStorage immediately
+      localStorage.setItem('shoots', JSON.stringify(updatedShoots));
+      
+      return updatedShoots;
+    });
     
     // Transform updates for Supabase schema
     const supabaseUpdates: Record<string, any> = {};
@@ -194,12 +202,6 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } else {
           // For non-UUID IDs (like numeric IDs in local storage), only update local storage
           console.log('Skipping Supabase update for non-UUID ID:', shootId);
-          
-          // Make sure to update localStorage immediately to reflect changes
-          const updatedShoots = shoots.map(shoot => 
-            shoot.id === shootId ? { ...shoot, ...updates } : shoot
-          );
-          localStorage.setItem('shoots', JSON.stringify(updatedShoots));
           
           toast({
             title: 'Notes saved',

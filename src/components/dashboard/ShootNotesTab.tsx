@@ -54,7 +54,9 @@ export function ShootNotesTab({
   function getNotes(key: string): string {
     if (!shoot.notes) return '';
     if (typeof shoot.notes === 'string') return shoot.notes;
-    return shoot.notes[key as keyof typeof shoot.notes] || '';
+    
+    const notes = shoot.notes[key as keyof typeof shoot.notes];
+    return notes ? String(notes) : '';
   }
   
   function handleEditToggle(noteType: string) {
@@ -140,9 +142,11 @@ export function ShootNotesTab({
 
   // Function to display the current note value, respecting the edit state
   function displayNoteValue(noteType: string): string {
-    return activeEdits[noteType as keyof typeof activeEdits] 
-      ? editableNotes[noteType as keyof typeof editableNotes] 
-      : getNotes(noteType);
+    if (activeEdits[noteType as keyof typeof activeEdits]) {
+      return editableNotes[noteType as keyof typeof editableNotes];
+    }
+    
+    return getNotes(noteType);
   }
 
   return (
