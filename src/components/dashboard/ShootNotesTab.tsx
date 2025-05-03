@@ -151,46 +151,46 @@ export function ShootNotesTab({
     return getNotes(noteType);
   }
 
-  // Helper functions for styled notes
+  // Helper functions for styled notes with updated colors to match dashboard
   const getNoteBackgroundClass = (noteType: string) => {
     switch (noteType) {
       case 'photographerNotes': 
-        return 'bg-blue-50 dark:bg-blue-950/30';
+        return 'bg-blue-50/60 dark:bg-blue-900/10';
       case 'editingNotes': 
-        return 'bg-purple-50 dark:bg-purple-950/30';
+        return 'bg-purple-50/60 dark:bg-purple-900/10';
       case 'companyNotes': 
-        return 'bg-amber-50 dark:bg-amber-950/30';
+        return 'bg-amber-50/60 dark:bg-amber-900/10';
       case 'shootNotes': 
       default:
-        return 'bg-green-50 dark:bg-green-950/30';
+        return 'bg-green-50/60 dark:bg-green-900/10';
     }
   };
   
   const getNoteTextClass = (noteType: string) => {
     switch (noteType) {
       case 'photographerNotes': 
-        return 'text-blue-900 dark:text-blue-200';
+        return 'text-blue-800 dark:text-blue-300';
       case 'editingNotes': 
-        return 'text-purple-900 dark:text-purple-200';
+        return 'text-purple-800 dark:text-purple-300';
       case 'companyNotes': 
-        return 'text-amber-900 dark:text-amber-200';
+        return 'text-amber-800 dark:text-amber-300';
       case 'shootNotes': 
       default:
-        return 'text-green-900 dark:text-green-200';
+        return 'text-green-800 dark:text-green-300';
     }
   };
   
   const getNoteBorderClass = (noteType: string) => {
     switch (noteType) {
       case 'photographerNotes': 
-        return 'border-blue-200 dark:border-blue-800';
+        return 'border-blue-200 dark:border-blue-700';
       case 'editingNotes': 
-        return 'border-purple-200 dark:border-purple-800';
+        return 'border-purple-200 dark:border-purple-700';
       case 'companyNotes': 
-        return 'border-amber-200 dark:border-amber-800';
+        return 'border-amber-200 dark:border-amber-700';
       case 'shootNotes': 
       default:
-        return 'border-green-200 dark:border-green-800';
+        return 'border-green-200 dark:border-green-700';
     }
   };
 
@@ -225,7 +225,7 @@ export function ShootNotesTab({
           readOnly={!activeEdits.shootNotes}
           className={`resize-none min-h-[100px] ${getNoteBackgroundClass('shootNotes')} ${getNoteTextClass('shootNotes')} border-2 ${getNoteBorderClass('shootNotes')} focus:ring-green-500/40`}
           style={{
-            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
+            boxShadow: "inset 0 1px 3px rgba(0,0,0,0.04)",
             transition: "all 0.2s ease"
           }}
         />
@@ -260,7 +260,7 @@ export function ShootNotesTab({
           readOnly={!activeEdits.photographerNotes}
           className={`resize-none min-h-[100px] ${getNoteBackgroundClass('photographerNotes')} ${getNoteTextClass('photographerNotes')} border-2 ${getNoteBorderClass('photographerNotes')} focus:ring-blue-500/40`}
           style={{
-            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
+            boxShadow: "inset 0 1px 3px rgba(0,0,0,0.04)",
             transition: "all 0.2s ease"
           }}
         />
@@ -295,7 +295,7 @@ export function ShootNotesTab({
           readOnly={!activeEdits.companyNotes}
           className={`resize-none min-h-[100px] ${getNoteBackgroundClass('companyNotes')} ${getNoteTextClass('companyNotes')} border-2 ${getNoteBorderClass('companyNotes')} focus:ring-amber-500/40`}
           style={{
-            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
+            boxShadow: "inset 0 1px 3px rgba(0,0,0,0.04)",
             transition: "all 0.2s ease"
           }}
         />
@@ -330,7 +330,7 @@ export function ShootNotesTab({
           readOnly={!activeEdits.editingNotes}
           className={`resize-none min-h-[100px] ${getNoteBackgroundClass('editingNotes')} ${getNoteTextClass('editingNotes')} border-2 ${getNoteBorderClass('editingNotes')} focus:ring-purple-500/40`}
           style={{
-            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
+            boxShadow: "inset 0 1px 3px rgba(0,0,0,0.04)",
             transition: "all 0.2s ease"
           }}
         />

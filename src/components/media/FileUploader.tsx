@@ -351,42 +351,42 @@ export function FileUploader({
     }
   };
   
-  // Get background color class based on user role
+  // Get background color class based on user role - Updated to match dashboard background
   const getNotesBackgroundColorClass = () => {
     if (user?.role === 'photographer') {
-      return "bg-blue-50 dark:bg-blue-950/30";
+      return "bg-blue-50/60 dark:bg-blue-900/10";
     } else if (user?.role === 'editor') {
-      return "bg-purple-50 dark:bg-purple-950/30";
+      return "bg-purple-50/60 dark:bg-purple-900/10";
     } else if (uploadType === 'raw') {
-      return "bg-blue-50 dark:bg-blue-950/30";
+      return "bg-blue-50/60 dark:bg-blue-900/10";
     } else {
-      return "bg-purple-50 dark:bg-purple-950/30";
+      return "bg-purple-50/60 dark:bg-purple-900/10";
     }
   };
 
-  // Get text color class based on user role
+  // Get text color class based on user role - Updated for better contrast
   const getNotesTextColorClass = () => {
     if (user?.role === 'photographer') {
-      return "text-blue-900 dark:text-blue-200";
+      return "text-blue-800 dark:text-blue-300";
     } else if (user?.role === 'editor') {
-      return "text-purple-900 dark:text-purple-200";
+      return "text-purple-800 dark:text-purple-300";
     } else if (uploadType === 'raw') {
-      return "text-blue-900 dark:text-blue-200";
+      return "text-blue-800 dark:text-blue-300";
     } else {
-      return "text-purple-900 dark:text-purple-200";
+      return "text-purple-800 dark:text-purple-300";
     }
   };
 
-  // Get border color class based on user role
+  // Get border color class based on user role - Updated for better visual hierarchy
   const getNotesBorderColorClass = () => {
     if (user?.role === 'photographer') {
-      return "border-blue-200 dark:border-blue-800";
+      return "border-blue-200 dark:border-blue-700";
     } else if (user?.role === 'editor') {
-      return "border-purple-200 dark:border-purple-800";
+      return "border-purple-200 dark:border-purple-700";
     } else if (uploadType === 'raw') {
-      return "border-blue-200 dark:border-blue-800";
+      return "border-blue-200 dark:border-blue-700";
     } else {
-      return "border-purple-200 dark:border-purple-800";
+      return "border-purple-200 dark:border-purple-700";
     }
   };
   
@@ -620,7 +620,7 @@ export function FileUploader({
             onChange={handleNotesChange}
             disabled={uploading}
             style={{
-              boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
+              boxShadow: "inset 0 1px 3px rgba(0,0,0,0.04)",
               transition: "all 0.2s ease"
             }}
           ></textarea>
