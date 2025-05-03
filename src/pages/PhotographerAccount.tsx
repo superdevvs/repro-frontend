@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -24,8 +23,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Camera, CameraIcon, CreditCard, MapPin, Phone, Settings, User, UserIcon } from 'lucide-react';
+import { Camera, CameraIcon, CreditCard, MapPin, Phone, Settings, Upload, User, UserIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { ShootsDialogs } from '@/components/dashboard/ShootsDialogs';
+import { ShootData } from '@/types/shoots';
+import { ImageUpload } from '@/components/profile/ImageUpload';
 
 // Define form schemas
 const personalInfoSchema = z.object({
@@ -52,8 +54,12 @@ type NotificationsFormValues = z.infer<typeof notificationsSchema>;
 const PhotographerAccount = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { shoots } = useShoots();
+  const { shoots, updateShoot } = useShoots();
   const [activeTab, setActiveTab] = useState('personal');
+  const [selectedShoot, setSelectedShoot] = useState<ShootData | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [profileImage, setProfileImage] = useState<string>(user?.avatar || '');
 
   // Filter shoots by this photographer
   const photographerShoots = shoots.filter(shoot => 
@@ -71,6 +77,50 @@ const PhotographerAccount = () => {
   const recentShoots = [...photographerShoots]
     .sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime())
     .slice(0, 5);
+  
+  // Filter completed shoots
+  const completedShoots = photographerShoots.filter(shoot => shoot.status === 'completed');
+
+  // Handle opening upload dialog
+  const handleUploadMedia = (shoot: ShootData) => {
+    setSelectedShoot(shoot);
+    setIsUploadDialogOpen(true);
+  };
+
+  // Handle upload complete
+  const handleUploadComplete = (files: File[]) => {
+    if (!selectedShoot) return;
+    
+    // Sample demo images from Unsplash for demonstration
+    const demoImages = [
+      "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&q=80",
+      "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&q=80",
+      "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80",
+      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80",
+      "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&q=80",
+    ];
+    
+    // Create valid image URLs from demo images for testing purposes
+    const photoUrls = files
+      .filter(file => file.type.startsWith('image/'))
+      .map((_, index) => {
+        // Use Unsplash demo images that actually load
+        return demoImages[index % demoImages.length];
+      });
+    
+    updateShoot(selectedShoot.id, {
+      media: {
+        ...selectedShoot.media,
+        photos: [...(selectedShoot.media?.photos || []), ...photoUrls]
+      }
+    });
+    
+    setIsUploadDialogOpen(false);
+    toast({
+      title: "Upload Complete",
+      description: `${files.length} files have been uploaded successfully.`
+    });
+  };
 
   // Form for personal info
   const personalInfoForm = useForm<PersonalInfoFormValues>({
@@ -129,6 +179,15 @@ const PhotographerAccount = () => {
     });
   };
 
+  // Handle profile image change
+  const handleProfileImageChange = (url: string) => {
+    setProfileImage(url);
+    toast({
+      title: 'Profile photo updated',
+      description: 'Your profile photo has been updated successfully.',
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="container max-w-5xl py-6">
@@ -142,20 +201,14 @@ const PhotographerAccount = () => {
                 <CardDescription>Manage your account details</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col items-center text-center pt-4">
-                <Avatar className="h-24 w-24 mb-4">
-                  <AvatarImage src={user?.avatar || "https://ui.shadcn.com/avatars/01.png"} />
-                  <AvatarFallback>
-                    <UserIcon className="h-12 w-12 text-muted-foreground" />
-                  </AvatarFallback>
-                </Avatar>
+                <ImageUpload 
+                  onChange={handleProfileImageChange}
+                  initialImage={user?.avatar}
+                  className="h-24 w-24 mb-4"
+                />
                 
                 <h3 className="text-xl font-bold">{user?.name || 'Photographer'}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{user?.email || 'email@example.com'}</p>
-                
-                <Button size="sm" className="mb-4">
-                  <CameraIcon className="h-4 w-4 mr-2" />
-                  Change Photo
-                </Button>
                 
                 <div className="w-full border-t pt-4 mt-2">
                   <div className="flex items-center justify-between text-sm mb-2">
@@ -250,6 +303,10 @@ const PhotographerAccount = () => {
                     <TabsTrigger value="notifications" className="flex items-center gap-2">
                       <Settings className="h-4 w-4" />
                       <span>Preferences</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="completed-shoots" className="flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      <span>Media</span>
                     </TabsTrigger>
                   </TabsList>
                   
@@ -460,12 +517,95 @@ const PhotographerAccount = () => {
                       </form>
                     </Form>
                   </TabsContent>
+                  
+                  {/* Completed Shoots Media Tab */}
+                  <TabsContent value="completed-shoots">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Completed Shoots</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Upload and manage media for your completed shoots.
+                      </p>
+                      
+                      {completedShoots.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-4">
+                          {completedShoots.map(shoot => (
+                            <Card key={shoot.id} className="overflow-hidden">
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h4 className="font-medium">{shoot.location.address}</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                      {format(new Date(shoot.completedDate || shoot.scheduledDate), 'MMM dd, yyyy')}
+                                    </p>
+                                  </div>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => handleUploadMedia(shoot)}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <Upload className="h-4 w-4" />
+                                    <span>Upload Media</span>
+                                  </Button>
+                                </div>
+                                
+                                {shoot.media && shoot.media.photos && shoot.media.photos.length > 0 && (
+                                  <div className="mt-4">
+                                    <h5 className="text-sm font-medium mb-2">Uploaded Photos ({shoot.media.photos.length})</h5>
+                                    <div className="grid grid-cols-4 gap-2">
+                                      {shoot.media.photos.slice(0, 4).map((photo, index) => (
+                                        <div key={index} className="aspect-square rounded-md overflow-hidden">
+                                          <img 
+                                            src={photo} 
+                                            alt={`Property photo ${index + 1}`} 
+                                            className="w-full h-full object-cover"
+                                          />
+                                        </div>
+                                      ))}
+                                      {shoot.media.photos.length > 4 && (
+                                        <div className="col-span-4 text-center mt-2">
+                                          <Button 
+                                            variant="link" 
+                                            size="sm" 
+                                            onClick={() => {
+                                              setSelectedShoot(shoot);
+                                              setIsDetailOpen(true);
+                                            }}
+                                          >
+                                            View all {shoot.media.photos.length} photos
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center p-8 border rounded-lg">
+                          <p className="text-muted-foreground">No completed shoots found.</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Upload Media and Shoot Detail Dialogs */}
+      <ShootsDialogs 
+        selectedShoot={selectedShoot}
+        isDetailOpen={isDetailOpen}
+        isUploadDialogOpen={isUploadDialogOpen}
+        setIsDetailOpen={setIsDetailOpen}
+        setIsUploadDialogOpen={setIsUploadDialogOpen}
+        onUploadComplete={handleUploadComplete}
+      />
     </DashboardLayout>
   );
 };
