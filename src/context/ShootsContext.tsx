@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ShootData } from '@/types/shoots';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +10,7 @@ import { toast } from '@/components/ui/use-toast';
 interface ShootsContextType {
   shoots: ShootData[];
   addShoot: (shoot: ShootData) => void;
-  updateShoot: (shootId: string, updates: Partial<ShootData>) => void;
+  updateShoot: (shootId: string, updates: Partial<ShootData>) => Promise<void>;
   deleteShoot: (shootId: string) => void;
   // Add the missing methods to the context type
   getClientShootsByStatus: (status: string) => ShootData[];
@@ -74,6 +73,8 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           } as ShootData));
           
           setShoots(transformedShoots);
+          // Also update localStorage to keep them in sync
+          localStorage.setItem('shoots', JSON.stringify(transformedShoots));
         } else {
           console.log('No shoots found in Supabase, using local data');
         }
@@ -135,8 +136,8 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const updateShoot = async (shootId: string, updates: Partial<ShootData>) => {
-    // Update the local state first
+  const updateShoot = async (shootId: string, updates: Partial<ShootData>): Promise<void> => {
+    // Update the local state first to ensure immediate UI feedback
     setShoots(prevShoots =>
       prevShoots.map(shoot =>
         shoot.id === shootId ? { ...shoot, ...updates } : shoot
@@ -182,6 +183,7 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               description: error.message,
               variant: 'destructive',
             });
+            throw error; // Propagate error to the component
           } else {
             console.log('Shoot updated in Supabase successfully');
             toast({
@@ -192,9 +194,13 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } else {
           // For non-UUID IDs (like numeric IDs in local storage), only update local storage
           console.log('Skipping Supabase update for non-UUID ID:', shootId);
-          localStorage.setItem('shoots', JSON.stringify(shoots.map(shoot => 
+          
+          // Make sure to update localStorage immediately to reflect changes
+          const updatedShoots = shoots.map(shoot => 
             shoot.id === shootId ? { ...shoot, ...updates } : shoot
-          )));
+          );
+          localStorage.setItem('shoots', JSON.stringify(updatedShoots));
+          
           toast({
             title: 'Notes saved',
             description: 'Your changes have been saved to local storage',
@@ -202,6 +208,7 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       } catch (error) {
         console.error('Error in Supabase shoot update:', error);
+        throw error; // Propagate error to the component
       }
     }
   };

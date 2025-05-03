@@ -39,12 +39,15 @@ export function ShootNotesTab({
 
   // Initialize notes from the shoot data when component mounts or shoot changes
   useEffect(() => {
-    setEditableNotes({
-      shootNotes: getNotes('shootNotes'),
-      photographerNotes: getNotes('photographerNotes'),
-      companyNotes: getNotes('companyNotes'),
-      editingNotes: getNotes('editingNotes')
-    });
+    if (shoot) {
+      console.log("Notes from shoot:", shoot.notes);
+      setEditableNotes({
+        shootNotes: getNotes('shootNotes'),
+        photographerNotes: getNotes('photographerNotes'),
+        companyNotes: getNotes('companyNotes'),
+        editingNotes: getNotes('editingNotes')
+      });
+    }
   }, [shoot]);
 
   // Helper function to safely get notes based on type
@@ -76,7 +79,7 @@ export function ShootNotesTab({
     }));
   }
   
-  function handleSaveNotes(noteType: string) {
+  async function handleSaveNotes(noteType: string) {
     console.log(`Saving ${noteType} with content: ${editableNotes[noteType as keyof typeof editableNotes]}`);
     
     // Create a new notes object based on existing notes
@@ -95,14 +98,28 @@ export function ShootNotesTab({
     console.log("Updated notes object:", updatedNotes);
     console.log("Shoot ID:", shoot.id);
     
-    // Save to database
-    updateShoot(shoot.id, { notes: updatedNotes });
-    
-    // Exit edit mode
-    setActiveEdits(prev => ({
-      ...prev,
-      [noteType]: false
-    }));
+    try {
+      // Save to database
+      await updateShoot(shoot.id, { notes: updatedNotes });
+      
+      // Exit edit mode
+      setActiveEdits(prev => ({
+        ...prev,
+        [noteType]: false
+      }));
+      
+      toast({
+        title: "Note saved",
+        description: "Your changes have been saved successfully",
+      });
+    } catch (error) {
+      console.error("Error saving note:", error);
+      toast({
+        title: "Error saving note",
+        description: "There was a problem saving your changes",
+        variant: "destructive"
+      });
+    }
   }
 
   // Updated to allow admin and superadmin to edit all types of notes
