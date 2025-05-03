@@ -61,7 +61,7 @@ export function ShootCard(props: ShootCardProps) {
   
   // Setup all needed variables whether using new or legacy props
   const status = isNewProps ? props.shoot.status : props.status;
-  const showMedia = isNewProps ? props.showMedia : false;
+  const showMedia = isNewProps ? props.showMedia && props.shoot.status === 'completed' : false;
   const onClick = props.onClick;
   
   const statusColorMap = {

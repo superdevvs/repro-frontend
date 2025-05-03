@@ -47,29 +47,34 @@ export function ShootsContent({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {filteredShoots.map((shoot) => (
-        <Card key={shoot.id} className="overflow-hidden">
-          <ShootCard 
-            shoot={shoot} 
-            onClick={() => onShootSelect(shoot)}
-            showMedia={shoot.status === 'completed' && showMedia}
-          />
-          {shoot.status === 'completed' && showMedia && onUploadMedia && (
-            <div className="p-3 border-t flex justify-end">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUploadMedia(shoot);
-                }}
-              >
-                <UploadIcon className="h-4 w-4 mr-2" /> Upload Media
-              </Button>
-            </div>
-          )}
-        </Card>
-      ))}
+      {filteredShoots.map((shoot) => {
+        // Only show media for completed shoots, never for hold/pending shoots
+        const shouldShowMedia = shoot.status === 'completed' && showMedia;
+        
+        return (
+          <Card key={shoot.id} className="overflow-hidden">
+            <ShootCard 
+              shoot={shoot} 
+              onClick={() => onShootSelect(shoot)}
+              showMedia={shouldShowMedia}
+            />
+            {shoot.status === 'completed' && showMedia && onUploadMedia && (
+              <div className="p-3 border-t flex justify-end">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUploadMedia(shoot);
+                  }}
+                >
+                  <UploadIcon className="h-4 w-4 mr-2" /> Upload Media
+                </Button>
+              </div>
+            )}
+          </Card>
+        );
+      })}
     </div>
   );
 }

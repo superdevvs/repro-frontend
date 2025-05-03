@@ -72,6 +72,9 @@ export function ShootsList({
         <TableBody>
           {shoots.map((shoot) => {
             const mediaImages = getMediaImages(shoot.media);
+            // Only show media for completed shoots, not for hold/pending
+            const shouldShowMedia = shoot.status === 'completed' && showMedia;
+            
             return (
               <TableRow key={shoot.id} className="cursor-pointer" onClick={() => onSelect(shoot)}>
                 <TableCell><Checkbox onClick={(e) => e.stopPropagation()} /></TableCell>
@@ -97,7 +100,7 @@ export function ShootsList({
                     {shoot.status.charAt(0).toUpperCase() + shoot.status.slice(1)}
                   </Badge>
                 </TableCell>
-                {showMedia && shoot.status === 'completed' && (
+                {shouldShowMedia && (
                   <TableCell>
                     {mediaImages.length > 0 ? (
                       <div className="flex -space-x-2">
@@ -120,7 +123,7 @@ export function ShootsList({
                     )}
                   </TableCell>
                 )}
-                {showMedia && shoot.status !== 'completed' && showMedia && (
+                {showMedia && shoot.status !== 'completed' && (
                   <TableCell>
                     <span className="text-muted-foreground text-sm">Not completed</span>
                   </TableCell>
