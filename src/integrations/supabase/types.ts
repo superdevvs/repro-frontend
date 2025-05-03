@@ -266,6 +266,66 @@ export type Database = {
         }
         Relationships: []
       }
+      shoots: {
+        Row: {
+          client: Json
+          completed_date: string | null
+          created_at: string | null
+          created_by: string
+          editor: Json | null
+          id: string
+          location: Json
+          media: Json | null
+          notes: Json | null
+          payment: Json
+          photographer: Json
+          scheduled_date: string
+          services: Json
+          status: string
+          time: string
+          tour_links: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          client: Json
+          completed_date?: string | null
+          created_at?: string | null
+          created_by: string
+          editor?: Json | null
+          id?: string
+          location: Json
+          media?: Json | null
+          notes?: Json | null
+          payment: Json
+          photographer: Json
+          scheduled_date: string
+          services?: Json
+          status?: string
+          time: string
+          tour_links?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          client?: Json
+          completed_date?: string | null
+          created_at?: string | null
+          created_by?: string
+          editor?: Json | null
+          id?: string
+          location?: Json
+          media?: Json | null
+          notes?: Json | null
+          payment?: Json
+          photographer?: Json
+          scheduled_date?: string
+          services?: Json
+          status?: string
+          time?: string
+          tour_links?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ShootData } from '@/types/shoots';
 import { v4 as uuidv4 } from 'uuid';
@@ -40,8 +41,9 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const loadShootsFromSupabase = async () => {
       try {
+        // Using the type assertion to work with the table until types are regenerated
         const { data, error } = await supabase
-          .from('shoots')
+          .from('shoots' as any)
           .select('*');
           
         if (error) {
@@ -51,7 +53,27 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         if (data && data.length > 0) {
           console.log('Loaded shoots from Supabase:', data);
-          setShoots(data as ShootData[]);
+          
+          // Transform the data from DB format to application format
+          const transformedShoots = data.map((shoot: any) => ({
+            id: shoot.id,
+            scheduledDate: shoot.scheduled_date,
+            time: shoot.time,
+            client: shoot.client,
+            location: shoot.location,
+            photographer: shoot.photographer,
+            editor: shoot.editor || undefined,
+            services: shoot.services || [],
+            payment: shoot.payment,
+            status: shoot.status,
+            notes: shoot.notes || undefined,
+            createdBy: shoot.created_by,
+            completedDate: shoot.completed_date || undefined,
+            media: shoot.media || undefined,
+            tourLinks: shoot.tour_links || undefined
+          } as ShootData));
+          
+          setShoots(transformedShoots);
         } else {
           console.log('No shoots found in Supabase, using local data');
         }
@@ -70,67 +92,115 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem('shoots', JSON.stringify(shoots));
   }, [shoots]);
 
-  const addShoot = (shoot: ShootData) => {
+  const addShoot = async (shoot: ShootData) => {
     setShoots(prevShoots => [...prevShoots, shoot]);
+    
+    // Transform shoot data for Supabase schema
+    const supabaseShoot = {
+      id: shoot.id,
+      scheduled_date: shoot.scheduledDate,
+      time: shoot.time,
+      client: shoot.client,
+      location: shoot.location,
+      photographer: shoot.photographer,
+      editor: shoot.editor || null,
+      services: shoot.services,
+      payment: shoot.payment,
+      status: shoot.status,
+      notes: shoot.notes || null,
+      created_by: shoot.createdBy,
+      completed_date: shoot.completedDate || null,
+      media: shoot.media || null,
+      tour_links: shoot.tourLinks || null
+    };
     
     // Try to add to Supabase if available
     try {
-      supabase
-        .from('shoots')
-        .insert(shoot)
-        .then(({ error }) => {
-          if (error) {
-            console.error('Error adding shoot to Supabase:', error);
-          } else {
-            console.log('Shoot added to Supabase successfully');
-          }
+      const { error } = await supabase
+        .from('shoots' as any)
+        .insert(supabaseShoot);
+        
+      if (error) {
+        console.error('Error adding shoot to Supabase:', error);
+        toast({
+          title: 'Error saving shoot',
+          description: error.message,
+          variant: 'destructive',
         });
+      } else {
+        console.log('Shoot added to Supabase successfully');
+      }
     } catch (error) {
       console.error('Error in Supabase shoot insert:', error);
     }
   };
 
-  const updateShoot = (shootId: string, updates: Partial<ShootData>) => {
+  const updateShoot = async (shootId: string, updates: Partial<ShootData>) => {
     setShoots(prevShoots =>
       prevShoots.map(shoot =>
         shoot.id === shootId ? { ...shoot, ...updates } : shoot
       )
     );
     
+    // Transform updates for Supabase schema
+    const supabaseUpdates: Record<string, any> = {};
+    
+    if (updates.scheduledDate) supabaseUpdates.scheduled_date = updates.scheduledDate;
+    if (updates.time) supabaseUpdates.time = updates.time;
+    if (updates.client) supabaseUpdates.client = updates.client;
+    if (updates.location) supabaseUpdates.location = updates.location;
+    if (updates.photographer) supabaseUpdates.photographer = updates.photographer;
+    if (updates.editor) supabaseUpdates.editor = updates.editor;
+    if (updates.services) supabaseUpdates.services = updates.services;
+    if (updates.payment) supabaseUpdates.payment = updates.payment;
+    if (updates.status) supabaseUpdates.status = updates.status;
+    if (updates.notes) supabaseUpdates.notes = updates.notes;
+    if (updates.completedDate) supabaseUpdates.completed_date = updates.completedDate;
+    if (updates.media) supabaseUpdates.media = updates.media;
+    if (updates.tourLinks) supabaseUpdates.tour_links = updates.tourLinks;
+    
     // Try to update in Supabase if available
     try {
-      supabase
-        .from('shoots')
-        .update(updates)
-        .eq('id', shootId)
-        .then(({ error }) => {
-          if (error) {
-            console.error('Error updating shoot in Supabase:', error);
-          } else {
-            console.log('Shoot updated in Supabase successfully');
-          }
+      const { error } = await supabase
+        .from('shoots' as any)
+        .update(supabaseUpdates)
+        .eq('id', shootId);
+        
+      if (error) {
+        console.error('Error updating shoot in Supabase:', error);
+        toast({
+          title: 'Error updating shoot',
+          description: error.message,
+          variant: 'destructive',
         });
+      } else {
+        console.log('Shoot updated in Supabase successfully');
+      }
     } catch (error) {
       console.error('Error in Supabase shoot update:', error);
     }
   };
 
-  const deleteShoot = (shootId: string) => {
+  const deleteShoot = async (shootId: string) => {
     setShoots(prevShoots => prevShoots.filter(shoot => shoot.id !== shootId));
     
     // Delete from Supabase if available
     try {
-      supabase
-        .from('shoots')
+      const { error } = await supabase
+        .from('shoots' as any)
         .delete()
-        .eq('id', shootId)
-        .then(({ error }) => {
-          if (error) {
-            console.error('Error deleting shoot from Supabase:', error);
-          } else {
-            console.log('Shoot deleted from Supabase successfully');
-          }
+        .eq('id', shootId);
+        
+      if (error) {
+        console.error('Error deleting shoot from Supabase:', error);
+        toast({
+          title: 'Error deleting shoot',
+          description: error.message,
+          variant: 'destructive',
         });
+      } else {
+        console.log('Shoot deleted from Supabase successfully');
+      }
     } catch (error) {
       console.error('Error in Supabase shoot deletion:', error);
     }
