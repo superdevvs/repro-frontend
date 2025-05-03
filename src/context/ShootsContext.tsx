@@ -166,20 +166,39 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.log('Updating shoot in Supabase with ID:', shootId);
         console.log('Update data:', supabaseUpdates);
         
-        const { error } = await supabase
-          .from('shoots' as any)
-          .update(supabaseUpdates)
-          .eq('id', shootId);
-          
-        if (error) {
-          console.error('Error updating shoot in Supabase:', error);
-          toast({
-            title: 'Error updating shoot',
-            description: error.message,
-            variant: 'destructive',
-          });
+        // Check if ID is a valid UUID before sending to Supabase
+        const isValidUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(shootId);
+        
+        if (isValidUUID) {
+          const { error } = await supabase
+            .from('shoots' as any)
+            .update(supabaseUpdates)
+            .eq('id', shootId);
+            
+          if (error) {
+            console.error('Error updating shoot in Supabase:', error);
+            toast({
+              title: 'Error updating shoot',
+              description: error.message,
+              variant: 'destructive',
+            });
+          } else {
+            console.log('Shoot updated in Supabase successfully');
+            toast({
+              title: 'Notes saved',
+              description: 'Your changes have been saved successfully',
+            });
+          }
         } else {
-          console.log('Shoot updated in Supabase successfully');
+          // For non-UUID IDs (like numeric IDs in local storage), only update local storage
+          console.log('Skipping Supabase update for non-UUID ID:', shootId);
+          localStorage.setItem('shoots', JSON.stringify(shoots.map(shoot => 
+            shoot.id === shootId ? { ...shoot, ...updates } : shoot
+          )));
+          toast({
+            title: 'Notes saved',
+            description: 'Your changes have been saved to local storage',
+          });
         }
       } catch (error) {
         console.error('Error in Supabase shoot update:', error);

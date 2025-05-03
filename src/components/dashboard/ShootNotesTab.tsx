@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PenLine, Save, X } from "lucide-react";
@@ -24,10 +24,10 @@ export function ShootNotesTab({
   const { toast } = useToast();
   
   const [editableNotes, setEditableNotes] = useState({
-    shootNotes: getNotes('shootNotes'),
-    photographerNotes: getNotes('photographerNotes'),
-    companyNotes: getNotes('companyNotes'),
-    editingNotes: getNotes('editingNotes')
+    shootNotes: '',
+    photographerNotes: '',
+    companyNotes: '',
+    editingNotes: ''
   });
   
   const [activeEdits, setActiveEdits] = useState({
@@ -36,6 +36,16 @@ export function ShootNotesTab({
     companyNotes: false,
     editingNotes: false
   });
+
+  // Initialize notes from the shoot data when component mounts or shoot changes
+  useEffect(() => {
+    setEditableNotes({
+      shootNotes: getNotes('shootNotes'),
+      photographerNotes: getNotes('photographerNotes'),
+      companyNotes: getNotes('companyNotes'),
+      editingNotes: getNotes('editingNotes')
+    });
+  }, [shoot]);
 
   // Helper function to safely get notes based on type
   function getNotes(key: string): string {
@@ -93,11 +103,6 @@ export function ShootNotesTab({
       ...prev,
       [noteType]: false
     }));
-    
-    toast({
-      title: "Notes saved",
-      description: `Your ${noteType.replace('Notes', '')} notes have been updated.`
-    });
   }
 
   // Updated to allow admin and superadmin to edit all types of notes
