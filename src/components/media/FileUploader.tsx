@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   AlertCircleIcon, 
   ArrowUpIcon, 
@@ -351,6 +351,45 @@ export function FileUploader({
     }
   };
   
+  // Get background color class based on user role
+  const getNotesBackgroundColorClass = () => {
+    if (user?.role === 'photographer') {
+      return "bg-blue-50 dark:bg-blue-950/30";
+    } else if (user?.role === 'editor') {
+      return "bg-purple-50 dark:bg-purple-950/30";
+    } else if (uploadType === 'raw') {
+      return "bg-blue-50 dark:bg-blue-950/30";
+    } else {
+      return "bg-purple-50 dark:bg-purple-950/30";
+    }
+  };
+
+  // Get text color class based on user role
+  const getNotesTextColorClass = () => {
+    if (user?.role === 'photographer') {
+      return "text-blue-900 dark:text-blue-200";
+    } else if (user?.role === 'editor') {
+      return "text-purple-900 dark:text-purple-200";
+    } else if (uploadType === 'raw') {
+      return "text-blue-900 dark:text-blue-200";
+    } else {
+      return "text-purple-900 dark:text-purple-200";
+    }
+  };
+
+  // Get border color class based on user role
+  const getNotesBorderColorClass = () => {
+    if (user?.role === 'photographer') {
+      return "border-blue-200 dark:border-blue-800";
+    } else if (user?.role === 'editor') {
+      return "border-purple-200 dark:border-purple-800";
+    } else if (uploadType === 'raw') {
+      return "border-blue-200 dark:border-blue-800";
+    } else {
+      return "border-purple-200 dark:border-purple-800";
+    }
+  };
+  
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-border">
@@ -575,15 +614,19 @@ export function FileUploader({
           
           <textarea
             id="notes"
-            className="w-full min-h-[100px] p-3 rounded-md border border-border resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className={`w-full min-h-[100px] p-3 rounded-md ${getNotesBackgroundColorClass()} ${getNotesTextColorClass()} ${getNotesBorderColorClass()} border-2 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder-opacity-70`}
             placeholder={getNotesPlaceholder()}
             value={notes}
             onChange={handleNotesChange}
             disabled={uploading}
+            style={{
+              boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
+              transition: "all 0.2s ease"
+            }}
           ></textarea>
           
           {shootId && (
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className={`text-xs mt-2 ${getNotesTextColorClass()} opacity-80`}>
               {user?.role === 'photographer' ? 
                 "These notes will be visible to editors and admins." : 
                 user?.role === 'editor' ? 

@@ -6,6 +6,7 @@ import { PenLine, Save, X } from "lucide-react";
 import { ShootData } from '@/types/shoots';
 import { useShoots } from '@/context/ShootsContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface ShootNotesTabProps {
   shoot: ShootData;
@@ -22,6 +23,7 @@ export function ShootNotesTab({
 }: ShootNotesTabProps) {
   const { updateShoot } = useShoots();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [editableNotes, setEditableNotes] = useState({
     shootNotes: '',
@@ -149,11 +151,54 @@ export function ShootNotesTab({
     return getNotes(noteType);
   }
 
+  // Helper functions for styled notes
+  const getNoteBackgroundClass = (noteType: string) => {
+    switch (noteType) {
+      case 'photographerNotes': 
+        return 'bg-blue-50 dark:bg-blue-950/30';
+      case 'editingNotes': 
+        return 'bg-purple-50 dark:bg-purple-950/30';
+      case 'companyNotes': 
+        return 'bg-amber-50 dark:bg-amber-950/30';
+      case 'shootNotes': 
+      default:
+        return 'bg-green-50 dark:bg-green-950/30';
+    }
+  };
+  
+  const getNoteTextClass = (noteType: string) => {
+    switch (noteType) {
+      case 'photographerNotes': 
+        return 'text-blue-900 dark:text-blue-200';
+      case 'editingNotes': 
+        return 'text-purple-900 dark:text-purple-200';
+      case 'companyNotes': 
+        return 'text-amber-900 dark:text-amber-200';
+      case 'shootNotes': 
+      default:
+        return 'text-green-900 dark:text-green-200';
+    }
+  };
+  
+  const getNoteBorderClass = (noteType: string) => {
+    switch (noteType) {
+      case 'photographerNotes': 
+        return 'border-blue-200 dark:border-blue-800';
+      case 'editingNotes': 
+        return 'border-purple-200 dark:border-purple-800';
+      case 'companyNotes': 
+        return 'border-amber-200 dark:border-amber-800';
+      case 'shootNotes': 
+      default:
+        return 'border-green-200 dark:border-green-800';
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Shoot Notes</h3>
+          <h3 className="text-sm font-medium text-green-700 dark:text-green-400">Shoot Notes</h3>
           {canEdit('shootNotes') && !activeEdits.shootNotes && (
             <Button variant="ghost" size="sm" onClick={() => handleEditToggle('shootNotes')}>
               <PenLine className="h-3.5 w-3.5 mr-1" />
@@ -178,13 +223,17 @@ export function ShootNotesTab({
           value={displayNoteValue('shootNotes')}
           onChange={(e) => handleNoteChange(e, 'shootNotes')}
           readOnly={!activeEdits.shootNotes}
-          className="resize-none min-h-[100px]"
+          className={`resize-none min-h-[100px] ${getNoteBackgroundClass('shootNotes')} ${getNoteTextClass('shootNotes')} border-2 ${getNoteBorderClass('shootNotes')} focus:ring-green-500/40`}
+          style={{
+            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
+            transition: "all 0.2s ease"
+          }}
         />
       </div>
       
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Photographer Notes</h3>
+          <h3 className="text-sm font-medium text-blue-700 dark:text-blue-400">Photographer Notes</h3>
           {canEdit('photographerNotes') && !activeEdits.photographerNotes && (
             <Button variant="ghost" size="sm" onClick={() => handleEditToggle('photographerNotes')}>
               <PenLine className="h-3.5 w-3.5 mr-1" />
@@ -209,13 +258,17 @@ export function ShootNotesTab({
           value={displayNoteValue('photographerNotes')}
           onChange={(e) => handleNoteChange(e, 'photographerNotes')}
           readOnly={!activeEdits.photographerNotes}
-          className="resize-none min-h-[100px]"
+          className={`resize-none min-h-[100px] ${getNoteBackgroundClass('photographerNotes')} ${getNoteTextClass('photographerNotes')} border-2 ${getNoteBorderClass('photographerNotes')} focus:ring-blue-500/40`}
+          style={{
+            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
+            transition: "all 0.2s ease"
+          }}
         />
       </div>
       
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Company Notes</h3>
+          <h3 className="text-sm font-medium text-amber-700 dark:text-amber-400">Company Notes</h3>
           {canEdit('companyNotes') && !activeEdits.companyNotes && (
             <Button variant="ghost" size="sm" onClick={() => handleEditToggle('companyNotes')}>
               <PenLine className="h-3.5 w-3.5 mr-1" />
@@ -240,13 +293,17 @@ export function ShootNotesTab({
           value={displayNoteValue('companyNotes')}
           onChange={(e) => handleNoteChange(e, 'companyNotes')}
           readOnly={!activeEdits.companyNotes}
-          className="resize-none min-h-[100px]"
+          className={`resize-none min-h-[100px] ${getNoteBackgroundClass('companyNotes')} ${getNoteTextClass('companyNotes')} border-2 ${getNoteBorderClass('companyNotes')} focus:ring-amber-500/40`}
+          style={{
+            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
+            transition: "all 0.2s ease"
+          }}
         />
       </div>
       
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Editing Notes</h3>
+          <h3 className="text-sm font-medium text-purple-700 dark:text-purple-400">Editing Notes</h3>
           {canEdit('editingNotes') && !activeEdits.editingNotes && (
             <Button variant="ghost" size="sm" onClick={() => handleEditToggle('editingNotes')}>
               <PenLine className="h-3.5 w-3.5 mr-1" />
@@ -271,7 +328,11 @@ export function ShootNotesTab({
           value={displayNoteValue('editingNotes')}
           onChange={(e) => handleNoteChange(e, 'editingNotes')}
           readOnly={!activeEdits.editingNotes}
-          className="resize-none min-h-[100px]"
+          className={`resize-none min-h-[100px] ${getNoteBackgroundClass('editingNotes')} ${getNoteTextClass('editingNotes')} border-2 ${getNoteBorderClass('editingNotes')} focus:ring-purple-500/40`}
+          style={{
+            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)",
+            transition: "all 0.2s ease"
+          }}
         />
       </div>
     </div>
