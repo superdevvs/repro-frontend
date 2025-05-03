@@ -12,6 +12,10 @@ export type Service = {
   category?: string;
   category_id?: string;
   photographer_required?: boolean;
+  service_categories?: {
+    id: string;
+    name: string;
+  };
 };
 
 export const useServices = () => {
@@ -42,7 +46,8 @@ export const useServices = () => {
         active: item.is_active || false,
         category: item.category,
         category_id: item.category_id,
-        photographer_required: false
+        photographer_required: false,
+        service_categories: item.service_categories
       }));
     }
   });
