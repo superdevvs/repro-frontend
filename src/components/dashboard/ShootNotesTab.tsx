@@ -100,14 +100,15 @@ export function ShootNotesTab({
     });
   }
 
+  // Updated to allow admin and superadmin to edit all types of notes
   function canEdit(noteType: string): boolean {
+    if (isAdmin || role === 'superadmin') {
+      return true; // Admin and superadmin can edit all note types
+    }
+    
     switch (noteType) {
-      case 'shootNotes': 
-        return isAdmin;
       case 'photographerNotes': 
         return isPhotographer;
-      case 'companyNotes': 
-        return isAdmin;
       case 'editingNotes': 
         return role === 'editor';
       default: 
@@ -120,13 +121,13 @@ export function ShootNotesTab({
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-muted-foreground">Shoot Notes</h3>
-          {isAdmin && !activeEdits.shootNotes && (
+          {canEdit('shootNotes') && !activeEdits.shootNotes && (
             <Button variant="ghost" size="sm" onClick={() => handleEditToggle('shootNotes')}>
               <PenLine className="h-3.5 w-3.5 mr-1" />
               Edit
             </Button>
           )}
-          {isAdmin && activeEdits.shootNotes && (
+          {canEdit('shootNotes') && activeEdits.shootNotes && (
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={() => handleEditToggle('shootNotes')}>
                 <X className="h-3.5 w-3.5 mr-1" />
@@ -148,104 +149,98 @@ export function ShootNotesTab({
         />
       </div>
       
-      {(isAdmin || isPhotographer) && (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Photographer Notes</h3>
-            {isPhotographer && !activeEdits.photographerNotes && (
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-muted-foreground">Photographer Notes</h3>
+          {canEdit('photographerNotes') && !activeEdits.photographerNotes && (
+            <Button variant="ghost" size="sm" onClick={() => handleEditToggle('photographerNotes')}>
+              <PenLine className="h-3.5 w-3.5 mr-1" />
+              Edit
+            </Button>
+          )}
+          {canEdit('photographerNotes') && activeEdits.photographerNotes && (
+            <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={() => handleEditToggle('photographerNotes')}>
-                <PenLine className="h-3.5 w-3.5 mr-1" />
-                Edit
+                <X className="h-3.5 w-3.5 mr-1" />
+                Cancel
               </Button>
-            )}
-            {isPhotographer && activeEdits.photographerNotes && (
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => handleEditToggle('photographerNotes')}>
-                  <X className="h-3.5 w-3.5 mr-1" />
-                  Cancel
-                </Button>
-                <Button variant="default" size="sm" onClick={() => handleSaveNotes('photographerNotes')}>
-                  <Save className="h-3.5 w-3.5 mr-1" />
-                  Save
-                </Button>
-              </div>
-            )}
-          </div>
-          <Textarea 
-            placeholder="No photographer notes available" 
-            value={activeEdits.photographerNotes ? editableNotes.photographerNotes : getNotes('photographerNotes')}
-            onChange={(e) => handleNoteChange(e, 'photographerNotes')}
-            readOnly={!activeEdits.photographerNotes}
-            className="resize-none min-h-[100px]"
-          />
+              <Button variant="default" size="sm" onClick={() => handleSaveNotes('photographerNotes')}>
+                <Save className="h-3.5 w-3.5 mr-1" />
+                Save
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+        <Textarea 
+          placeholder="No photographer notes available" 
+          value={activeEdits.photographerNotes ? editableNotes.photographerNotes : getNotes('photographerNotes')}
+          onChange={(e) => handleNoteChange(e, 'photographerNotes')}
+          readOnly={!activeEdits.photographerNotes}
+          className="resize-none min-h-[100px]"
+        />
+      </div>
       
-      {isAdmin && (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Company Notes</h3>
-            {!activeEdits.companyNotes && (
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-muted-foreground">Company Notes</h3>
+          {canEdit('companyNotes') && !activeEdits.companyNotes && (
+            <Button variant="ghost" size="sm" onClick={() => handleEditToggle('companyNotes')}>
+              <PenLine className="h-3.5 w-3.5 mr-1" />
+              Edit
+            </Button>
+          )}
+          {canEdit('companyNotes') && activeEdits.companyNotes && (
+            <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={() => handleEditToggle('companyNotes')}>
-                <PenLine className="h-3.5 w-3.5 mr-1" />
-                Edit
+                <X className="h-3.5 w-3.5 mr-1" />
+                Cancel
               </Button>
-            )}
-            {activeEdits.companyNotes && (
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => handleEditToggle('companyNotes')}>
-                  <X className="h-3.5 w-3.5 mr-1" />
-                  Cancel
-                </Button>
-                <Button variant="default" size="sm" onClick={() => handleSaveNotes('companyNotes')}>
-                  <Save className="h-3.5 w-3.5 mr-1" />
-                  Save
-                </Button>
-              </div>
-            )}
-          </div>
-          <Textarea 
-            placeholder="No company notes available" 
-            value={activeEdits.companyNotes ? editableNotes.companyNotes : getNotes('companyNotes')}
-            onChange={(e) => handleNoteChange(e, 'companyNotes')}
-            readOnly={!activeEdits.companyNotes}
-            className="resize-none min-h-[100px]"
-          />
+              <Button variant="default" size="sm" onClick={() => handleSaveNotes('companyNotes')}>
+                <Save className="h-3.5 w-3.5 mr-1" />
+                Save
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+        <Textarea 
+          placeholder="No company notes available" 
+          value={activeEdits.companyNotes ? editableNotes.companyNotes : getNotes('companyNotes')}
+          onChange={(e) => handleNoteChange(e, 'companyNotes')}
+          readOnly={!activeEdits.companyNotes}
+          className="resize-none min-h-[100px]"
+        />
+      </div>
       
-      {(isAdmin || role === 'editor') && (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Editing Notes</h3>
-            {role === 'editor' && !activeEdits.editingNotes && (
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-muted-foreground">Editing Notes</h3>
+          {canEdit('editingNotes') && !activeEdits.editingNotes && (
+            <Button variant="ghost" size="sm" onClick={() => handleEditToggle('editingNotes')}>
+              <PenLine className="h-3.5 w-3.5 mr-1" />
+              Edit
+            </Button>
+          )}
+          {canEdit('editingNotes') && activeEdits.editingNotes && (
+            <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={() => handleEditToggle('editingNotes')}>
-                <PenLine className="h-3.5 w-3.5 mr-1" />
-                Edit
+                <X className="h-3.5 w-3.5 mr-1" />
+                Cancel
               </Button>
-            )}
-            {role === 'editor' && activeEdits.editingNotes && (
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => handleEditToggle('editingNotes')}>
-                  <X className="h-3.5 w-3.5 mr-1" />
-                  Cancel
-                </Button>
-                <Button variant="default" size="sm" onClick={() => handleSaveNotes('editingNotes')}>
-                  <Save className="h-3.5 w-3.5 mr-1" />
-                  Save
-                </Button>
-              </div>
-            )}
-          </div>
-          <Textarea 
-            placeholder="No editing notes available" 
-            value={activeEdits.editingNotes ? editableNotes.editingNotes : getNotes('editingNotes')}
-            onChange={(e) => handleNoteChange(e, 'editingNotes')}
-            readOnly={!activeEdits.editingNotes}
-            className="resize-none min-h-[100px]"
-          />
+              <Button variant="default" size="sm" onClick={() => handleSaveNotes('editingNotes')}>
+                <Save className="h-3.5 w-3.5 mr-1" />
+                Save
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+        <Textarea 
+          placeholder="No editing notes available" 
+          value={activeEdits.editingNotes ? editableNotes.editingNotes : getNotes('editingNotes')}
+          onChange={(e) => handleNoteChange(e, 'editingNotes')}
+          readOnly={!activeEdits.editingNotes}
+          className="resize-none min-h-[100px]"
+        />
+      </div>
     </div>
   );
 }
