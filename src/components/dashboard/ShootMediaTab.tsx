@@ -15,6 +15,8 @@ import {
   Download as DownloadIcon,
   Plus as PlusIcon,
 } from 'lucide-react';
+import { useShoots } from '@/context/ShootsContext';
+import { useToast } from '@/hooks/use-toast';
 
 type MediaType = 'images' | 'videos' | 'files' | 'slideshows';
 
@@ -34,6 +36,8 @@ const demoImages = [
 
 export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   const [activeTab, setActiveTab] = useState<MediaType>('images');
+  const { updateShoot } = useShoots();
+  const { toast } = useToast();
   
   const getMediaImages = (): string[] => {
     if (!shoot.media) return demoImages.slice(0, 3); // Return demo images if no media
@@ -65,7 +69,46 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
   
   const handleDelete = (id: string, type: MediaType) => {
     console.log(`Delete ${type} with id ${id}`);
-    // This would delete the media in a real app
+    
+    if (!shoot.media) return;
+    
+    let updatedMedia = {...shoot.media};
+    
+    switch(type) {
+      case 'images':
+        // If using the legacy 'photos' array
+        if (updatedMedia.photos) {
+          updatedMedia.photos = updatedMedia.photos.filter((_, index) => index !== parseInt(id));
+        }
+        // If using the newer 'images' array
+        if (updatedMedia.images) {
+          updatedMedia.images = updatedMedia.images.filter(img => img.id !== id);
+        }
+        break;
+      case 'videos':
+        if (updatedMedia.videos) {
+          updatedMedia.videos = updatedMedia.videos.filter(video => video.id !== id);
+        }
+        break;
+      case 'files':
+        if (updatedMedia.files) {
+          updatedMedia.files = updatedMedia.files.filter(file => file.id !== id);
+        }
+        break;
+      case 'slideshows':
+        if (updatedMedia.slideshows) {
+          updatedMedia.slideshows = updatedMedia.slideshows.filter(slideshow => slideshow.id !== id);
+        }
+        break;
+    }
+    
+    // Update the shoot with the modified media
+    updateShoot(shoot.id, { media: updatedMedia });
+    
+    toast({
+      title: "Media deleted",
+      description: `The ${type === 'slideshows' ? 'slideshow' : type.slice(0, -1)} has been deleted.`,
+    });
   };
   
   const handleViewSlideshow = (url: string) => {
@@ -227,10 +270,16 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                     src={imageUrl} 
                     alt={`Property image ${index + 1}`}
                     className="h-full w-full object-cover"
-                    onLoad={debugImageLoad}
+                    onLoad={(e) => console.log("Image loaded:", e.currentTarget.src)}
                     onError={(e) => console.error("Image failed to load:", e.currentTarget.src)}
                   />
-                  {shouldShowWatermark && <WatermarkOverlay />}
+                  {shouldShowWatermark && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+                      <span className="text-3xl md:text-4xl font-bold text-white/70 bg-black/30 rounded-lg px-8 py-2 rotate-[-25deg] tracking-wide" style={{letterSpacing: 2, userSelect: 'none'}}>
+                        REPro Co. Watermark
+                      </span>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <Button 
                       size="sm" 
@@ -271,7 +320,7 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
                       src={video.thumbnail} 
                       alt={`Video thumbnail ${index + 1}`}
                       className="h-full w-full object-cover"
-                      onLoad={debugImageLoad}
+                      onLoad={(e) => console.log("Image loaded:", e.currentTarget.src)}
                     />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center">
@@ -412,4 +461,30 @@ export function ShootMediaTab({ shoot, isPhotographer }: ShootMediaTabProps) {
       </Tabs>
     </div>
   );
+  
+  function EmptyState({ type, canUpload }: { type: MediaType, canUpload: boolean }) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        {type === 'images' && <ImageIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />}
+        {type === 'videos' && <VideoIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />}
+        {type === 'files' && <FileIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />}
+        {type === 'slideshows' && <PresentationIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />}
+        
+        <h3 className="text-lg font-medium mb-2">No {type} available</h3>
+        <p className="text-muted-foreground mb-6 max-w-sm">
+          {type === 'images' && "No images have been uploaded for this shoot yet."}
+          {type === 'videos' && "No videos have been uploaded for this shoot yet."}
+          {type === 'files' && "No files have been uploaded for this shoot yet."}
+          {type === 'slideshows' && "No slideshows have been created for this shoot yet."}
+        </p>
+        
+        {canUpload && (
+          <Button onClick={() => handleMediaUpload(type)}>
+            <UploadIcon className="h-4 w-4 mr-2" />
+            Upload {type === 'images' ? 'Images' : type === 'videos' ? 'Videos' : type === 'files' ? 'Files' : 'Slideshows'}
+          </Button>
+        )}
+      </div>
+    );
+  }
 }
