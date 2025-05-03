@@ -1,10 +1,11 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ShootData } from '@/types/shoots';
 import { v4 as uuidv4 } from 'uuid';
 import { format, addDays } from 'date-fns';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { UserData } from '@/types/auth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 interface ShootsContextType {
   shoots: ShootData[];
@@ -35,12 +36,58 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   });
   const { user } = useAuth();
 
+  // Load shoots from Supabase on mount if available
+  useEffect(() => {
+    const loadShootsFromSupabase = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('shoots')
+          .select('*');
+          
+        if (error) {
+          console.error('Error loading shoots from Supabase:', error);
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          console.log('Loaded shoots from Supabase:', data);
+          setShoots(data as ShootData[]);
+        } else {
+          console.log('No shoots found in Supabase, using local data');
+        }
+      } catch (error) {
+        console.error('Error in loadShootsFromSupabase:', error);
+      }
+    };
+    
+    // Try to load from Supabase, fallback to localStorage if not available
+    loadShootsFromSupabase().catch(() => {
+      console.log('Using local shoots data');
+    });
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('shoots', JSON.stringify(shoots));
   }, [shoots]);
 
   const addShoot = (shoot: ShootData) => {
     setShoots(prevShoots => [...prevShoots, shoot]);
+    
+    // Try to add to Supabase if available
+    try {
+      supabase
+        .from('shoots')
+        .insert(shoot)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error adding shoot to Supabase:', error);
+          } else {
+            console.log('Shoot added to Supabase successfully');
+          }
+        });
+    } catch (error) {
+      console.error('Error in Supabase shoot insert:', error);
+    }
   };
 
   const updateShoot = (shootId: string, updates: Partial<ShootData>) => {
@@ -49,10 +96,44 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         shoot.id === shootId ? { ...shoot, ...updates } : shoot
       )
     );
+    
+    // Try to update in Supabase if available
+    try {
+      supabase
+        .from('shoots')
+        .update(updates)
+        .eq('id', shootId)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error updating shoot in Supabase:', error);
+          } else {
+            console.log('Shoot updated in Supabase successfully');
+          }
+        });
+    } catch (error) {
+      console.error('Error in Supabase shoot update:', error);
+    }
   };
 
   const deleteShoot = (shootId: string) => {
     setShoots(prevShoots => prevShoots.filter(shoot => shoot.id !== shootId));
+    
+    // Delete from Supabase if available
+    try {
+      supabase
+        .from('shoots')
+        .delete()
+        .eq('id', shootId)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error deleting shoot from Supabase:', error);
+          } else {
+            console.log('Shoot deleted from Supabase successfully');
+          }
+        });
+    } catch (error) {
+      console.error('Error in Supabase shoot deletion:', error);
+    }
   };
 
   // Implement the getClientShootsByStatus method

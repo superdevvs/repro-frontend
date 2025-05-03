@@ -7,7 +7,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -16,6 +27,7 @@ import {
   PenLine,
   DollarSignIcon,
   CheckCircle,
+  Trash2,
 } from "lucide-react";
 import { ShootData } from '@/types/shoots';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -23,6 +35,7 @@ import { ShootDetailTabs } from './ShootDetailTabs';
 import { MessageDialog } from './MessageDialog';
 import { ShootActionsDialog } from './ShootActionsDialog';
 import { useShoots } from '@/context/ShootsContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface ShootDetailProps {
   shoot: ShootData | null;
@@ -32,10 +45,12 @@ interface ShootDetailProps {
 
 export function ShootDetail({ shoot, isOpen, onClose }: ShootDetailProps) {
   const { role } = useAuth();
-  const { updateShoot } = useShoots();
+  const { updateShoot, deleteShoot } = useShoots();
   const [activeTab, setActiveTab] = useState("details");
   const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { toast } = useToast();
   
   const isAdmin = ['admin', 'superadmin'].includes(role);
   const isPhotographer = role === 'photographer';
@@ -91,6 +106,22 @@ export function ShootDetail({ shoot, isOpen, onClose }: ShootDetailProps) {
     }
   };
   
+  const handleOpenDeleteDialog = () => {
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const handleDeleteShoot = () => {
+    if (shoot) {
+      deleteShoot(shoot.id);
+      setIsDeleteDialogOpen(false);
+      toast({
+        title: "Shoot Deleted",
+        description: `Shoot #${shoot.id} has been permanently deleted.`,
+      });
+      onClose();
+    }
+  };
+  
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -139,6 +170,13 @@ export function ShootDetail({ shoot, isOpen, onClose }: ShootDetailProps) {
               </Button>
             )}
             
+            {isAdmin && (
+              <Button variant="destructive" onClick={handleOpenDeleteDialog}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            )}
+            
             {role === 'superadmin' && (
               <Button variant="default">
                 <DollarSignIcon className="h-4 w-4 mr-2" />
@@ -162,6 +200,24 @@ export function ShootDetail({ shoot, isOpen, onClose }: ShootDetailProps) {
             isOpen={isEditDialogOpen}
             onClose={handleCloseEditDialog}
           />
+          
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Shoot</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this shoot? This action cannot be undone 
+                  and all associated data will be permanently removed.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteShoot} className="bg-red-600 hover:bg-red-700">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       )}
     </>
