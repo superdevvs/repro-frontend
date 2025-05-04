@@ -10,10 +10,11 @@ import { ResetPasswordDialog } from '@/components/accounts/ResetPasswordDialog';
 import { RoleChangeDialog } from '@/components/accounts/RoleChangeDialog';
 import { NotificationSettingsDialog } from '@/components/accounts/NotificationSettingsDialog';
 import { AccountForm } from '@/components/accounts/AccountForm';
-import { AccountBox } from '@/components/accounts/AccountBox'; // Import our new component
+import { AccountBox } from '@/components/accounts/AccountBox';
 import { Input } from '@/components/ui/input';
 import { Search, Filter, Plus, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Role } from '@/components/auth/AuthProvider';
 
 const mockAccounts = [
   {
@@ -65,6 +66,7 @@ const Accounts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isResetOpen, setIsResetOpen] = useState(false);
@@ -84,10 +86,40 @@ const Accounts = () => {
     setIsProfileOpen(true);
   };
 
+  const handleSearch = (query: string) => {
+    setSearchTerm(query);
+  };
+
+  const handleFilterChange = (role: Role | 'all') => {
+    setActiveTab(role);
+  };
+
+  const handleExport = () => {
+    console.log('Exporting accounts');
+    // Implementation for exporting accounts
+  };
+
+  const handleAddAccount = () => {
+    setIsNewAccountOpen(true);
+  };
+
+  const handleNewAccount = (data: any) => {
+    console.log('Creating new account', data);
+    // Implementation for creating a new account
+  };
+
   return (
     <AccountsLayout>
       <PageTransition>
-        <AccountsHeader />
+        <AccountsHeader 
+          onAddAccount={handleAddAccount}
+          onExport={handleExport}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          selectedFilter={activeTab as Role | 'all'}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
         
         <div className="mb-6">
           <div className={`flex ${isMobile ? 'flex-col gap-4' : 'flex-row justify-between'} mb-4`}>
@@ -117,7 +149,7 @@ const Accounts = () => {
                 <span>Filters</span>
               </Button>
               
-              <Button className="gap-2" onClick={() => setIsNewAccountOpen(true)}>
+              <Button className="gap-2" onClick={handleAddAccount}>
                 <Plus className="h-4 w-4" />
                 <span>New Account</span>
               </Button>
@@ -164,37 +196,33 @@ const Accounts = () => {
           <UserProfileDialog
             open={isProfileOpen}
             onOpenChange={setIsProfileOpen}
-            account={selectedAccount}
-            onResetPassword={() => {
+            user={selectedAccount}
+            onEdit={() => {
               setIsProfileOpen(false);
               setIsResetOpen(true);
-            }}
-            onChangeRole={() => {
-              setIsProfileOpen(false);
-              setIsRoleOpen(true);
-            }}
-            onNotificationSettings={() => {
-              setIsProfileOpen(false);
-              setIsNotificationsOpen(true);
             }}
           />
           
           <ResetPasswordDialog
             open={isResetOpen}
             onOpenChange={setIsResetOpen}
-            account={selectedAccount}
+            user={selectedAccount}
+            onSendResetLink={(userId, email) => console.log('Sending reset link to', email)}
+            onUpdatePassword={(userId, password) => console.log('Updating password for', userId)}
           />
           
           <RoleChangeDialog
             open={isRoleOpen}
             onOpenChange={setIsRoleOpen}
-            account={selectedAccount}
+            user={selectedAccount}
+            onSubmit={(userId, roles) => console.log('Updating roles for', userId, roles)}
           />
           
           <NotificationSettingsDialog
             open={isNotificationsOpen}
             onOpenChange={setIsNotificationsOpen}
-            account={selectedAccount}
+            user={selectedAccount}
+            onSubmit={(userId, settings) => console.log('Updating notification settings for', userId, settings)}
           />
         </>
       )}
@@ -202,6 +230,7 @@ const Accounts = () => {
       <AccountForm
         open={isNewAccountOpen}
         onOpenChange={setIsNewAccountOpen}
+        onSubmit={handleNewAccount}
       />
     </AccountsLayout>
   );

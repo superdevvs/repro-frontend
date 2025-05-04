@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar as CalendarIcon, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { CalendarIcon, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/dashboard/Calendar';
+import { Calendar } from '@/components/ui/calendar';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -48,7 +48,6 @@ const PhotographerAvailability = () => {
             <CardContent>
               <div className="flex justify-center">
                 <Calendar
-                  mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   className={`${isMobile ? 'max-w-full' : ''}`}
