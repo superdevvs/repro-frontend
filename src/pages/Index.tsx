@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { motion } from 'framer-motion';
@@ -29,7 +30,7 @@ const Index = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 22V12h6v10" />
                 </svg>
               </div>
-              <h1 className="text-4xl font-bold tracking-tight mb-2">Real Estate Media</h1>
+              <h1 className="text-4xl font-bold tracking-tight mb-2">REProDashboard</h1>
               <p className="text-muted-foreground">Streamline your real estate media workflow with our comprehensive management dashboard.</p>
             </motion.div>
             
@@ -95,7 +96,7 @@ const Index = () => {
               </svg>
             </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Real Estate Media</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">REProDashboard</h1>
           <p className="text-sm text-muted-foreground mb-0">Your complete real estate photography platform</p>
         </motion.div>
       )}
