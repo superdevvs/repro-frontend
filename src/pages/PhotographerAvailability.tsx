@@ -38,7 +38,7 @@ const PhotographerAvailability = () => {
       <div className="container py-6 px-4 md:px-6">
         <div className="flex flex-col md:flex-row justify-between items-start gap-6">
           {/* Calendar Section */}
-          <Card className={`${isMobile ? 'w-full' : 'w-1/2'} shadow-md`}>
+          <Card className="w-full md:w-1/2 shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarIcon className="h-5 w-5" />
@@ -50,14 +50,14 @@ const PhotographerAvailability = () => {
                 <Calendar
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  className={`${isMobile ? 'max-w-full' : ''}`}
+                  className="w-full max-w-full mx-auto sm:max-w-[300px] md:max-w-none md:w-full"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Time Slots Section */}
-          <Card className={`${isMobile ? 'w-full' : 'w-1/2'} shadow-md`}>
+          <Card className="w-full md:w-1/2 shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
