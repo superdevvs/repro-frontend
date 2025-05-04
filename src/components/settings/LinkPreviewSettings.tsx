@@ -118,10 +118,10 @@ export function LinkPreviewSettings() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <FileUploader
-                    onFilesSelected={handleImageChange}
-                    accept="image/*"
-                    maxFiles={1}
-                    label="Upload preview image"
+                    onUploadComplete={handleImageChange}
+                    allowedFileTypes={['image/*']}
+                    className="w-full"
+                    initialNotes=""
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Recommended size: 1200x630 pixels (Aspect ratio 1.91:1)
