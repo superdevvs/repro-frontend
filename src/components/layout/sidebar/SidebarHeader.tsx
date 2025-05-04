@@ -25,7 +25,7 @@ export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderPro
         ) : (
           <>
             <HomeIcon className="h-6 w-6 text-primary" />
-            <span>REProDashboard</span>
+            <span>RePro Photos</span>
           </>
         )}
       </Link>
