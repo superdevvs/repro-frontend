@@ -21,3 +21,28 @@ export function useMediaQuery(query: string) {
 
   return matches;
 }
+
+// Predefined breakpoint hooks
+export function useIsXXSmall() {
+  return useMediaQuery('(min-width: 360px)');
+}
+
+export function useIsXSmall() {
+  return useMediaQuery('(min-width: 480px)');
+}
+
+export function useIsSmall() {
+  return useMediaQuery('(min-width: 640px)');
+}
+
+export function useIsMedium() {
+  return useMediaQuery('(min-width: 768px)');
+}
+
+export function useIsLarge() {
+  return useMediaQuery('(min-width: 1024px)');
+}
+
+export function useIsXLarge() {
+  return useMediaQuery('(min-width: 1280px)');
+}

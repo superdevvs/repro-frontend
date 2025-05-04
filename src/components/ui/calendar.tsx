@@ -26,19 +26,19 @@ function Calendar({
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 dark:border-gray-700 dark:hover:bg-gray-800"
+          "h-6 w-6 sm:h-7 sm:w-7 bg-transparent p-0 opacity-50 hover:opacity-100 dark:border-gray-700 dark:hover:bg-gray-800"
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse space-y-1",
         head_row: "flex w-full justify-between",
         head_cell:
-          "text-muted-foreground rounded-md w-full font-normal text-xs sm:text-[0.8rem] flex-1 text-center",
+          "text-muted-foreground rounded-md w-full font-normal text-[0.7rem] xs:text-xs sm:text-[0.8rem] flex-1 text-center",
         row: "flex w-full mt-2 justify-between",
-        cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md flex-1 dark:[&:has([aria-selected])]:bg-gray-800",
+        cell: "relative p-0 text-center text-xs sm:text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md flex-1 dark:[&:has([aria-selected])]:bg-gray-800",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-8 w-full p-0 font-normal aria-selected:opacity-100 dark:hover:bg-gray-800 dark:hover:text-white sm:h-10"
+          "h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 p-0 font-normal aria-selected:opacity-100 dark:hover:bg-gray-800 dark:hover:text-white"
         ),
         day_range_end: "day-range-end",
         day_selected:
@@ -53,8 +53,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        IconLeft: ({ ..._props }) => <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />,
+        IconRight: ({ ..._props }) => <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />,
       }}
       {...props}
     />

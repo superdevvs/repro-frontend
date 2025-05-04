@@ -76,31 +76,31 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
 
   return (
     <div className={cn("w-full h-full", className)}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm sm:text-base md:text-lg font-medium">{format(currentDate, 'MMMM yyyy')}</h3>
-        <div className="flex items-center gap-2">
-          <Button size="icon" variant="outline" onClick={goToPreviousWeek} className="h-7 w-7 sm:h-8 sm:w-8">
+      <div className="flex items-center justify-between mb-2 sm:mb-4">
+        <h3 className="text-xs xs:text-sm sm:text-base md:text-lg font-medium">{format(currentDate, 'MMMM yyyy')}</h3>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button size="icon" variant="outline" onClick={goToPreviousWeek} className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8">
             <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
-          <Button size="icon" variant="outline" onClick={goToNextWeek} className="h-7 w-7 sm:h-8 sm:w-8">
+          <Button size="icon" variant="outline" onClick={goToNextWeek} className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8">
             <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
         </div>
       </div>
       
-      <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
+      <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-1 sm:mb-2">
         {days.map((day) => (
           <div
             key={day.toISOString()}
             className={cn(
-              "text-center text-xs sm:text-sm py-1 font-medium",
+              "text-center text-[10px] xs:text-xs sm:text-sm py-1 font-medium",
               isToday(day) ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <div className="hidden xs:block">{format(day, 'EEE')}</div>
-            <div className="xs:hidden">{format(day, 'EEEEE')}</div>
+            <div className="hidden xxs:block">{format(day, 'EEEEE')}</div>
+            <div className="hidden xs:block xxs:hidden">{format(day, 'EEE')}</div>
             <div className={cn(
-              "text-xs rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center mx-auto",
+              "text-[9px] xs:text-xs rounded-full w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 flex items-center justify-center mx-auto",
               isToday(day) ? "bg-primary text-primary-foreground" : ""
             )}>
               {format(day, 'd')}
@@ -114,20 +114,20 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
           {hours.map((hour) => (
             <div
               key={hour}
-              className="grid gap-0.5 sm:gap-1 border-b border-border py-2 first:pt-0 last:border-none"
+              className="grid gap-0.5 sm:gap-1 border-b border-border py-1 sm:py-2 first:pt-0 last:border-none"
               style={{
-                gridTemplateColumns: '40px repeat(7, minmax(0, 1fr))',
+                gridTemplateColumns: '32px repeat(7, minmax(0, 1fr))',
               }}
             >
-              <div className="text-[10px] sm:text-xs text-muted-foreground text-right pr-1 sm:pr-2 font-medium">
+              <div className="text-[8px] xs:text-[10px] sm:text-xs text-muted-foreground text-right pr-1 sm:pr-2 font-medium">
                 {`${hour}:00`}
               </div>
               {days.map((day, dayIndex) => {
                 const eventsAtThisTime = events[hour - 8][dayIndex];
-                if (eventsAtThisTime.length === 0) return <div key={day.toISOString()} className="h-12 sm:h-14 px-0.5 sm:px-1" />;
+                if (eventsAtThisTime.length === 0) return <div key={day.toISOString()} className="h-8 xs:h-10 sm:h-12 md:h-14 px-0.5" />;
                 
                 return (
-                  <div key={day.toISOString()} className="h-12 sm:h-14 px-0.5 sm:px-1 relative">
+                  <div key={day.toISOString()} className="h-8 xs:h-10 sm:h-12 md:h-14 px-0.5 relative">
                     {eventsAtThisTime.map((event, idx) => {
                       // Extract and format the time from the scheduledDate
                       const shootTime = new Date(event.scheduledDate);
@@ -136,30 +136,30 @@ export function Calendar({ className, height = 400 }: CalendarProps) {
                       return (
                         <div
                           key={`${event.id}-${idx}`}
-                          className="absolute top-0 left-0 right-0 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-primary p-1 sm:p-1.5 text-[8px] sm:text-xs h-full overflow-hidden border border-primary/20 cursor-pointer"
+                          className="absolute top-0 left-0 right-0 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors text-primary p-0.5 xs:p-1 text-[6px] xs:text-[8px] sm:text-xs h-full overflow-hidden border border-primary/20 cursor-pointer"
                           onClick={() => handleShowShootDetails(event)}
                         >
-                          <Badge className="absolute top-1 right-1 rounded-full h-3 w-3 sm:h-4 sm:w-4 text-[6px] sm:text-[8px] p-0 flex items-center justify-center">
+                          <Badge className="absolute top-0.5 right-0.5 rounded-full h-2 w-2 xs:h-3 xs:w-3 sm:h-4 sm:w-4 text-[5px] xs:text-[6px] sm:text-[8px] p-0 flex items-center justify-center">
                             {event.status.charAt(0).toUpperCase()}
                           </Badge>
-                          <p className="font-medium leading-tight truncate">{event.client.name}</p>
-                          <div className="flex-col gap-0.5 mt-0.5 hidden sm:flex">
+                          <p className="font-medium leading-tight truncate text-[7px] xs:text-[8px] sm:text-xs">{event.client.name}</p>
+                          <div className="flex-col gap-0.5 mt-0.5 hidden xs:flex">
                             <div 
-                              className="flex items-center gap-0.5 text-[8px] sm:text-[9px] text-primary cursor-pointer hover:underline"
+                              className="flex items-center gap-0.5 text-[6px] xs:text-[7px] sm:text-[9px] text-primary cursor-pointer hover:underline"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleShowShootDetails(event);
                               }}
                             >
-                              <UserIcon className="h-2 w-2 sm:h-2.5 sm:w-2.5 flex-shrink-0" />
+                              <UserIcon className="h-1.5 w-1.5 xs:h-2 xs:w-2 sm:h-2.5 sm:w-2.5 flex-shrink-0" />
                               <span className="truncate">{event.photographer.name}</span>
                             </div>
-                            <div className="flex items-center gap-0.5 text-[8px] sm:text-[9px] text-muted-foreground">
-                              <ClockIcon className="h-2 w-2 sm:h-2.5 sm:w-2.5 flex-shrink-0" />
+                            <div className="flex items-center gap-0.5 text-[6px] xs:text-[7px] sm:text-[9px] text-muted-foreground">
+                              <ClockIcon className="h-1.5 w-1.5 xs:h-2 xs:w-2 sm:h-2.5 sm:w-2.5 flex-shrink-0" />
                               <span>{formattedTime}</span>
                             </div>
-                            <div className="flex items-center gap-0.5 text-[8px] sm:text-[9px] text-muted-foreground">
-                              <MapPinIcon className="h-2 w-2 sm:h-2.5 sm:w-2.5 flex-shrink-0" />
+                            <div className="hidden sm:flex items-center gap-0.5 text-[6px] xs:text-[7px] sm:text-[9px] text-muted-foreground">
+                              <MapPinIcon className="h-1.5 w-1.5 xs:h-2 xs:w-2 sm:h-2.5 sm:w-2.5 flex-shrink-0" />
                               <span className="truncate">{event.location.city}</span>
                             </div>
                           </div>
