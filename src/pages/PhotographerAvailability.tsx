@@ -2,17 +2,21 @@
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarIcon, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { CalendarIcon, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const PhotographerAvailability = () => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Mock data for availability slots
   const mockTimeSlots = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
@@ -21,9 +25,23 @@ const PhotographerAvailability = () => {
   const bookedTimes = ['11:00 AM', '2:00 PM'];
 
   useEffect(() => {
-    // This would typically fetch availability data from an API
+    // Restrict access to photographers only
+    if (role !== 'photographer') {
+      toast({
+        title: "Access Denied",
+        description: "Only photographers can access their own availability settings.",
+        variant: "destructive"
+      });
+      
+      // Redirect to dashboard or appropriate page
+      navigate('/dashboard');
+      return;
+    }
+
+    // This would typically fetch availability data from an API for the current photographer only
     setAvailableTimes(mockTimeSlots.filter(time => !bookedTimes.includes(time)));
-  }, []);
+    setLoading(false);
+  }, [role, navigate]);
 
   const toggleTimeSlot = (time: string) => {
     if (availableTimes.includes(time)) {
@@ -33,9 +51,51 @@ const PhotographerAvailability = () => {
     }
   };
 
+  const handleSaveAvailability = () => {
+    // Here we would save the availability data to the backend
+    // This would only allow the logged-in photographer to save their own data
+    
+    toast({
+      title: "Availability Saved",
+      description: "Your availability settings have been updated successfully.",
+    });
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="container py-6 px-4">
+          <div className="flex items-center justify-center h-[60vh]">
+            <div className="text-center">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full inline-block mb-4"></div>
+              <p>Loading your availability settings...</p>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (role !== 'photographer') {
+    return null; // This should not render as we redirect in useEffect
+  }
+
   return (
     <DashboardLayout>
       <div className="container py-4 sm:py-6 px-2 sm:px-4 md:px-6">
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <AlertCircle className="h-5 w-5 text-yellow-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                You are viewing your personal availability settings. Only you can see and edit these settings.
+              </p>
+            </div>
+          </div>
+        </div>
+        
         <div className="flex flex-col md:flex-row justify-between items-start gap-4 sm:gap-6">
           {/* Calendar Section */}
           <Card className="w-full md:w-1/2 shadow-md">
@@ -61,7 +121,7 @@ const PhotographerAvailability = () => {
             <CardHeader className="p-3 sm:p-4">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span>Available Time Slots</span>
+                <span>Your Available Time Slots</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-2 sm:p-4">
@@ -112,7 +172,7 @@ const PhotographerAvailability = () => {
                 })}
               </div>
               <div className="mt-4 sm:mt-6">
-                <Button className="w-full text-sm sm:text-base">Save Availability</Button>
+                <Button onClick={handleSaveAvailability} className="w-full text-sm sm:text-base">Save Availability</Button>
               </div>
             </CardContent>
           </Card>
