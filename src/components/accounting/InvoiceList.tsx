@@ -272,7 +272,7 @@ interface InvoiceItemProps {
   onDelete: (invoice: InvoiceData) => void;
   getStatusColor: (status: string) => string;
   onPay: (invoice: InvoiceData) => void;
-  isAdmin?: boolean; // New prop
+  isAdmin?: boolean; // Admin role prop
 }
 
 function InvoiceItem({ 

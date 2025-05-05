@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -15,14 +14,14 @@ import { BatchInvoiceDialog } from '@/components/accounting/BatchInvoiceDialog';
 import { InvoiceData } from '@/utils/invoiceUtils';
 import { useToast } from '@/hooks/use-toast';
 import { EditInvoiceDialog } from '@/components/invoices/EditInvoiceDialog';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 // We're reusing the existing initial invoices data for now
 import { initialInvoices } from '@/components/accounting/data';
 
 const AccountingPage = () => {
   const { toast } = useToast();
-  const { role } = useAuth(); // Get user role from auth context
+  const { role } = useAuth(); // Use the correct AuthProvider
   const [invoices, setInvoices] = useState<InvoiceData[]>(initialInvoices);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -33,7 +32,7 @@ const AccountingPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   
   // Determine if user has admin permissions
-  const isAdmin = ['admin', 'superadmin'].includes(role);
+  const isAdmin = ['admin', 'superadmin'].includes(role || '');
 
   const handleDownloadInvoice = (invoice: InvoiceData) => {
     toast({
