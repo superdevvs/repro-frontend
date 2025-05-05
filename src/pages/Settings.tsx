@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -13,7 +14,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUpload } from '@/components/profile/ImageUpload';
 import { BrandingImageUpload } from '@/components/profile/BrandingImageUpload';
-import { LinkPreviewSettings } from '@/components/settings/LinkPreviewSettings';
 
 const Settings = () => {
   const { user, role } = useAuth();
@@ -62,8 +62,6 @@ const Settings = () => {
     setBrandBanner(url);
   };
   
-  const isSuperAdmin = role === 'superadmin';
-  
   return (
     <DashboardLayout>
       <PageTransition>
@@ -85,12 +83,8 @@ const Settings = () => {
               <TabsTrigger value="branding">Branding</TabsTrigger>
               <TabsTrigger value="billing">Billing</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
-              {isSuperAdmin && (
-                <TabsTrigger value="admin">Admin</TabsTrigger>
-              )}
             </TabsList>
             
-            {/* Profile Tab */}
             <TabsContent value="profile" className="space-y-4">
               <Card>
                 <CardHeader>
@@ -174,7 +168,6 @@ const Settings = () => {
               </Card>
             </TabsContent>
             
-            {/* Account Tab */}
             <TabsContent value="account" className="space-y-4">
               <Card>
                 <CardHeader>
@@ -249,7 +242,6 @@ const Settings = () => {
               </Card>
             </TabsContent>
 
-            {/* Branding Tab */}
             <TabsContent value="branding" className="space-y-4">
               <Card>
                 <CardHeader>
@@ -336,7 +328,6 @@ const Settings = () => {
               </Card>
             </TabsContent>
             
-            {/* Billing Tab */}
             <TabsContent value="billing" className="space-y-4">
               <Card>
                 <CardHeader>
@@ -376,7 +367,6 @@ const Settings = () => {
               </Card>
             </TabsContent>
             
-            {/* Notifications Tab */}
             <TabsContent value="notifications" className="space-y-4">
               <Card>
                 <CardHeader>
@@ -426,15 +416,6 @@ const Settings = () => {
                 </CardFooter>
               </Card>
             </TabsContent>
-            
-            {/* Admin Tab - Only visible to superadmins */}
-            {isSuperAdmin && (
-              <TabsContent value="admin" className="space-y-4">
-                <div className="grid grid-cols-1 gap-6">
-                  <LinkPreviewSettings />
-                </div>
-              </TabsContent>
-            )}
           </Tabs>
         </div>
       </PageTransition>
