@@ -35,7 +35,7 @@ const Shoots = () => {
   const [currentPage, setCurrentPage] = useState(1);
   
   const { shoots, updateShoot } = useShoots();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
   
   // Filter shoots based on user role
@@ -132,7 +132,7 @@ const Shoots = () => {
           />
           
           {/* Quick Booking Card - Show only for admin users */}
-          {['admin', 'superadmin'].includes(user?.role || '') && (
+          {['admin', 'superadmin'].includes(role || '') && (
             <QuickBookingCard />
           )}
           

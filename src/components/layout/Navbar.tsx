@@ -25,7 +25,7 @@ interface WeatherData {
 }
 
 export function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, role } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -80,15 +80,17 @@ export function Navbar() {
       transition={{ duration: 0.3, delay: 0.1 }}
     >
       <div className="flex items-center gap-4">
-        <Button 
-          variant="default" 
-          size="sm" 
-          className="mr-2 flex items-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90"
-          onClick={() => navigate('/book-shoot')}
-        >
-          <PlusCircleIcon className="h-4 w-4" />
-          <span className="hidden sm:inline">New Shoot</span>
-        </Button>
+        {['admin', 'superadmin'].includes(role) && (
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="mr-2 flex items-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => navigate('/book-shoot')}
+          >
+            <PlusCircleIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">New Shoot</span>
+          </Button>
+        )}
       
         <div className="flex w-full max-w-sm items-center gap-1.5 relative">
           <SearchIcon className="h-4 w-4 text-muted-foreground absolute ml-3" />
