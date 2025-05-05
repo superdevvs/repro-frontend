@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Calendar as CalendarIcon,
@@ -30,9 +29,18 @@ interface InvoiceListProps {
   onDownload: (invoice: InvoiceData) => void;
   onPay: (invoice: InvoiceData) => void;
   onSendReminder: (invoice: InvoiceData) => void;
+  isAdmin?: boolean; // New prop to determine if user is admin
 }
 
-export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendReminder }: InvoiceListProps) {
+export function InvoiceList({ 
+  data, 
+  onView, 
+  onEdit, 
+  onDownload, 
+  onPay, 
+  onSendReminder,
+  isAdmin = false // Default to false for safety
+}: InvoiceListProps) {
   const { toast } = useToast();
   const [viewInvoiceDialogOpen, setViewInvoiceDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
@@ -58,6 +66,7 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
   };
 
   const handleSendInvoice = (invoice: InvoiceData) => {
+    if (!isAdmin) return;
     toast({
       title: "Invoice sent",
       description: `Invoice #${invoice.number} has been sent to ${invoice.client}.`
@@ -72,6 +81,7 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
   };
 
   const handleEditInvoice = (invoice: InvoiceData) => {
+    if (!isAdmin) return;
     toast({
       title: "Edit invoice",
       description: `Edit mode for invoice #${invoice.number}.`
@@ -80,6 +90,7 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
   };
 
   const handleDeleteInvoice = (invoice: InvoiceData) => {
+    if (!isAdmin) return;
     toast({
       title: "Invoice deleted",
       description: `Invoice #${invoice.number} has been deleted.`,
@@ -150,9 +161,26 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
                       <td className="py-1 px-2 text-xs">{format(new Date(invoice.date), 'MMM d, yyyy')}</td>
                       <td className="py-1 px-2">
                         <div className="flex flex-wrap gap-1">
-                          <Button variant="outline" size="sm" onClick={() => handleViewInvoice(invoice)} aria-label="View" className="px-3 py-1 text-xs">View</Button>
-                          <Button variant="outline" size="sm" onClick={() => handleDownloadInvoice(invoice)} aria-label="Download" className="px-3 py-1 text-xs">Download</Button>
-                          {(invoice.status === "pending" || invoice.status === "overdue") && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleViewInvoice(invoice)} 
+                            aria-label="View" 
+                            className="px-3 py-1 text-xs"
+                          >
+                            View
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleDownloadInvoice(invoice)} 
+                            aria-label="Download" 
+                            className="px-3 py-1 text-xs"
+                          >
+                            Download
+                          </Button>
+                          {/* Only show mark as paid button for admins */}
+                          {isAdmin && (invoice.status === "pending" || invoice.status === "overdue") && (
                             <Button
                               variant="accent"
                               size="sm"
@@ -163,7 +191,18 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
                               Mark Paid
                             </Button>
                           )}
-                          <Button variant="outline" size="sm" onClick={() => handleEditInvoice(invoice)} aria-label="Edit" className="px-3 py-1 text-xs">Edit</Button>
+                          {/* Only show edit button for admins */}
+                          {isAdmin && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleEditInvoice(invoice)} 
+                              aria-label="Edit" 
+                              className="px-3 py-1 text-xs"
+                            >
+                              Edit
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -194,6 +233,7 @@ export function InvoiceList({ data, onView, onEdit, onDownload, onPay, onSendRem
                       onDelete={handleDeleteInvoice}
                       getStatusColor={getStatusColor}
                       onPay={onPay}
+                      isAdmin={isAdmin}
                     />
                   ))}
                   {filteredInvoices.length === 0 && (
@@ -229,10 +269,23 @@ interface InvoiceItemProps {
   onDelete: (invoice: InvoiceData) => void;
   getStatusColor: (status: string) => string;
   onPay: (invoice: InvoiceData) => void;
+  isAdmin?: boolean; // New prop
 }
 
-function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onDelete, getStatusColor, onPay }: InvoiceItemProps) {
-  const showMarkAsPaid = invoice.status === 'pending' || invoice.status === 'overdue';
+function InvoiceItem({ 
+  invoice, 
+  onView, 
+  onDownload, 
+  onSend, 
+  onPrint, 
+  onEdit, 
+  onDelete, 
+  getStatusColor, 
+  onPay,
+  isAdmin = false, // Default to false for safety
+}: InvoiceItemProps) {
+  const showMarkAsPaid = isAdmin && (invoice.status === 'pending' || invoice.status === 'overdue');
+  
   return (
     <div className="flex flex-col bg-card rounded-lg shadow-sm">
       <div className="p-3 flex-row justify-between items-center border-b border-border hidden sm:flex">
@@ -296,14 +349,17 @@ function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onD
         </div>
 
         <div className="flex flex-wrap gap-2 text-xs">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => onEdit(invoice)}
-            className="px-3 py-1"
-          >
-            Edit
-          </Button>
+          {/* Only show edit button for admins */}
+          {isAdmin && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onEdit(invoice)}
+              className="px-3 py-1"
+            >
+              Edit
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="px-3 py-1">
@@ -314,12 +370,16 @@ function InvoiceItem({ invoice, onView, onDownload, onSend, onPrint, onEdit, onD
             <DropdownMenuContent align="end" className="text-sm">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => onView(invoice)}>View</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onSend(invoice)}>Send</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDownload(invoice)}>Download</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onPrint(invoice)}>Print</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onEdit(invoice)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(invoice)} className="text-red-500">Delete</DropdownMenuItem>
+              {isAdmin && (
+                <>
+                  <DropdownMenuItem onClick={() => onSend(invoice)}>Send</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onEdit(invoice)}>Edit</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDelete(invoice)} className="text-red-500">Delete</DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

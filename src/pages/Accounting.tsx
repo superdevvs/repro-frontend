@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -14,12 +15,14 @@ import { BatchInvoiceDialog } from '@/components/accounting/BatchInvoiceDialog';
 import { InvoiceData } from '@/utils/invoiceUtils';
 import { useToast } from '@/hooks/use-toast';
 import { EditInvoiceDialog } from '@/components/invoices/EditInvoiceDialog';
+import { useAuth } from '@/context/AuthContext';
 
 // We're reusing the existing initial invoices data for now
 import { initialInvoices } from '@/components/accounting/data';
 
 const AccountingPage = () => {
   const { toast } = useToast();
+  const { role } = useAuth(); // Get user role from auth context
   const [invoices, setInvoices] = useState<InvoiceData[]>(initialInvoices);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -28,6 +31,9 @@ const AccountingPage = () => {
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
   const [timeFilter, setTimeFilter] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  
+  // Determine if user has admin permissions
+  const isAdmin = role === 'admin';
 
   const handleDownloadInvoice = (invoice: InvoiceData) => {
     toast({
@@ -43,11 +49,13 @@ const AccountingPage = () => {
   };
 
   const handlePayInvoice = (invoice: InvoiceData) => {
+    if (!isAdmin) return; // Only admins can pay invoices
     setSelectedInvoice(invoice);
     setPaymentDialogOpen(true);
   };
   
   const handleEditInvoice = (invoice: InvoiceData) => {
+    if (!isAdmin) return; // Only admins can edit invoices
     setSelectedInvoice(invoice);
     setEditDialogOpen(true);
   };
@@ -121,8 +129,8 @@ const AccountingPage = () => {
       <PageTransition>
         <div className="space-y-6 pb-8">
           <AccountingHeader 
-            onCreateInvoice={() => setCreateDialogOpen(true)}
-            onCreateBatch={() => setBatchDialogOpen(true)}
+            onCreateInvoice={() => isAdmin && setCreateDialogOpen(true)}
+            onCreateBatch={() => isAdmin && setBatchDialogOpen(true)}
           />
           
           <OverviewCards invoices={invoices} timeFilter={timeFilter} />
@@ -147,6 +155,7 @@ const AccountingPage = () => {
             onDownload={handleDownloadInvoice}
             onPay={handlePayInvoice}
             onSendReminder={handleSendReminder}
+            isAdmin={isAdmin} // Pass down admin status
           />
           
           <UpcomingPayments invoices={invoices} />
@@ -161,7 +170,7 @@ const AccountingPage = () => {
         />
       )}
 
-      {selectedInvoice && (
+      {selectedInvoice && isAdmin && (
         <PaymentDialog
           isOpen={paymentDialogOpen}
           onClose={closePaymentDialog}
@@ -170,19 +179,23 @@ const AccountingPage = () => {
         />
       )}
 
-      <CreateInvoiceDialog
-        isOpen={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-        onInvoiceCreate={handleCreateInvoice}
-      />
+      {isAdmin && (
+        <CreateInvoiceDialog
+          isOpen={createDialogOpen}
+          onClose={() => setCreateDialogOpen(false)}
+          onInvoiceCreate={handleCreateInvoice}
+        />
+      )}
       
-      <BatchInvoiceDialog
-        isOpen={batchDialogOpen}
-        onClose={() => setBatchDialogOpen(false)}
-        onCreateBatch={handleCreateBatchInvoices}
-      />
+      {isAdmin && (
+        <BatchInvoiceDialog
+          isOpen={batchDialogOpen}
+          onClose={() => setBatchDialogOpen(false)}
+          onCreateBatch={handleCreateBatchInvoices}
+        />
+      )}
 
-      {selectedInvoice && (
+      {selectedInvoice && isAdmin && (
         <EditInvoiceDialog
           isOpen={editDialogOpen}
           onClose={() => setEditDialogOpen(false)}
