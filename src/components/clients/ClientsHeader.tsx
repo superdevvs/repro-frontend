@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ export const ClientsHeader: React.FC<ClientsHeaderProps> = ({
   handleAddClient,
   totalClients = 0
 }) => {
+  // Keep add client button only for admin and superadmin users
   const isAdmin = ['admin', 'superadmin'].includes(role);
   
   return (

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -68,7 +67,8 @@ const Shoots = () => {
   );
   
   const isCompletedTab = selectedTab === 'completed';
-  const isAdmin = ['admin', 'superadmin'].includes(role || '');
+  // Show QuickBookingCard to admin, superadmin, and client users
+  const canSeeQuickBooking = ['admin', 'superadmin', 'client'].includes(role || '');
   
   const handleShootSelect = (shoot: ShootData) => {
     setSelectedShoot(shoot);
@@ -132,8 +132,8 @@ const Shoots = () => {
             } 
           />
           
-          {/* Quick Booking Card - Show only for admin users */}
-          {isAdmin && (
+          {/* Quick Booking Card - Show for admin, superadmin, and client users */}
+          {canSeeQuickBooking && (
             <QuickBookingCard />
           )}
           

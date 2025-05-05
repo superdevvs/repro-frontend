@@ -30,6 +30,9 @@ export function Navbar() {
   const { theme, setTheme } = useTheme();
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
+  // Allow client users to create new shoots
+  const canBookShoot = ['admin', 'superadmin', 'client'].includes(role);
+
   // Fetch current weather data for demo purposes
   useEffect(() => {
     // Safe check to prevent error if component unmounts
@@ -80,7 +83,7 @@ export function Navbar() {
       transition={{ duration: 0.3, delay: 0.1 }}
     >
       <div className="flex items-center gap-4">
-        {['admin', 'superadmin'].includes(role) && (
+        {canBookShoot && (
           <Button 
             variant="default" 
             size="sm" 

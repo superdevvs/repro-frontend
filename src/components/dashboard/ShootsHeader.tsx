@@ -15,8 +15,8 @@ export function ShootsHeader({ title, subtitle }: ShootsHeaderProps) {
   const { role } = useAuth();
   const navigate = useNavigate();
   
-  // Only show the button to admin and superadmin users
-  const isAdmin = ['admin', 'superadmin'].includes(role || '');
+  // Show the button to admin, superadmin, and client users
+  const canBookShoot = ['admin', 'superadmin', 'client'].includes(role || '');
   
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -30,7 +30,7 @@ export function ShootsHeader({ title, subtitle }: ShootsHeaderProps) {
         </p>
       </div>
       
-      {isAdmin && (
+      {canBookShoot && (
         <Button onClick={() => navigate('/book-shoot')}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Book New Shoot
