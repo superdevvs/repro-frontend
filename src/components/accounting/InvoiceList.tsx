@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Calendar as CalendarIcon,
@@ -29,7 +30,7 @@ interface InvoiceListProps {
   onDownload: (invoice: InvoiceData) => void;
   onPay: (invoice: InvoiceData) => void;
   onSendReminder: (invoice: InvoiceData) => void;
-  isAdmin?: boolean; // New prop to determine if user is admin
+  isAdmin?: boolean; // Prop to determine if user is admin
 }
 
 export function InvoiceList({ 

@@ -33,7 +33,7 @@ const AccountingPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   
   // Determine if user has admin permissions
-  const isAdmin = role === 'admin';
+  const isAdmin = ['admin', 'superadmin'].includes(role);
 
   const handleDownloadInvoice = (invoice: InvoiceData) => {
     toast({
