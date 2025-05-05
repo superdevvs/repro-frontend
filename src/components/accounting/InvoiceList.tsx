@@ -218,32 +218,34 @@ export function InvoiceList({
               </table>
             </div>
           ) : (
-            <TabsContent value={activeTab} className="p-0">
-              <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
-                <div className="space-y-3 p-3">
-                  {filteredInvoices.map((invoice) => (
-                    <InvoiceItem 
-                      key={invoice.id} 
-                      invoice={invoice}
-                      onView={handleViewInvoice}
-                      onDownload={handleDownloadInvoice}
-                      onSend={handleSendInvoice}
-                      onPrint={handlePrintInvoice}
-                      onEdit={handleEditInvoice}
-                      onDelete={handleDeleteInvoice}
-                      getStatusColor={getStatusColor}
-                      onPay={onPay}
-                      isAdmin={isAdmin}
-                    />
-                  ))}
-                  {filteredInvoices.length === 0 && (
-                    <div className="py-8 text-center">
-                      <p className="text-muted-foreground text-sm">No invoices found</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </TabsContent>
+            <Tabs value={activeTab}>
+              <TabsContent value={activeTab} className="p-0">
+                <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
+                  <div className="space-y-3 p-3">
+                    {filteredInvoices.map((invoice) => (
+                      <InvoiceItem 
+                        key={invoice.id} 
+                        invoice={invoice}
+                        onView={handleViewInvoice}
+                        onDownload={handleDownloadInvoice}
+                        onSend={handleSendInvoice}
+                        onPrint={handlePrintInvoice}
+                        onEdit={handleEditInvoice}
+                        onDelete={handleDeleteInvoice}
+                        getStatusColor={getStatusColor}
+                        onPay={onPay}
+                        isAdmin={isAdmin}
+                      />
+                    ))}
+                    {filteredInvoices.length === 0 && (
+                      <div className="py-8 text-center">
+                        <p className="text-muted-foreground text-sm">No invoices found</p>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           )}
         </div>
       </Card>
