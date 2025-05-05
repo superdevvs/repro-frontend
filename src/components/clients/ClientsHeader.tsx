@@ -15,6 +15,8 @@ export const ClientsHeader: React.FC<ClientsHeaderProps> = ({
   handleAddClient,
   totalClients = 0
 }) => {
+  const isAdmin = ['admin', 'superadmin'].includes(role);
+  
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
@@ -33,7 +35,7 @@ export const ClientsHeader: React.FC<ClientsHeaderProps> = ({
         </p>
       </div>
       
-      {['admin', 'superadmin'].includes(role) && (
+      {isAdmin && (
         <Button 
           className="gap-2 bg-primary text-white hover:bg-primary/90 transition-all" 
           onClick={handleAddClient}

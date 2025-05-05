@@ -68,6 +68,7 @@ const Shoots = () => {
   );
   
   const isCompletedTab = selectedTab === 'completed';
+  const isAdmin = ['admin', 'superadmin'].includes(role || '');
   
   const handleShootSelect = (shoot: ShootData) => {
     setSelectedShoot(shoot);
@@ -132,7 +133,7 @@ const Shoots = () => {
           />
           
           {/* Quick Booking Card - Show only for admin users */}
-          {['admin', 'superadmin'].includes(role || '') && (
+          {isAdmin && (
             <QuickBookingCard />
           )}
           
