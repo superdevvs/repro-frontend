@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./components/auth";
+import { PermissionsProvider } from './context/PermissionsContext';
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Shoots from "./pages/Shoots";
@@ -29,6 +30,7 @@ import Accounting from "./pages/Accounting";
 import Integrations from "./pages/Integrations";
 import { toast } from "./components/ui/use-toast";
 import Coupons from "./pages/Coupons";
+import PermissionSettings from "./pages/PermissionSettings";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -200,6 +202,12 @@ const AppRoutes = () => {
           <Coupons />
         </ProtectedRoute>
       } />
+      {/* New permissions settings route */}
+      <Route path="/permissions" element={
+        <ProtectedRoute>
+          <PermissionSettings />
+        </ProtectedRoute>
+      } />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -214,9 +222,11 @@ function App() {
           <Sonner position="top-right" closeButton richColors />
           <BrowserRouter>
             <AuthProvider>
-              <ShootsProvider>
-                <AppRoutes />
-              </ShootsProvider>
+              <PermissionsProvider>
+                <ShootsProvider>
+                  <AppRoutes />
+                </ShootsProvider>
+              </PermissionsProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>

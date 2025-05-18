@@ -2,6 +2,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { NavLink } from './NavLink';
+import { usePermission } from '@/hooks/usePermission';
 import {
   HomeIcon,
   ClipboardIcon,
@@ -23,19 +24,33 @@ interface SidebarLinksProps {
 
 export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
   const { pathname } = useLocation();
+  const permission = usePermission();
+  
+  // Define permissions for each section
+  const dashboardPermission = permission.forResource('dashboard');
+  const shootsPermission = permission.forResource('shoots');
+  const clientsPermission = permission.forResource('clients');
+  const accountsPermission = permission.forResource('accounts');
+  const invoicesPermission = permission.forResource('invoices');
+  const availabilityPermission = permission.forResource('availability');
+  const integrationsPermission = permission.forResource('integrations');
+  const settingsPermission = permission.forResource('settings');
 
   return (
     <div className="flex flex-1 flex-col gap-2 p-2">
-      <NavLink
-        to="/dashboard"
-        icon={<HomeIcon className="h-5 w-5" />}
-        label="Dashboard"
-        isCollapsed={isCollapsed}
-        isActive={pathname === '/dashboard'}
-      />
+      {/* Dashboard link - everyone with dashboard view permission can see this */}
+      {dashboardPermission.canView() && (
+        <NavLink
+          to="/dashboard"
+          icon={<HomeIcon className="h-5 w-5" />}
+          label="Dashboard"
+          isCollapsed={isCollapsed}
+          isActive={pathname === '/dashboard'}
+        />
+      )}
       
-      {/* Show Book Shoot based on role */}
-      {['client', 'admin', 'superadmin'].includes(role) && (
+      {/* Book Shoot link - only those who can book shoots */}
+      {shootsPermission.canBook() && (
         <NavLink
           to="/book-shoot"
           icon={<ClipboardIcon className="h-5 w-5" />}
@@ -45,25 +60,18 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
         />
       )}
       
-      {/* Show appropriate shoots history based on user role */}
-      {role === 'client' ? (
+      {/* Shoots History */}
+      {shootsPermission.canView() && (
         <NavLink
-          to="/shoot-history"
-          icon={<HistoryIcon className="h-5 w-5" />}
+          to={role === 'client' ? "/shoot-history" : "/shoots"}
+          icon={role === 'client' ? <HistoryIcon className="h-5 w-5" /> : <CalendarIcon className="h-5 w-5" />}
           label="Shoots History"
           isCollapsed={isCollapsed}
-          isActive={pathname === '/shoot-history'}
-        />
-      ) : (
-        <NavLink
-          to="/shoots"
-          icon={<CalendarIcon className="h-5 w-5" />}
-          label="Shoots History"
-          isCollapsed={isCollapsed}
-          isActive={pathname === '/shoots'}
+          isActive={pathname === (role === 'client' ? '/shoot-history' : '/shoots')}
         />
       )}
       
+      {/* Messages - all users can access */}
       <NavLink
         to="/messages"
         icon={<MessageSquareIcon className="h-5 w-5" />}
@@ -72,8 +80,8 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
         isActive={pathname === '/messages'}
       />
       
-      {/* Show Clients link only for specific roles */}
-      {['admin', 'superadmin', 'photographer', 'editor'].includes(role) && (
+      {/* Clients link */}
+      {clientsPermission.canView() && (
         <NavLink
           to="/clients"
           icon={<UserIcon className="h-5 w-5" />}
@@ -83,8 +91,8 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
         />
       )}
       
-      {/* Show Accounts link only for admin roles */}
-      {['admin', 'superadmin'].includes(role) && (
+      {/* Accounts link */}
+      {accountsPermission.canView() && (
         <>
           <NavLink
             to="/accounts"
@@ -110,17 +118,19 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
         </>
       )}
       
-      {/* Replace Invoices with Accounting */}
-      <NavLink
-        to="/accounting"
-        icon={<BarChart3Icon className="h-5 w-5" />}
-        label="Accounting"
-        isCollapsed={isCollapsed}
-        isActive={pathname === '/accounting'}
-      />
+      {/* Accounting */}
+      {invoicesPermission.canView() && (
+        <NavLink
+          to="/accounting"
+          icon={<BarChart3Icon className="h-5 w-5" />}
+          label="Accounting"
+          isCollapsed={isCollapsed}
+          isActive={pathname === '/accounting'}
+        />
+      )}
       
-      {/* Show Availability for admin and photographer */}
-      {['admin', 'photographer', 'superadmin'].includes(role) && (
+      {/* Availability */}
+      {availabilityPermission.canView() && (
         <NavLink
           to="/availability"
           icon={<CalendarIcon className="h-5 w-5" />}
@@ -130,8 +140,8 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
         />
       )}
       
-      {/* Show Integrations only for superadmin */}
-      {['admin', 'superadmin'].includes(role) && (
+      {/* Integrations */}
+      {integrationsPermission.canView() && (
         <NavLink
           to="/integrations"
           icon={<PlugIcon className="h-5 w-5" />}

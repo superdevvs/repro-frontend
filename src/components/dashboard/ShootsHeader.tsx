@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { usePermission } from '@/hooks/usePermission';
 
 interface ShootsHeaderProps {
   title: string;
@@ -12,11 +12,11 @@ interface ShootsHeaderProps {
 }
 
 export function ShootsHeader({ title, subtitle }: ShootsHeaderProps) {
-  const { role } = useAuth();
   const navigate = useNavigate();
+  const shootPermissions = usePermission().forResource('shoots');
   
-  // Show the button to admin, superadmin, and client users
-  const canBookShoot = ['admin', 'superadmin', 'client'].includes(role || '');
+  // Show the button to users who have permission to book shoots
+  const canBookShoot = shootPermissions.canBook();
   
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

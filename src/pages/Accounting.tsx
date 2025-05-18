@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
@@ -15,6 +16,7 @@ import { InvoiceData } from '@/utils/invoiceUtils';
 import { useToast } from '@/hooks/use-toast';
 import { EditInvoiceDialog } from '@/components/invoices/EditInvoiceDialog';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { usePermission } from '@/hooks/usePermission';
 
 // We're reusing the existing initial invoices data for now
 import { initialInvoices } from '@/components/accounting/data';
@@ -22,6 +24,7 @@ import { initialInvoices } from '@/components/accounting/data';
 const AccountingPage = () => {
   const { toast } = useToast();
   const { role } = useAuth(); // Use the correct AuthProvider
+  const { can } = usePermission();
   const [invoices, setInvoices] = useState<InvoiceData[]>(initialInvoices);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -31,7 +34,10 @@ const AccountingPage = () => {
   const [timeFilter, setTimeFilter] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   
-  // Determine if user has admin permissions
+  // Use permission system to check if user has admin capabilities
+  const canCreateInvoice = can('invoices', 'create');
+  const canEditInvoice = can('invoices', 'update');
+  const canMarkAsPaid = can('invoices', 'approve');
   const isAdmin = ['admin', 'superadmin'].includes(role || '');
 
   const handleDownloadInvoice = (invoice: InvoiceData) => {
@@ -48,13 +54,13 @@ const AccountingPage = () => {
   };
 
   const handlePayInvoice = (invoice: InvoiceData) => {
-    if (!isAdmin) return; // Only admins can pay invoices
+    if (!canMarkAsPaid) return; // Use permission check
     setSelectedInvoice(invoice);
     setPaymentDialogOpen(true);
   };
   
   const handleEditInvoice = (invoice: InvoiceData) => {
-    if (!isAdmin) return; // Only admins can edit invoices
+    if (!canEditInvoice) return; // Use permission check
     setSelectedInvoice(invoice);
     setEditDialogOpen(true);
   };
@@ -128,8 +134,8 @@ const AccountingPage = () => {
       <PageTransition>
         <div className="space-y-6 pb-8">
           <AccountingHeader 
-            onCreateInvoice={() => isAdmin && setCreateDialogOpen(true)}
-            onCreateBatch={() => isAdmin && setBatchDialogOpen(true)}
+            onCreateInvoice={() => canCreateInvoice && setCreateDialogOpen(true)}
+            onCreateBatch={() => canCreateInvoice && setBatchDialogOpen(true)}
           />
           
           <OverviewCards invoices={invoices} timeFilter={timeFilter} />
@@ -169,7 +175,7 @@ const AccountingPage = () => {
         />
       )}
 
-      {selectedInvoice && isAdmin && (
+      {selectedInvoice && canMarkAsPaid && (
         <PaymentDialog
           isOpen={paymentDialogOpen}
           onClose={closePaymentDialog}
@@ -178,7 +184,7 @@ const AccountingPage = () => {
         />
       )}
 
-      {isAdmin && (
+      {canCreateInvoice && (
         <CreateInvoiceDialog
           isOpen={createDialogOpen}
           onClose={() => setCreateDialogOpen(false)}
@@ -186,7 +192,7 @@ const AccountingPage = () => {
         />
       )}
       
-      {isAdmin && (
+      {canCreateInvoice && (
         <BatchInvoiceDialog
           isOpen={batchDialogOpen}
           onClose={() => setBatchDialogOpen(false)}
@@ -194,7 +200,7 @@ const AccountingPage = () => {
         />
       )}
 
-      {selectedInvoice && isAdmin && (
+      {selectedInvoice && canEditInvoice && (
         <EditInvoiceDialog
           isOpen={editDialogOpen}
           onClose={() => setEditDialogOpen(false)}
