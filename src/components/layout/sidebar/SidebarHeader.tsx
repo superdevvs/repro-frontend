@@ -16,8 +16,8 @@ export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderPro
       <Link
         to="/"
         className={cn(
-          'flex items-center',
-          isCollapsed ? 'w-full justify-center px-0' : 'pl-2 w-full'
+          'flex items-center justify-center',
+          isCollapsed ? 'w-full px-0' : 'w-full'
         )}
       >
         <img 
