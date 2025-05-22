@@ -29,7 +29,7 @@ export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderPro
           )}
         />
         {!isCollapsed && (
-          <span className="ml-2 font-semibold text-lg">RePro Photos</span>
+          <span className="ml-2 font-semibold text-lg whitespace-nowrap">RePro Photos</span>
         )}
       </Link>
       <Button
