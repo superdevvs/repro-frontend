@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { HomeIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarHeaderProps {
@@ -17,16 +17,21 @@ export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderPro
         to="/"
         className={cn(
           'flex items-center gap-2 font-semibold',
-          isCollapsed && 'justify-center w-full'
+          isCollapsed ? 'justify-center w-full' : 'flex-1'
         )}
       >
         {isCollapsed ? (
-          <HomeIcon className="h-6 w-6 text-primary" />
+          <img 
+            src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
+            alt="RePro Photos Logo"
+            className="h-8 w-auto object-contain" 
+          />
         ) : (
-          <>
-            <HomeIcon className="h-6 w-6 text-primary" />
-            <span>RePro Photos</span>
-          </>
+          <img 
+            src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
+            alt="RePro Photos Logo" 
+            className="h-8 w-auto object-contain"
+          />
         )}
       </Link>
       <Button
