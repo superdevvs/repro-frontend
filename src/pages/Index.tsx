@@ -12,12 +12,22 @@ const Index = () => {
       {/* Left side with branding - hidden on mobile */}
       {!isMobile && (
         <motion.div 
-          className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 md:p-16"
+          className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 md:p-16 relative overflow-hidden"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="max-w-md w-full">
+          {/* Background cover image */}
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1973&q=80" 
+              alt="Real estate interior" 
+              className="object-cover w-full h-full opacity-15"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-background/90 to-background/70"></div>
+          </div>
+          
+          <div className="max-w-md w-full z-10">
             <motion.div 
               className="mb-8"
               initial={{ opacity: 0, y: 20 }}
@@ -33,7 +43,7 @@ const Index = () => {
               <img 
                 src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
                 alt="RePro Photos Logo" 
-                className="h-28 w-auto mb-2"
+                className="h-36 w-auto mb-2"
               />
               <p className="text-muted-foreground">Streamline your real estate media workflow with our comprehensive management dashboard.</p>
             </motion.div>
@@ -87,12 +97,22 @@ const Index = () => {
       {/* Mobile-only compact header */}
       {isMobile && (
         <motion.div 
-          className="pt-8 pb-6 px-6 text-center"
+          className="pt-8 pb-6 px-6 text-center relative"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="flex justify-center mb-4">
+          {/* Mobile background cover image */}
+          <div className="absolute inset-0 z-0 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1973&q=80" 
+              alt="Real estate interior" 
+              className="object-cover w-full h-full opacity-15"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/90 to-background/70"></div>
+          </div>
+          
+          <div className="flex justify-center mb-4 relative z-10">
             <div className="h-16 w-16 bg-primary/10 rounded-xl flex items-center justify-center">
               <svg className="h-9 w-9 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -103,9 +123,9 @@ const Index = () => {
           <img 
             src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
             alt="RePro Photos Logo" 
-            className="h-20 w-auto mx-auto mb-2"
+            className="h-28 w-auto mx-auto mb-2 relative z-10"
           />
-          <p className="text-sm text-muted-foreground mb-0">Your complete real estate photography platform</p>
+          <p className="text-sm text-muted-foreground mb-0 relative z-10">Your complete real estate photography platform</p>
         </motion.div>
       )}
       
