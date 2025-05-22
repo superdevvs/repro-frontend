@@ -30,7 +30,11 @@ const Index = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 22V12h6v10" />
                 </svg>
               </div>
-              <h1 className="text-4xl font-bold tracking-tight mb-2">RePro Photos</h1>
+              <img 
+                src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
+                alt="RePro Photos Logo" 
+                className="h-14 mb-2"
+              />
               <p className="text-muted-foreground">Streamline your real estate media workflow with our comprehensive management dashboard.</p>
             </motion.div>
             
@@ -96,7 +100,11 @@ const Index = () => {
               </svg>
             </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">RePro Photos</h1>
+          <img 
+            src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
+            alt="RePro Photos Logo" 
+            className="h-10 mx-auto mb-2"
+          />
           <p className="text-sm text-muted-foreground mb-0">Your complete real estate photography platform</p>
         </motion.div>
       )}
