@@ -33,7 +33,7 @@ const Index = () => {
               <img 
                 src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
                 alt="RePro Photos Logo" 
-                className="h-20 w-auto mb-2"
+                className="h-28 w-auto mb-2"
               />
               <p className="text-muted-foreground">Streamline your real estate media workflow with our comprehensive management dashboard.</p>
             </motion.div>
@@ -103,7 +103,7 @@ const Index = () => {
           <img 
             src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
             alt="RePro Photos Logo" 
-            className="h-14 w-auto mx-auto mb-2"
+            className="h-20 w-auto mx-auto mb-2"
           />
           <p className="text-sm text-muted-foreground mb-0">Your complete real estate photography platform</p>
         </motion.div>
