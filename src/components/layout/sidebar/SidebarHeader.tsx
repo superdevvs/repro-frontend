@@ -28,9 +28,6 @@ export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderPro
             isCollapsed ? "scale-90" : ""
           )}
         />
-        {!isCollapsed && (
-          <span className="ml-2 font-semibold text-sm whitespace-nowrap">R/E Pro Photos</span>
-        )}
       </Link>
       <Button
         variant="ghost"
