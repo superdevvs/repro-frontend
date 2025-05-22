@@ -24,7 +24,7 @@ export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderPro
           src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
           alt="RePro Photos Logo"
           className={cn(
-            "h-8 w-auto object-contain mx-auto",
+            "h-10 w-auto object-contain mx-auto",
             isCollapsed ? "scale-90" : ""
           )}
         />
