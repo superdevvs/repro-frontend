@@ -12,12 +12,12 @@ interface SidebarHeaderProps {
 
 export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderProps) {
   return (
-    <div className="flex h-14 items-center border-b px-2 relative">
+    <div className="flex h-14 items-center border-b px-0 relative">
       <Link
         to="/"
         className={cn(
           'flex items-center',
-          isCollapsed ? 'w-full justify-center px-2' : 'justify-start w-full px-4'
+          isCollapsed ? 'w-full justify-center px-0' : 'pl-2 w-full'
         )}
       >
         <img 
