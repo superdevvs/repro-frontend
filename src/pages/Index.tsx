@@ -28,9 +28,9 @@ const Index = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="max-w-md w-full flex justify-center">
+            <div className="max-w-md w-full flex flex-col items-center">
               <motion.div 
-                className="flex justify-center"
+                className="flex flex-col items-center"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
@@ -40,6 +40,9 @@ const Index = () => {
                   alt="RePro Photos Logo" 
                   className="w-auto h-auto max-h-72 max-w-full object-contain"
                 />
+                <p className="text-center text-lg md:text-xl mt-4 text-primary font-medium italic">
+                  Elevating your Status Quo!
+                </p>
               </motion.div>
             </div>
           </motion.div>
@@ -48,7 +51,7 @@ const Index = () => {
         {/* Mobile-only logo */}
         {isMobile && (
           <motion.div 
-            className="pt-8 pb-6 px-6 flex justify-center relative"
+            className="pt-8 pb-6 px-6 flex flex-col items-center relative"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
@@ -58,6 +61,9 @@ const Index = () => {
               alt="RePro Photos Logo" 
               className="w-auto h-auto max-h-48 max-w-full object-contain relative z-10"
             />
+            <p className="text-center text-base mt-3 text-primary font-medium italic relative z-10">
+              Elevating your Status Quo!
+            </p>
           </motion.div>
         )}
         
