@@ -12,18 +12,21 @@ interface SidebarHeaderProps {
 
 export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderProps) {
   return (
-    <div className="flex h-14 items-center border-b px-2 relative">
+    <div className="flex h-14 items-center justify-center border-b px-2 relative">
       <Link
         to="/"
         className={cn(
-          'flex items-center justify-center w-full',
-          isCollapsed ? 'px-2' : 'px-4'
+          'flex items-center justify-center',
+          isCollapsed ? 'w-full px-2' : 'w-full px-4'
         )}
       >
         <img 
           src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
           alt="RePro Photos Logo"
-          className="h-8 w-auto object-contain" 
+          className={cn(
+            "h-8 w-auto object-contain mx-auto",
+            isCollapsed ? "scale-90" : ""
+          )}
         />
       </Link>
       <Button
