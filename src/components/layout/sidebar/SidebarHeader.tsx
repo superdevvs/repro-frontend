@@ -20,22 +20,11 @@ export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderPro
           isCollapsed ? 'px-2' : 'px-4'
         )}
       >
-        {isCollapsed ? (
-          <img 
-            src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
-            alt="RePro Photos Logo"
-            className="h-8 w-auto object-contain" 
-          />
-        ) : (
-          <div className="flex items-center justify-center gap-2 w-full">
-            <img 
-              src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
-              alt="RePro Photos Logo" 
-              className="h-8 w-auto object-contain"
-            />
-            <span className="font-semibold">R/E Pro Photos</span>
-          </div>
-        )}
+        <img 
+          src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
+          alt="RePro Photos Logo"
+          className="h-8 w-auto object-contain" 
+        />
       </Link>
       <Button
         variant="ghost"
