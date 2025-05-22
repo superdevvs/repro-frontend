@@ -40,7 +40,7 @@ const Index = () => {
                   alt="RePro Photos Logo" 
                   className="w-auto h-auto max-h-72 max-w-full object-contain"
                 />
-                <p className="text-center text-lg md:text-xl mt-4 text-primary font-medium italic">
+                <p className="text-center text-lg md:text-xl mt-4 text-accent-foreground font-medium italic">
                   Elevating your Status Quo!
                 </p>
               </motion.div>
@@ -61,7 +61,7 @@ const Index = () => {
               alt="RePro Photos Logo" 
               className="w-auto h-auto max-h-48 max-w-full object-contain relative z-10"
             />
-            <p className="text-center text-base mt-3 text-primary font-medium italic relative z-10">
+            <p className="text-center text-base mt-3 text-accent-foreground font-medium italic relative z-10">
               Elevating your Status Quo!
             </p>
           </motion.div>
