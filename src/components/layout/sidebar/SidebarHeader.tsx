@@ -22,14 +22,14 @@ export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderPro
       >
         <img 
           src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
-          alt="RePro Photos Logo"
+          alt="R/E Pro Photos Logo"
           className={cn(
             "h-10 w-auto object-contain",
             isCollapsed ? "scale-90" : ""
           )}
         />
         {!isCollapsed && (
-          <span className="ml-2 font-semibold text-sm whitespace-nowrap">RePro Photos</span>
+          <span className="ml-2 font-semibold text-sm whitespace-nowrap">R/E Pro Photos</span>
         )}
       </Link>
       <Button
