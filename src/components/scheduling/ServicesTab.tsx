@@ -50,30 +50,22 @@ export function ServicesTab() {
   const fetchServices = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('services')
-        .select(`
-          *,
-          service_categories (
-            id,
-            name
-          )
-        `)
-        .order('category');
-      
-      if (error) throw error;
-      
-      const mappedServices: Service[] = (data || []).map(item => ({
+      const response = await fetch('http://localhost:8000/api/services');
+      if (!response.ok) {
+        throw new Error('Failed to fetch services');
+      }
+      const data = await response.json();
+      const mappedServices: Service[] = data.data.map((item: any) => ({
         id: item.id,
         name: item.name,
         description: item.description || '',
         price: item.price,
         delivery_time: item.duration,
         active: item.is_active || false,
-        category: item.category,
-        photographer_required: false
+        category: item.category.name || '', // adjust this based on your actual API response
+        photographer_required: false,
       }));
-      
+
       setServices(mappedServices);
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -86,6 +78,7 @@ export function ServicesTab() {
       setIsLoading(false);
     }
   };
+
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -111,25 +104,32 @@ export function ServicesTab() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('services')
-        .insert([
-          {
-            name: newService.name,
-            description: newService.description,
-            price: parseFloat(newService.price),
-            duration: parseInt(newService.delivery_time),
-            category_id: newService.category,
-            category: selectedCategoryData.name,
-            is_active: true
-          }
-        ]);
+      const response = await fetch('http://localhost:8000/api/admin/services', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer 8|snLDvxXTh7olFq1mUpHXN9458n8RYoYgpjHwaI0r41c81571'
+        },
+        body: JSON.stringify({
+          name: newService.name,
+          description: newService.description,
+          price: parseFloat(newService.price),
+          delivery_time: parseInt(newService.delivery_time),
+          category_id: "2"
+        })
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save service');
+      }
+
+      const result = await response.json();
 
       toast({
         title: 'Success',
-        description: 'Service saved successfully',
+        description: result.message || 'Service saved successfully',
       });
 
       setIsAddDialogOpen(false);
@@ -140,16 +140,17 @@ export function ServicesTab() {
         delivery_time: '',
         category: '',
       });
-      fetchServices();
-    } catch (error) {
+      fetchServices(); // Make sure fetchServices is also updated to use your custom API
+    } catch (error: any) {
       console.error('Error saving service:', error);
       toast({
         title: 'Error',
-        description: 'Failed to save service',
+        description: error.message || 'Failed to save service',
         variant: 'destructive',
       });
     }
   };
+
 
   const filteredServices = selectedCategory 
     ? services.filter(service => service.category === categories?.find(cat => cat.id === selectedCategory)?.name)
