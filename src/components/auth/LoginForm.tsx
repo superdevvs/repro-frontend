@@ -16,6 +16,7 @@ import { UserData } from '@/types/auth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AlertCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import axios from 'axios';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -104,95 +105,102 @@ export function LoginForm() {
     setLoginError(null);
   };
 
-  const handleLogin = (values: LoginFormValues) => {
-    setIsLoading(true);
-    clearErrors();
-    
-    setTimeout(() => {
-      let userData: UserData | null = null;
-      
-      // Check for exact match of email (case insensitive)
-      const lowerEmail = values.email.toLowerCase();
-      
-      if (lowerEmail === 'client@example.com') {
-        userData = sampleUsers.client as UserData;
-      } else if (lowerEmail === 'admin@example.com') {
-        userData = sampleUsers.admin as UserData;
-      } else if (lowerEmail === 'photographer@example.com') {
-        userData = sampleUsers.photographer as UserData;
-      } else if (lowerEmail === 'editor@example.com') {
-        userData = sampleUsers.editor as UserData;
-      } else if (lowerEmail === 'superadmin@example.com') {
-        userData = sampleUsers.superadmin as UserData;
-      }
-      
-      if (userData) {
-        try {
-          login(userData);
-          toast({
-            title: "Success",
-            description: "You have successfully logged in!",
-          });
-          navigate('/dashboard');
-        } catch (error) {
-          console.error("Login error:", error);
-          setLoginError("An unexpected error occurred during login.");
-          toast({
-            title: "Login Failed",
-            description: "An unexpected error occurred. Please try again.",
-            variant: "destructive",
-          });
-        }
-      } else {
-        setLoginError("Invalid email or password. Try one of the sample emails.");
-        toast({
-          title: "Login Failed",
-          description: "Invalid email or password. Try one of the sample emails.",
-          variant: "destructive",
-        });
-      }
-      setIsLoading(false);
-    }, 1000);
-  };
+  // Example after login API response
+const handleLogin = async (values: LoginFormValues) => {
+  setIsLoading(true);
+  clearErrors();
 
-  const handleRegister = (values: RegisterFormValues) => {
+  try {
+    const response = await axios.post('http://localhost:8000/api/login', {
+      email: values.email,
+      password: values.password,
+    });
+
+    const { token, user } = response.data;
+
+    // ✅ Save token to localStorage
+    localStorage.setItem('authToken', token);
+
+    // Optionally save user too
+    localStorage.setItem('user', JSON.stringify(user));
+
+    toast({
+      title: 'Success',
+      description: 'You have successfully logged in!',
+    });
+
+    login(user); // your auth context method
+    navigate('/dashboard');
+  } catch (error) {
+    console.error("Login error:", error);
+    setLoginError(error.response?.data?.message || 'Login failed.');
+    toast({
+      title: "Login Failed",
+      description: error.response?.data?.message || "Invalid email or password.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+  const handleRegister = async (values: RegisterFormValues) => {
     setIsLoading(true);
     clearErrors();
-    
-    setTimeout(() => {
-      try {
-        const newUser: UserData = {
-          id: `user-${Date.now()}`,
-          name: values.name,
-          email: values.email,
-          role: values.role,
-          company: values.company,
-          isActive: true,
-          metadata: {
-            preferences: {
-              theme: 'system',
-              notifications: true,
-              emailFrequency: 'weekly'
-            }
+  
+    try {
+      const response = await axios.post('http://localhost:8000/api/register', {
+        name: values.name,
+        username: values.name, // Ensure this exists in your form
+        email: values.email,
+        password: values.password, // Ensure this exists in your form
+        password_confirmation: 'secure123', // Ensure this exists in your form
+        phonenumber: '54112345678', // Optional, provide a default if not in form
+        company_name: values.company,
+        role: values.role,
+        avatar: 'https://example.com/avatar.jpg', // Ensure this exists in your form
+        bio: 'No bio provided' // Ensure this exists in your form
+      });
+  
+      const user = response.data.user;
+      const token = response.data.token;
+  
+      const newUser: UserData = {
+        id: `user-${user.id}`,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        company: user.company_name,
+        isActive: user.account_status === 'active',
+        metadata: {
+          avatar: user.avatar,
+          bio: user.bio,
+          preferences: {
+            theme: 'system',
+            notifications: true,
+            emailFrequency: 'weekly'
           }
-        };
-        
-        login(newUser);
-        toast({
-          title: "Account created",
-          description: "You have successfully registered and logged in!",
-        });
-        navigate('/dashboard');
-      } catch (error) {
-        console.error("Registration error:", error);
-        toast({
-          title: "Registration Failed",
-          description: "An unexpected error occurred. Please try again.",
-          variant: "destructive",
-        });
-      }
+        }
+      };
+  
+      login(newUser); // Save user in your auth context/state
+      localStorage.setItem('token', token); // Store token if needed for auth
+      toast({
+        title: "Account created",
+        description: "You have successfully registered and logged in!",
+      });
+      navigate('/dashboard');
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Registration Failed",
+        description: error.response?.data?.message || "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   React.useEffect(() => {

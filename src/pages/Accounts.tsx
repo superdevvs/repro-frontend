@@ -1,239 +1,317 @@
 
 import React, { useState } from 'react';
-import { AccountsLayout } from '@/components/layout/AccountsLayout';
+import { AccountsLayout } from "@/components/layout/AccountsLayout";
+import { AccountCard } from "@/components/accounts/AccountCard";
+import { AccountList } from "@/components/accounts/AccountList";
+import { AccountsHeader } from "@/components/accounts/AccountsHeader";
+import { AccountForm } from "@/components/accounts/AccountForm";
 import { PageTransition } from '@/components/layout/PageTransition';
-import { AccountsHeader } from '@/components/accounts/AccountsHeader';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { UserProfileDialog } from '@/components/accounts/UserProfileDialog';
 import { ResetPasswordDialog } from '@/components/accounts/ResetPasswordDialog';
 import { RoleChangeDialog } from '@/components/accounts/RoleChangeDialog';
 import { NotificationSettingsDialog } from '@/components/accounts/NotificationSettingsDialog';
-import { AccountForm } from '@/components/accounts/AccountForm';
-import { AccountBox } from '@/components/accounts/AccountBox';
+import { LinkClientBrandingDialog } from '@/components/accounts/LinkClientBrandingDialog';
 import { Input } from '@/components/ui/input';
 import { Search, Filter, Plus, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Role } from '@/components/auth/AuthProvider';
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/components/auth/AuthProvider";
 
-const mockAccounts = [
+const sampleUsersData = [
   {
-    id: '1',
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    role: 'admin',
-    phone: '(555) 123-4567',
-    avatar: 'https://ui.shadcn.com/avatars/01.png',
-    location: 'New York, NY',
-    joinDate: 'Jan 15, 2023',
-    status: 'active' as const,
+    id: "1",
+    name: "John Smith",
+    email: "john@example.com",
+    role: "admin" as Role,
+    avatar: "/placeholder.svg",
+    lastLogin: "2023-04-01T08:30:00Z",
+    active: true,
   },
   {
-    id: '2',
-    name: 'Sarah Johnson',
-    email: 'sarah.j@example.com',
-    role: 'client',
-    avatar: 'https://ui.shadcn.com/avatars/02.png',
-    location: 'Los Angeles, CA',
-    joinDate: 'Mar 3, 2023',
-    status: 'active' as const,
+    id: "2",
+    name: "Sarah Wilson",
+    email: "sarah@photostudio.com",
+    role: "photographer" as Role,
+    avatar: "/placeholder.svg",
+    phone: "555-123-4567",
+    lastLogin: "2023-04-02T14:20:00Z",
+    active: true,
   },
   {
-    id: '3',
-    name: 'Michael Wong',
-    email: 'michael.w@example.com',
-    role: 'photographer',
-    phone: '(555) 987-6543',
-    avatar: 'https://ui.shadcn.com/avatars/03.png',
-    location: 'Chicago, IL',
-    joinDate: 'Feb 12, 2023',
-    status: 'active' as const,
+    id: "3",
+    name: "Michael Brown",
+    email: "michael@editing.com",
+    role: "editor" as Role,
+    avatar: "/placeholder.svg",
+    phone: "555-987-6543",
+    lastLogin: "2023-03-28T09:15:00Z",
+    active: true,
   },
   {
-    id: '4',
-    name: 'Emily Davis',
-    email: 'emily.d@example.com',
-    role: 'editor',
-    avatar: 'https://ui.shadcn.com/avatars/04.png',
-    location: 'Seattle, WA',
-    joinDate: 'Apr 22, 2023',
-    status: 'inactive' as const,
+    id: "4",
+    name: "Emily Davis",
+    email: "emily@realestate.com",
+    role: "client" as Role,
+    company: "Davis Realty",
+    avatar: "/placeholder.svg",
+    phone: "555-456-7890",
+    lastLogin: "2023-04-03T11:40:00Z",
+    active: true,
+  },
+  {
+    id: "5",
+    name: "Robert Johnson",
+    email: "robert@inactive.com",
+    role: "client" as Role,
+    avatar: "/placeholder.svg",
+    lastLogin: "2023-02-15T10:10:00Z",
+    active: false,
   },
 ];
 
-const Accounts = () => {
-  const isMobile = useIsMobile();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  const [selectedAccount, setSelectedAccount] = useState<any>(null);
+export default function Accounts() {
+  const [users, setUsers] = useState(sampleUsersData);
+  const [filterRole, setFilterRole] = useState<Role | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const { toast } = useToast();
+  const { user: currentUser } = useAuth();
   
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isResetOpen, setIsResetOpen] = useState(false);
-  const [isRoleOpen, setIsRoleOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isNewAccountOpen, setIsNewAccountOpen] = useState(false);
-
-  const filteredAccounts = mockAccounts.filter(account => {
-    const matchesSearch = account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          account.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTab = activeTab === 'all' || account.role === activeTab;
-    return matchesSearch && matchesTab;
+  const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
+  const [roleChangeDialogOpen, setRoleChangeDialogOpen] = useState(false);
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [notificationSettingsDialogOpen, setNotificationSettingsDialogOpen] = useState(false);
+  const [linkClientBrandingDialogOpen, setLinkClientBrandingDialogOpen] = useState(false);
+  const [userProfileDialogOpen, setUserProfileDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<>(null);
+  
+  const filteredUsers = users.filter((user) => {
+    const roleMatch = filterRole === "all" || user.role === filterRole;
+    const searchMatch = searchQuery === "" || 
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.company && user.company.toLowerCase().includes(searchQuery.toLowerCase()));
+    return roleMatch && searchMatch;
   });
 
-  const handleAccountSelect = (account: any) => {
-    setSelectedAccount(account);
-    setIsProfileOpen(true);
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchTerm(query);
-  };
-
-  const handleFilterChange = (role: Role | 'all') => {
-    setActiveTab(role);
+  const handleAddAccount = () => {
+    setSelectedUser(null);
+    setEditUserDialogOpen(true);
   };
 
   const handleExport = () => {
-    console.log('Exporting accounts');
-    // Implementation for exporting accounts
+    toast({
+      title: "Exporting users data",
+      description: "The users data has been exported successfully.",
+    });
   };
 
-  const handleAddAccount = () => {
-    setIsNewAccountOpen(true);
+  const handleEditUser = (user) => {
+    setSelectedUser(user);
+    setEditUserDialogOpen(true);
   };
 
-  const handleNewAccount = (data: any) => {
-    console.log('Creating new account', data);
-    // Implementation for creating a new account
+  const handleChangeRole = (user) => {
+    setSelectedUser(user);
+    setRoleChangeDialogOpen(true);
   };
+
+  const handleToggleStatus = (user) => {
+    setUsers(
+      users.map((u) =>
+        u.id === user.id ? { ...u, active: !u.active } : u
+      )
+    );
+    
+    toast({
+      title: `User ${user.active ? "deactivated" : "activated"}`,
+      description: `${user.name} has been ${user.active ? "deactivated" : "activated"} successfully.`,
+      variant: user.active ? "destructive" : "default",
+    });
+  };
+
+  const handleResetPassword = (user) => {
+    setSelectedUser(user);
+    setResetPasswordDialogOpen(true);
+  };
+
+  const handleImpersonate = (user) => {
+    toast({
+      title: "Impersonating user",
+      description: `You are now viewing the dashboard as ${user.name}.`,
+    });
+  };
+
+  const handleManageNotifications = (user) => {
+    setSelectedUser(user);
+    setNotificationSettingsDialogOpen(true);
+  };
+
+  const handleLinkClientBranding = (user) => {
+    setSelectedUser(user);
+    setLinkClientBrandingDialogOpen(true);
+  };
+
+  const handleViewProfile = (user) => {
+    setSelectedUser(user);
+    setUserProfileDialogOpen(true);
+  };
+  
+  const handleUpdateRoles = (userId: string, roles: Role[]) => {
+    setUsers(
+      users.map((u) =>
+        u.id === userId ? { ...u, role: roles[0] } : u
+      )
+    );
+    
+    toast({
+      title: "Role updated",
+      description: `User role has been updated to ${roles.join(", ")}.`,
+    });
+  };
+  
+  const handleUpdateNotifications = (userId: string, settings: Record<string, boolean>) => {
+    toast({
+      title: "Notification preferences updated",
+      description: "Notification settings have been saved successfully.",
+    });
+  };
+  
+  const handleUpdateClientBranding = (userId: string, data) => {
+    toast({
+      title: "Client branding updated",
+      description: "Client associations and branding settings have been saved.",
+    });
+  };
+  
+  const handleSendResetLink = (userId: string, email: string) => {
+    toast({
+      title: "Reset link sent",
+      description: `Password reset link has been sent to ${email}.`,
+    });
+  };
+  
+  const handleUpdatePassword = (userId: string, password: string) => {
+    toast({
+      title: "Password updated",
+      description: "The user's password has been changed successfully.",
+    });
+  };
+  
+
 
   return (
     <AccountsLayout>
-      <PageTransition>
-        <AccountsHeader 
+      <div className="container px-4 sm:px-6 pb-6 space-y-6">
+        <AccountsHeader
           onAddAccount={handleAddAccount}
           onExport={handleExport}
-          onSearch={handleSearch}
-          onFilterChange={handleFilterChange}
-          selectedFilter={activeTab as Role | 'all'}
+          onSearch={setSearchQuery}
+          onFilterChange={setFilterRole}
+          selectedFilter={filterRole}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
         />
         
-        <div className="mb-6">
-          <div className={`flex ${isMobile ? 'flex-col gap-4' : 'flex-row justify-between'} mb-4`}>
-            <div className={`relative ${isMobile ? 'w-full' : 'w-1/3'}`}>
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search accounts..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredUsers.map((user) => (
+              <AccountCard
+                key={user.id}
+                user={user}
+                onEdit={handleEditUser}
+                onChangeRole={handleChangeRole}
+                onToggleStatus={handleToggleStatus}
+                onResetPassword={handleResetPassword}
+                onImpersonate={handleImpersonate}
+                onManageNotifications={handleManageNotifications}
+                onLinkClientBranding={handleLinkClientBranding}
+                onViewProfile={handleViewProfile}
+                isActive={user.active}
               />
-              {searchTerm && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6"
-                  onClick={() => setSearchTerm('')}
+            ))}
+            
+            {filteredUsers.length === 0 && (
+              <div className="col-span-full bg-muted/30 p-8 rounded-lg text-center">
+                <h3 className="text-lg font-medium mb-2">No accounts found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchQuery
+                    ? "Try adjusting your search or filter criteria."
+                    : "Get started by adding a new account."}
+                </p>
+                <button
+                  onClick={handleAddAccount}
+                  className="inline-flex items-center justify-center px-4 py-2 bg-primary text-white rounded-md"
                 >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-            
-            <div className="flex gap-2">
-              <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                <span>Filters</span>
-              </Button>
-              
-              <Button className="gap-2" onClick={handleAddAccount}>
-                <Plus className="h-4 w-4" />
-                <span>New Account</span>
-              </Button>
-            </div>
-          </div>
-          
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-6">
-              <TabsTrigger value="all">All Accounts</TabsTrigger>
-              <TabsTrigger value="admin">Admins</TabsTrigger>
-              <TabsTrigger value="client">Clients</TabsTrigger>
-              <TabsTrigger value="photographer">Photographers</TabsTrigger>
-              <TabsTrigger value="editor">Editors</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value={activeTab} className="mt-0">
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'} gap-4`}>
-                {filteredAccounts.map((account) => (
-                  <AccountBox
-                    key={account.id}
-                    account={account}
-                    onSelect={handleAccountSelect}
-                    isSelected={selectedAccount?.id === account.id}
-                  />
-                ))}
-                
-                {filteredAccounts.length === 0 && (
-                  <div className="col-span-full text-center py-12">
-                    <h3 className="text-lg font-medium">No accounts found</h3>
-                    <p className="text-muted-foreground">
-                      Try adjusting your search or filter criteria
-                    </p>
-                  </div>
-                )}
+                  Add Account
+                </button>
               </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </PageTransition>
+            )}
+          </div>
+        ) : (
+          <AccountList
+            users={filteredUsers}
+            onEdit={handleEditUser}
+            onChangeRole={handleChangeRole}
+            onToggleStatus={handleToggleStatus}
+            onResetPassword={handleResetPassword}
+            onImpersonate={handleImpersonate}
+            onManageNotifications={handleManageNotifications}
+            onLinkClientBranding={handleLinkClientBranding}
+            onViewProfile={handleViewProfile}
+          />
+        )}
+      </div>
       
       {/* Dialogs */}
-      {selectedAccount && (
+      {selectedUser && (
         <>
-          <UserProfileDialog
-            open={isProfileOpen}
-            onOpenChange={setIsProfileOpen}
-            user={selectedAccount}
-            onEdit={() => {
-              setIsProfileOpen(false);
-              setIsResetOpen(true);
-            }}
+          <UserProfileDialog 
+            open={userProfileDialogOpen} 
+            onOpenChange={setUserProfileDialogOpen}
+            user={selectedUser}
+            onEdit={() => handleEditUser(selectedUser)}
           />
           
           <ResetPasswordDialog
-            open={isResetOpen}
-            onOpenChange={setIsResetOpen}
-            user={selectedAccount}
-            onSendResetLink={(userId, email) => console.log('Sending reset link to', email)}
-            onUpdatePassword={(userId, password) => console.log('Updating password for', userId)}
+            open={resetPasswordDialogOpen}
+            onOpenChange={setResetPasswordDialogOpen}
+            user={selectedUser}
+            onSendResetLink={handleSendResetLink}
+            onUpdatePassword={handleUpdatePassword}
           />
           
           <RoleChangeDialog
-            open={isRoleOpen}
-            onOpenChange={setIsRoleOpen}
-            user={selectedAccount}
-            onSubmit={(userId, roles) => console.log('Updating roles for', userId, roles)}
+            open={roleChangeDialogOpen}
+            onOpenChange={setRoleChangeDialogOpen}
+            user={selectedUser}
+            onSubmit={handleUpdateRoles}
           />
           
           <NotificationSettingsDialog
-            open={isNotificationsOpen}
-            onOpenChange={setIsNotificationsOpen}
-            user={selectedAccount}
-            onSubmit={(userId, settings) => console.log('Updating notification settings for', userId, settings)}
+            open={notificationSettingsDialogOpen}
+            onOpenChange={setNotificationSettingsDialogOpen}
+            user={selectedUser}
+            onSubmit={handleUpdateNotifications}
+          />
+          
+          <LinkClientBrandingDialog
+            open={linkClientBrandingDialogOpen}
+            onOpenChange={setLinkClientBrandingDialogOpen}
+            user={selectedUser}
+            onSubmit={handleUpdateClientBranding}
           />
         </>
       )}
       
-      <AccountForm
+      {/* <AccountForm
         open={isNewAccountOpen}
         onOpenChange={setIsNewAccountOpen}
         onSubmit={handleNewAccount}
-      />
+      /> */}
     </AccountsLayout>
   );
 };
-
-export default Accounts;

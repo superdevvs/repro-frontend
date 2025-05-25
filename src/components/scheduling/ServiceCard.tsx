@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Edit, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import axios  from 'axios';
 
 type ServiceProps = {
   service: {
@@ -50,68 +51,122 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
 
   const handleSaveService = async () => {
     setIsSubmitting(true);
+  
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No auth token found in localStorage');
+      toast({
+        title: 'Auth Error',
+        description: 'You are not logged in as admin. Please login first.',
+        variant: 'destructive',
+      });
+      setIsSubmitting(false);
+      return;
+    }
+  
+    const payload = {
+      name: editedService.name?.trim(),
+      description: editedService.description?.trim(),
+      price: parseFloat(editedService.price),
+      delivery_time: parseInt(editedService.delivery_time),
+      category_id:
+        typeof editedService.category === 'object'
+          ? editedService.category.id
+          : parseInt(editedService.category),
+    };
+  
+    console.log('Payload being sent:', payload);
+    console.log('Payload type check:', {
+      name: typeof payload.name,
+      description: typeof payload.description,
+      price: typeof payload.price,
+      delivery_time: typeof payload.delivery_time,
+      category_id: typeof payload.category_id,
+    });
+    console.log('Token:', token);
+  
     try {
-      const { error } = await supabase
-        .from('services')
-        .update({
-          name: editedService.name,
-          description: editedService.description,
-          price: Number(editedService.price),
-          duration: Number(editedService.delivery_time),
-          is_active: editedService.active,
-          category: editedService.category
-        })
-        .eq('id', service.id);
-      
-      if (error) throw error;
-      
+      const res = await axios.put(
+        `http://localhost:8000/api/admin/services/${service.id}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+        }
+      );
+  
       toast({
         title: 'Service Updated',
-        description: 'The service has been updated successfully.',
+        description: res.data.message || 'Service updated successfully.',
       });
-      
+  
       setIsEditDialogOpen(false);
       onUpdate();
     } catch (error) {
       console.error('Error updating service:', error);
+  
+      const errData = error.response?.data;
+      const validationErrors = errData?.errors;
+      const errMsg = errData?.message || 'Failed to update service.';
+  
+      if (validationErrors) {
+        console.error('Validation errors:', validationErrors);
+      }
+  
       toast({
-        title: 'Error',
-        description: 'Failed to update service. Please try again.',
+        title: 'Update Failed',
+        description: validationErrors
+          ? Object.values(validationErrors).flat().join(' ')
+          : errMsg,
         variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   const handleDeleteService = async () => {
     setIsSubmitting(true);
+  
     try {
-      const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', service.id);
-      
-      if (error) throw error;
-      
+      const token = localStorage.getItem('authToken');
+  
+      if (!token) {
+        throw new Error("No auth token found in localStorage");
+      }
+  
+      const response = await axios.delete(
+        `http://localhost:8000/api/admin/services/${service.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+        }
+      );
+  
       toast({
         title: 'Service Deleted',
-        description: 'The service has been deleted successfully.',
+        description: response.data?.message || 'Service deleted successfully.',
       });
-      
+  
       setIsDeleteDialogOpen(false);
       onUpdate();
     } catch (error) {
       console.error('Error deleting service:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete service. Please try again.',
+        description: error.response?.data?.message || 'Failed to delete service.',
         variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+  
 
   const formattedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',

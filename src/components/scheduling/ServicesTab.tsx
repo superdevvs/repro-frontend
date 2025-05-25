@@ -55,7 +55,7 @@ export function ServicesTab() {
         throw new Error('Failed to fetch services');
       }
       const data = await response.json();
-      const mappedServices: Service[] = data.data.map((item: any) => ({
+      const mappedServices: Service[] = data.data.map((item) => ({
         id: item.id,
         name: item.name,
         description: item.description || '',
@@ -67,6 +67,8 @@ export function ServicesTab() {
       }));
 
       setServices(mappedServices);
+      console.log(data);
+      console.log(mappedServices);
     } catch (error) {
       console.error('Error fetching services:', error);
       toast({
@@ -109,7 +111,7 @@ export function ServicesTab() {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 8|snLDvxXTh7olFq1mUpHXN9458n8RYoYgpjHwaI0r41c81571'
+          'Authorization': 'Bearer 2|BJs6IU3mvB2S3DzuF8yAxrh8OcGsShHws1VBW0oQacb74c75'
         },
         body: JSON.stringify({
           name: newService.name,
@@ -141,7 +143,7 @@ export function ServicesTab() {
         category: '',
       });
       fetchServices(); // Make sure fetchServices is also updated to use your custom API
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving service:', error);
       toast({
         title: 'Error',
