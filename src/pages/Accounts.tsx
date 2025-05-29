@@ -79,6 +79,7 @@ export default function Accounts() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
+  const [isNewAccountOpen, setIsNewAccountOpen] = useState(false);
   
   const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
   const [roleChangeDialogOpen, setRoleChangeDialogOpen] = useState(false);
@@ -97,9 +98,14 @@ export default function Accounts() {
     return roleMatch && searchMatch;
   });
 
+  
+
   const handleAddAccount = () => {
-    setSelectedUser(null);
-    setEditUserDialogOpen(true);
+    setIsNewAccountOpen(true);
+  };
+
+  const handleNewAccount = (data) => {
+    console.log('Creating new account', data);
   };
 
   const handleExport = () => {
@@ -307,11 +313,11 @@ export default function Accounts() {
         </>
       )}
       
-      {/* <AccountForm
+      <AccountForm
         open={isNewAccountOpen}
         onOpenChange={setIsNewAccountOpen}
         onSubmit={handleNewAccount}
-      /> */}
+      />
     </AccountsLayout>
   );
 };
