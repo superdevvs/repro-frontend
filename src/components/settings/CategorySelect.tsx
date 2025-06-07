@@ -34,9 +34,9 @@ export function CategorySelect({ value, onChange }: CategorySelectProps) {
         <SelectContent>
           {categories && categories.length > 0 ? (
             categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
+              <SelectItem key={category.id} value={String(category.id)}>
+              {category.name}
+            </SelectItem>
             ))
           ) : (
             <SelectItem value="no-categories" disabled>

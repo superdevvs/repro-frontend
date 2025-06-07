@@ -11,13 +11,14 @@ import { ServiceCard } from './ServiceCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CategorySelect } from '@/components/settings/CategorySelect';
 import { useServiceCategories } from '@/hooks/useServiceCategories';
+import API_ROUTES from '@/lib/api';
 
 type Service = {
   id: string;
   name: string;
   description?: string;
-  price: number;
-  delivery_time?: number;
+  price: string;
+  delivery_time?: string;
   photographer_required?: boolean;
   active: boolean;
   category?: string;
@@ -50,7 +51,7 @@ export function ServicesTab() {
   const fetchServices = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/services');
+      const response = await fetch(API_ROUTES.services.all);
       if (!response.ok) {
         throw new Error('Failed to fetch services');
       }
@@ -60,15 +61,13 @@ export function ServicesTab() {
         name: item.name,
         description: item.description || '',
         price: item.price,
-        delivery_time: item.duration,
+        delivery_time: item.delivery_time,
         active: item.is_active || false,
         category: item.category.name || '', // adjust this based on your actual API response
         photographer_required: false,
       }));
 
       setServices(mappedServices);
-      console.log(data);
-      console.log(mappedServices);
     } catch (error) {
       console.error('Error fetching services:', error);
       toast({
@@ -83,6 +82,7 @@ export function ServicesTab() {
 
 
   const handleCategoryChange = (categoryId: string) => {
+    console.log('Selected category:', categoryId);
     setSelectedCategory(categoryId);
   };
 
@@ -96,7 +96,7 @@ export function ServicesTab() {
 
   const handleSaveService = async () => {
     try {
-      const selectedCategoryData = categories?.find(cat => cat.id === newService.category);
+      const selectedCategoryData = categories?.find(cat => cat.id == newService.category);
       if (!selectedCategoryData) {
         toast({
           title: 'Error',
@@ -106,19 +106,25 @@ export function ServicesTab() {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/admin/services', {
+      const token = localStorage.getItem('authToken');
+  
+      if (!token) {
+        throw new Error("No auth token found in localStorage");
+      }
+
+      const response = await fetch(API_ROUTES.services.create, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer 2|BJs6IU3mvB2S3DzuF8yAxrh8OcGsShHws1VBW0oQacb74c75'
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           name: newService.name,
           description: newService.description,
           price: parseFloat(newService.price),
           delivery_time: parseInt(newService.delivery_time),
-          category_id: "2"
+          category_id: newService.category, // Ensure this matches your API's expected field
         })
       });
 
@@ -260,7 +266,10 @@ export function ServicesTab() {
                 <div className="space-y-2">
                   <CategorySelect 
                     value={newService.category}
-                    onChange={(value) => setNewService(prev => ({ ...prev, category: value }))}
+                    onChange={(value) => {
+                      setNewService(prev => ({ ...prev, category: value }));
+                    }}
+
                   />
                 </div>
               </div>

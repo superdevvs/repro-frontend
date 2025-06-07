@@ -10,15 +10,15 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Edit, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import axios  from 'axios';
+import axios from 'axios';
 
 type ServiceProps = {
   service: {
     id: string;
     name: string;
     description?: string;
-    price: number;
-    delivery_time?: number;
+    price: string;
+    delivery_time?: string;
     photographer_required?: boolean;
     active: boolean;
     category?: string; // Added category property
@@ -29,7 +29,8 @@ type ServiceProps = {
 export function ServiceCard({ service, onUpdate }: ServiceProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editedService, setEditedService] = useState({ ...service });
+  type Service = ServiceProps['service'];
+  const [editedService, setEditedService] = useState<Service>({ ...service });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -52,7 +53,7 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
   const handleSaveService = async () => {
     setIsSubmitting(true);
   
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('authToken');
     if (!token) {
       console.error('No auth token found in localStorage');
       toast({
@@ -69,10 +70,6 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
       description: editedService.description?.trim(),
       price: parseFloat(editedService.price),
       delivery_time: parseInt(editedService.delivery_time),
-      category_id:
-        typeof editedService.category === 'object'
-          ? editedService.category.id
-          : parseInt(editedService.category),
     };
   
     console.log('Payload being sent:', payload);
@@ -81,7 +78,6 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
       description: typeof payload.description,
       price: typeof payload.price,
       delivery_time: typeof payload.delivery_time,
-      category_id: typeof payload.category_id,
     });
     console.log('Token:', token);
   
@@ -171,7 +167,7 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
   const formattedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-  }).format(service.price);
+  }).format(Number(service.price));
 
   return (
     <>
@@ -219,7 +215,10 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => setIsEditDialogOpen(true)}
+              onClick={() => {
+                console.log('Edit button clicked');
+                setIsEditDialogOpen(true);
+              }}
             >
               <Edit className="h-4 w-4 mr-1" /> Edit
             </Button>
@@ -280,7 +279,7 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
                   id="delivery_time"
                   name="delivery_time"
                   type="number"
-                  value={editedService.delivery_time || 0}
+                  value={editedService.delivery_time}
                   onChange={handleInputChange}
                 />
               </div>
