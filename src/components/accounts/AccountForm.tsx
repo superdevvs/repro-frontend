@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; 
 import { User, Role } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
 import {
@@ -97,7 +96,7 @@ export function AccountForm({
         bio: initialData.bio || "",
         username: initialData.username || "",
         // Use initialData.isActive if it exists, otherwise default to true
-        isActive: (initialData as any).isActive !== undefined ? (initialData as any).isActive : true,
+        isActive: (initialData).isActive !== undefined ? (initialData).isActive : true,
       });
       setAvatarUrl(initialData.avatar || "");
     } else {
@@ -178,7 +177,7 @@ export function AccountForm({
                 )}
               />
 
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="username"
                 render={({ field }) => (
@@ -190,7 +189,7 @@ export function AccountForm({
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
 
               <FormField
                 control={form.control}
