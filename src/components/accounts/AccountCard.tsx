@@ -29,7 +29,6 @@ interface AccountCardProps {
   user: User;
   onEdit: (user: User) => void;
   onChangeRole: (user: User) => void;
-  onToggleStatus: (user: User) => void;
   onResetPassword: (user: User) => void;
   onImpersonate: (user: User) => void;
   onManageNotifications: (user: User) => void;
@@ -42,13 +41,11 @@ export function AccountCard({
   user,
   onEdit,
   onChangeRole,
-  onToggleStatus,
   onResetPassword,
   onImpersonate,
   onManageNotifications,
   onLinkClientBranding,
   onViewProfile,
-  isActive = true
 }: AccountCardProps) {
   const [hovering, setHovering] = useState(false);
 
@@ -74,8 +71,6 @@ export function AccountCard({
   return (
     <Card 
       className={`overflow-hidden transition-all duration-200 hover:shadow-md dark:shadow-none ${
-        isActive ? "" : "opacity-60"
-      } ${
         hovering ? "transform-gpu -translate-y-1" : ""
       }`}
       onMouseEnter={() => setHovering(true)}
@@ -113,12 +108,6 @@ export function AccountCard({
                 onChangeRole(user);
               }}>
                 <UserCog className="mr-2 h-4 w-4" /> Change Role
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => { 
-                e.stopPropagation();
-                onToggleStatus(user);
-              }}>
-                <Power className="mr-2 h-4 w-4" /> {isActive ? "Deactivate" : "Activate"} Account
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={(e) => { 
@@ -177,15 +166,6 @@ export function AccountCard({
             {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
           </Badge>
           
-          {isActive ? (
-            <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 border-green-200 dark:border-green-800">
-              <Check className="mr-1 h-3 w-3" /> Active
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200 border-red-200 dark:border-red-800">
-              <X className="mr-1 h-3 w-3" /> Inactive
-            </Badge>
-          )}
         </div>
       </div>
     </Card>

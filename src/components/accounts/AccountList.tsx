@@ -18,7 +18,6 @@ interface AccountListProps {
   users: Array<User & { active?: boolean }>;
   onEdit: (user: User) => void;
   onChangeRole: (user: User) => void;
-  onToggleStatus: (user: User) => void;
   onResetPassword: (user: User) => void;
   onImpersonate: (user: User) => void;
   onManageNotifications: (user: User) => void;
@@ -30,7 +29,6 @@ export function AccountList({
   users,
   onEdit,
   onChangeRole,
-  onToggleStatus,
   onResetPassword,
   onImpersonate,
   onManageNotifications,
@@ -121,9 +119,6 @@ export function AccountList({
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onChangeRole(user)}>
                       Change Role
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onToggleStatus(user)}>
-                      {user.active ? "Deactivate" : "Activate"} Account
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => onResetPassword(user)}>

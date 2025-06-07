@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { AccountsLayout } from "@/components/layout/AccountsLayout";
 import { AccountCard } from "@/components/accounts/AccountCard";
 import { AccountList } from "@/components/accounts/AccountList";
@@ -72,8 +73,19 @@ const sampleUsersData = [
   },
 ];
 
+type UserType = {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  avatar: string;
+  phone?: string;
+  company?: string;
+};
+
 export default function Accounts() {
-  const [users, setUsers] = useState(sampleUsersData);
+  const [users, setUsers] = useState<UserType[]>([]);
+
   const [filterRole, setFilterRole] = useState<Role | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -87,8 +99,42 @@ export default function Accounts() {
   const [notificationSettingsDialogOpen, setNotificationSettingsDialogOpen] = useState(false);
   const [linkClientBrandingDialogOpen, setLinkClientBrandingDialogOpen] = useState(false);
   const [userProfileDialogOpen, setUserProfileDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<>(null);
+  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
   
+        if (!token) {
+          throw new Error("No auth token found in localStorage");
+        }
+
+        const res = await fetch('http://localhost:8000/api/admin/users', {
+          headers: {
+            Authorization: `Bearer ${token}`, // If needed
+          },
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch users');
+
+        const data = await res.json();
+        console.log('Fetched users:', data);
+        setUsers(data.users);
+      } catch (err) {
+        console.error(err);
+        toast({
+          title: "Error loading users",
+          description: "Unable to fetch user data from server.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
   const filteredUsers = users.filter((user) => {
     const roleMatch = filterRole === "all" || user.role === filterRole;
     const searchMatch = searchQuery === "" || 
@@ -123,20 +169,6 @@ export default function Accounts() {
   const handleChangeRole = (user) => {
     setSelectedUser(user);
     setRoleChangeDialogOpen(true);
-  };
-
-  const handleToggleStatus = (user) => {
-    setUsers(
-      users.map((u) =>
-        u.id === user.id ? { ...u, active: !u.active } : u
-      )
-    );
-    
-    toast({
-      title: `User ${user.active ? "deactivated" : "activated"}`,
-      description: `${user.name} has been ${user.active ? "deactivated" : "activated"} successfully.`,
-      variant: user.active ? "destructive" : "default",
-    });
   };
 
   const handleResetPassword = (user) => {
@@ -230,13 +262,11 @@ export default function Accounts() {
                 user={user}
                 onEdit={handleEditUser}
                 onChangeRole={handleChangeRole}
-                onToggleStatus={handleToggleStatus}
                 onResetPassword={handleResetPassword}
                 onImpersonate={handleImpersonate}
                 onManageNotifications={handleManageNotifications}
                 onLinkClientBranding={handleLinkClientBranding}
                 onViewProfile={handleViewProfile}
-                isActive={user.active}
               />
             ))}
             
@@ -262,7 +292,6 @@ export default function Accounts() {
             users={filteredUsers}
             onEdit={handleEditUser}
             onChangeRole={handleChangeRole}
-            onToggleStatus={handleToggleStatus}
             onResetPassword={handleResetPassword}
             onImpersonate={handleImpersonate}
             onManageNotifications={handleManageNotifications}
