@@ -16,10 +16,12 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { format } from 'date-fns';
 import { BookingSummary } from '@/components/booking/BookingSummary';
 import { BookingContentArea } from '@/components/booking/BookingContentArea';
-import { packages, photographers } from '@/constants/bookingSteps';
+// import { photographers } from '@/constants/bookingSteps';
 import { ShootData } from '@/types/shoots';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { BookingHeader } from '@/components/booking/BookingHeader';
+import axios from 'axios';
+
 
 const BookShoot = () => {
   const isMobile = useIsMobile();
@@ -29,11 +31,10 @@ const BookShoot = () => {
   const clientNameFromUrl = queryParams.get('clientName');
   const clientCompanyFromUrl = queryParams.get('clientCompany');
   const { user } = useAuth();
-  
-  const [clients, setClients] = useState<Client[]>(() => {
-    const storedClients = localStorage.getItem('clientsData');
-    return storedClients ? JSON.parse(storedClients) : initialClientsData;
-  });
+  const [packages, setPackages] = useState<{ id: string, name: string, price: number, description: string }[]>([]);
+
+  const [clients, setClients] = useState<Client[]>([]);
+
   
   const [client, setClient] = useState(() => {
     if (user && user.role === 'client' && user.metadata) {
@@ -59,15 +60,99 @@ const BookShoot = () => {
   const { toast } = useToast();
   const { addShoot } = useShoots();
   const navigate = useNavigate();
+  const [photographers, setPhotographersList] = useState([]);
+
 
   const isClientAccount = user && user.role === 'client';
 
   useEffect(() => {
-    const storedClients = localStorage.getItem('clientsData');
-    if (storedClients) {
-      setClients(JSON.parse(storedClients));
+    const fetchClients = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+  
+        if (!token) {
+          throw new Error("No auth token found in localStorage");
+        }
+
+        const response = await axios.get('http://localhost:8000/api/admin/clients', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const clientsData = response.data.data.map((client: any) => ({
+          ...client,
+          id: client.id.toString()
+        }));
+        setClients(clientsData);
+        // setClients(response.data.data);
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+        toast({
+          title: "Failed to load clients",
+          description: "There was an error loading clients from the server.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    if (!isClientAccount) {
+      fetchClients();
     }
+  }, [isClientAccount, toast]);
+
+
+  useEffect(() => {
+    const fetchPhotographers = async () => {
+      try {
+
+        const token = localStorage.getItem('authToken');
+  
+        if (!token) {
+          throw new Error("No auth token found in localStorage");
+        }
+
+        const response = await axios.get('http://localhost:8000/api/admin/photographers',{
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const formatted = response.data.data.map((photographer: any) => ({
+          ...photographer,
+          id: photographer.id.toString(), // Ensure id is string
+        }));
+        setPhotographersList(formatted);
+      } catch (error) {
+        console.error("Error fetching photographers:", error);
+      }
+    };
+
+    fetchPhotographers();
   }, []);
+
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/services');
+        const packageData = response.data.data.map((pkg: any) => ({
+          ...pkg,
+          id: pkg.id.toString()
+        }));
+        setPackages(packageData);
+        // setPackages(response.data.data);
+      } catch (error) {
+        console.error("Error fetching packages:", error);
+        toast({
+          title: "Failed to load packages",
+          description: "There was an error loading available services.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    fetchPackages();
+  }, [toast]);
+
 
   useEffect(() => {
     if (clientIdFromUrl && clientNameFromUrl) {
@@ -119,9 +204,11 @@ const BookShoot = () => {
   };
 
   const getAvailablePhotographers = () => {
-    if (!date || !time || !selectedPackage) return [];
+    // if (!date || !time || !selectedPackage) return [];
 
-    return photographers.filter(p => p.availability);
+    // return photographers.filter(p => p.availability);
+
+    return photographers
   };
 
   const validateCurrentStep = () => {
@@ -161,82 +248,138 @@ const BookShoot = () => {
     return true;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setFormErrors({});
     
     if (step === 3) {
-      const availablePhotographers = getAvailablePhotographers();
+      // const availablePhotographers = getAvailablePhotographers();
       
-      if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
-        toast({
-          title: "Missing information",
-          description: "Please fill in all required fields before confirming the booking.",
-          variant: "destructive",
-        });
-        return;
-      }
+      // if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
+      //   toast({
+      //     title: "Missing information",
+      //     description: "Please fill in all required fields before confirming the booking.",
+      //     variant: "destructive",
+      //   });
+      //   return;
+      // }
       
-      const selectedClientData = clients.find(c => c.id === client);
-      const selectedPhotographerData = photographers.find(p => p.id === photographer);
-      const selectedPackageData = packages.find(p => p.id === selectedPackage);
+      // const selectedClientData = clients.find(c => c.id === client);
+      // const selectedPhotographerData = photographers.find(p => p.id === photographer);
+      // const selectedPackageData = packages.find(p => p.id === selectedPackage);
       
-      const bookingStatus: ShootData['status'] = 'booked';
+      // const bookingStatus: ShootData['status'] = 'booked';
       
-      // Make sure date is properly formatted to avoid timezone issues
-      const shootDate = date ? new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-        12, // Set to noon to avoid timezone issues
-        0,
-        0
-      ) : new Date();
+      // // Make sure date is properly formatted to avoid timezone issues
+      // const shootDate = date ? new Date(
+      //   date.getFullYear(),
+      //   date.getMonth(),
+      //   date.getDate(),
+      //   12, // Set to noon to avoid timezone issues
+      //   0,
+      //   0
+      // ) : new Date();
       
-      const newShoot: ShootData = {
-        id: uuidv4(),
-        scheduledDate: shootDate.toISOString().split('T')[0],
-        time: time,
-        client: {
-          name: selectedClientData?.name || 'Unknown Client',
-          email: selectedClientData?.email || `client${client}@example.com`,
-          company: selectedClientData?.company,
-          totalShoots: 1
-        },
-        location: {
-          address: address,
-          address2: '',
-          city: city,
-          state: state,
-          zip: zip,
-          fullAddress: `${address}, ${city}, ${state} ${zip}`
-        },
-        photographer: selectedPhotographerData ? {
-          id: selectedPhotographerData.id,
-          name: selectedPhotographerData.name,
-          avatar: selectedPhotographerData.avatar
-        } : {
-          name: "To Be Assigned",
-          avatar: ""
-        },
-        services: selectedPackageData ? [selectedPackageData.name] : [],
-        payment: {
-          baseQuote: getPackagePrice(),
-          taxRate: 6.0,
-          taxAmount: getTax(),
-          totalQuote: getTotal(),
-          totalPaid: bypassPayment ? 0 : getTotal(),
-          lastPaymentDate: bypassPayment ? undefined : new Date().toISOString().split('T')[0],
-          lastPaymentType: bypassPayment ? undefined : 'Credit Card'
-        },
-        status: bookingStatus,
-        notes: notes ? { shootNotes: notes } : undefined,
-        createdBy: user?.name || "Current User"
-      };
+      // const newShoot: ShootData = {
+      //   id: uuidv4(),
+      //   scheduledDate: shootDate.toISOString().split('T')[0],
+      //   time: time,
+      //   client: {
+      //     name: selectedClientData?.name || 'Unknown Client',
+      //     email: selectedClientData?.email || `client${client}@example.com`,
+      //     company: selectedClientData?.company,
+      //     totalShoots: 1
+      //   },
+      //   location: {
+      //     address: address,
+      //     address2: '',
+      //     city: city,
+      //     state: state,
+      //     zip: zip,
+      //     fullAddress: `${address}, ${city}, ${state} ${zip}`
+      //   },
+      //   photographer: selectedPhotographerData ? {
+      //     id: selectedPhotographerData.id,
+      //     name: selectedPhotographerData.name,
+      //     avatar: selectedPhotographerData.avatar
+      //   } : {
+      //     name: "To Be Assigned",
+      //     avatar: ""
+      //   },
+      //   services: selectedPackageData ? [selectedPackageData.name] : [],
+      //   payment: {
+      //     baseQuote: getPackagePrice(),
+      //     taxRate: 6.0,
+      //     taxAmount: getTax(),
+      //     totalQuote: getTotal(),
+      //     totalPaid: bypassPayment ? 0 : getTotal(),
+      //     lastPaymentDate: bypassPayment ? undefined : new Date().toISOString().split('T')[0],
+      //     lastPaymentType: bypassPayment ? undefined : 'Credit Card'
+      //   },
+      //   status: bookingStatus,
+      //   notes: notes ? { shootNotes: notes } : undefined,
+      //   createdBy: user?.name || "Current User"
+      // };
 
-      addShoot(newShoot);
-      setIsComplete(true);
+      // addShoot(newShoot);
+      // setIsComplete(true);
 
-      console.log("New shoot created:", newShoot);
+      // console.log("New shoot created:", newShoot);
+
+        if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
+          toast({
+            title: "Missing information",
+            description: "Please fill in all required fields before confirming the booking.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const shootDate = date ? new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate(),
+          12
+        ) : new Date();
+
+        const payload = {
+          client_id: client,
+          address,
+          city,
+          state,
+          zip,
+          date: shootDate.toISOString().split('T')[0],
+          time,
+          photographer_id: photographer || null,
+          package_id: selectedPackage,
+          notes,
+          bypass_payment: bypassPayment,
+          send_notification: sendNotification
+        };
+
+        try {
+          const token = localStorage.getItem('authToken');
+          const response = await axios.post('http://localhost:8000/api/shoots', payload, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          toast({
+            title: "Shoot Booked!",
+            description: "The shoot has been successfully created.",
+            variant: "default"
+          });
+
+          setIsComplete(true);
+          console.log("Shoot created response:", response.data);
+        } catch (error) {
+          console.error("Error creating shoot:", error);
+          toast({
+            title: "Error",
+            description: "Failed to create shoot. Please try again.",
+            variant: "destructive"
+          });
+        }
     } else {
       if (!validateCurrentStep()) {
         return;
