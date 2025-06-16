@@ -184,14 +184,22 @@ const BookShoot = () => {
     }
   }, [address, toast]);
 
+  // const getPackagePrice = () => {
+  //   const pkg = packages.find(p => p.id === selectedPackage);
+  //   return pkg ? pkg.price : 0;
+  // };
+
   const getPackagePrice = () => {
     const pkg = packages.find(p => p.id === selectedPackage);
-    return pkg ? pkg.price : 0;
+    // Ensure we get a clean number and round to 2 decimal places
+    return pkg ? Math.round(Number(pkg.price) * 100) / 100 : 0;
   };
 
   const getPhotographerRate = () => {
-    const photog = photographers.find(p => p.id === photographer);
-    return photog ? photog.rate : 0;
+    // const photog = photographers.find(p => p.id === photographer);
+    // return photog ? photog.rate : 0;
+
+    return 0;
   };
 
   const getTax = () => {
@@ -199,10 +207,20 @@ const BookShoot = () => {
     return Math.round(subtotal * 0.06);
   };
 
-  const getTotal = () => {
-    return getPackagePrice() + getPhotographerRate() + getTax();
+   const getTotal = () => {
+    const packagePrice = getPackagePrice();
+    const photographerRate = getPhotographerRate();
+    const tax = getTax();
+    
+    // Convert to cents, add, then convert back to dollars to avoid floating point issues
+    const packageCents = Math.round(packagePrice * 100);
+    const photographerCents = Math.round(photographerRate * 100);
+    const taxCents = Math.round(tax * 100);
+    
+    const totalCents = packageCents + photographerCents + taxCents;
+    return totalCents / 100;
   };
-
+  
   const getAvailablePhotographers = () => {
     // if (!date || !time || !selectedPackage) return [];
 
@@ -248,10 +266,10 @@ const BookShoot = () => {
     return true;
   };
 
-  const handleSubmit = async () => {
-    setFormErrors({});
+  // const handleSubmit = async () => {
+  //   setFormErrors({});
     
-    if (step === 3) {
+  //   if (step === 3) {
       // const availablePhotographers = getAvailablePhotographers();
       
       // if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
@@ -325,68 +343,161 @@ const BookShoot = () => {
 
       // console.log("New shoot created:", newShoot);
 
-        if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
-          toast({
-            title: "Missing information",
-            description: "Please fill in all required fields before confirming the booking.",
-            variant: "destructive",
-          });
-          return;
-        }
+  //       if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
+  //         toast({
+  //           title: "Missing information",
+  //           description: "Please fill in all required fields before confirming the booking.",
+  //           variant: "destructive",
+  //         });
+  //         return;
+  //       }
 
-        const shootDate = date ? new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-          12
-        ) : new Date();
+  //       const shootDate = date ? new Date(
+  //         date.getFullYear(),
+  //         date.getMonth(),
+  //         date.getDate(),
+  //         12
+  //       ) : new Date();
 
-        const payload = {
-          client_id: client,
-          address,
-          city,
-          state,
-          zip,
-          date: shootDate.toISOString().split('T')[0],
-          time,
-          photographer_id: photographer || null,
-          package_id: selectedPackage,
-          notes,
-          bypass_payment: bypassPayment,
-          send_notification: sendNotification
-        };
+  //       const payload = {
+  //         client_id: client,
+  //         address,
+  //         city,
+  //         state,
+  //         zip,
+  //         scheduled_date: shootDate.toISOString().split('T')[0],
+  //         time,
+  //         photographer_id: photographer || null,
+  //         service_id: selectedPackage,
+  //         notes,
+  //         bypass_payment: bypassPayment,
+  //         send_notification: sendNotification
+  //       };
 
-        try {
-          const token = localStorage.getItem('authToken');
-          const response = await axios.post('http://localhost:8000/api/shoots', payload, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
+  //       try {
+  //         const token = localStorage.getItem('authToken');
+  //         const response = await axios.post('http://localhost:8000/api/shoots', payload, {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`
+  //           }
+  //         });
 
-          toast({
-            title: "Shoot Booked!",
-            description: "The shoot has been successfully created.",
-            variant: "default"
-          });
+  //         toast({
+  //           title: "Shoot Booked!",
+  //           description: "The shoot has been successfully created.",
+  //           variant: "default"
+  //         });
 
-          setIsComplete(true);
-          console.log("Shoot created response:", response.data);
-        } catch (error) {
-          console.error("Error creating shoot:", error);
-          toast({
-            title: "Error",
-            description: "Failed to create shoot. Please try again.",
-            variant: "destructive"
-          });
-        }
-    } else {
-      if (!validateCurrentStep()) {
-        return;
-      }
+  //         setIsComplete(true);
+  //         console.log("Shoot created response:", response.data);
+  //       } catch (error) {
+  //         console.error("Error creating shoot:", error);
+  //         toast({
+  //           title: "Error",
+  //           description: "Failed to create shoot. Please try again.",
+  //           variant: "destructive"
+  //         });
+  //       }
+  //   } else {
+  //     if (!validateCurrentStep()) {
+  //       return;
+  //     }
       
-      setStep(step + 1);
+  //     setStep(step + 1);
+  //   }
+  // };
+
+  const handleSubmit = async () => {
+  setFormErrors({});
+
+  if (step === 3) {
+  if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
+    toast({
+      title: "Missing information",
+      description: "Please fill in all required fields before confirming the booking.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const shootDate = date ? new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    12
+  ) : new Date();
+
+  // Calculate pricing information
+  const baseQuote = getPackagePrice();
+  const photographerRate = getPackagePrice();
+  const taxAmount = getTax();
+  const totalQuote = getTotal();
+
+  const payload = {
+    client_id: client,
+    address,
+    city,
+    state,
+    zip,
+    scheduled_date: shootDate.toISOString().split('T')[0], // YYYY-MM-DD format
+    time,
+    photographer_id: photographer || null,
+    service_id: selectedPackage,
+    notes,
+    bypass_payment: bypassPayment,
+    send_notification: sendNotification,
+    // Add the missing required fields based on API error
+    base_quote: baseQuote,
+    tax_amount: taxAmount,
+    total_quote: totalQuote,
+    payment_status: bypassPayment ? 'pending' : 'paid', // or whatever statuses your API expects
+    status: 'booked', // or 'scheduled', 'confirmed' - check your API documentation
+    created_by: user?.name || user?.email || 'System' // Use available user info
+  };
+
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await axios.post('http://localhost:8000/api/shoots', payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    toast({
+      title: "Shoot Booked!",
+      description: "The shoot has been successfully created.",
+      variant: "default"
+    });
+
+    setIsComplete(true);
+    console.log("Shoot created response:", response.data);
+  } catch (error) {
+    console.error("Error creating shoot:", error);
+    
+    // Better error handling to show specific validation errors
+    if (error.response?.data?.errors) {
+      const errorMessages = Object.values(error.response.data.errors).flat();
+      toast({
+        title: "Validation Error",
+        description: errorMessages.join('. '),
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to create shoot. Please try again.",
+        variant: "destructive"
+      });
     }
+  }
+  } else {
+  if (!validateCurrentStep()) {
+    return;
+  }
+
+  setStep(step + 1);
+  }
   };
 
   const goBack = () => {
