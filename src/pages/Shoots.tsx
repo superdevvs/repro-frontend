@@ -33,9 +33,45 @@ const Shoots = () => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   
-  const { shoots, updateShoot } = useShoots();
+  const [shoots, setShoots] = useState<ShootData[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const { user, role } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchShoots = async () => {
+      const token = localStorage.getItem('authToken');
+  
+      if (!token) {
+        throw new Error("No auth token found in localStorage");
+      }
+      
+      try {
+        const res = await fetch('http://localhost:8000/api/photographer/shoots', {
+          headers: {
+            'Authorization': `Bearer ${token}`, // adjust if you store token differently
+            'Accept': 'application/json',
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch shoots');
+        }
+
+        const data = await res.json();
+        setShoots(data.data); // assuming data comes as { data: [...] }
+      } catch (err) {
+        console.error(err);
+        toast({ title: "Error", description: "Could not fetch shoots." });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchShoots();
+  }, []);
+
   
   // Filter shoots based on user role
   const userFilteredShoots = shoots.filter(shoot => {
@@ -47,10 +83,12 @@ const Shoots = () => {
   
   // Filter shoots based on search and tab
   const filteredShoots = userFilteredShoots.filter(shoot => {
-    const matchesSearch = 
-      shoot.location.fullAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      shoot.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      shoot.photographer.name.toLowerCase().includes(searchTerm.toLowerCase());
+    // const matchesSearch = 
+    //   shoot.location.fullAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //   shoot.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //   shoot.photographer.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesSearch = shoot;
     
     if (selectedTab === 'all') return matchesSearch;
     if (selectedTab === 'scheduled') return matchesSearch && shoot.status === 'scheduled';
@@ -92,12 +130,31 @@ const Shoots = () => {
         return demoImages[index % demoImages.length];
       });
     
-    updateShoot(selectedShoot.id, {
-      media: {
-        ...selectedShoot.media,
-        photos: [...(selectedShoot.media?.photos || []), ...photoUrls]
+      const updateShoot = async (id: number, updatedData: any) => {
+      const token = localStorage.getItem('authToken');
+      try {
+        const res = await fetch(`http://localhost:8000/api/shoots/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedData),
+        });
+
+        if (!res.ok) throw new Error("Update failed");
+
+        const data = await res.json();
+        console.log("Updated shoot:", data);
+
+        // Optionally re-fetch shoots or update local state
+      } catch (err) {
+        console.error(err);
+        toast({ title: "Error", description: "Failed to update shoot." });
       }
-    });
+      };
+
     
     setIsUploadDialogOpen(false);
     toast({

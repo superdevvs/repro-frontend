@@ -176,7 +176,7 @@ export function ShootCard(props: ShootCardProps) {
           <CardTitle className="text-base line-clamp-1">
             <div className="flex items-start">
               <MapPinIcon className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0 text-muted-foreground" />
-              <span>{shoot.location.fullAddress}</span>
+              <span>{shoot.address}</span>
             </div>
           </CardTitle>
         </CardHeader>
@@ -218,10 +218,10 @@ export function ShootCard(props: ShootCardProps) {
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center">
                 <HomeIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{shoot.services.join(', ') || 'No services'}</span>
+                <span>{shoot.service }</span>
               </div>
               <span className="font-medium">
-                {shoot.payment.totalQuote > 0 ? `$${shoot.payment.totalQuote.toFixed(2)}` : 'TBD'}
+                {shoot.total_quote}
               </span>
             </div>
           </div>
