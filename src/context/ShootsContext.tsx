@@ -17,6 +17,8 @@ interface ShootsContextType {
   getUniquePhotographers: () => { name: string; shootCount: number; avatar?: string }[];
   getUniqueEditors: () => { name: string; shootCount: number; avatar?: string }[];
   getUniqueClients: () => { name: string; email?: string; company?: string; phone?: string; shootCount: number }[];
+  //for fetching shoot
+  fetchShoots: () => Promise<void>;
 }
 
 const ShootsContext = createContext<ShootsContextType | undefined>(undefined);
@@ -89,9 +91,12 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('shoots', JSON.stringify(shoots));
-  }, [shoots]);
+  // useEffect(() => {
+  //   localStorage.setItem('shoots', JSON.stringify(shoots));
+  // }, [shoots]);
+
+   useEffect(() => {  fetchShoots(); }, []);
+
 
   const addShoot = async (shoot: ShootData) => {
     setShoots(prevShoots => [...prevShoots, shoot]);
@@ -389,6 +394,41 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     addShoot(newShoot);
   };
 
+  const fetchShoots = async () => {
+  try {
+    const { data, error } = await supabase.from('shoots').select('*');
+    if (error) {
+      console.error('Error fetching shoots from Supabase:', error);
+      return;
+    }
+
+    const transformedShoots = data.map((shoot) => ({
+      id: shoot.id,
+      scheduledDate: shoot.scheduled_date,
+      time: shoot.time,
+      client: shoot.client,
+      location: shoot.location,
+      photographer: shoot.photographer,
+      editor: shoot.editor || undefined,
+      services: shoot.services || [],
+      payment: shoot.payment,
+      status: shoot.status,
+      notes: shoot.notes || undefined,
+      createdBy: shoot.created_by,
+      completedDate: shoot.completed_date || undefined,
+      media: shoot.media || undefined,
+      tourLinks: shoot.tour_links || undefined
+    })) as ShootData[];
+
+    setShoots(transformedShoots);
+    localStorage.setItem('shoots', JSON.stringify(transformedShoots));
+  } catch (error) {
+    console.error('Error fetching shoots:', error);
+  }
+};
+
+
+
   const value: ShootsContextType = {
     shoots,
     addShoot,
@@ -398,6 +438,7 @@ export const ShootsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     getUniquePhotographers,
     getUniqueEditors,
     getUniqueClients,
+    fetchShoots,
   };
 
   return (

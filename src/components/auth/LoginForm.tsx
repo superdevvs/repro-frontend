@@ -18,6 +18,7 @@ import { AlertCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import axios from 'axios';
 
+
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
@@ -111,7 +112,7 @@ const handleLogin = async (values: LoginFormValues) => {
   clearErrors();
 
   try {
-    const response = await axios.post('http://localhost:8000/api/login', {
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/login`, {
       email: values.email,
       password: values.password,
     });
@@ -150,12 +151,12 @@ const handleLogin = async (values: LoginFormValues) => {
     clearErrors();
   
     try {
-      const response = await axios.post('http://localhost:8000/api/register', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/register`, {
         name: values.name,
         username: values.name, // Ensure this exists in your form
         email: values.email,
         password: values.password, // Ensure this exists in your form
-        password_confirmation: 'secure123', // Ensure this exists in your form
+        password_confirmation: values.password , // Ensure this exists in your form
         phonenumber: '54112345678', // Optional, provide a default if not in form
         company_name: values.company,
         role: values.role,
@@ -287,46 +288,6 @@ const handleLogin = async (values: LoginFormValues) => {
                   </form>
                 </Form>
                 
-                <div className="mt-4 text-center">
-                  <p className="text-xs text-muted-foreground mb-2">Sample logins:</p>
-                  <div className="flex flex-wrap gap-1 justify-center">
-                    <Badge variant="outline" className="cursor-pointer" onClick={() => {
-                      loginForm.setValue('email', 'client@example.com');
-                      loginForm.setValue('password', 'password123');
-                      clearErrors();
-                    }}>
-                      Client
-                    </Badge>
-                    <Badge variant="outline" className="cursor-pointer" onClick={() => {
-                      loginForm.setValue('email', 'admin@example.com');
-                      loginForm.setValue('password', 'password123');
-                      clearErrors();
-                    }}>
-                      Admin
-                    </Badge>
-                    <Badge variant="outline" className="cursor-pointer" onClick={() => {
-                      loginForm.setValue('email', 'photographer@example.com');
-                      loginForm.setValue('password', 'password123');
-                      clearErrors();
-                    }}>
-                      Photographer
-                    </Badge>
-                    <Badge variant="outline" className="cursor-pointer" onClick={() => {
-                      loginForm.setValue('email', 'editor@example.com');
-                      loginForm.setValue('password', 'password123');
-                      clearErrors();
-                    }}>
-                      Editor
-                    </Badge>
-                    <Badge variant="outline" className="cursor-pointer" onClick={() => {
-                      loginForm.setValue('email', 'superadmin@example.com');
-                      loginForm.setValue('password', 'password123');
-                      clearErrors();
-                    }}>
-                      SuperAdmin
-                    </Badge>
-                  </div>
-                </div>
               </TabsContent>
               
               <TabsContent value="register">
@@ -365,7 +326,7 @@ const handleLogin = async (values: LoginFormValues) => {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel>New Password</FormLabel>
                           <FormControl>
                             <Input type="password" placeholder="••••••••" {...field} />
                           </FormControl>
@@ -374,6 +335,22 @@ const handleLogin = async (values: LoginFormValues) => {
                       )}
                     />
                     
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+
                     <FormField
                       control={registerForm.control}
                       name="role"
@@ -390,7 +367,7 @@ const handleLogin = async (values: LoginFormValues) => {
                               <SelectItem value="client">Client</SelectItem>
                               <SelectItem value="photographer">Photographer</SelectItem>
                               <SelectItem value="editor">Editor</SelectItem>
-                              <SelectItem value="admin">Administrator</SelectItem>
+                              {/* <SelectItem value="admin">Administrator</SelectItem> */}
                             </SelectContent>
                           </Select>
                           <FormMessage />

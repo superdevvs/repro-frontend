@@ -111,7 +111,7 @@ export default function Accounts() {
           throw new Error("No auth token found in localStorage");
         }
 
-        const res = await fetch('http://localhost:8000/api/admin/users', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/users`, {
           headers: {
             Authorization: `Bearer ${token}`, // If needed
           },

@@ -61,6 +61,7 @@ const BookShoot = () => {
   const { addShoot } = useShoots();
   const navigate = useNavigate();
   const [photographers, setPhotographersList] = useState([]);
+  const { fetchShoots } = useShoots();
 
 
   const isClientAccount = user && user.role === 'client';
@@ -74,7 +75,7 @@ const BookShoot = () => {
           throw new Error("No auth token found in localStorage");
         }
 
-        const response = await axios.get('http://localhost:8000/api/admin/clients', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/clients`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -111,7 +112,7 @@ const BookShoot = () => {
           throw new Error("No auth token found in localStorage");
         }
 
-        const response = await axios.get('http://localhost:8000/api/admin/photographers',{
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/photographers`,{
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -133,7 +134,7 @@ const BookShoot = () => {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/services');
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/services`);
         const packageData = response.data.data.map((pkg: any) => ({
           ...pkg,
           id: pkg.id.toString()
@@ -376,7 +377,7 @@ const BookShoot = () => {
 
   //       try {
   //         const token = localStorage.getItem('authToken');
-  //         const response = await axios.post('http://localhost:8000/api/shoots', payload, {
+  //         const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/shoots`, payload, {
   //           headers: {
   //             Authorization: `Bearer ${token}`
   //           }
@@ -457,7 +458,7 @@ const BookShoot = () => {
 
   try {
     const token = localStorage.getItem('authToken');
-    const response = await axios.post('http://localhost:8000/api/shoots', payload, {
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/shoots`, payload, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -471,6 +472,7 @@ const BookShoot = () => {
     });
 
     setIsComplete(true);
+    await fetchShoots();
     console.log("Shoot created response:", response.data);
   } catch (error) {
     console.error("Error creating shoot:", error);

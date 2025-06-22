@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircleIcon, AlertTriangle } from 'lucide-react';
+import { CheckCircleIcon, AlertTriangle, Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ReviewFormProps {
   client: string;
@@ -33,6 +34,8 @@ interface ReviewFormProps {
   packages: Array<{ id: string; name: string; description: string; price: number }>;
   onConfirm: () => void; // Renamed from handleSubmit
   onBack: () => void; // Renamed from goBack
+  onSubmit?: () => void;
+  isLastStep?: boolean;
 }
 
 export function ReviewForm({
@@ -58,8 +61,10 @@ export function ReviewForm({
   total,
   photographers,
   packages,
+  onSubmit,
   onConfirm,
-  onBack
+  onBack,
+  isLastStep = false 
 }: ReviewFormProps) {
   // Find the selected client, photographer, and package
   const selectedPackageDetails = packages.find(p => p.id === selectedPackage);
@@ -224,6 +229,15 @@ export function ReviewForm({
             onCheckedChange={setSendNotification}
           />
         </div>
+      </div>
+
+      <div className="pt-4 mt-4 border-t border-[#1e2d4a]">
+                <Button 
+                  onClick={onSubmit} 
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition-colors"
+                >
+                  <Check className="mr-2 h-4 w-4" /> Book Shoot
+                </Button>
       </div>
     </motion.div>
   );

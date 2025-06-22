@@ -37,7 +37,7 @@ const ShootHistory = () => {
   const [filterPhotographer, setFilterPhotographer] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { getClientShootsByStatus, getUniquePhotographers } = useShoots();
+  const { getClientShootsByStatus, getUniquePhotographers, fetchShoots } = useShoots();
   const { user } = useAuth();
 
   // Get all photographers for filter dropdown

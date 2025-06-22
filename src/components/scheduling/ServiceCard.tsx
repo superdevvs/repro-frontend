@@ -83,7 +83,7 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
   
     try {
       const res = await axios.put(
-        `http://localhost:8000/api/admin/services/${service.id}`,
+        `${import.meta.env.VITE_API_URL}/api/admin/services/${service.id}`,
         payload,
         {
           headers: {
@@ -135,7 +135,7 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
       }
   
       const response = await axios.delete(
-        `http://localhost:8000/api/admin/services/${service.id}`,
+        `${import.meta.env.VITE_API_URL}/api/admin/services/${service.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

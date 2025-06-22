@@ -13,6 +13,7 @@ import { useShoots } from '@/context/ShootsContext';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from "@/components/ui/use-toast";
 
+
 const ITEMS_PER_PAGE = 6;
 
 // Sample demo images from Unsplash
@@ -48,7 +49,7 @@ const Shoots = () => {
       }
       
       try {
-        const res = await fetch('http://localhost:8000/api/photographer/shoots', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/photographer/shoots`, {
           headers: {
             'Authorization': `Bearer ${token}`, // adjust if you store token differently
             'Accept': 'application/json',
@@ -133,7 +134,7 @@ const Shoots = () => {
       const updateShoot = async (id: number, updatedData: any) => {
       const token = localStorage.getItem('authToken');
       try {
-        const res = await fetch(`http://localhost:8000/api/shoots/${id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shoots/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
