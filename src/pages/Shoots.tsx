@@ -43,15 +43,15 @@ const Shoots = () => {
   useEffect(() => {
     const fetchShoots = async () => {
       const token = localStorage.getItem('authToken');
-  
+
       if (!token) {
         throw new Error("No auth token found in localStorage");
       }
-      
+
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/photographer/shoots`, {
           headers: {
-            'Authorization': `Bearer ${token}`, // adjust if you store token differently
+            'Authorization': `Bearer ${token}`,
             'Accept': 'application/json',
           },
         });
@@ -61,7 +61,56 @@ const Shoots = () => {
         }
 
         const data = await res.json();
-        setShoots(data.data); // assuming data comes as { data: [...] }
+
+        const mappedShoots: ShootData[] = data.data.map((item: any) => ({
+          id: String(item.id),
+          scheduledDate: item.scheduled_date,
+          time: item.time,
+
+          client: {
+            id: String(item.client.id),
+            name: item.client.name,
+            email: item.client.email,
+            company: item.client.company_name || '',
+            phone: item.client.phonenumber,
+            totalShoots: 0, // You can fetch total shoots separately if needed
+          },
+
+          location: {
+            address: item.address,
+            address2: '',
+            city: item.city,
+            state: item.state,
+            zip: item.zip,
+            fullAddress: `${item.address}, ${item.city}, ${item.state} ${item.zip}`,
+          },
+
+          photographer: {
+            id: String(item.photographer.id),
+            name: item.photographer.name,
+            avatar: item.photographer.avatar,
+          },
+
+          services: [item.service?.name || 'Unknown'],
+
+          payment: {
+            baseQuote: parseFloat(item.base_quote),
+            taxRate: 0, // Not provided in API, adjust if available
+            taxAmount: parseFloat(item.tax_amount),
+            totalQuote: parseFloat(item.total_quote),
+            totalPaid: item.payment_status === 'paid' ? parseFloat(item.total_quote) : 0,
+            lastPaymentDate: undefined,
+            lastPaymentType: item.payment_type || undefined,
+          },
+
+          status: item.status,
+          notes: item.notes,
+          createdBy: item.created_by,
+          completedDate: undefined,
+        }));
+
+        setShoots(mappedShoots);
+        console.log("Mapped shoots:", mappedShoots);
       } catch (err) {
         console.error(err);
         toast({ title: "Error", description: "Could not fetch shoots." });
@@ -72,6 +121,7 @@ const Shoots = () => {
 
     fetchShoots();
   }, []);
+
 
   
   // Filter shoots based on user role

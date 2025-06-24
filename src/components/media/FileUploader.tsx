@@ -26,6 +26,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useShoots } from '@/context/ShootsContext';
+import axios from 'axios';
 
 interface FileUploaderProps {
   shootId?: string;
@@ -226,6 +227,8 @@ export function FileUploader({
   };
   
   const handleUpload = async () => {
+    
+    console.log("Starting upload for shoot ID:", shootId);
     if (files.length === 0) {
       toast({
         title: 'No files selected',
@@ -237,66 +240,55 @@ export function FileUploader({
     
     setUploading(true);
     
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
+      // Replace the timeout in handleUpload with:
+      const formData = new FormData();
+      files.forEach(file => formData.append('files[]', file));
+
+      try {
+        const token = localStorage.getItem('authToken');
+
+        if (!token) {
+          throw new Error("No auth token found in localStorage");
         }
-        return prev + 5;
-      });
-    }, 200);
-    
-    setTimeout(() => {
-      clearInterval(interval);
-      setProgress(100);
-      
-      const imageFiles = files.filter(f => f.type.startsWith('image/')).length;
-      const videoFiles = files.filter(f => f.type.startsWith('video/')).length;
-      const zipFiles = files.filter(f => f.type.includes('zip')).length;
-      
-      // If there's a ShootID and notes, save them to the shoot
-      if (shootId && notes) {
-        try {
-          // Determine which note field to update based on user role
-          let notesUpdate: any = {};
-          
-          if (user?.role === 'photographer') {
-            notesUpdate = { notes: { photographerNotes: notes } };
-          } else if (user?.role === 'editor') {
-            notesUpdate = { notes: { editingNotes: notes } };
-          } else if (user?.role === 'admin' || user?.role === 'superadmin') {
-            // For admin, determine based on the active tab
-            if (uploadType === 'raw') {
-              notesUpdate = { notes: { photographerNotes: notes } };
-            } else {
-              notesUpdate = { notes: { editingNotes: notes } };
+        console.log("Soot id is "+shootId)
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/shoots/${shootId}/upload`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${token}`, 
+            },
+            onUploadProgress: (progressEvent) => {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setProgress(percentCompleted);
             }
-          } else {
-            notesUpdate = { notes: { shootNotes: notes } };
           }
-          
-          updateShoot(shootId, notesUpdate);
-        } catch (error) {
-          console.error("Error saving notes during upload:", error);
+        );
+
+        toast({
+          title: 'Upload Complete',
+          description: `${files.length} files uploaded successfully.`,
+        });
+
+        if (onUploadComplete) {
+          onUploadComplete(files, notes);
         }
+
+        setUploading(false);
+        setProgress(0);
+        setFiles([]);
+        setNotesChanged(false);
+      } catch (error) {
+        toast({
+          title: 'Upload Failed',
+          description: 'Something went wrong while uploading.',
+          variant: 'destructive',
+        });
+        console.error(error);
+        setUploading(false);
       }
-      
-      if (onUploadComplete) {
-        onUploadComplete(files, notes);
-      }
-      
-      toast({
-        title: 'Upload Complete',
-        description: `Successfully uploaded ${files.length} files (${imageFiles} photos, ${videoFiles} videos, ${zipFiles} zip files)`,
-      });
-      
-      setUploading(false);
-      setProgress(0);
-      setFiles([]);
-      setNotesChanged(false);
-      // Don't reset notes as they might be useful for the next upload
-    }, 4000);
+
   };
   
   const getFileIcon = (file: File) => {

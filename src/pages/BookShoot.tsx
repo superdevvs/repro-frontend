@@ -452,7 +452,7 @@ const BookShoot = () => {
     tax_amount: taxAmount,
     total_quote: totalQuote,
     payment_status: bypassPayment ? 'pending' : 'paid', // or whatever statuses your API expects
-    status: 'booked', // or 'scheduled', 'confirmed' - check your API documentation
+    status: 'scheduled', // or 'scheduled', 'confirmed' - check your API documentation
     created_by: user?.name || user?.email || 'System' // Use available user info
   };
 
