@@ -692,7 +692,7 @@ export function FileUploader({
               <Button variant="outline" onClick={handleClearFiles} disabled={files.length === 0}>
                 Cancel
               </Button>
-              <Button onClick={handleUpload} disabled={files.length === 0} className="flex items-center gap-1">
+              <Button onClick={handleUpload} className="flex items-center gap-1">
                 <UploadCloudIcon className="h-4 w-4 mr-1" />
                 {files.length > 0
                   ? `Upload ${files.length} ${files.length === 1 ? 'file' : 'files'}`
