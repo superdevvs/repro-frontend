@@ -338,7 +338,7 @@ const handleLogin = async (values: LoginFormValues) => {
                     
                     <FormField
                       control={registerForm.control}
-                      name="password"
+                      name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Confirm Password</FormLabel>
