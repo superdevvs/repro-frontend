@@ -85,6 +85,21 @@ export interface ShootData {
     mls?: string;
     genericMls?: string;
   };
+  files?: {
+    [key: string]: {
+      id: string;
+      filename: string;
+      storedFilename: string;
+      path: string;
+      url: string;
+      fileType: string;
+      fileSize: number;
+      formattedSize: string;
+      uploadedBy: string;
+      isImage: boolean;
+      isVideo: boolean;
+    };
+  };
   tourPurchased?: boolean; // Add this field for ImportShootsDialog
 }
 

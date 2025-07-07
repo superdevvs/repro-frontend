@@ -107,6 +107,22 @@ const Shoots = () => {
           notes: item.notes,
           createdBy: item.created_by,
           completedDate: undefined,
+
+          files: Array.isArray(item.files)
+            ? item.files.map((file: any) => ({
+                id: String(file.id),
+                filename: file.filename,
+                storedFilename: file.stored_filename,
+                path: file.path,
+                url: file.url, // This comes from the accessor in your ShootFile model
+                fileType: file.file_type,
+                fileSize: file.file_size,
+                formattedSize: file.formatted_size, // Also comes from accessor
+                uploadedBy: file.uploaded_by,
+                isImage: file.file_type?.startsWith('image/'),
+                isVideo: file.file_type?.startsWith('video/'),
+              }))
+            : [],
         }));
 
         setShoots(mappedShoots);
@@ -207,101 +223,101 @@ const Shoots = () => {
   };
 
   const handleUploadComplete = async (files: File[]) => {
-  console.log("handleUploadComplete called with files:", files);
-  
-  if (!selectedShoot) {
-    console.error("No selectedShoot available");
-    return;
-  }
-  
-  console.log("Selected shoot:", selectedShoot);
-  
-  const token = localStorage.getItem('authToken');
-  if (!token) {
-    console.error("No auth token found");
-    toast({
-      title: "Error",
-      description: "Authentication token not found. Please log in again."
-    });
-    return;
-  }
-
-  console.log("Auth token found:", token.substring(0, 10) + "...");
-
-  try {
-    // Create FormData to send files
-    const formData = new FormData();
+    console.log("handleUploadComplete called with files:", files);
     
-    // Append each file to FormData
-    files.forEach((file, index) => {
-      console.log(`Appending file ${index}:`, file.name, file.size, file.type);
-      formData.append(`files[${index}]`, file);
-    });
+    // if (!selectedShoot) {
+    //   console.error("No selectedShoot available");
+    //   return;
+    // }
+    
+    // console.log("Selected shoot:", selectedShoot);
+    
+    // const token = localStorage.getItem('authToken');
+    // if (!token) {
+    //   console.error("No auth token found");
+    //   toast({
+    //     title: "Error",
+    //     description: "Authentication token not found. Please log in again."
+    //   });
+    //   return;
+    // }
 
-    // Log FormData contents (for debugging)
-    console.log("FormData entries:");
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
+    // console.log("Auth token found:", token.substring(0, 10) + "...");
 
-    const uploadUrl = `${import.meta.env.VITE_API_URL}/api/shoots/${selectedShoot.id}/upload`;
-    console.log("Upload URL:", uploadUrl);
-
-    // Make API call to upload files
-    console.log("Making API call to upload files...");
-    const response = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
-        // Don't set Content-Type header - let the browser set it for FormData
-      },
-      body: formData,
-    });
-
-    console.log("Response status:", response.status);
-    console.log("Response ok:", response.ok);
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Upload failed with error:", errorData);
-      throw new Error(errorData.message || 'Upload failed');
-    }
-
-    const result = await response.json();
-    console.log("Upload successful:", result);
-
-    // Update the shoot status to completed if needed
-    if (selectedShoot.status !== 'completed') {
-      console.log("Updating shoot status to completed...");
-      await updateShoot(parseInt(selectedShoot.id), {
-        status: 'completed'
-      });
+    // try {
+    //   // Create FormData to send files
+    //   const formData = new FormData();
       
-      // Update local state
-      setShoots(prevShoots => 
-        prevShoots.map(shoot => 
-          shoot.id === selectedShoot.id 
-            ? { ...shoot, status: 'completed' }
-            : shoot
-        )
-      );
-    }
+    //   // Append each file to FormData
+    //   files.forEach((file, index) => {
+    //     console.log(`Appending file ${index}:`, file.name, file.size, file.type);
+    //     formData.append(`files[${index}]`, file);
+    //   });
 
-    setIsUploadDialogOpen(false);
-    toast({
-      title: "Upload Complete",
-      description: `${files.length} files have been uploaded successfully.`
-    });
+    //   // Log FormData contents (for debugging)
+    //   console.log("FormData entries:");
+    //   for (let [key, value] of formData.entries()) {
+    //     console.log(key, value);
+    //   }
 
-  } catch (error) {
-    console.error("Upload error:", error);
-    toast({
-      title: "Upload Failed",
-      description: error instanceof Error ? error.message : "Failed to upload files. Please try again."
-    });
-  }
-};
+    //   const uploadUrl = `${import.meta.env.VITE_API_URL}/api/shoots/${selectedShoot.id}/upload`;
+    //   console.log("Upload URL:", uploadUrl);
+
+    //   // Make API call to upload files
+    //   console.log("Making API call to upload files...");
+    //   const response = await fetch(uploadUrl, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Authorization': `Bearer ${token}`,
+    //       'Accept': 'application/json',
+    //       // Don't set Content-Type header - let the browser set it for FormData
+    //     },
+    //     body: formData,
+    //   });
+
+    //   console.log("Response status:", response.status);
+    //   console.log("Response ok:", response.ok);
+
+    //   if (!response.ok) {
+    //     const errorData = await response.json();
+    //     console.error("Upload failed with error:", errorData);
+    //     throw new Error(errorData.message || 'Upload failed');
+    //   }
+
+    //   const result = await response.json();
+    //   console.log("Upload successful:", result);
+
+    //   // Update the shoot status to completed if needed
+    //   if (selectedShoot.status !== 'completed') {
+    //     console.log("Updating shoot status to completed...");
+    //     await updateShoot(parseInt(selectedShoot.id), {
+    //       status: 'completed'
+    //     });
+        
+    //     // Update local state
+    //     setShoots(prevShoots => 
+    //       prevShoots.map(shoot => 
+    //         shoot.id === selectedShoot.id 
+    //           ? { ...shoot, status: 'completed' }
+    //           : shoot
+    //       )
+    //     );
+    //   }
+
+    //   setIsUploadDialogOpen(false);
+    //   toast({
+    //     title: "Upload Complete",
+    //     description: `${files.length} files have been uploaded successfully.`
+    //   });
+
+    // } catch (error) {
+    //   console.error("Upload error:", error);
+    //   toast({
+    //     title: "Upload Failed",
+    //     description: error instanceof Error ? error.message : "Failed to upload files. Please try again."
+    //   });
+    // }
+  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
