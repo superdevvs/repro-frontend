@@ -31,6 +31,7 @@ import Integrations from "./pages/Integrations";
 import { toast } from "./components/ui/use-toast";
 import Coupons from "./pages/Coupons";
 import PermissionSettings from "./pages/PermissionSettings";
+import DropboxCallback from './components/DropboxCallback';
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -107,6 +108,8 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
+
+      <Route path="/dropbox-callback" element={<DropboxCallback />} />
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
