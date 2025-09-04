@@ -62,7 +62,7 @@ export function ServicesTab() {
         description: item.description || '',
         price: item.price,
         delivery_time: item.delivery_time,
-        active: item.is_active || false,
+        // active: item.is_active || false,
         category: item.category.name || '', // adjust this based on your actual API response
         photographer_required: false,
       }));

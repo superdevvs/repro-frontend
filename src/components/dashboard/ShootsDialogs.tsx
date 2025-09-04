@@ -13,6 +13,7 @@ interface ShootsDialogsProps {
   setIsDetailOpen: (isOpen: boolean) => void;
   setIsUploadDialogOpen: (isOpen: boolean) => void;
   onUploadComplete: (files: File[], notes?: string) => void;
+  
 }
 
 export function ShootsDialogs({ 
@@ -59,7 +60,7 @@ export function ShootsDialogs({
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Upload Media for {selectedShoot?.location.fullAddress}</DialogTitle>
+            {/* <DialogTitle>Upload Media for {selectedShoot?.location.fullAddress}</DialogTitle> */}
             <DialogDescription>
               Add photos, videos, or other media files related to this property.
             </DialogDescription>

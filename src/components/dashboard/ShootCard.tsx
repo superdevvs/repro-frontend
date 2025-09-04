@@ -41,7 +41,7 @@ interface LegacyShootCardProps {
   client: {
     name: string;
   };
-  status: 'scheduled' | 'completed' | 'pending' | 'hold' | 'booked';
+  status: 'scheduled' | 'completed';
   price: number;
   delay?: number;
 }
@@ -61,7 +61,7 @@ export function ShootCard(props: ShootCardProps) {
   
   // Setup all needed variables whether using new or legacy props
   const status = isNewProps ? props.shoot.status : props.status;
-  const showMedia = isNewProps ? props.showMedia && props.shoot.status === 'completed' : false;
+  const showMedia = isNewProps ? props.showMedia :false;
   const onClick = props.onClick;
   
   const statusColorMap = {
@@ -109,7 +109,7 @@ export function ShootCard(props: ShootCardProps) {
     const getRandomWeather = () => {
       const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Snow'];
       const randomCondition = conditions[Math.floor(Math.random() * conditions.length)];
-      const randomTemp = Math.floor(Math.random() * 40) + 50; // Random temp between 50-90°F
+      const randomTemp = Math.floor(Math.random() * 23) + 10; // Random temp between 50-90°F
       
       return {
         temp: randomTemp,
@@ -132,6 +132,9 @@ export function ShootCard(props: ShootCardProps) {
     }
     return [];
   };
+
+
+  
 
   // If using new props structure
   if (isNewProps) {
@@ -168,7 +171,7 @@ export function ShootCard(props: ShootCardProps) {
             {weather && (
               <div className="flex items-center gap-1.5 bg-muted/60 p-1.5 px-2 rounded-full">
                 {weather.icon}
-                <span className="font-medium text-sm">{weather.temp}°F</span>
+                <span className="font-medium text-sm">{weather.temp}°C</span>
               </div>
             )}
           </div>
@@ -176,12 +179,17 @@ export function ShootCard(props: ShootCardProps) {
           <CardTitle className="text-base line-clamp-1">
             <div className="flex items-start">
               <MapPinIcon className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0 text-muted-foreground" />
-              <span>{shoot.address}</span>
+              <span>{shoot.location.fullAddress}</span>
             </div>
           </CardTitle>
         </CardHeader>
         
         <CardContent className="p-4 pt-2">
+          <div className="flex items-center text-sm mb-2">
+            <UserIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+            <span className="font-medium">{shoot.services}</span>
+          </div>
+
           <div className="flex items-center text-sm mb-2">
             <UserIcon className="h-4 w-4 mr-2 text-muted-foreground" />
             <span className="font-medium">{shoot.client.name}</span>
@@ -194,7 +202,7 @@ export function ShootCard(props: ShootCardProps) {
           
           <div className="flex items-center text-sm mb-2">
             <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span>{formatDate(shoot.scheduledDate)}</span>
+            <span>{format(new Date(shoot.scheduledDate), "MMM dd, yyyy")}</span>
           </div>
           
           {weather && (
@@ -204,15 +212,16 @@ export function ShootCard(props: ShootCardProps) {
             </div>
           )}
           
-          {showMedia && !mediaImages.length && (
-            <div className="mt-3 flex items-center text-sm text-muted-foreground">
-              <ImageIcon className="h-4 w-4 mr-2" />
-              <span>No media uploaded yet</span>
-            </div>
-          )}
+          {showMedia && mediaImages.length === 0 && (
+  <div className="mt-3 flex items-center text-sm text-muted-foreground">
+    <ImageIcon className="h-4 w-4 mr-2" />
+    <span>No media uploaded yet</span>
+  </div>
+)}
+
         </CardContent>
         
-        <CardFooter className="p-4 pt-0">
+        {/* <CardFooter className="p-4 pt-0">
           <div className="w-full">
             <Separator className="my-2" />
             <div className="flex items-center justify-between text-sm">
@@ -225,13 +234,14 @@ export function ShootCard(props: ShootCardProps) {
               </span>
             </div>
           </div>
-        </CardFooter>
+        </CardFooter> */}
       </div>
     );
   }
   
   // Using legacy props structure
-  const { address, date, time, photographer, client, price } = props;
+  const { address, date, time, photographer, client, price} = props;
+  // const mediaImages = getMediaImages(shoot.media);
   
   return (
     <div 
@@ -250,7 +260,7 @@ export function ShootCard(props: ShootCardProps) {
           {weather && (
             <div className="flex items-center gap-1.5 bg-muted/60 p-1.5 px-2 rounded-full">
               {weather.icon}
-              <span className="font-medium text-sm">{weather.temp}°F</span>
+              <span className="font-medium text-sm">{weather.temp}°C</span>
             </div>
           )}
         </div>
@@ -285,6 +295,7 @@ export function ShootCard(props: ShootCardProps) {
             <span>{weather.condition}</span>
           </div>
         )}
+
       </CardContent>
       
       <CardFooter className="p-4 pt-0">

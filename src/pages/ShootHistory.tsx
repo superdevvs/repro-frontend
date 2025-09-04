@@ -22,9 +22,9 @@ import { ShootDetailDialog } from '@/components/ShootDetailDialog'; // ADD THIS 
 const statusColors: { [key: string]: string } = {
   'scheduled': 'bg-blue-500',
   'completed': 'bg-green-500',
-  'pending': 'bg-yellow-500',
-  'hold': 'bg-purple-500',
-  'booked': 'bg-orange-500',
+  // 'pending': 'bg-yellow-500',
+  // 'hold': 'bg-purple-500',
+  // 'booked': 'bg-orange-500',
 };
 
 const ShootHistory = () => {

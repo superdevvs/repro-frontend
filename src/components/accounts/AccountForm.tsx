@@ -80,6 +80,7 @@ export function AccountForm({
   });
 
   useEffect(() => {
+    if(open){
     if (initialData) {
       // Convert Role to FormRole if needed
       const role: FormRole = initialData.role === 'superadmin' 
@@ -113,6 +114,7 @@ export function AccountForm({
       });
       setAvatarUrl("");
     }
+  }
   }, [initialData, form, open]);
 
   const handleSubmit = (values: AccountFormValues) => {

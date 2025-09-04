@@ -160,8 +160,8 @@ const Shoots = () => {
     if (selectedTab === 'all') return matchesSearch;
     if (selectedTab === 'scheduled') return matchesSearch && shoot.status === 'scheduled';
     if (selectedTab === 'completed') return matchesSearch && shoot.status === 'completed';
-    if (selectedTab === 'pending') return matchesSearch && shoot.status === 'pending';
-    if (selectedTab === 'hold') return matchesSearch && shoot.status === 'hold';
+    // if (selectedTab === 'pending') return matchesSearch && shoot.status === 'pending';
+    // if (selectedTab === 'hold') return matchesSearch && shoot.status === 'hold';
     return false;
   });
   
@@ -344,9 +344,9 @@ const Shoots = () => {
           />
           
           {/* Quick Booking Card - Show for admin, superadmin, and client users */}
-          {canSeeQuickBooking && (
+          {/* {canSeeQuickBooking && (
             <QuickBookingCard />
-          )}
+          )} */}
           
           <ShootsFilter 
             searchTerm={searchTerm}

@@ -45,14 +45,14 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
     onClose();
   };
 
-  const handleMarkPending = () => {
-    updateShoot(shoot.id, { status: 'pending' });
-    toast({
-      title: "Shoot status updated",
-      description: `Shoot #${shoot.id} has been marked as pending.`,
-    });
-    onClose();
-  };
+  // const handleMarkPending = () => {
+  //   updateShoot(shoot.id, { status: 'pending' });
+  //   toast({
+  //     title: "Shoot status updated",
+  //     description: `Shoot #${shoot.id} has been marked as pending.`,
+  //   });
+  //   onClose();
+  // };
 
   const handleMarkCompleted = () => {
     updateShoot(shoot.id, { 
@@ -78,35 +78,8 @@ export function ShootActionsDialog({ shoot, isOpen, onClose }: ShootActionsDialo
             <Button variant="outline" onClick={handleReschedule}>
               Reschedule
             </Button>
-            <Button variant="outline" onClick={handleMarkPending}>
-              Mark as Pending
-            </Button>
-          </>
-        );
-      
-      case 'pending':
-        return (
-          <>
-            <Button variant="outline" onClick={handleCancel}>
-              Cancel Shoot
-            </Button>
-            <Button variant="outline" onClick={handleReschedule}>
-              Reschedule
-            </Button>
-            <Button onClick={handleMarkCompleted}>
+            <Button variant="outline" onClick={handleMarkCompleted}>
               Mark as Completed
-            </Button>
-          </>
-        );
-      
-      case 'hold':
-        return (
-          <>
-            <Button variant="outline" onClick={handleReschedule}>
-              Reschedule
-            </Button>
-            <Button onClick={handleAccept}>
-              Confirm & Schedule
             </Button>
           </>
         );

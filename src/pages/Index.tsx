@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -7,16 +6,39 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const Index = () => {
   const isMobile = useIsMobile();
   
+  // 🎬 Background video playlist
+  const videos = [
+    "/bg-video.mp4",
+    "/bg-video-2.mp4",
+    "/bg-video-3.mp4",
+    "/bg-video-4.mp4",
+  ];
+
+  const videoRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handleEnded = () => {
+    const nextIndex = (currentIndex + 1) % videos.length; // loop back to first
+    setCurrentIndex(nextIndex);
+    if (videoRef.current) {
+      videoRef.current.src = videos[nextIndex];
+      videoRef.current.play();
+    }
+  };
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row overflow-hidden relative">
       {/* Full page background cover image */}
       <div className="absolute inset-0 z-0">
-        <img 
-          src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1973&q=80" 
-          alt="Real estate interior" 
+        <video
+          ref={videoRef}
+          src={videos[currentIndex]}
+          autoPlay
+          muted
+          playsInline
+          onEnded={handleEnded}
           className="object-cover w-full h-full"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/70"></div>
+        {/* <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/70"></div> */}
       </div>
       
       <div className="flex flex-col md:flex-row w-full z-10">
@@ -36,7 +58,7 @@ const Index = () => {
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
                 <img 
-                  src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
+                  src="/REPRO-HQ.png" 
                   alt="RePro Photos Logo" 
                   className="w-auto h-auto max-h-72 max-w-full object-contain"
                 />
@@ -57,7 +79,7 @@ const Index = () => {
             transition={{ duration: 0.3 }}
           >
             <img 
-              src="/lovable-uploads/b2e1d77f-fa76-4e07-87f5-a4820c7a1396.png" 
+              src="/REPRO-HQ.png" 
               alt="RePro Photos Logo" 
               className="w-auto h-auto max-h-48 max-w-full object-contain relative z-10"
             />
@@ -69,7 +91,7 @@ const Index = () => {
         
         {/* Right side with login form - make scrollable */}
         <motion.div 
-          className={`w-full ${!isMobile ? 'md:w-1/2' : ''} flex items-center justify-center ${isMobile ? 'py-2 pb-8' : 'p-8'} bg-background/70 backdrop-blur-sm overflow-y-auto mobile-scrollable`}
+          className={`w-full ${!isMobile ? 'md:w-1/2' : ''} flex items-center justify-center ${isMobile ? 'py-2 pb-8' : 'p-8'}  overflow-y-auto mobile-scrollable`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}

@@ -49,8 +49,10 @@ export function ShootsContent({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {filteredShoots.map((shoot) => {
         // Show media and upload button for completed shoots
-        const shouldShowMedia = shoot.status === 'completed' && showMedia;
-        const shouldShowUploadButton = shoot.status === 'completed' && onUploadMedia;
+        const shouldShowMedia = showMedia;
+        const shouldShowUploadButton =
+        Boolean(onUploadMedia) && 
+        (shoot.status === "completed" || shoot.status === "scheduled" || shoot.status === "all");
         
         return (
           <Card key={shoot.id} className="overflow-hidden">

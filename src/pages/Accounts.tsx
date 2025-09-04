@@ -92,7 +92,7 @@ export default function Accounts() {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const [isNewAccountOpen, setIsNewAccountOpen] = useState(false);
-  
+
   const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
   const [roleChangeDialogOpen, setRoleChangeDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
@@ -106,7 +106,7 @@ export default function Accounts() {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem('authToken');
-  
+
         if (!token) {
           throw new Error("No auth token found in localStorage");
         }
@@ -137,14 +137,45 @@ export default function Accounts() {
 
   const filteredUsers = users.filter((user) => {
     const roleMatch = filterRole === "all" || user.role === filterRole;
-    const searchMatch = searchQuery === "" || 
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const searchMatch = searchQuery === "" ||
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (user.company && user.company.toLowerCase().includes(searchQuery.toLowerCase()));
     return roleMatch && searchMatch;
   });
 
-  
+  const handleUpdateUser = (data) => {
+    if (!selectedUser) return;
+
+    console.log("Updating account", selectedUser.id, data);
+
+    // Update state locally
+    setUsers((prev) =>
+      prev.map((u) => (u.id === selectedUser.id ? { ...u, ...data } : u))
+    );
+
+    // Optional: call API to update user
+    /*
+    const token = localStorage.getItem("authToken");
+    await fetch(`${import.meta.env.VITE_API_URL}/api/admin/users/${selectedUser.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    */
+
+    // Close dialog
+    setEditUserDialogOpen(false);
+
+    toast({
+      title: "User updated",
+      description: `${data.name}'s account has been updated successfully.`,
+    });
+  };
+
 
   const handleAddAccount = () => {
     setIsNewAccountOpen(true);
@@ -197,48 +228,48 @@ export default function Accounts() {
     setSelectedUser(user);
     setUserProfileDialogOpen(true);
   };
-  
+
   const handleUpdateRoles = (userId: string, roles: Role[]) => {
     setUsers(
       users.map((u) =>
         u.id === userId ? { ...u, role: roles[0] } : u
       )
     );
-    
+
     toast({
       title: "Role updated",
       description: `User role has been updated to ${roles.join(", ")}.`,
     });
   };
-  
+
   const handleUpdateNotifications = (userId: string, settings: Record<string, boolean>) => {
     toast({
       title: "Notification preferences updated",
       description: "Notification settings have been saved successfully.",
     });
   };
-  
+
   const handleUpdateClientBranding = (userId: string, data) => {
     toast({
       title: "Client branding updated",
       description: "Client associations and branding settings have been saved.",
     });
   };
-  
+
   const handleSendResetLink = (userId: string, email: string) => {
     toast({
       title: "Reset link sent",
       description: `Password reset link has been sent to ${email}.`,
     });
   };
-  
+
   const handleUpdatePassword = (userId: string, password: string) => {
     toast({
       title: "Password updated",
       description: "The user's password has been changed successfully.",
     });
   };
-  
+
 
 
   return (
@@ -253,7 +284,7 @@ export default function Accounts() {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
         />
-        
+
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredUsers.map((user) => (
@@ -269,7 +300,7 @@ export default function Accounts() {
                 onViewProfile={handleViewProfile}
               />
             ))}
-            
+
             {filteredUsers.length === 0 && (
               <div className="col-span-full bg-muted/30 p-8 rounded-lg text-center">
                 <h3 className="text-lg font-medium mb-2">No accounts found</h3>
@@ -300,17 +331,17 @@ export default function Accounts() {
           />
         )}
       </div>
-      
+
       {/* Dialogs */}
       {selectedUser && (
         <>
-          <UserProfileDialog 
-            open={userProfileDialogOpen} 
+          <UserProfileDialog
+            open={userProfileDialogOpen}
             onOpenChange={setUserProfileDialogOpen}
             user={selectedUser}
             onEdit={() => handleEditUser(selectedUser)}
           />
-          
+
           <ResetPasswordDialog
             open={resetPasswordDialogOpen}
             onOpenChange={setResetPasswordDialogOpen}
@@ -318,21 +349,21 @@ export default function Accounts() {
             onSendResetLink={handleSendResetLink}
             onUpdatePassword={handleUpdatePassword}
           />
-          
+
           <RoleChangeDialog
             open={roleChangeDialogOpen}
             onOpenChange={setRoleChangeDialogOpen}
             user={selectedUser}
             onSubmit={handleUpdateRoles}
           />
-          
+
           <NotificationSettingsDialog
             open={notificationSettingsDialogOpen}
             onOpenChange={setNotificationSettingsDialogOpen}
             user={selectedUser}
             onSubmit={handleUpdateNotifications}
           />
-          
+
           <LinkClientBrandingDialog
             open={linkClientBrandingDialogOpen}
             onOpenChange={setLinkClientBrandingDialogOpen}
@@ -341,11 +372,15 @@ export default function Accounts() {
           />
         </>
       )}
-      
+
       <AccountForm
-        open={isNewAccountOpen}
-        onOpenChange={setIsNewAccountOpen}
-        onSubmit={handleNewAccount}
+        open={isNewAccountOpen || editUserDialogOpen}
+        onOpenChange={(open) => {
+          setIsNewAccountOpen(open);
+          setEditUserDialogOpen(open);
+        }}
+        onSubmit={editUserDialogOpen ? handleUpdateUser : handleNewAccount}
+        initialData={editUserDialogOpen ? selectedUser : undefined}
       />
     </AccountsLayout>
   );

@@ -20,7 +20,7 @@ import {
   UploadIcon
 } from 'lucide-react';
 import { ShootData } from '@/types/shoots';
-import { format } from 'date-fns';
+import { parse, format } from 'date-fns';
 
 interface ShootsListProps {
   shoots: ShootData[];
@@ -59,13 +59,15 @@ export function ShootsList({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[60px]"><Checkbox /></TableHead>
+            {/* <TableHead className="w-[60px]"><Checkbox /></TableHead> */}
+            <TableHead>Date</TableHead>
+            <TableHead>Time</TableHead>
             <TableHead>Address</TableHead>
+            <TableHead>Services</TableHead>
             <TableHead>Client</TableHead>
             <TableHead>Photographer</TableHead>
-            <TableHead>Date</TableHead>
             <TableHead>Status</TableHead>
-            {showMedia && <TableHead>Media</TableHead>}
+            {showMedia && <TableHead></TableHead>}
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -77,21 +79,30 @@ export function ShootsList({
             
             return (
               <TableRow key={shoot.id} className="cursor-pointer" onClick={() => onSelect(shoot)}>
-                <TableCell><Checkbox onClick={(e) => e.stopPropagation()} /></TableCell>
-                <TableCell className="font-medium">
-                  <div className="flex items-center">
-                    <MapPinIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-                    {shoot.location.fullAddress}
-                  </div>
-                </TableCell>
-                <TableCell>{shoot.client.name}</TableCell>
-                <TableCell>{shoot.photographer.name}</TableCell>
+                {/* <TableCell><Checkbox onClick={(e) => e.stopPropagation()} /></TableCell> */}
                 <TableCell>
                   <div className="flex items-center">
-                    <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                    {/* <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" /> */}
                     {format(new Date(shoot.scheduledDate), 'MMM dd, yyyy')}
                   </div>
                 </TableCell>
+                <TableCell>
+                  <div className="flex items-center">
+                    {/* <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" /> */}
+                    {shoot.time
+      ? format(parse(shoot.time, "h:mm a", new Date()), "hh:mm a")
+      : "No time"}
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center">
+                    {/* <MapPinIcon className="h-4 w-4 mr-2 text-muted-foreground" /> */}
+                    {shoot.location.fullAddress}
+                  </div>
+                </TableCell>
+                <TableCell>{shoot.services}</TableCell>
+                <TableCell>{shoot.client.name}</TableCell>
+                <TableCell>{shoot.photographer.name}</TableCell>
                 <TableCell>
                   <Badge 
                     variant="secondary" 

@@ -1,21 +1,21 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
 } from '@/components/ui/form';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -25,12 +25,12 @@ import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Client } from '@/types/clients';
 import { initialClientsData } from '@/data/clientsData';
-import { 
-  Building2, 
-  Home, 
-  PlusCircle, 
-  Search, 
-  User 
+import {
+  Building2,
+  Home,
+  PlusCircle,
+  Search,
+  User
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -96,12 +96,12 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
   const [isAddingClient, setIsAddingClient] = useState(false);
 
   const navigate = useNavigate();
-  
+
   const formSchema = isClientAccount ? clientAccountPropertyFormSchema : adminPropertyFormSchema;
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: isClientAccount 
+    defaultValues: isClientAccount
       ? {
         propertyAddress: initialData.propertyAddress || '',
         propertyCity: initialData.propertyCity || '',
@@ -123,7 +123,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
       },
   });
 
-  const filteredClients = clients.filter(client => 
+  const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (client.company && client.company.toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -178,7 +178,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
           </Tooltip>
         </TooltipProvider>
       </div>
-      
+
       <FormField
         control={form.control}
         name="selectedPackage"
@@ -190,11 +190,10 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                 return (
                   <div
                     key={pkg.id}
-                    className={`p-4 border rounded-md cursor-pointer transition-all hover:shadow-md ${
-                      field.value === pkg.id
+                    className={`p-4 border rounded-md cursor-pointer transition-all hover:shadow-md ${field.value === pkg.id
                         ? "bg-primary/10 border-primary transform scale-[1.02]"
                         : "bg-card hover:bg-accent/50 hover:border-primary/30"
-                    }`}
+                      }`}
                     onClick={() => form.setValue("selectedPackage", pkg.id)}
                   >
                     {highlight && (
@@ -227,7 +226,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
         {!isClientAccount && (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Client Information</h3>
-            
+
             <div className="relative">
               <div className="flex mb-3">
                 <div className="relative flex-1">
@@ -261,20 +260,18 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                         filteredClients.map((client) => (
                           <div
                             key={client.id}
-                            className={`p-3 border rounded-md cursor-pointer transition-colors ${
-                              field.value === client.id
+                            className={`p-3 border rounded-md cursor-pointer transition-colors ${field.value === client.id
                                 ? "bg-primary/10 border-primary"
                                 : "bg-card hover:bg-accent/50"
-                            }`}
+                              }`}
                             onClick={() => form.setValue("clientId" as any, client.id)}
                           >
                             <div className="flex items-start gap-3">
                               <div
-                                className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                                  field.value === client.id
+                                className={`h-8 w-8 rounded-full flex items-center justify-center ${field.value === client.id
                                     ? "bg-primary text-primary-foreground"
                                     : "bg-muted text-muted-foreground"
-                                }`}
+                                  }`}
                               >
                                 <User className="h-4 w-4" />
                               </div>
@@ -305,7 +302,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                 )}
               />
             </div>
-            
+
             <Separator className="my-6" />
           </div>
         )}
@@ -313,7 +310,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
         <div className="pt-2">
           {!isClientAccount && <Separator className="my-6" />}
           <h3 className="text-lg font-medium mb-4">Property Details</h3>
-          
+
           <div className="space-y-4">
             <FormField
               control={form.control}
@@ -347,7 +344,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                 </FormItem>
               )}
             />
-            
+
             <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
@@ -362,7 +359,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                   </FormItem>
                 )}
               />
-              
+
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -377,7 +374,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="propertyState"
@@ -391,7 +388,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="propertyZip"
@@ -406,16 +403,16 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                   )}
                 />
               </div>
-              
-              <FormField
+
+              {/* <FormField
                 control={form.control}
                 name="propertyInfo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Additional Information</FormLabel>
+                    <FormLabel>Shoot Notes</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Gate code, access instructions, special requirements, etc." 
+                        placeholder="Provide any additional information to attach to this shoot that will be visible to the client." 
                         className="resize-none" 
                         {...field}
                       />
@@ -424,6 +421,26 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                   </FormItem>
                 )}
               />
+
+
+              <FormField
+                control={form.control}
+                name="propertyInfo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Notes</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Provide any additional information to save for the selected client that will only be visible to company admins/photographer.." 
+                        className="resize-none" 
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              /> */}
+
             </div>
           </div>
         </div>
@@ -443,7 +460,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
               </Tooltip>
             </TooltipProvider>
           </div>
-          
+
           <FormField
             control={form.control}
             name="selectedPackage"
@@ -455,11 +472,10 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                     return (
                       <div
                         key={pkg.id}
-                        className={`p-4 border rounded-md cursor-pointer transition-all hover:shadow-md ${
-                          field.value === pkg.id
+                        className={`p-4 border rounded-md cursor-pointer transition-all hover:shadow-md ${field.value === pkg.id
                             ? "bg-primary/10 border-primary transform scale-[1.02]"
                             : "bg-card hover:bg-accent/50 hover:border-primary/30"
-                        }`}
+                          }`}
                         onClick={() => form.setValue("selectedPackage", pkg.id)}
                       >
                         {highlight && (
@@ -485,9 +501,51 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
           />
         </div>
 
-        <div className="mt-6 flex justify-end">
-          <Button type="submit">Continue</Button>
-        </div>
+
+        <div className="pt-2">
+          <Separator className="my-6" />
+          <div className="flex items-center gap-2 mb-4"></div>
+          <FormField
+            control={form.control}
+            name="shootNotes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Shoot Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Provide any additional information to attach to this shoot that will be visible to the client."
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+
+          <FormField
+            control={form.control}
+            name="companyNotes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Company Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Provide any additional information to save for the selected client that will only be visible to company admins/photographer.."
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <Button type="submit">Continue</Button>
+          </div>
       </form>
     </Form>
   );

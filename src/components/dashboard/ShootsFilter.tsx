@@ -78,8 +78,8 @@ export function ShootsFilter({
                   <TabsTrigger className="px-4 flex-shrink-0" value="all">All</TabsTrigger>
                   <TabsTrigger className="px-4 flex-shrink-0" value="scheduled">Scheduled</TabsTrigger>
                   <TabsTrigger className="px-4 flex-shrink-0" value="completed">Completed</TabsTrigger>
-                  <TabsTrigger className="px-4 flex-shrink-0" value="pending">Pending</TabsTrigger>
-                  <TabsTrigger className="px-4 flex-shrink-0" value="hold">On Hold</TabsTrigger>
+                  {/* <TabsTrigger className="px-4 flex-shrink-0" value="pending">Pending</TabsTrigger>
+                  <TabsTrigger className="px-4 flex-shrink-0" value="hold">On Hold</TabsTrigger> */}
                 </TabsList>
               </Tabs>
             </div>
@@ -92,8 +92,8 @@ export function ShootsFilter({
             <TabsTrigger className="flex-1" value="all">All</TabsTrigger>
             <TabsTrigger className="flex-1" value="scheduled">Scheduled</TabsTrigger>
             <TabsTrigger className="flex-1" value="completed">Completed</TabsTrigger>
-            <TabsTrigger className="flex-1" value="pending">Pending</TabsTrigger>
-            <TabsTrigger className="flex-1" value="hold">On Hold</TabsTrigger>
+            {/* <TabsTrigger className="flex-1" value="pending">Pending</TabsTrigger>
+            <TabsTrigger className="flex-1" value="hold">On Hold</TabsTrigger> */}
           </TabsList>
         </Tabs>
       )}

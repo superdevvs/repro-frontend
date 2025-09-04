@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistance } from "date-fns";
 import { User, Role } from "@/components/auth/AuthProvider";
+import { AccountForm } from "./AccountForm";
 
 interface AccountListProps {
   users: Array<User & { active?: boolean }>;

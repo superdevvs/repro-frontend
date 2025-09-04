@@ -175,9 +175,9 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">
             <CardTitle className="text-lg">{service.name}</CardTitle>
-            <Badge variant={service.active ? "default" : "secondary"}>
+            {/* <Badge variant={service.active ? "default" : "secondary"}>
               {service.active ? "Active" : "Inactive"}
-            </Badge>
+            </Badge> */}
           </div>
         </CardHeader>
         <CardContent className="flex-1">
@@ -299,7 +299,7 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
               />
             </div>
             
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <Label htmlFor="active" className="cursor-pointer">
                 Active
               </Label>
@@ -308,7 +308,7 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
                 checked={editedService.active}
                 onCheckedChange={handleSwitchChange}
               />
-            </div>
+            </div> */}
           </div>
           <DialogFooter>
             <Button 

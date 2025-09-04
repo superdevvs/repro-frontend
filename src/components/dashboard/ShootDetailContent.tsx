@@ -39,7 +39,7 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
-  
+
   const copyToClipboard = (text: string, successMessage: string) => {
     navigator.clipboard.writeText(text).then(() => {
       toast.success(successMessage);
@@ -89,19 +89,19 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
             </div>
           </div>
         </div>
-        
+
         <Separator />
-        
+
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-medium text-muted-foreground">Property Information</h3>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
                     onClick={copyAddress}
                   >
                     <CopyIcon className="h-3.5 w-3.5" />
@@ -126,9 +126,9 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
             </div>
           </div>
         </div>
-        
+
         <Separator />
-        
+
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">Photographer</h3>
           <div className="flex items-start gap-3">
@@ -139,10 +139,9 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
           </div>
         </div>
 
-        {hasTourLinks() && (
-          <>
-            <Separator />
-            <div className="space-y-2">
+
+        <Separator />
+        {/* <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">Tour Links</h3>
               <div className="space-y-2">
                 {shoot.tourLinks?.matterport && (
@@ -188,28 +187,26 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
                   </div>
                 )}
               </div>
-            </div>
-          </>
-        )}
-        
-        <Separator />
-        
+            </div> */}
+
+
+
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">Actions</h3>
           <div className="flex flex-wrap gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="h-8"
               onClick={shareShoot}
             >
               <Share2Icon className="h-3.5 w-3.5 mr-1.5" />
               Share Details
             </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
+
+            <Button
+              variant="outline"
+              size="sm"
               className="h-8"
             >
               <PaperclipIcon className="h-3.5 w-3.5 mr-1.5" />
@@ -218,7 +215,7 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
           </div>
         </div>
       </div>
-      
+
       <div className="space-y-4">
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">Schedule</h3>
@@ -230,7 +227,7 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
                 <p className="font-medium">{formatDate(shoot.scheduledDate)}</p>
               </div>
             </div>
-            
+
             {shoot.completedDate && (
               <div className="flex items-start gap-3">
                 <ClockIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
@@ -242,9 +239,9 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
             )}
           </div>
         </div>
-        
+
         <Separator />
-        
+
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">Services</h3>
           <div className="flex flex-wrap gap-2">
@@ -259,9 +256,9 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
             )}
           </div>
         </div>
-        
+
         <Separator />
-        
+
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">Payment Details</h3>
           <div className="space-y-1">
@@ -277,14 +274,14 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
               <span>Total Quote:</span>
               <span>${shoot.payment.totalQuote.toFixed(2)}</span>
             </div>
-            
+
             {shoot.payment.totalPaid !== undefined && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Total Paid:</span>
                 <span>${shoot.payment.totalPaid.toFixed(2)}</span>
               </div>
             )}
-            
+
             {shoot.payment.lastPaymentDate && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Last Payment:</span>
@@ -293,6 +290,49 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
             )}
           </div>
         </div>
+
+        <Separator />
+
+
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-muted-foreground">Tour Links</h3>
+          <div className="flex flex-wrap gap-2">
+            {/* Branded */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              disabled={!shoot.tourLinks?.branded}
+              onClick={() => shoot.tourLinks?.branded && window.open(shoot.tourLinks?.branded, "_blank")}
+            >
+              Branded
+            </Button>
+
+
+            {/* MLS */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              disabled={!shoot.tourLinks?.mls}
+              onClick={() => shoot.tourLinks?.mls && window.open(shoot.tourLinks?.mls, "_blank")}
+            >
+              MLS
+            </Button>
+
+            {/* Generic MLS */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              disabled={!shoot.tourLinks?.genericMls}
+              onClick={() => shoot.tourLinks?.genericMls && window.open(shoot.tourLinks?.genericMls, "_blank")}
+            >
+             Generic MLS
+            </Button>
+          </div>
+        </div>
+
       </div>
     </div>
   );
