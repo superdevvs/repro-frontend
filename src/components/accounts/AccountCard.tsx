@@ -151,11 +151,11 @@ export function AccountCard({
               <span className="text-muted-foreground">{user.phone}</span>
             </div>
           )}
-          {user.lastLogin && (
+          {/* {user.lastLogin && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>Last active {formatDistance(new Date(user.lastLogin), new Date(), { addSuffix: true })}</span>
             </div>
-          )}
+          )} */}
         </div>
         
         <div className="flex items-center justify-between pt-2 border-t dark:border-slate-800">

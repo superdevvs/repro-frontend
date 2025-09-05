@@ -37,6 +37,9 @@ interface SchedulingFormProps {
   city?: string;
   state?: string;
   zip?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  sqft?: number;
   setAddress?: React.Dispatch<React.SetStateAction<string>>;
   setCity?: React.Dispatch<React.SetStateAction<string>>;
   setState?: React.Dispatch<React.SetStateAction<string>>;
@@ -60,6 +63,9 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
   city = '',
   state = '',
   zip = '',
+  bedrooms = '',
+  bathrooms = '',
+  sqft = '',
   setAddress,
   setCity,
   setState,

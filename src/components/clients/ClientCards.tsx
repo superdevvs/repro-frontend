@@ -133,7 +133,7 @@ export const ClientCards: React.FC<ClientCardsProps> = ({
                           <p className="font-medium pl-6">{client.shootsCount || 0}</p>
                         </div>
                         
-                        <div className="space-y-2">
+                        {/* <div className="space-y-2">
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <GlobeIcon className="h-4 w-4" />
                             <span>Last Activity</span>
@@ -141,7 +141,7 @@ export const ClientCards: React.FC<ClientCardsProps> = ({
                           <p className="font-medium pl-6">
                             {client.lastActivity ? new Date(client.lastActivity).toLocaleDateString() : 'N/A'}
                           </p>
-                        </div>
+                        </div> */}
                       </div>
                       
                       <div className="flex justify-between items-center gap-2 pt-2">

@@ -130,10 +130,10 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
                       <p className="text-2xl font-bold">{client.shootsCount}</p>
                     </div>
                     
-                    <div className="bg-secondary/20 rounded-md p-3">
+                    {/* <div className="bg-secondary/20 rounded-md p-3">
                       <p className="text-sm text-muted-foreground">Last Activity</p>
                       <p className="text-2xl font-bold">{new Date(client.lastActivity).toLocaleDateString()}</p>
-                    </div>
+                    </div> */}
                   </div>
                 </CardContent>
               </Card>

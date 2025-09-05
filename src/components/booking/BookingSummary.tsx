@@ -13,6 +13,9 @@ interface BookingSummaryProps {
     package: string;
     packagePrice: number;
     address: string;
+    bedrooms: number;
+    bathrooms: number;
+    sqft: number;
     date: string;
     time: string;
   };
@@ -65,6 +68,18 @@ export function BookingSummary({
             <Skeleton className="h-6 w-full bg-[#1e2d4a]" />
           )}
         </div>
+
+        {/* <div className="space-y-1.5">
+          <div className="text-sm text-blue-400">Area</div>
+          {summaryInfo.sqft ? (
+            <div className="flex items-start gap-2 text-white">
+              <MapPin className="h-4 w-4 text-blue-500 mt-0.5" />
+              <span>{summaryInfo.sqft}</span>
+            </div>
+          ) : (
+            <Skeleton className="h-6 w-full bg-[#1e2d4a]" />
+          )}
+        </div> */}
         
         <div className="space-y-1.5">
           <div className="text-sm text-blue-400">Date & Time</div>

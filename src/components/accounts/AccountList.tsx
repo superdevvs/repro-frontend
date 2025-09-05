@@ -63,8 +63,8 @@ export function AccountList({
             <TableHead>User</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Company</TableHead>
-            <TableHead>Last Active</TableHead>
-            <TableHead>Status</TableHead>
+            {/* <TableHead>Last Active</TableHead> */}
+            {/* <TableHead>Status</TableHead> */}
             <TableHead className="w-[80px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -89,14 +89,14 @@ export function AccountList({
                 </Badge>
               </TableCell>
               <TableCell>{user.company || "-"}</TableCell>
-              <TableCell>
+              {/* <TableCell>
                 {user.lastLogin ? (
                   formatDistance(new Date(user.lastLogin), new Date(), { addSuffix: true })
                 ) : (
                   "Never"
                 )}
-              </TableCell>
-              <TableCell>
+              </TableCell> */}
+              {/* <TableCell>
                 {user.active ? (
                   <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 border-green-200 dark:border-green-800">
                     <Check className="mr-1 h-3 w-3" /> Active
@@ -106,7 +106,7 @@ export function AccountList({
                     <X className="mr-1 h-3 w-3" /> Inactive
                   </Badge>
                 )}
-              </TableCell>
+              </TableCell> */}
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

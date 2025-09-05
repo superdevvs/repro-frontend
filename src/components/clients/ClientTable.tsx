@@ -53,8 +53,8 @@ export const ClientTable: React.FC<ClientTableProps> = ({
             <TableHead>Email</TableHead>
             <TableHead>Phone</TableHead>
             <TableHead className="text-center">Shoots</TableHead>
-            <TableHead>Last Activity</TableHead>
-            <TableHead>Status</TableHead>
+            {/* <TableHead>Last Activity</TableHead>
+            <TableHead>Status</TableHead> */}
             <TableHead className="text-right w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -93,7 +93,7 @@ export const ClientTable: React.FC<ClientTableProps> = ({
                     <span>{client.shootsCount || 0}</span>
                   </div>
                 </TableCell>
-                <TableCell>
+                {/* <TableCell>
                   {client.lastActivity ? new Date(client.lastActivity).toLocaleDateString() : '—'}
                 </TableCell>
                 <TableCell>
@@ -105,7 +105,7 @@ export const ClientTable: React.FC<ClientTableProps> = ({
                   >
                     {client.status}
                   </Badge>
-                </TableCell>
+                </TableCell> */}
                 <TableCell className="text-right p-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>

@@ -81,7 +81,16 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
       />
       
       {/* Clients link */}
-      {clientsPermission.canView() && (
+      {/* {clientsPermission.canView() && (
+        <NavLink
+          to="/clients"
+          icon={<UserIcon className="h-5 w-5" />}
+          label="Clients"
+          isCollapsed={isCollapsed}
+          isActive={pathname === '/clients'}
+        />
+      )} */}
+      {role !== 'photographer' && clientsPermission.canView() && (
         <NavLink
           to="/clients"
           icon={<UserIcon className="h-5 w-5" />}
@@ -119,7 +128,16 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
       )}
       
       {/* Accounting */}
-      {invoicesPermission.canView() && (
+      {/* {invoicesPermission.canView() && (
+        <NavLink
+          to="/accounting"
+          icon={<BarChart3Icon className="h-5 w-5" />}
+          label="Accounting"
+          isCollapsed={isCollapsed}
+          isActive={pathname === '/accounting'}
+        />
+      )} */}
+      {role !== 'client' && invoicesPermission.canView() && (
         <NavLink
           to="/accounting"
           icon={<BarChart3Icon className="h-5 w-5" />}

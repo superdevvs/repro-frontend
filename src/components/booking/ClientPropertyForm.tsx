@@ -50,8 +50,13 @@ const clientAccountPropertyFormSchema = z.object({
   propertyCity: z.string().min(1, "City is required"),
   propertyState: z.string().min(1, "State is required"),
   propertyZip: z.string().min(1, "ZIP code is required"),
+  bedRooms: z.number().min(0, "Bedrooms must be 0 or more").optional(),
+  bathRooms: z.number().min(0, "Bathrooms must be 0 or more").optional(),
+  sqft: z.number().min(0, "SQFT must be 0 or more").optional(),
   propertyType: z.enum(["residential", "commercial"]),
   propertyInfo: z.string().optional(),
+  companyNotes: z.string().optional(),
+  shootNotes: z.string().optional(),
   selectedPackage: z.string().min(1, "Please select a package")
 });
 
@@ -61,8 +66,13 @@ const adminPropertyFormSchema = z.object({
   propertyCity: z.string().min(1, "City is required"),
   propertyState: z.string().min(1, "State is required"),
   propertyZip: z.string().min(1, "ZIP code is required"),
+  bedRooms: z.number().min(0, "Bedrooms must be 0 or more").optional(),
+  bathRooms: z.number().min(0, "Bathrooms must be 0 or more").optional(),
+  sqft: z.number().min(0, "SQFT must be 0 or more").optional(),
   propertyType: z.enum(["residential", "commercial"]),
   propertyInfo: z.string().optional(),
+  companyNotes: z.string().optional(),
+  shootNotes: z.string().optional(),
   selectedPackage: z.string().min(1, "Please select a package")
 });
 
@@ -83,7 +93,12 @@ type ClientPropertyFormProps = {
     propertyCity: string;
     propertyState: string;
     propertyZip: string;
+    bedRooms: number;
+    bathRooms: number;
+    sqft: number;
     propertyInfo: string;
+    companyNotes: string;
+    shootNotes: string;
     selectedPackage?: string;
   };
   isClientAccount?: boolean;
@@ -107,6 +122,9 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
         propertyCity: initialData.propertyCity || '',
         propertyState: initialData.propertyState || '',
         propertyZip: initialData.propertyZip || '',
+        bedRooms: initialData.bedRooms || 0,
+        bathRooms: initialData.bathRooms || 0,
+        sqft: initialData.sqft || 0,
         propertyType: initialData.propertyType || 'residential',
         propertyInfo: initialData.propertyInfo || '',
         selectedPackage: initialData.selectedPackage || '',
@@ -117,6 +135,9 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
         propertyCity: initialData.propertyCity || '',
         propertyState: initialData.propertyState || '',
         propertyZip: initialData.propertyZip || '',
+        bedRooms: initialData.bedRooms || 0,
+        bathRooms: initialData.bathRooms || 0,
+        sqft: initialData.sqft || 0,
         propertyType: initialData.propertyType || 'residential',
         propertyInfo: initialData.propertyInfo || '',
         selectedPackage: initialData.selectedPackage || '',
@@ -191,8 +212,8 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                   <div
                     key={pkg.id}
                     className={`p-4 border rounded-md cursor-pointer transition-all hover:shadow-md ${field.value === pkg.id
-                        ? "bg-primary/10 border-primary transform scale-[1.02]"
-                        : "bg-card hover:bg-accent/50 hover:border-primary/30"
+                      ? "bg-primary/10 border-primary transform scale-[1.02]"
+                      : "bg-card hover:bg-accent/50 hover:border-primary/30"
                       }`}
                     onClick={() => form.setValue("selectedPackage", pkg.id)}
                   >
@@ -261,16 +282,16 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                           <div
                             key={client.id}
                             className={`p-3 border rounded-md cursor-pointer transition-colors ${field.value === client.id
-                                ? "bg-primary/10 border-primary"
-                                : "bg-card hover:bg-accent/50"
+                              ? "bg-primary/10 border-primary"
+                              : "bg-card hover:bg-accent/50"
                               }`}
                             onClick={() => form.setValue("clientId" as any, client.id)}
                           >
                             <div className="flex items-start gap-3">
                               <div
                                 className={`h-8 w-8 rounded-full flex items-center justify-center ${field.value === client.id
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted text-muted-foreground"
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-muted text-muted-foreground"
                                   }`}
                               >
                                 <User className="h-4 w-4" />
@@ -402,6 +423,62 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="bedRooms"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-1 col-span-2">
+                      <FormLabel>Bedrooms</FormLabel>
+                      <FormControl>
+                        {/* <Input placeholder="Bedrooms" {...field} /> */}
+                        <Input
+                          type="number"
+                          placeholder="Bedrooms"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        />
+
+
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="bathRooms"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-1 col-span-2">
+                      <FormLabel>Bathroom</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number"
+                          placeholder="Bathroom" 
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="sqft"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-1 col-span-2">
+                      <FormLabel>SQFT</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number"
+                          placeholder="sqft" 
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               {/* <FormField
@@ -473,8 +550,8 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                       <div
                         key={pkg.id}
                         className={`p-4 border rounded-md cursor-pointer transition-all hover:shadow-md ${field.value === pkg.id
-                            ? "bg-primary/10 border-primary transform scale-[1.02]"
-                            : "bg-card hover:bg-accent/50 hover:border-primary/30"
+                          ? "bg-primary/10 border-primary transform scale-[1.02]"
+                          : "bg-card hover:bg-accent/50 hover:border-primary/30"
                           }`}
                         onClick={() => form.setValue("selectedPackage", pkg.id)}
                       >
@@ -541,11 +618,11 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
               </FormItem>
             )}
           />
-          </div>
+        </div>
 
-          <div className="mt-6 flex justify-end">
-            <Button type="submit">Continue</Button>
-          </div>
+        <div className="mt-6 flex justify-end">
+          <Button type="submit">Continue</Button>
+        </div>
       </form>
     </Form>
   );

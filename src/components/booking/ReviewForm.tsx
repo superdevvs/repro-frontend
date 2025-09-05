@@ -15,6 +15,10 @@ interface ReviewFormProps {
   city: string;
   state: string;
   zip: string;
+  bedrooms: number;
+  bathrooms: number;
+  sqft: number;
+  area: number; // New prop to combine bedrooms, bathrooms, sqft
   date: Date | undefined;
   time: string;
   photographer: string;
@@ -44,6 +48,10 @@ export function ReviewForm({
   city,
   state,
   zip,
+  bedrooms,
+  bathrooms,
+  sqft,
+  area,
   date,
   time,
   photographer,
@@ -109,10 +117,10 @@ export function ReviewForm({
                   </div>
                   <div>
                     <p className="font-medium text-sm">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">${p.rate}/shoot</p>
+                    {/* <p className="text-xs text-muted-foreground">${p.rate}/shoot</p>
                     {!p.availability && (
                       <span className="text-[10px] text-muted-foreground">Unavailable</span>
-                    )}
+                    )} */}
                   </div>
                 </div>
               </Card>
@@ -139,13 +147,18 @@ export function ReviewForm({
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Client:</span>
-            <span className="text-sm font-medium">{client || "No client selected"}</span>
+            <span className="text-sm font-medium">{client ? `${client}` : "No client selected"}</span>
           </div>
           
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Property:</span>
             <span className="text-sm font-medium">{address ? `${address}, ${city}, ${state} ${zip}` : "No address provided"}</span>
           </div>
+
+          {/* <div className="flex justify-between">
+            <span className="text-sm text-muted-foreground">Area:</span>
+            <span className="text-sm font-medium">{area ? `${bedrooms}, ${bathrooms}, ${sqft}` : "No data provided"}</span>
+          </div> */}
           
           <div className="flex justify-between">
             <span className="text-sm text-muted-foreground">Date & Time:</span>
