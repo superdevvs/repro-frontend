@@ -240,40 +240,30 @@ const selectAllDropboxFiles = () => {
 // Download selected files from Dropbox and add to upload queue
 const addSelectedDropboxFiles = async () => {
   if (!dropboxClient || selectedDropboxFiles.size === 0) return;
-  
   const selectedFiles = dropboxFiles.filter(f => selectedDropboxFiles.has(f.id));
   const downloadedFiles: File[] = [];
-  
   try {
     for (const file of selectedFiles) {
       toast({
         title: "Downloading",
         description: `Downloading ${file.name} from Dropbox...`,
       });
-      
-      const response = await dropboxClient.filesDownload({
-        path: file.path_display
-      });
-      
+      const response = await dropboxClient.filesDownload({ path: file.path_display });
       // Convert the downloaded data to a File object
-      const blob = (response.result as any).fileBinary;
+      const blob = (response.result as any).fileBlob || (response.result as any).fileBinary;
       const downloadedFile = new File([blob], file.name, {
         type: getMimeType(file.name),
         lastModified: new Date(file.client_modified).getTime()
       });
-      
       downloadedFiles.push(downloadedFile);
     }
-    
     // Add downloaded files to the upload queue
     setFiles(prev => [...prev, ...downloadedFiles]);
     setSelectedDropboxFiles(new Set());
-    
     toast({
       title: "Files Added",
       description: `${downloadedFiles.length} files downloaded from Dropbox and added to upload queue.`,
     });
-    
   } catch (error) {
     console.error('Error downloading Dropbox files:', error);
     toast({
@@ -525,55 +515,46 @@ useEffect(() => {
     }
     
     setUploading(true);
-    
-      // Replace the timeout in handleUpload with:
-      const formData = new FormData();
-      files.forEach(file => formData.append('files[]', file));
-
-      try {
-        const token = localStorage.getItem('authToken');
-
-        if (!token) {
-          throw new Error("No auth token found in localStorage");
-        }
-        console.log("Soot id is "+shootId)
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/shoots/${shootId}/upload`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: `Bearer ${token}`, 
-            },
-            onUploadProgress: (progressEvent) => {
-              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-              setProgress(percentCompleted);
-            }
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('file', file);
+      // Optionally, set a Dropbox path for each file
+      formData.append('path', `/Apps/YourApp/${file.name}`);
+    });
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/dropbox/upload`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setProgress(percentCompleted);
           }
-        );
-
-        toast({
-          title: 'Upload Complete',
-          description: `${files.length} files uploaded successfully.`,
-        });
-
-        if (onUploadComplete) {
-          onUploadComplete(files, notes);
         }
-
-        setUploading(false);
-        setProgress(0);
-        setFiles([]);
-        setNotesChanged(false);
-      } catch (error) {
-        toast({
-          title: 'Upload Failed',
-          description: 'Something went wrong while uploading.',
-          variant: 'destructive',
-        });
-        console.error(error);
-        setUploading(false);
+      );
+      toast({
+        title: 'Upload Complete',
+        description: `${files.length} files uploaded successfully to Dropbox.`,
+      });
+      if (onUploadComplete) {
+        onUploadComplete(files, notes);
       }
+      setUploading(false);
+      setProgress(0);
+      setFiles([]);
+      setNotesChanged(false);
+    } catch (error) {
+      toast({
+        title: 'Upload Failed',
+        description: 'Something went wrong while uploading to Dropbox.',
+        variant: 'destructive',
+      });
+      console.error(error);
+      setUploading(false);
+    }
 
   };
   
