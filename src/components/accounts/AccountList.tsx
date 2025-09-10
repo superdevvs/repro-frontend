@@ -63,8 +63,8 @@ export function AccountList({
             <TableHead>User</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Company</TableHead>
-            {/* <TableHead>Last Active</TableHead> */}
-            {/* <TableHead>Status</TableHead> */}
+            {/* <TableHead>Last Active</TableHead>
+            <TableHead>Status</TableHead> */}
             <TableHead className="w-[80px]"></TableHead>
           </TableRow>
         </TableHeader>

@@ -138,14 +138,17 @@ const Dashboard = () => {
                   ) : (
                     <div className="flex flex-col items-center justify-center py-4 text-center">
                       <p className="text-muted-foreground">No upcoming shoots scheduled.</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-4"
-                        onClick={() => navigate('/book-shoot')}
-                      >
-                        Book a Shoot
-                      </Button>
+                      {role !== 'photographer' && role !== 'editor' && (
+  <Button
+    variant="outline"
+    size="sm"
+    className="mt-4"
+    onClick={() => navigate('/book-shoot')}
+  >
+    Book a Shoot
+  </Button>
+)}
+
                     </div>
                   )}
                 </div>

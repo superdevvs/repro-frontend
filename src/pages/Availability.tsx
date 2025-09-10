@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
@@ -161,12 +161,15 @@ export default function Availability() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedAvailabilityId, setSelectedAvailabilityId] = useState<string | null>(null);
   const [selectedPhotographer, setSelectedPhotographer] = useState<string>("all");
+
   const [editingWeeklySchedule, setEditingWeeklySchedule] = useState(false);
   const [editingAvailability, setEditingAvailability] = useState<string | null>(null);
   const [editedAvailability, setEditedAvailability] = useState<Partial<Availability>>({});
   const [editModeOpen, setEditModeOpen] = useState(false);
   const { toast } = useToast();
   const { user, role } = useAuth();
+
+  
   
   const [photographerWeeklySchedules, setPhotographerWeeklySchedules] = useState<Record<string, WeeklyScheduleItem[]>>({
     "1": [
@@ -240,7 +243,20 @@ export default function Availability() {
     ];
   };
 
+   // If logged-in user is a photographer, auto-select them on first render (only if selection is still "all")
+  useEffect(() => {
+    if (role === 'photographer' && user && selectedPhotographer === "all") {
+      // assume user.id corresponds to photographer id string (adjust if your auth shape differs)
+      setSelectedPhotographer(String(user.id));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, user]);
+
+  // Admins/superadmins can edit everything
   const isAdmin = role === 'admin' || role === 'superadmin';
+
+  // Photographers can edit only their own schedule (when they select themselves)
+  const isPhotographer = role === 'photographer';
 
   const getSelectedDateAvailabilities = () => {
     if (!date) return [];
@@ -389,7 +405,10 @@ export default function Availability() {
     setEditModeOpen(!editModeOpen);
   };
 
-  const canEditAvailability = isAdmin;
+ // Allow editing if admin OR if user is photographer AND selectedPhotographer matches their id
+  const canEditAvailability =
+    isAdmin ||
+    (isPhotographer && user && String(user.id) === String(selectedPhotographer));
   
   const updateCurrentWeeklySchedule = (index: number, field: keyof WeeklyScheduleItem, value: any) => {
     if (selectedPhotographer === "all") return;
@@ -446,7 +465,7 @@ export default function Availability() {
         {!canEditAvailability && (
           <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-4 mb-6 flex items-start">
             <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-            <p>You are in view-only mode. Only administrators can edit photographer availability.</p>
+            <p>You are in view-only mode. Only administrators or the selected photographer can edit photographer availability.</p>
           </div>
         )}
 

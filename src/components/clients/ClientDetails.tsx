@@ -65,13 +65,13 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
                     )}
                     <h2 className="text-xl font-bold">{client.name}</h2>
                     <p className="text-muted-foreground">{client.company}</p>
-                    <Badge 
+                    {/* <Badge 
                       className={`mt-2 ${client.status === 'active' 
                         ? 'bg-green-500/10 text-green-500 border-green-500/20' 
                         : 'bg-gray-500/10 text-gray-500 border-gray-500/20'}`}
                     >
                       {client.status}
-                    </Badge>
+                    </Badge> */}
                   </div>
                 </CardContent>
               </Card>

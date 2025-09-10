@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShootDetailContent } from "@/components/dashboard/ShootDetailContent";
 import { ShootNotesTab } from "@/components/dashboard/ShootNotesTab";
 import { ShootMediaTab } from "@/components/dashboard/ShootMediaTab";
+import { ShootSettingsTab } from "@/components/dashboard/ShootSettingsTab";
 import { ShootData } from '@/types/shoots';
 
 interface ShootDetailTabsProps {
@@ -28,10 +29,11 @@ export function ShootDetailTabs({
   
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger value="details">Details</TabsTrigger>
         <TabsTrigger value="notes">Notes</TabsTrigger>
-        <TabsTrigger value="media" disabled={!showMediaTab}>Media</TabsTrigger>
+        <TabsTrigger value="media">Media</TabsTrigger>
+        <TabsTrigger value="settings" disabled={!showMediaTab}>Settings</TabsTrigger>
       </TabsList>
       
       <TabsContent value="details" className="mt-4">
@@ -49,6 +51,19 @@ export function ShootDetailTabs({
       
       <TabsContent value="media" className="mt-4">
         <ShootMediaTab shoot={shoot} isPhotographer={isPhotographer} />
+      </TabsContent>
+
+      <TabsContent value="settings" className="mt-4">
+        <ShootSettingsTab 
+          shoot={shoot}
+          isAdmin={isAdmin}
+          onUpdate={(updated) => {
+            console.log("Shoot updated:", updated);
+          }}
+          onDelete={() => {
+            console.log("Shoot deleted");
+          }}
+        />
       </TabsContent>
     </Tabs>
   );

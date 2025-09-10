@@ -140,7 +140,7 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
         </div>
 
 
-        <Separator />
+        {/* <Separator /> */}
         {/* <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">Tour Links</h3>
               <div className="space-y-2">
@@ -194,20 +194,15 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
         {/* <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">Actions</h3>
           <div className="flex flex-wrap gap-2">
-            {shoot.tourLinks?.cubicasa && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Cubicasa Tour</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-7"
-                      onClick={() => openTourLink(shoot.tourLinks?.cubicasa)}
-                    >
-                      <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                      View
-                    </Button>
-                  </div>
-                )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={shareShoot}
+            >
+              <Share2Icon className="h-3.5 w-3.5 mr-1.5" />
+              Share Details
+            </Button>
 
             <Button
               variant="outline"
@@ -215,49 +210,10 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
               className="h-8"
             >
               <PaperclipIcon className="h-3.5 w-3.5 mr-1.5" />
-              Slideshow
+              Attach Files
             </Button>
           </div>
         </div> */}
-
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">3D Tour</h3>
-          <div className="flex flex-wrap gap-2">
-            {/* Branded */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              // disabled={!shoot.tourLinks?.cubicasa}
-              onClick={() => shoot.tourLinks?.cubicasa && window.open(shoot.tourLinks?.cubicasa, "_blank")}
-            >
-              Cubicasa
-            </Button>
-
-
-            {/* MLS */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              // disabled={!shoot.tourLinks?.matterport}
-              onClick={() => shoot.tourLinks?.matterport && window.open(shoot.tourLinks?.matterport, "_blank")}
-            >
-              Matterport
-            </Button>
-
-            {/* Generic MLS */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              // disabled={!shoot.tourLinks?.genericMls}
-              onClick={() => shoot.tourLinks?.iGuide && window.open(shoot.tourLinks?.iGuide, "_blank")}
-            >
-            iGuide
-            </Button>
-          </div>
-        </div>
       </div>
 
       <div className="space-y-4">
@@ -336,46 +292,6 @@ export function ShootDetailContent({ shoot, isAdmin }: ShootDetailContentProps) 
         </div>
 
         <Separator />
-
-
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Tour Links</h3>
-          <div className="flex flex-wrap gap-2">
-            {/* Branded */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              // disabled={!shoot.tourLinks?.branded}
-              onClick={() => shoot.tourLinks?.branded && window.open(shoot.tourLinks?.branded, "_blank")}
-            >
-              Branded
-            </Button>
-
-
-            {/* MLS */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              // disabled={!shoot.tourLinks?.mls}
-              onClick={() => shoot.tourLinks?.mls && window.open(shoot.tourLinks?.mls, "_blank")}
-            >
-              MLS
-            </Button>
-
-            {/* Generic MLS */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              // disabled={!shoot.tourLinks?.genericMls}
-              onClick={() => shoot.tourLinks?.genericMls && window.open(shoot.tourLinks?.genericMls, "_blank")}
-            >
-              Generic MLS
-            </Button>
-          </div>
-        </div>
 
       </div>
     </div>

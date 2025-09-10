@@ -51,7 +51,7 @@ export function ShootDetail({ shoot, isOpen, onClose, onPay, invoice }: ShootDet
   const { role } = useAuth();
   const { updateShoot, deleteShoot } = useShoots();
   const [activeTab, setActiveTab] = useState("details");
-  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
+  // const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -86,13 +86,13 @@ export function ShootDetail({ shoot, isOpen, onClose, onPay, invoice }: ShootDet
     return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Paid</Badge>;
   };
 
-  const handleOpenMessageDialog = () => {
-    setIsMessageDialogOpen(true);
-  };
+  // const handleOpenMessageDialog = () => {
+  //   setIsMessageDialogOpen(true);
+  // };
 
-  const handleCloseMessageDialog = () => {
-    setIsMessageDialogOpen(false);
-  };
+  // const handleCloseMessageDialog = () => {
+  //   setIsMessageDialogOpen(false);
+  // };
 
   const handleOpenEditDialog = () => {
     setIsEditDialogOpen(true);
@@ -155,12 +155,12 @@ export function ShootDetail({ shoot, isOpen, onClose, onPay, invoice }: ShootDet
           />
 
           <DialogFooter className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={onClose}>Close</Button>
+            {/* <Button variant="outline" onClick={onClose}>Close</Button>
 
             <Button variant="outline" onClick={handleOpenMessageDialog}>
               <MessageSquare className="h-4 w-4 mr-2" />
               Send Message
-            </Button>
+            </Button> */}
 
             {(isAdmin || isPhotographer) && shoot.status == 'scheduled' && (
               <Button onClick={handleOpenEditDialog}>
@@ -183,12 +183,12 @@ export function ShootDetail({ shoot, isOpen, onClose, onPay, invoice }: ShootDet
               </Button>
             )}
 
-            {(role === 'superadmin' || role === 'admin') && (
+            {/* {(role === 'superadmin' || role === 'admin') && (
               <Button variant="default">
                 <DollarSignIcon className="h-4 w-4 mr-2" />
                 Process Payment
               </Button>
-            )}
+            )} */}
 
             {/* {(role === 'superadmin' || role === 'admin') && (
               <Button variant="default" onClick={() => setIsPaymentDialogOpen(true)}>
@@ -220,11 +220,11 @@ export function ShootDetail({ shoot, isOpen, onClose, onPay, invoice }: ShootDet
 
       {shoot && (
         <>
-          <MessageDialog
+          {/* <MessageDialog
             shoot={shoot}
             isOpen={isMessageDialogOpen}
             onClose={handleCloseMessageDialog}
-          />
+          /> */}
 
           <ShootActionsDialog
             shoot={shoot}
