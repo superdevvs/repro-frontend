@@ -37,7 +37,7 @@ import { ShootActionsDialog } from './ShootActionsDialog';
 import { useShoots } from '@/context/ShootsContext';
 import { useToast } from '@/hooks/use-toast';
 import { InvoiceData } from '@/utils/invoiceUtils';
-import { PaymentDialog } from '@/components/invoices/PaymentDialog';
+import { PaymentDialog } from "@/components/invoices/PaymentDialog";
 
 interface ShootDetailProps {
   shoot: ShootData | null;
@@ -58,6 +58,7 @@ export function ShootDetail({ shoot, isOpen, onClose, onPay, invoice }: ShootDet
 
   const isAdmin = ['admin', 'superadmin'].includes(role);
   const isPhotographer = role === 'photographer';
+  const isClient = role === 'client'; 
 
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
@@ -69,10 +70,10 @@ export function ShootDetail({ shoot, isOpen, onClose, onPay, invoice }: ShootDet
         return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">Scheduled</Badge>;
       case 'completed':
         return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Completed</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending</Badge>;
-      case 'hold':
-        return <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20">Hold</Badge>;
+      // case 'pending':
+      //   return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending</Badge>;
+      // case 'hold':
+      //   return <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20">Hold</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
@@ -162,21 +163,21 @@ export function ShootDetail({ shoot, isOpen, onClose, onPay, invoice }: ShootDet
               Send Message
             </Button> */}
 
-            {(isAdmin || isPhotographer) && shoot.status == 'scheduled' && (
+            {(isAdmin || isPhotographer || isClient) && shoot.status == 'scheduled' && (
               <Button onClick={handleOpenEditDialog}>
                 <PenLine className="h-4 w-4 mr-2" />
                 Edit Shoot
               </Button>
             )}
 
-            {isPhotographer && shoot.status === 'scheduled' && isAdmin && (
+            {isPhotographer && shoot.status === 'scheduled' && isAdmin && isClient &&(
               <Button onClick={handleMarkAsCompleted}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Mark as Completed
               </Button>
             )}
 
-            {isAdmin && (
+            {isAdmin && isClient &&(
               <Button variant="destructive" onClick={handleOpenDeleteDialog}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete

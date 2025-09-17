@@ -80,6 +80,7 @@ import { ShootMediaTab } from "@/components/dashboard/ShootMediaTab";
 import { ShootSettingsTab } from "@/components/dashboard/ShootSettingsTab";
 import { ShootData } from '@/types/shoots';
 import { InvoiceData } from '@/utils/invoiceUtils';   // 👈 import InvoiceData type
+import { useToast } from '@/hooks/use-toast';
 
 interface ShootDetailTabsProps {
   shoot: ShootData;
@@ -98,19 +99,38 @@ export function ShootDetailTabs({
   isPhotographer,
   role
 }: ShootDetailTabsProps) {
+  const { toast } = useToast();
+
   // Always show media tab
   const showMediaTab = true;
 
   // 👇 1. Agar shoot object ke andar invoice data hai:
   const currentInvoice: InvoiceData | null = (shoot as any).invoice ?? null;
 
+  // derive isClient from role (so we can pass it to ShootSettingsTab)
+  const isClient = role === 'client';
+
   // 👇 2. Common handler jo InvoiceList aur ShootSettingsTab dono use karenge
-  const handlePay = (invoice: InvoiceData) => {
+  const handlePay = async (invoice: InvoiceData) => {
     console.log("Process payment for invoice:", invoice);
-    // yaha aap wahi logic daalo jo InvoiceList ke onPay me hai:
-    // - API call mark as paid
-    // - toast show
-    // - state update
+
+    // Example: optimistic UI update + toast. Replace with real API call to mark invoice paid.
+    try {
+      // Example API call (uncomment and adapt if your backend supports it)
+      // const res = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices/${invoice.id}/pay`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ method: invoice.paymentMethod }),
+      // });
+      // const data = await res.json();
+
+      // For now: just toast and console
+      toast({ title: "Payment processed", description: `Invoice ${invoice.id} marked paid (simulated).` });
+      console.log("Payment processed (simulated) for", invoice.id);
+    } catch (err) {
+      console.error("Payment failed", err);
+      toast({ title: "Payment failed", description: "Could not process payment." });
+    }
   };
 
   return (
@@ -143,8 +163,9 @@ export function ShootDetailTabs({
         <ShootSettingsTab 
           shoot={shoot}
           isAdmin={isAdmin}
-          currentInvoice={currentInvoice}      // ✅ ab real object pass hoga
-          onProcessPayment={handlePay}         // ✅ ab real handler pass hoga
+          isClient={isClient}                // ✅ pass isClient derived from role
+          currentInvoice={currentInvoice}   // ✅ pass invoice if present
+          onProcessPayment={handlePay}      // ✅ pass handler to be called after payment
           onUpdate={(updated) => {
             console.log("Shoot updated:", updated);
           }}

@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, Calendar, Clock, ChevronRight, Building, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShootData } from '@/types/shoots';
@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ShootDetailDialog } from '@/components/ShootDetailDialog'; // ADD THIS IMPORT
-
+import { useAuth } from '@/components/auth/AuthProvider'; // added for role check
 
 const statusColors: { [key: string]: string } = {
   'scheduled': 'bg-blue-500',
@@ -40,11 +40,30 @@ const ShootHistory = () => {
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { role } = useAuth(); // role from auth provider
 
   const handleViewDetails = (shoot: ShootData) => {
     setSelectedShoot(shoot);
     setIsDetailDialogOpen(true);
   };
+
+  // --- NEW: if logged-in user is client, redirect to /shoots preserving id & tab ---
+  useEffect(() => {
+    // Only redirect for clients
+    if (role === 'client') {
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+      const tab = params.get('tab') || 'scheduled';
+
+      const next = new URLSearchParams();
+      if (id) next.set('id', id);
+      if (tab) next.set('tab', tab);
+
+      navigate(`/shoots?${next.toString()}`, { replace: true });
+    }
+  }, [role, location.search, navigate]);
+  // -------------------------------------------------------------------------------
 
   // Fetch shoots from the API when the component mounts
   useEffect(() => {
@@ -262,7 +281,7 @@ const ShootHistory = () => {
       <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
       <h3 className="text-xl font-medium mb-2">No shoots to display</h3>
       <p className="text-muted-foreground mb-6">{message}</p>
-      <Button onClick={handleBookNewShoot}>Book a New Shoot</Button>
+      {/* <Button onClick={handleBookNewShoot}>Book a New Shoot</Button> */}
     </div>
   );
   
@@ -299,7 +318,7 @@ const ShootHistory = () => {
             <h1 className="text-3xl font-bold tracking-tight">My Shoots</h1>
             <p className="text-muted-foreground">View and manage your property photo shoots</p>
           </div>
-          <Button onClick={handleBookNewShoot}>Book New Shoot</Button>
+          {/* <Button onClick={handleBookNewShoot}>Book New Shoot</Button> */}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
