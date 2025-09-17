@@ -1,10 +1,9 @@
 
-import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogDescription } from '@/components/ui/dialog';
 import { ShootDetail } from '@/components/dashboard/ShootDetail';
 import { FileUploader } from '@/components/media/FileUploader';
 import { ShootData } from '@/types/shoots';
-import { useShoots } from '@/context/ShootsContext';
 
 interface ShootsDialogsProps {
   selectedShoot: ShootData | null;
@@ -12,19 +11,19 @@ interface ShootsDialogsProps {
   isUploadDialogOpen: boolean;
   setIsDetailOpen: (isOpen: boolean) => void;
   setIsUploadDialogOpen: (isOpen: boolean) => void;
-  onUploadComplete: (files: File[], notes?: string) => void;
-  
+  onUploadComplete: (files?: any[], notes?: string) => void;
+  onPay?: (invoice: any) => void;
 }
 
-export function ShootsDialogs({ 
+export function ShootsDialogs({
   selectedShoot,
   isDetailOpen,
   isUploadDialogOpen,
   setIsDetailOpen,
   setIsUploadDialogOpen,
-  onUploadComplete
+  onUploadComplete,
+  onPay
 }: ShootsDialogsProps) {
-  const { shoots } = useShoots();
   const [initialNotes, setInitialNotes] = useState('');
 
   // When the selected shoot changes, get the appropriate notes based on role
@@ -51,12 +50,13 @@ export function ShootsDialogs({
 
   return (
     <>
-      <ShootDetail 
+      <ShootDetail
         shoot={selectedShoot}
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
+        onPay={onPay || (() => { })}
       />
-      
+
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
@@ -65,8 +65,8 @@ export function ShootsDialogs({
               Add photos, videos, or other media files related to this property.
             </DialogDescription>
           </DialogHeader>
-          <FileUploader 
-            shootId={selectedShoot?.id} 
+          <FileUploader
+            shootId={selectedShoot?.id}
             onUploadComplete={onUploadComplete}
             initialNotes={initialNotes}
           />

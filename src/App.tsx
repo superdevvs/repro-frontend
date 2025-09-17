@@ -24,6 +24,7 @@ import ShootHistory from "./pages/ShootHistory";
 import PhotographerShootHistory from "./pages/PhotographerShootHistory";
 import PhotographerAccount from "./pages/PhotographerAccount";
 import PhotographerAvailability from "./pages/PhotographerAvailability";
+import ShootDetails from "./pages/ShootDetails";
 import { ShootsProvider } from './context/ShootsContext';
 import Profile from "./pages/Profile";
 import Accounting from "./pages/Accounting";
@@ -118,6 +119,11 @@ const AppRoutes = () => {
       <Route path="/shoots" element={
         <ProtectedRoute>
           <Shoots />
+        </ProtectedRoute>
+      } />
+      <Route path="/shoots/:id" element={
+        <ProtectedRoute>
+          <ShootDetails />
         </ProtectedRoute>
       } />
       <Route path="/book-shoot" element={

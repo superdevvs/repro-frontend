@@ -517,13 +517,25 @@ useEffect(() => {
     setUploading(true);
     const formData = new FormData();
     files.forEach(file => {
-      formData.append('file', file);
-      // Optionally, set a Dropbox path for each file
-      formData.append('path', `/Apps/YourApp/${file.name}`);
+      formData.append('files[]', file);
     });
     try {
+      // Determine the correct endpoint based on upload type and shoot ID
+      let uploadEndpoint;
+      if (shootId) {
+        // For shoot-specific uploads, use the workflow system
+        uploadEndpoint = `${import.meta.env.VITE_API_URL}/api/shoots/${shootId}/upload-from-pc`;
+        
+        // Add service category and upload type
+        formData.append('service_category', 'P'); // Default to Photos
+        formData.append('upload_type', uploadType); // raw or edited
+      } else {
+        // For general uploads, use media library
+        uploadEndpoint = `${import.meta.env.VITE_API_URL}/api/media/upload`;
+      }
+
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/dropbox/upload`,
+        uploadEndpoint,
         formData,
         {
           headers: {
@@ -535,9 +547,10 @@ useEffect(() => {
           }
         }
       );
+      const folderType = uploadType === 'raw' ? 'ToDo' : 'Completed';
       toast({
         title: 'Upload Complete',
-        description: `${files.length} files uploaded successfully to Dropbox.`,
+        description: `${files.length} files uploaded successfully to ${folderType} folder.`,
       });
       if (onUploadComplete) {
         onUploadComplete(files, notes);
