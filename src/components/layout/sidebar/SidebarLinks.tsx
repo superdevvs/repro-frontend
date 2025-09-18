@@ -15,6 +15,8 @@ import {
   PlugIcon,
   TicketIcon,
   Settings2Icon,
+  MapPinIcon,
+  TestTubeIcon,
 } from 'lucide-react';
 
 interface SidebarLinksProps {
@@ -150,6 +152,37 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
           isCollapsed={isCollapsed}
           isActive={pathname === '/integrations'}
         />
+      )}
+      
+      {/* Development/Testing Links - Remove in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <>
+          <div className="border-t border-gray-200 my-2"></div>
+          <div className={`px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wide ${isCollapsed ? 'text-center' : ''}`}>
+            {!isCollapsed && 'Testing'}
+          </div>
+          <NavLink
+            to="/address-lookup-demo"
+            icon={<MapPinIcon className="h-5 w-5" />}
+            label="Address Lookup Demo"
+            isCollapsed={isCollapsed}
+            isActive={pathname === '/address-lookup-demo'}
+          />
+          <NavLink
+            to="/book-shoot-enhanced"
+            icon={<TestTubeIcon className="h-5 w-5" />}
+            label="Enhanced Book Shoot"
+            isCollapsed={isCollapsed}
+            isActive={pathname === '/book-shoot-enhanced'}
+          />
+          <NavLink
+            to="/test-client-form"
+            icon={<ClipboardIcon className="h-5 w-5" />}
+            label="Test Client Form"
+            isCollapsed={isCollapsed}
+            isActive={pathname === '/test-client-form'}
+          />
+        </>
       )}
     </div>
   );

@@ -33,6 +33,10 @@ import { toast } from "./components/ui/use-toast";
 import Coupons from "./pages/Coupons";
 import PermissionSettings from "./pages/PermissionSettings";
 import DropboxCallback from './components/DropboxCallback';
+import AddressLookupDemo from './components/AddressLookupDemo';
+import BookShootWithAddressLookup from './components/BookShootWithAddressLookup';
+import AddressLookupTest from './pages/AddressLookupTest';
+import TestClientPropertyForm from './pages/TestClientPropertyForm';
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -109,6 +113,10 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
+      
+      {/* Public test routes for address lookup */}
+      <Route path="/test-address-lookup" element={<AddressLookupTest />} />
+      <Route path="/test-client-form" element={<TestClientPropertyForm />} />
 
       <Route path="/dropbox-callback" element={<DropboxCallback />} />
       <Route path="/dashboard" element={
@@ -215,6 +223,17 @@ const AppRoutes = () => {
       <Route path="/permissions" element={
         <ProtectedRoute>
           <PermissionSettings />
+        </ProtectedRoute>
+      } />
+      {/* Address lookup testing routes */}
+      <Route path="/address-lookup-demo" element={
+        <ProtectedRoute>
+          <AddressLookupDemo />
+        </ProtectedRoute>
+      } />
+      <Route path="/book-shoot-enhanced" element={
+        <ProtectedRoute>
+          <BookShootWithAddressLookup />
         </ProtectedRoute>
       } />
       <Route path="*" element={<NotFound />} />

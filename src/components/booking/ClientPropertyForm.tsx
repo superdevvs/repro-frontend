@@ -36,6 +36,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info, Star } from 'lucide-react';
+import AddressLookupField from '../AddressLookupField';
 
 interface PackageOption {
   id: string;
@@ -373,8 +374,23 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                   <FormItem>
                     <FormLabel>Address</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter property address" {...field} />
+                      <AddressLookupField
+                        value={field.value}
+                        onChange={field.onChange}
+                        onAddressSelect={(address) => {
+                          // Auto-fill city, state, and zip when address is selected
+                          form.setValue('propertyCity', address.city);
+                          form.setValue('propertyState', address.state);
+                          form.setValue('propertyZip', address.zip);
+                          // Update the address field with just the street address
+                          form.setValue('propertyAddress', address.address);
+                        }}
+                        placeholder="Start typing the property address..."
+                      />
                     </FormControl>
+                    <FormDescription className="text-xs text-muted-foreground">
+                      Start typing to see address suggestions. Selecting an address will auto-fill city, state, and ZIP code.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
