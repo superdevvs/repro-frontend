@@ -16,7 +16,7 @@ import { DollarSignIcon } from "lucide-react";
 import { PaymentDialog } from "@/components/invoices/PaymentDialog";
 import { BrandedPage } from "@/components/tourLinks/BrandedPage";
 import { MlsCompliant } from "@/components/tourLinks/MlsCompliant";
-// import { GenericMlS } from "@/components/tourLinks/GenericMLS";
+import { GenericMLS } from "@/components/tourLinks/GenericMLS";
 
 interface ShootSettingsTabProps {
   shoot: ShootData;
@@ -351,7 +351,7 @@ export function ShootSettingsTab({
 
       {activePage === "branded" && <BrandedPage />}
       {activePage === "mls" && <MlsCompliant />}
-      {activePage === "genericMls" && <GenericMlS />}
+      {activePage === "genericMls" && <GenericMLS />}
     </div>
   ) : (
     TOUR_KEYS.map((key) => {
