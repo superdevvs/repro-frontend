@@ -13,7 +13,10 @@ import { format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { DollarSignIcon } from "lucide-react";
 
-import { PaymentDialog } from "@/components/invoices/PaymentDialog"; // ensure this matches your file's export
+import { PaymentDialog } from "@/components/invoices/PaymentDialog";
+import { BrandedPage } from "@/components/tourLinks/BrandedPage";
+import { MlsCompliant } from "@/components/tourLinks/MlsCompliant";
+// import { GenericMlS } from "@/components/tourLinks/GenericMLS";
 
 interface ShootSettingsTabProps {
   shoot: ShootData;
@@ -64,6 +67,8 @@ export function ShootSettingsTab({
 
   // Local invoice state (sync with prop if provided)
   const [localInvoice, setLocalInvoice] = useState<InvoiceData | null>(currentInvoice ?? null);
+
+  const [activePage, setActivePage] = useState<TourLinkKey | null>(null);
 
   // initialize from prop
   useEffect(() => {
@@ -293,7 +298,7 @@ export function ShootSettingsTab({
       return;
     }
 
-    sonnerToast("Creating invoice...", { type: "info" });
+    sonnerToast("Creating invoice...");
     const created = await createInvoiceForShoot();
     if (created) {
       setLocalInvoice(created);
@@ -335,30 +340,70 @@ export function ShootSettingsTab({
           <h3 className="text-sm font-medium text-muted-foreground">Tour Links</h3>
         </div>
 
-        <div className="flex gap-3">
-          {TOUR_KEYS.map((key) => {
-            const label = key === "branded" ? "Branded" : key === "mls" ? "MLS" : "Generic MLS";
-            const url = tourLinks[key] as string | undefined;
+        {/* Buttons OR Active Page */}
+        {/* Buttons OR Active Page */}
+<div className="flex gap-3">
+  {activePage ? (
+    <div className="w-full">
+      <div className="mb-3">
+        <Button variant="ghost" onClick={() => setActivePage(null)}>← Back</Button>
+      </div>
 
-            const handleClick = () => {
-              if (key === "branded") navigate("/branded");
-              else if (key === "mls") navigate("/mls");
-              else if (key === "genericMls") navigate("/genericmls");
-            };
+      {activePage === "branded" && <BrandedPage />}
+      {activePage === "mls" && <MlsCompliant />}
+      {activePage === "genericMls" && <GenericMlS />}
+    </div>
+  ) : (
+    TOUR_KEYS.map((key) => {
+      const label = key === "branded" ? "Branded" : key === "mls" ? "MLS" : "Generic MLS";
+      const url = tourLinks[key] as string | undefined;
 
-            return (
-              <Button
-                key={key}
-                variant={url ? "outline" : "secondary"}
-                className="flex-1 justify-center"
-                onClick={handleClick}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                {label}
-              </Button>
-            );
-          })}
-        </div>
+      // debug: confirm url at render time
+      // console.log("tour key:", key, "url:", url);
+
+      if (url) {
+        // ensure absolute URL — if missing protocol, prefix https://
+        const safeUrl = /^(https?:)?\/\//i.test(url) ? url : `https://${url}`;
+
+        // Use Button asChild so the Button renders the <a> element instead of nesting a <button> inside <a>
+        return (
+          <div key={key} className="flex-1">
+            <Button asChild variant="outline" className="w-full justify-center">
+              <a
+  key={key}
+  href={safeUrl}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="flex-1 block"
+>
+  <div className="w-full px-4 py-2 border rounded-lg text-center flex items-center justify-center">
+    <ExternalLink className="h-4 w-4 mr-2" />
+    {label}
+  </div>
+</a>
+
+            </Button>
+          </div>
+        );
+      }
+
+      // otherwise show inline component button
+      return (
+        <Button
+          key={key}
+          variant="secondary"
+          className="flex-1 justify-center"
+          onClick={() => setActivePage(key)}
+        >
+          <ExternalLink className="h-4 w-4 mr-2" />
+          {label}
+        </Button>
+      );
+    })
+  )}
+</div>
+
+
 
         {/* -------------- 3D Tours Section -------------- */}
         <div className="mt-6">
