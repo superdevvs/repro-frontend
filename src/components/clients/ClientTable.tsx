@@ -130,7 +130,14 @@ export const ClientTable: React.FC<ClientTableProps> = ({
                         <CameraIcon className="h-4 w-4 mr-2" />
                         Book Shoot
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => onClientPortal(client, e)}>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onClientPortal(client, e);
+                          const url = `${window.location.origin}/client-portal`;
+                          window.open(url, '_blank', 'noopener,noreferrer');
+                        }}
+                      >
                         <ExternalLinkIcon className="h-4 w-4 mr-2" />
                         Client Portal
                       </DropdownMenuItem>

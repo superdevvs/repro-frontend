@@ -342,66 +342,63 @@ export function ShootSettingsTab({
 
         {/* Buttons OR Active Page */}
         {/* Buttons OR Active Page */}
-<div className="flex gap-3">
-  {activePage ? (
-    <div className="w-full">
-      <div className="mb-3">
-        <Button variant="ghost" onClick={() => setActivePage(null)}>← Back</Button>
-      </div>
+        <div className="flex gap-3">
+          {activePage ? (
+            <div className="w-full">
+              <div className="mb-3">
+                <Button variant="ghost" onClick={() => setActivePage(null)}>← Back</Button>
+              </div>
 
-      {activePage === "branded" && <BrandedPage />}
-      {activePage === "mls" && <MlsCompliant />}
-      {activePage === "genericMls" && <GenericMLS />}
-    </div>
-  ) : (
-    TOUR_KEYS.map((key) => {
-      const label = key === "branded" ? "Branded" : key === "mls" ? "MLS" : "Generic MLS";
-      const url = tourLinks[key] as string | undefined;
+              {activePage === "branded" && <BrandedPage />}
+              {activePage === "mls" && <MlsCompliant />}
+              {activePage === "genericMls" && <GenericMLS />}
+            </div>
+          ) : (
+            TOUR_KEYS.map((key) => {
+              const label = key === "branded" ? "Branded" : key === "mls" ? "MLS" : "Generic MLS";
+              const url = tourLinks[key] as string | undefined;
 
-      // debug: confirm url at render time
-      // console.log("tour key:", key, "url:", url);
+              if (url) {
+                // ensure absolute URL — if missing protocol, prefix https://
+                const safeUrl = /^(https?:)?\/\//i.test(url) ? url : `https://${url}`;
 
-      if (url) {
-        // ensure absolute URL — if missing protocol, prefix https://
-        const safeUrl = /^(https?:)?\/\//i.test(url) ? url : `https://${url}`;
+                // Use Button asChild so the Button renders the <a> element instead of nesting a <button> inside <a>
+                return (
+                  <div key={key} className="flex-1">
+                    <Button asChild variant="outline" className="w-full justify-center">
+                      <a
+                        key={key}
+                        href={safeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 block"
+                      >
+                        <div className="w-full px-4 py-2 border rounded-lg text-center flex items-center justify-center">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          {label}
+                        </div>
+                      </a>
 
-        // Use Button asChild so the Button renders the <a> element instead of nesting a <button> inside <a>
-        return (
-          <div key={key} className="flex-1">
-            <Button asChild variant="outline" className="w-full justify-center">
-              <a
-  key={key}
-  href={safeUrl}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="flex-1 block"
->
-  <div className="w-full px-4 py-2 border rounded-lg text-center flex items-center justify-center">
-    <ExternalLink className="h-4 w-4 mr-2" />
-    {label}
-  </div>
-</a>
+                    </Button>
+                  </div>
+                );
+              }
 
-            </Button>
-          </div>
-        );
-      }
-
-      // otherwise show inline component button
-      return (
-        <Button
-          key={key}
-          variant="secondary"
-          className="flex-1 justify-center"
-          onClick={() => setActivePage(key)}
-        >
-          <ExternalLink className="h-4 w-4 mr-2" />
-          {label}
-        </Button>
-      );
-    })
-  )}
-</div>
+              // otherwise show inline component button
+              return (
+                <Button
+                  key={key}
+                  variant="secondary"
+                  className="flex-1 justify-center"
+                  onClick={() => setActivePage(key)}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  {label}
+                </Button>
+              );
+            })
+          )}
+        </div>
 
 
 

@@ -32,6 +32,7 @@ import { toast } from "./components/ui/use-toast";
 import Coupons from "./pages/Coupons";
 import PermissionSettings from "./pages/PermissionSettings";
 import DropboxCallback from './components/DropboxCallback';
+import ClientPortal from "./components/clients/ClientPortal";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -46,7 +47,7 @@ const queryClient = new QueryClient({
 // Protected route component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   // Show loading state if auth is still initializing
   if (isLoading) {
     return (
@@ -55,7 +56,7 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
     // Show a toast notification when redirecting
     toast({
@@ -65,14 +66,14 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
     });
     return <Navigate to="/" replace />;
   }
-  
+
   return children;
 };
 
 // Admin route component
 const AdminRoute = ({ children }: { children: JSX.Element }) => {
   const { role, isAuthenticated, isLoading } = useAuth();
-  
+
   // Show loading state if auth is still initializing
   if (isLoading) {
     return (
@@ -81,7 +82,7 @@ const AdminRoute = ({ children }: { children: JSX.Element }) => {
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
     toast({
       title: "Authentication Required",
@@ -90,7 +91,7 @@ const AdminRoute = ({ children }: { children: JSX.Element }) => {
     });
     return <Navigate to="/" replace />;
   }
-  
+
   if (!['admin', 'superadmin'].includes(role)) {
     toast({
       title: "Access Denied",
@@ -99,7 +100,7 @@ const AdminRoute = ({ children }: { children: JSX.Element }) => {
     });
     return <Navigate to="/dashboard" replace />;
   }
-  
+
   return children;
 };
 
@@ -110,6 +111,12 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
 
       <Route path="/dropbox-callback" element={<DropboxCallback />} />
+      <Route path="/client-portal" element={
+        <ProtectedRoute>
+          <ClientPortal />
+        </ProtectedRoute>
+      } />
+
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
@@ -212,6 +219,7 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       <Route path="*" element={<NotFound />} />
+
     </Routes>
   );
 };
