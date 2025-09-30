@@ -169,7 +169,7 @@ export const ClientCardComponent: React.FC<ClientCardComponentProps> = ({
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
-                const url = `${window.location.origin}/client-portal/${client.id}`;
+                const url = `${window.location.origin}/client-portal`;
                 window.open(url, '_blank', 'noopener,noreferrer');
               }}
             >
