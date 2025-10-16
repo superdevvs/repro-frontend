@@ -29,7 +29,7 @@ import {
   Home,
   PlusCircle,
   Search,
-  User
+  User,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,6 +37,11 @@ import * as z from 'zod';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info, Star } from 'lucide-react';
 import AddressLookupField from '../AddressLookupField';
+// add near other imports at top
+import { AccountForm } from '@/components/accounts/AccountForm';
+import type { AccountFormValues } from '@/components/accounts/AccountForm';
+import type { User } from '@/components/auth/AuthProvider';
+
 
 interface PackageOption {
   id: string;
@@ -110,6 +115,10 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingClient, setIsAddingClient] = useState(false);
 
+  // AccountForm control state
+  const [isAccountFormOpen, setIsAccountFormOpen] = useState<boolean>(false);
+  const [accountInitialData, setAccountInitialData] = useState<User | undefined>(undefined);
+
   const navigate = useNavigate();
 
   const formSchema = isClientAccount ? clientAccountPropertyFormSchema : adminPropertyFormSchema;
@@ -173,9 +182,20 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
     }
   };
 
-  const navigateToNewClient = () => {
-    navigate('/clients/new?returnToBooking=true');
+
+  const handleAccountFormSubmit = (data: AccountFormValues) => {
+    // data: create payload from account form
+    console.log("AccountForm submitted:", data);
+    // close modal
+    setIsAccountFormOpen(false);
   };
+
+  const navigateToNewClient = () => {
+    // Open AccountForm modal for creating a NEW client
+    setAccountInitialData(undefined);
+    setIsAccountFormOpen(true);
+  };
+
 
   const getPackageHighlight = (pkg: { id: string; name: string }) => {
     if (pkg.name === 'Premium') return { icon: <Star className="h-4 w-4 text-amber-500" />, label: 'Most Popular' };
@@ -329,7 +349,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
         )}
 
         <div className="pt-2">
-          {!isClientAccount && <Separator className="my-6" />}
+          {/* {!isClientAccount && <Separator className="my-6" />} */}
           <h3 className="text-lg font-medium mb-4">Property Details</h3>
 
           <div className="space-y-4">
@@ -467,9 +487,9 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                     <FormItem className="sm:col-span-1 col-span-2">
                       <FormLabel>Bathroom</FormLabel>
                       <FormControl>
-                        <Input 
+                        <Input
                           type="number"
-                          placeholder="Bathroom" 
+                          placeholder="Bathroom"
                           {...field}
                           onChange={(e) => field.onChange(e.target.valueAsNumber)} />
                       </FormControl>
@@ -484,9 +504,9 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                     <FormItem className="sm:col-span-1 col-span-2">
                       <FormLabel>SQFT</FormLabel>
                       <FormControl>
-                        <Input 
+                        <Input
                           type="number"
-                          placeholder="sqft" 
+                          placeholder="sqft"
                           {...field}
                           onChange={(e) => field.onChange(e.target.valueAsNumber)} />
                       </FormControl>
@@ -639,6 +659,16 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
           <Button type="submit">Continue</Button>
         </div>
       </form>
+
+      <AccountForm
+        open={isAccountFormOpen}
+        onOpenChange={(open) => {
+          setIsAccountFormOpen(open);
+          if (!open) setAccountInitialData(undefined);
+        }}
+        onSubmit={handleAccountFormSubmit}
+        initialData={accountInitialData}
+      />
     </Form>
   );
 }

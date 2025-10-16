@@ -1,41 +1,48 @@
-// ShootSettingsTab.tsx
 import React, { useEffect, useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { InvoiceData } from '@/utils/invoiceUtils';
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { toast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 import { ExternalLink, Trash, Plus, Edit, Check, DollarSignIcon as DSIcon } from "lucide-react";
 import { ShootData } from "@/types/shoots";
 import { format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { DollarSignIcon } from "lucide-react";
 
+import { PaymentDialog } from "@/components/invoices/PaymentDialog";
+import { BrandedPage } from "@/components/tourLinks/BrandedPage";
+import { MlsCompliant } from "@/components/tourLinks/MlsCompliant";
+import { GenericMLS } from "@/components/tourLinks/GenericMLS";
+
 interface ShootSettingsTabProps {
   shoot: ShootData;
   isAdmin?: boolean;
+  isClient?: boolean;
   onUpdate?: (updated: Partial<ShootData>) => void; // optimistic update callback
   onDelete?: () => void;
+  onProcessPayment?: (invoice: InvoiceData) => void;
+  currentInvoice?: InvoiceData | null;
 }
 
 type TourLinkKey = "branded" | "mls" | "genericMls";
 type Tour3DKey = "matterport" | "iGuide" | "cubicasa";
 
-// Only first three tour link types (2D / MLS)
 const TOUR_KEYS: TourLinkKey[] = ["branded", "mls", "genericMls"];
-// 3D tour keys
 const TOUR_3D_KEYS: Tour3DKey[] = ["matterport", "iGuide", "cubicasa"];
 
-export function ShootSettingsTab({ shoot, isAdmin = false, onUpdate, onDelete }: ShootSettingsTabProps) {
+export function ShootSettingsTab({
+  shoot,
+  isAdmin = false,
+  isClient = false,
+  onUpdate,
+  onDelete,
+  onProcessPayment,
+  currentInvoice = null,
+}: ShootSettingsTabProps) {
   // ---------- local state ----------
   const [tourLinks, setTourLinks] = useState<Record<string, string | undefined>>({});
   const [isDeletingTour, setIsDeletingTour] = useState<TourLinkKey | Tour3DKey | null>(null);
@@ -54,9 +61,14 @@ export function ShootSettingsTab({ shoot, isAdmin = false, onUpdate, onDelete }:
 
   const [savingToggleKey, setSavingToggleKey] = useState<string | null>(null); // to show loading state per toggle
 
-  // payment dialog state
-  const [markPaidDialogOpen, setMarkPaidDialogOpen] = useState(false);
-  const [processingPayment, setProcessingPayment] = useState(false);
+  // Payment dialog state
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false); // kept if needed elsewhere
+
+  // Local invoice state (sync with prop if provided)
+  const [localInvoice, setLocalInvoice] = useState<InvoiceData | null>(currentInvoice ?? null);
+
+  const [activePage, setActivePage] = useState<TourLinkKey | null>(null);
 
   // initialize from prop
   useEffect(() => {
@@ -78,6 +90,11 @@ export function ShootSettingsTab({ shoot, isAdmin = false, onUpdate, onDelete }:
     setIsSortLocked(!!(shoot as any)?.meta?.sortLocked);
   }, [shoot]);
 
+  // keep localInvoice in sync with prop changes
+  useEffect(() => {
+    setLocalInvoice(currentInvoice ?? null);
+  }, [currentInvoice]);
+
   // ---------- helpers ----------
   const formatMoney = (v: number) => `$${v.toFixed(2)}`;
   const computedTaxAmount = () => ((shoot as any)?.payment?.baseQuote ?? 0) * ((shoot as any)?.payment?.taxRate ?? 0) / 100;
@@ -96,11 +113,11 @@ export function ShootSettingsTab({ shoot, isAdmin = false, onUpdate, onDelete }:
       if (!res.ok) throw new Error(`Server ${res.status}`);
 
       // optimistic update to parent
-      onUpdate?.({ meta: { ...( (shoot as any).meta || {} ), [key]: value } } as any);
-      toast.success("Updated");
+      onUpdate?.({ meta: { ...((shoot as any).meta || {}), [key]: value } } as any);
+      sonnerToast.success("Updated");
     } catch (err) {
       console.error("Toggle update failed", err);
-      toast.error("Failed to update");
+      sonnerToast.error("Failed to update");
     } finally {
       setSavingToggleKey(null);
     }
@@ -109,7 +126,7 @@ export function ShootSettingsTab({ shoot, isAdmin = false, onUpdate, onDelete }:
   // ---------- tour link deletion (2D + 3D) ----------
   const confirmDeleteTour = async (key: TourLinkKey | Tour3DKey) => {
     if (!isAdmin) {
-      toast.error("You don't have permission to remove links");
+      sonnerToast.error("You don't have permission to remove links");
       return;
     }
 
@@ -126,11 +143,11 @@ export function ShootSettingsTab({ shoot, isAdmin = false, onUpdate, onDelete }:
 
       const updatedLinks = { ...tourLinks, [key]: undefined };
       setTourLinks(updatedLinks);
-      toast.success("Tour link removed");
+      sonnerToast.success("Tour link removed");
       onUpdate?.({ tourLinks: updatedLinks });
     } catch (err) {
       console.error("Failed to delete tour link", err);
-      toast.error("Failed to remove link");
+      sonnerToast.error("Failed to remove link");
     } finally {
       setIsDeletingTour(null);
     }
@@ -151,7 +168,7 @@ export function ShootSettingsTab({ shoot, isAdmin = false, onUpdate, onDelete }:
     if (!editing3DKey) return;
     const value = editing3DValue.trim();
     if (value && !/^https?:\/\//i.test(value)) {
-      toast.error("Please enter a valid URL (must start with http:// or https://)");
+      sonnerToast.error("Please enter a valid URL (must start with http:// or https://)");
       return;
     }
     setIsSaving3D(true);
@@ -168,60 +185,150 @@ export function ShootSettingsTab({ shoot, isAdmin = false, onUpdate, onDelete }:
       setTourLinks(updated);
       setEditing3DKey(null);
       setEditing3DValue("");
-      toast.success("3D tour saved");
+      sonnerToast.success("3D tour saved");
       onUpdate?.({ tourLinks: updated });
     } catch (err) {
       console.error("Save 3D tour failed", err);
-      toast.error("Failed to save 3D tour");
+      sonnerToast.error("Failed to save 3D tour");
     } finally {
       setIsSaving3D(false);
     }
   };
 
-  // ---------- payment handlers (simple) ----------
-  const handleProcessPayment = async () => {
-    setProcessingPayment(true);
+  // ---------- Payment helpers: fetch/create invoice ----------
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return token ? { Authorization: `Bearer ${token}`, Accept: 'application/json' } : { Accept: 'application/json' };
+  };
+
+  const fetchInvoiceForShoot = async (): Promise<InvoiceData | null> => {
     try {
-      const res = await fetch(`/api/shoots/${shoot.id}/process-payment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: computedTotalQuote() }),
+      // Try a shoot-scoped endpoint first
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shoots/${shoot.id}/invoice`, {
+        headers: getAuthHeaders(),
       });
-      if (!res.ok) throw new Error(`Payment failed ${res.status}`);
-      const data = await res.json();
-      toast.success("Payment processed");
-      onUpdate?.({ payment: { ...(shoot as any).payment, totalPaid: data.totalPaid ?? computedTotalQuote(), lastPaymentDate: data.lastPaymentDate } } as any);
-      setIsMarkedPaid(true);
+      if (res.ok) {
+        const json = await res.json();
+        const invoice: InvoiceData = json.data ?? json;
+        console.log("Fetched invoice via /shoots/:id/invoice", invoice);
+        return invoice;
+      }
+
+      // fallback to search invoices by shootId
+      const res2 = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices?shootId=${shoot.id}`, {
+        headers: getAuthHeaders(),
+      });
+      if (res2.ok) {
+        const json2 = await res2.json();
+        const items = json2.data ?? json2;
+        if (Array.isArray(items) && items.length > 0) {
+          console.log("Fetched invoice list and picked first", items[0]);
+          return items[0] as InvoiceData;
+        }
+      }
+
+      return null;
     } catch (err) {
-      console.error(err);
-      toast.error("Payment failed");
-    } finally {
-      setProcessingPayment(false);
-      setMarkPaidDialogOpen(false);
+      console.error("fetchInvoiceForShoot error", err);
+      return null;
     }
   };
 
-  const handleMarkAsPaid = async () => {
-    setProcessingPayment(true);
+  const createInvoiceForShoot = async (): Promise<InvoiceData | null> => {
     try {
-      const total = computedTotalQuote();
-      const res = await fetch(`/api/shoots/${shoot.id}/mark-paid`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ totalPaid: total }),
+      // Minimal payload; adjust according to backend requirements
+      const payload = {
+        shootId: shoot.id,
+        amount: (shoot as any)?.payment?.totalQuote ?? (shoot as any)?.payment?.baseQuote ?? 0,
+        description: `Invoice for shoot ${shoot.id}`,
+      };
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(getAuthHeaders() as any) },
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Server error");
-      const data = await res.json();
-      toast.success("Marked as paid");
-      onUpdate?.({ payment: { ...(shoot as any).payment, totalPaid: data.totalPaid ?? total, lastPaymentDate: data.lastPaymentDate } } as any);
-      setIsMarkedPaid(true);
+
+      if (!res.ok) {
+        console.error("createInvoiceForShoot failed status", res.status);
+        throw new Error(`Server ${res.status}`);
+      }
+
+      const json = await res.json();
+      const created: InvoiceData = json.data ?? json;
+      console.log("Created invoice", created);
+      return created;
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to mark paid");
-    } finally {
-      setProcessingPayment(false);
-      setMarkPaidDialogOpen(false);
+      console.error("createInvoiceForShoot error", err);
+      return null;
     }
+  };
+
+  // ---------- openPaymentDialog resilient flow ----------
+  const openPaymentDialog = async () => {
+    console.log("openPaymentDialog invoked", { isAdmin, isClient, localInvoice, currentInvoice });
+
+    if (!(isAdmin || isClient)) {
+      sonnerToast.error("You don't have permission to process payments");
+      return;
+    }
+
+    if (localInvoice) {
+      setPaymentDialogOpen(true);
+      return;
+    }
+
+    sonnerToast("Searching for invoice...", { type: "info" });
+    // try fetch
+    const fetched = await fetchInvoiceForShoot();
+    if (fetched) {
+      setLocalInvoice(fetched);
+      // optionally inform parent
+      if (onProcessPayment) {
+        try { onProcessPayment(fetched); } catch (e) { /* ignore */ }
+      }
+      setPaymentDialogOpen(true);
+      return;
+    }
+
+    // ask user to create invoice
+    const create = window.confirm("No invoice found for this shoot. Would you like to create one now?");
+    if (!create) {
+      sonnerToast.error("No invoice available to process for this shoot");
+      return;
+    }
+
+    sonnerToast("Creating invoice...");
+    const created = await createInvoiceForShoot();
+    if (created) {
+      setLocalInvoice(created);
+      if (onProcessPayment) {
+        try { onProcessPayment(created); } catch (e) { /* ignore */ }
+      }
+      sonnerToast.success("Invoice created. You can now process payment.");
+      setPaymentDialogOpen(true);
+      return;
+    }
+
+    sonnerToast.error("Failed to create invoice");
+    return;
+  };
+
+  const handlePaymentComplete = (invoiceId: string, paymentMethod: string) => {
+    // Close dialog
+    setPaymentDialogOpen(false);
+
+    // Optionally update local invoice/payment flags
+    if (localInvoice && String(localInvoice.id) === String(invoiceId)) {
+      setLocalInvoice({ ...localInvoice, status: "paid" as any, paymentMethod });
+    }
+
+    // notify parent
+    if (onProcessPayment && localInvoice) {
+      try { onProcessPayment(localInvoice); } catch (e) { /* ignore */ }
+    }
+
+    sonnerToast.success(`Payment processed (${paymentMethod}) for invoice ${invoiceId}`);
   };
 
   // ---------- render ----------
@@ -233,25 +340,67 @@ export function ShootSettingsTab({ shoot, isAdmin = false, onUpdate, onDelete }:
           <h3 className="text-sm font-medium text-muted-foreground">Tour Links</h3>
         </div>
 
+        {/* Buttons OR Active Page */}
+        {/* Buttons OR Active Page */}
         <div className="flex gap-3">
-          {TOUR_KEYS.map((key) => {
-            const label = key === "branded" ? "Branded" : key === "mls" ? "MLS" : "Generic MLS";
-            const url = tourLinks[key] as string | undefined;
+          {activePage ? (
+            <div className="w-full">
+              <div className="mb-3">
+                <Button variant="ghost" onClick={() => setActivePage(null)}>← Back</Button>
+              </div>
 
-            return (
-              <Button
-                key={key}
-                variant={url ? "outline" : "secondary"}
-                className="flex-1 justify-center"
-                onClick={() => url && window.open(url, "_blank")}
-                disabled={!url}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                {label}
-              </Button>
-            );
-          })}
+              {activePage === "branded" && <BrandedPage />}
+              {activePage === "mls" && <MlsCompliant />}
+              {activePage === "genericMls" && <GenericMLS />}
+            </div>
+          ) : (
+            TOUR_KEYS.map((key) => {
+              const label = key === "branded" ? "Branded" : key === "mls" ? "MLS" : "Generic MLS";
+              const url = tourLinks[key] as string | undefined;
+
+              if (url) {
+                // ensure absolute URL — if missing protocol, prefix https://
+                const safeUrl = /^(https?:)?\/\//i.test(url) ? url : `https://${url}`;
+
+                // Use Button asChild so the Button renders the <a> element instead of nesting a <button> inside <a>
+                return (
+                  <div key={key} className="flex-1">
+                    <Button asChild variant="outline" className="w-full justify-center">
+                      <a
+                        key={key}
+                        href={safeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 block"
+                      >
+                        <div className="w-full px-4 py-2 border rounded-lg text-center flex items-center justify-center">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          {label}
+                        </div>
+                      </a>
+
+                    </Button>
+                  </div>
+                );
+              }
+
+              // otherwise show inline component button
+              return (
+                <Button
+                  key={key}
+                  variant="secondary"
+                  className="flex-1 justify-center"
+                  onClick={() => setActivePage(key)}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  {label}
+                </Button>
+              );
+            })
+          )}
         </div>
+
+
 
         {/* -------------- 3D Tours Section -------------- */}
         <div className="mt-6">
@@ -341,95 +490,58 @@ export function ShootSettingsTab({ shoot, isAdmin = false, onUpdate, onDelete }:
       <div>
         <div className="space-y-1 border rounded-lg divide-y">
           {/* Finalize */}
-          <div className="flex items-center justify-between px-4 py-2 text-sm">
-            <span>Finalize</span>
-            <Switch
-              checked={isFinalized}
-              onCheckedChange={(checked: boolean) => {
-                setIsFinalized(checked);
-                toggleSetting("finalized", checked);
-              }}
-              disabled={savingToggleKey === "finalized"}
-            />
-          </div>
+          {isAdmin && (
+            <div className="flex items-center justify-between px-4 py-2 text-sm">
+              <span>Finalize</span>
+              <Switch
+                checked={isFinalized}
+                onCheckedChange={(checked: boolean) => {
+                  setIsFinalized(checked);
+                  toggleSetting("finalized", checked);
+                }}
+                disabled={savingToggleKey === "finalized"}
+              />
+            </div>
+          )}
 
           {/* Downloadable */}
-          <div className="flex items-center justify-between px-4 py-2 text-sm">
-            <span>Downloadable</span>
-            <Switch
-              checked={isDownloadable}
-              onCheckedChange={(checked: boolean) => {
-                setIsDownloadable(checked);
-                toggleSetting("downloadable", checked);
-              }}
-              disabled={savingToggleKey === "downloadable"}
-            />
-          </div>
-
-          {/* Mark as Paid (toggle) */}
-          {/* <div className="flex items-center justify-between px-4 py-2 text-sm">
-            <span>Mark as Paid</span>
-            <Switch
-              checked={isMarkedPaid}
-              onCheckedChange={(checked: boolean) => {
-                setIsMarkedPaid(checked);
-                // if marking paid on -> open dialog / or just toggle
-                if (checked) {
-                  setMarkPaidDialogOpen(true);
-                } else {
-                  // un-marking paid just toggles the flag via API
-                  toggleSetting("markedPaid", false);
-                }
-              }}
-              disabled={savingToggleKey === "markedPaid"}
-            />
-          </div> */}
-
+          {isAdmin && (
+            <div className="flex items-center justify-between px-4 py-2 text-sm">
+              <span>Downloadable</span>
+              <Switch
+                checked={isDownloadable}
+                onCheckedChange={(checked: boolean) => {
+                  setIsDownloadable(checked);
+                  toggleSetting("downloadable", checked);
+                }}
+                disabled={savingToggleKey === "downloadable"}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Process Payment button for admins */}
-{isAdmin && (
-  <div className="mt-3">
-    <Button 
-      variant="default" 
-      className="w-full flex items-center justify-center gap-2"
-      onClick={() => setMarkPaidDialogOpen(true)}
-    >
-      <DollarSignIcon className="h-4 w-4 mr-2" />
-      Process Payment
-    </Button>
-  </div>
-)}
-
+        {/* Process Payment button for admins OR clients */}
+        {(isAdmin || isClient) && (
+          <div className="mt-3">
+            <Button
+              variant="default"
+              className="w-full flex items-center justify-center gap-2"
+              onClick={openPaymentDialog}
+            >
+              <DollarSignIcon className="h-4 w-4 mr-2" />
+              Process Payment
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Mark Paid dialog */}
-      <Dialog open={markPaidDialogOpen} onOpenChange={setMarkPaidDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Process Payment</DialogTitle>
-            <DialogDescription>
-              You are about to process a payment of <strong>{formatMoney(computedTotalQuote())}</strong> for this shoot.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">Choose how to complete the payment:</p>
-            <div className="flex gap-2 mt-4">
-              <Button onClick={handleProcessPayment} disabled={processingPayment}>
-                {processingPayment ? "Processing..." : "Process Payment"}
-              </Button>
-              <Button variant="outline" onClick={handleMarkAsPaid} disabled={processingPayment}>
-                {processingPayment ? "Processing..." : "Mark as Paid (manual)"}
-              </Button>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setMarkPaidDialogOpen(false)}>Cancel</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* PaymentDialog (reused shared component). */}
+      <PaymentDialog
+        invoice={localInvoice}
+        isOpen={paymentDialogOpen}
+        onClose={() => setPaymentDialogOpen(false)}
+        onPaymentComplete={handlePaymentComplete}
+      />
     </div>
   );
 }

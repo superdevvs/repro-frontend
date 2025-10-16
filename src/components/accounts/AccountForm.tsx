@@ -47,7 +47,9 @@ const accountFormSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-type AccountFormValues = z.infer<typeof accountFormSchema>;
+// type AccountFormValues = z.infer<typeof accountFormSchema>;
+export type AccountFormValues = z.infer<typeof accountFormSchema>;
+
 
 interface AccountFormProps {
   open: boolean;

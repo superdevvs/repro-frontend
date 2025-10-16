@@ -517,7 +517,9 @@ useEffect(() => {
     setUploading(true);
     const formData = new FormData();
     files.forEach(file => {
-      formData.append('files[]', file);
+      formData.append('file', file);
+      // Optionally, set a Dropbox path for each file
+      formData.append('path', `/Apps/YourApp/${file.name}`);
     });
     try {
       // Determine the correct endpoint based on upload type and shoot ID
