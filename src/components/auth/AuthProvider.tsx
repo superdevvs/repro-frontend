@@ -94,6 +94,8 @@ const generateMockJWT = (userId: string, role: string): string => {
   return `${header}.${payload}.${signature}`;
 };
 
+
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
