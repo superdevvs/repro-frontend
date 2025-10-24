@@ -155,7 +155,7 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
       )}
       
       {/* Development/Testing Links - Remove in production */}
-      {process.env.NODE_ENV === 'development' && (
+      {import.meta.env.VITE_ENV === 'development' && (
         <>
           <div className="border-t border-gray-200 my-2"></div>
           <div className={`px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wide ${isCollapsed ? 'text-center' : ''}`}>
