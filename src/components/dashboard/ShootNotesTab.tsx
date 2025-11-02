@@ -39,6 +39,14 @@ export function ShootNotesTab({
     editingNotes: false
   });
 
+  // Server-side notes fetched from Laravel API (preferred source when available)
+  const [serverNotes, setServerNotes] = useState<{
+    shoot_notes?: string;
+    company_notes?: string;
+    photographer_notes?: string;
+    editor_notes?: string;
+  } | null>(null);
+
   // Initialize notes from the shoot data when component mounts or shoot changes
   useEffect(() => {
     if (shoot) {
@@ -52,28 +60,92 @@ export function ShootNotesTab({
     }
   }, [shoot]);
 
-  // Helper function to safely get notes based on type
+  // Fetch canonical shoot notes from backend API so we can display new top-level fields even if context lacks them
+  useEffect(() => {
+    const loadServerNotes = async () => {
+      try {
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+        if (!token || !shoot?.id) return;
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shoots/${shoot.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        const s = json?.data || {};
+        setServerNotes({
+          shoot_notes: s.shoot_notes ?? undefined,
+          company_notes: s.company_notes ?? undefined,
+          photographer_notes: s.photographer_notes ?? undefined,
+          editor_notes: s.editor_notes ?? undefined,
+        });
+      } catch (e) {
+        console.warn('Failed to load server notes', e);
+      }
+    };
+    loadServerNotes();
+  }, [shoot?.id]);
+
+  // Helper function to read notes from API response (supports legacy object and new top-level fields)
   function getNotes(key: string): string {
+    // Prefer fresh server notes when available
+    if (serverNotes) {
+      switch (key) {
+        case 'shootNotes':
+          if (serverNotes.shoot_notes) return String(serverNotes.shoot_notes);
+          break;
+        case 'photographerNotes':
+          if (serverNotes.photographer_notes) return String(serverNotes.photographer_notes);
+          break;
+        case 'companyNotes':
+          if (serverNotes.company_notes) return String(serverNotes.company_notes);
+          break;
+        case 'editingNotes':
+          if (serverNotes.editor_notes) return String(serverNotes.editor_notes);
+          break;
+      }
+    }
+    // Fallback: check any existing top-level fields on the local shoot object
+    const anyShoot: any = shoot as any;
+    if (anyShoot) {
+      switch (key) {
+        case 'shootNotes':
+          if (anyShoot.shoot_notes) return String(anyShoot.shoot_notes);
+          break;
+        case 'photographerNotes':
+          if (anyShoot.photographer_notes) return String(anyShoot.photographer_notes);
+          break;
+        case 'companyNotes':
+          if (anyShoot.company_notes) return String(anyShoot.company_notes);
+          break;
+        case 'editingNotes':
+          if (anyShoot.editor_notes) return String(anyShoot.editor_notes);
+          break;
+      }
+    }
+    // Legacy: stored under shoot.notes (string or object)
     if (!shoot.notes) return '';
     if (typeof shoot.notes === 'string') return shoot.notes;
-    
     const notes = shoot.notes[key as keyof typeof shoot.notes];
     return notes ? String(notes) : '';
   }
   
   function handleEditToggle(noteType: string) {
-    setActiveEdits(prev => ({
-      ...prev,
-      [noteType]: !prev[noteType as keyof typeof prev]
-    }));
-    
-    // If we're canceling the edit, reset back to original value
-    if (activeEdits[noteType as keyof typeof activeEdits]) {
+    const currentlyEditing = !!activeEdits[noteType as keyof typeof activeEdits];
+    const nextEditing = !currentlyEditing;
+
+    // When entering edit mode, prefill with current displayed note
+    if (nextEditing) {
+      const currentValue = getNotes(noteType);
       setEditableNotes(prev => ({
         ...prev,
-        [noteType]: getNotes(noteType)
+        [noteType]: currentValue
       }));
     }
+
+    setActiveEdits(prev => ({
+      ...prev,
+      [noteType]: nextEditing
+    }));
   }
   
   function handleNoteChange(e: React.ChangeEvent<HTMLTextAreaElement>, noteType: string) {
@@ -103,8 +175,40 @@ export function ShootNotesTab({
     console.log("Shoot ID:", shoot.id);
     
     try {
-      // Save to database
-      await updateShoot(shoot.id, { notes: updatedNotes });
+      // Save to Laravel backend
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      const apiKeyMap: Record<string, string> = {
+        shootNotes: 'shoot_notes',
+        photographerNotes: 'photographer_notes',
+        companyNotes: 'company_notes',
+        editingNotes: 'editor_notes'
+      };
+      const apiKey = apiKeyMap[noteType];
+      if (!apiKey) return;
+
+      const payload: Record<string, string> = {};
+      payload[apiKey] = String(editableNotes[noteType as keyof typeof editableNotes] || '');
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shoots/${shoot.id}/notes`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || 'Failed to save');
+      }
+      const json = await res.json();
+      const d = json?.data || {};
+      setServerNotes({
+        shoot_notes: d.shoot_notes ?? serverNotes?.shoot_notes,
+        company_notes: d.company_notes ?? serverNotes?.company_notes,
+        photographer_notes: d.photographer_notes ?? serverNotes?.photographer_notes,
+        editor_notes: d.editor_notes ?? serverNotes?.editor_notes,
+      });
       
       // Exit edit mode
       setActiveEdits(prev => ({
@@ -140,6 +244,16 @@ export function ShootNotesTab({
       default: 
         return false;
     }
+  }
+
+  // Visibility rules for each audience
+  function canView(noteType: string): boolean {
+    if (isAdmin || role === 'superadmin') return true;
+    if (noteType === 'shootNotes') return role === 'client';
+    if (noteType === 'photographerNotes') return role === 'photographer';
+    if (noteType === 'editingNotes') return role === 'editor';
+    if (noteType === 'companyNotes') return false;
+    return false;
   }
 
   // Function to display the current note value, respecting the edit state
@@ -196,6 +310,7 @@ export function ShootNotesTab({
 
   return (
     <div className="space-y-4">
+      {canView('shootNotes') && (
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-green-700 dark:text-green-400">Shoot Notes</h3>
@@ -230,7 +345,9 @@ export function ShootNotesTab({
           }}
         />
       </div>
+      )}
       
+      {canView('photographerNotes') && (
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-blue-700 dark:text-blue-400">Photographer Notes</h3>
@@ -265,7 +382,9 @@ export function ShootNotesTab({
           }}
         />
       </div>
+      )}
       
+      {canView('companyNotes') && (
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-amber-700 dark:text-amber-400">Company Notes</h3>
@@ -300,7 +419,9 @@ export function ShootNotesTab({
           }}
         />
       </div>
+      )}
       
+      {canView('editingNotes') && (
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-purple-700 dark:text-purple-400">Editing Notes</h3>
@@ -335,6 +456,7 @@ export function ShootNotesTab({
           }}
         />
       </div>
+      )}
     </div>
   );
 }

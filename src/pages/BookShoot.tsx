@@ -1,4 +1,48 @@
+  const [photographers, setPhotographersList] = useState<Array<{ id: string; name: string; avatar?: string }>>([]);
+import API_ROUTES from '@/lib/api';
 
+  // Client info toast when no available photographers
+  useEffect(() => {
+    const role = user?.role;
+    if (role === 'client' && date && time) {
+      if (availablePhotographerIds.length === 0) {
+        toast({ title: 'No photographers available', description: 'You can proceed without selecting a photographer. Our team will assign one soon.' });
+      }
+    }
+  }, [user?.role, date, time, availablePhotographerIds]);
+
+  // Fetch available photographers when date/time changes
+  useEffect(() => {
+    const fetchAvailable = async () => {
+      if (!date || !time) { setAvailablePhotographerIds([]); return; }
+      const parts = time.split(':');
+      if (parts.length < 2) { setAvailablePhotographerIds([]); return; }
+      const [hh, mm] = parts;
+      const start_time = ${hh.padStart(2,'0')}:;
+      const d = new Date(date);
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      const fmtDate = ${y}--;
+      const endHour = String(Number(hh) + 1).padStart(2,'0');
+      const end_time = ${endHour}:;
+      try {
+        const res = await fetch(API_ROUTES.photographerAvailability.availablePhotographers, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: fmtDate, start_time, end_time })
+        });
+        if (!res.ok) throw new Error('Failed to fetch availability');
+        const json = await res.json();
+        const ids = (json?.data || []).map((row: any) => String(row.photographer_id));
+        setAvailablePhotographerIds(ids);
+      } catch {
+        setAvailablePhotographerIds([]);
+      }
+    };
+    fetchAvailable();
+  }, [date, time]);
+  const [availablePhotographerIds, setAvailablePhotographerIds] = useState<string[]>([]);
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -52,6 +96,9 @@ const BookShoot = () => {
   const [photographer, setPhotographer] = useState('');
   const [selectedPackage, setSelectedPackage] = useState('');
   const [notes, setNotes] = useState('');
+  const [companyNotes, setCompanyNotes] = useState('');
+  const [photographerNotes, setPhotographerNotes] = useState('');
+  const [editorNotes, setEditorNotes] = useState('');
   const [bypassPayment, setBypassPayment] = useState(false);
   const [sendNotification, setSendNotification] = useState(true);
   const [step, setStep] = useState(1);
@@ -222,13 +269,7 @@ const BookShoot = () => {
     return totalCents / 100;
   };
   
-  const getAvailablePhotographers = () => {
-    // if (!date || !time || !selectedPackage) return [];
-
-    // return photographers.filter(p => p.availability);
-
-    return photographers
-  };
+  const getAvailablePhotographers = () => {\n    const role = user?.role;\n    if (role === 'admin' || role === 'superadmin') return photographers;\n    if (!date || !time) return [];\n    if (availablePhotographerIds.length === 0) return [];\n    return photographers.filter(p => availablePhotographerIds.includes(p.id));\n  };
 
   const validateCurrentStep = () => {
     if (step === 1) {
@@ -444,7 +485,10 @@ const BookShoot = () => {
     time,
     photographer_id: photographer || null,
     service_id: selectedPackage,
-    notes,
+    shoot_notes: notes || undefined,
+    company_notes: companyNotes || undefined,
+    photographer_notes: photographerNotes || undefined,
+    editor_notes: editorNotes || undefined,
     bypass_payment: bypassPayment,
     send_notification: sendNotification,
     // Add the missing required fields based on API error
@@ -552,7 +596,10 @@ const BookShoot = () => {
       setCity(data.propertyCity);
       setState(data.propertyState);
       setZip(data.propertyZip);
-      setNotes(data.propertyInfo || '');
+      setNotes(data.shootNotes || data.propertyInfo || '');
+      setCompanyNotes(data.companyNotes || '');
+      setPhotographerNotes(data.photographerNotes || '');
+      setEditorNotes(data.editorNotes || '');
       setSelectedPackage(data.selectedPackage || '');
       setStep(2);
     },
@@ -682,3 +729,4 @@ const BookShoot = () => {
 };
 
 export default BookShoot;
+

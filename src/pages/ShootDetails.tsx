@@ -41,6 +41,10 @@ interface Shoot {
   status: string;
   workflow_status: string;
   notes?: string;
+  shoot_notes?: string;
+  company_notes?: string;
+  photographer_notes?: string;
+  editor_notes?: string;
   created_at: string;
   total_paid: number;
   remaining_balance: number;
@@ -224,14 +228,53 @@ const ShootDetails: React.FC = () => {
                 </div>
               </div>
 
-              {shoot.notes && (
-                <>
-                  <Separator />
-                  <div>
-                    <div className="font-medium mb-2">Notes</div>
-                    <div className="text-sm text-muted-foreground">{shoot.notes}</div>
-                  </div>
-                </>
+              {/* Role-specific notes */}
+              <Separator />
+              {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                <div className="space-y-3">
+                  {shoot.shoot_notes && (
+                    <div>
+                      <div className="font-medium mb-1">Client Notes</div>
+                      <div className="text-sm text-muted-foreground">{shoot.shoot_notes}</div>
+                    </div>
+                  )}
+                  {shoot.company_notes && (
+                    <div>
+                      <div className="font-medium mb-1">Company Notes</div>
+                      <div className="text-sm text-muted-foreground">{shoot.company_notes}</div>
+                    </div>
+                  )}
+                  {shoot.photographer_notes && (
+                    <div>
+                      <div className="font-medium mb-1">Photographer Notes</div>
+                      <div className="text-sm text-muted-foreground">{shoot.photographer_notes}</div>
+                    </div>
+                  )}
+                  {shoot.editor_notes && (
+                    <div>
+                      <div className="font-medium mb-1">Editor Notes</div>
+                      <div className="text-sm text-muted-foreground">{shoot.editor_notes}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {user?.role === 'client' && (shoot.shoot_notes || shoot.notes) && (
+                <div>
+                  <div className="font-medium mb-1">Notes</div>
+                  <div className="text-sm text-muted-foreground">{shoot.shoot_notes || shoot.notes}</div>
+                </div>
+              )}
+              {user?.role === 'photographer' && shoot.photographer_notes && (
+                <div>
+                  <div className="font-medium mb-1">Photographer Notes</div>
+                  <div className="text-sm text-muted-foreground">{shoot.photographer_notes}</div>
+                </div>
+              )}
+              {user?.role === 'editor' && shoot.editor_notes && (
+                <div>
+                  <div className="font-medium mb-1">Editor Notes</div>
+                  <div className="text-sm text-muted-foreground">{shoot.editor_notes}</div>
+                </div>
               )}
             </CardContent>
           </Card>

@@ -1,65 +1,133 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarIcon, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { CalendarIcon, Clock, CheckCircle, XCircle, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import API_ROUTES from '@/lib/api';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { TimeSelect } from '@/components/ui/time-select';
 
 const PhotographerAvailability = () => {
   const { user, role } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [slots, setSlots] = useState<Array<{ id: number; photographer_id: number; date?: string | null; day_of_week?: string | null; start_time: string; end_time: string; status?: 'available'|'unavailable' }>>([]);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [newStart, setNewStart] = useState<string>('');
+  const [newEnd, setNewEnd] = useState<string>('');
+  const [isSpecificDate, setIsSpecificDate] = useState(false);
 
-  // Mock data for availability slots
-  const mockTimeSlots = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
-  
-  // Mock data for booked times
-  const bookedTimes = ['11:00 AM', '2:00 PM'];
+  // UI grid hours for quick toggle (1-hour blocks)
+  const gridTimes = useMemo(() => ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'], []);
+
+  const dayOfWeek = useMemo(() => selectedDate ? selectedDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() : undefined, [selectedDate]);
+  const dateStr = useMemo(() => selectedDate ? formatDate(selectedDate) : undefined, [selectedDate]);
+  const slotsForDay = useMemo(() => {
+    if (!dayOfWeek) return [] as typeof slots;
+    if (isSpecificDate && dateStr) {
+      const specific = slots.filter(s => s.date && s.date === dateStr);
+      if (specific.length > 0) return specific as any;
+      return [] as any;
+    }
+    return slots.filter(s => !s.date && s.day_of_week === dayOfWeek) as any;
+  }, [slots, dayOfWeek, isSpecificDate, dateStr]);
+  const toHhMm = (t?: string) => (t ? t.slice(0,5) : '');
+  const activeStartSet = useMemo(() => new Set(slotsForDay.map(s => toHhMm(s.start_time))), [slotsForDay]);
 
   useEffect(() => {
-    // Restrict access to photographers only
-    if (role !== 'photographer') {
-      toast({
-        title: "Access Denied",
-        description: "Only photographers can access their own availability settings.",
-        variant: "destructive"
-      });
-      
-      // Redirect to dashboard or appropriate page
-      navigate('/dashboard');
-      return;
-    }
+    if (!user?.id) return;
+    const load = async () => {
+      try {
+        const res = await fetch(API_ROUTES.photographerAvailability.list(user.id));
+        const json = await res.json();
+        setSlots(json?.data || []);
+      } catch (e) {
+        toast({ title: 'Failed to load availability', variant: 'destructive' });
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [user?.id]);
 
-    // This would typically fetch availability data from an API for the current photographer only
-    setAvailableTimes(mockTimeSlots.filter(time => !bookedTimes.includes(time)));
-    setLoading(false);
-  }, [role, navigate]);
-
-  const toggleTimeSlot = (time: string) => {
-    if (availableTimes.includes(time)) {
-      setAvailableTimes(availableTimes.filter(t => t !== time));
+  const toggleTimeSlot = async (time24: string) => {
+    if (!dayOfWeek || !user?.id) return;
+    // exists? then delete that 1-hour slot, else create it
+    const existing = slotsForDay.find(s => toHhMm(s.start_time) === time24);
+    if (existing) {
+      try {
+        await fetch(API_ROUTES.photographerAvailability.delete(existing.id), { method: 'DELETE' });
+        setSlots(prev => prev.filter(s => s.id !== existing.id));
+      } catch (e) {
+        toast({ title: 'Failed to remove slot', variant: 'destructive' });
+      }
     } else {
-      setAvailableTimes([...availableTimes, time]);
+      // create 1-hour block
+      const end = addOneHour(time24);
+      const payload: any = { photographer_id: user.id, start_time: time24, end_time: end };
+      if (isSpecificDate && dateStr) {
+        payload.date = dateStr;
+      } else {
+        payload.day_of_week = dayOfWeek;
+      }
+      try {
+        const res = await fetch(API_ROUTES.photographerAvailability.create, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json?.data) setSlots(prev => [...prev, json.data]);
+      } catch (e) {
+        toast({ title: 'Failed to add slot', variant: 'destructive' });
+      }
     }
   };
 
   const handleSaveAvailability = () => {
-    // Here we would save the availability data to the backend
-    // This would only allow the logged-in photographer to save their own data
-    
-    toast({
-      title: "Availability Saved",
-      description: "Your availability settings have been updated successfully.",
-    });
+    toast({ title: 'Already saved', description: 'Toggles update immediately.' });
   };
+
+  const addOneHour = (time24: string) => {
+    const [h, m] = time24.split(':').map(Number);
+    const d = new Date(); d.setHours(h, m, 0, 0);
+    d.setHours(d.getHours() + 1);
+    const hh = d.getHours().toString().padStart(2, '0');
+    const mm = d.getMinutes().toString().padStart(2, '0');
+    return `${hh}:${mm}`;
+  };
+
+  const handleAddInterval = async () => {
+    if (!dayOfWeek || !user?.id || !newStart || !newEnd) return;
+    const payload: any = { photographer_id: user.id, start_time: newStart, end_time: newEnd };
+    if (isSpecificDate && dateStr) payload.date = dateStr; else payload.day_of_week = dayOfWeek;
+    try {
+      const res = await fetch(API_ROUTES.photographerAvailability.create, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json?.data) setSlots(prev => [...prev, json.data]);
+      setIsAddOpen(false); setNewStart(''); setNewEnd('');
+    } catch (e) {
+      toast({ title: 'Failed to add interval', variant: 'destructive' });
+    }
+  };
+
+  function formatDate(d: Date) {
+    const y = d.getFullYear();
+    const m = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
 
   if (loading) {
     return (
@@ -108,6 +176,7 @@ const PhotographerAvailability = () => {
             <CardContent className="p-2 sm:p-4">
               <div className="flex justify-center">
                 <Calendar
+                  mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   className="w-full max-w-full mx-auto"
@@ -134,29 +203,33 @@ const PhotographerAvailability = () => {
                   <p className="text-muted-foreground text-sm">Please select a date</p>
                 )}
               </div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs text-muted-foreground">Mode:</div>
+                <div className="flex items-center gap-2">
+                  <button
+                    className={`text-xs px-2 py-1 rounded border ${!isSpecificDate ? 'bg-primary text-white' : 'bg-white'}`}
+                    onClick={() => setIsSpecificDate(false)}
+                  >Weekly Template</button>
+                  <button
+                    className={`text-xs px-2 py-1 rounded border ${isSpecificDate ? 'bg-primary text-white' : 'bg-white'}`}
+                    onClick={() => setIsSpecificDate(true)}
+                  >This Date Only</button>
+                </div>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-2">
-                {mockTimeSlots.map((time) => {
-                  const isAvailable = availableTimes.includes(time);
-                  const isBooked = bookedTimes.includes(time);
-                  
+                {gridTimes.map((t) => {
+                  const isAvailable = activeStartSet.has(t);
                   return (
                     <div
-                      key={time}
-                      onClick={() => !isBooked && toggleTimeSlot(time)}
+                      key={t}
+                      onClick={() => toggleTimeSlot(t)}
                       className={`
                         p-2 sm:p-3 rounded-md border text-center cursor-pointer transition-all flex flex-col items-center justify-center
-                        ${isBooked ? 'bg-gray-100 cursor-not-allowed border-gray-300' : 
-                          isAvailable ? 'bg-green-50 border-green-200 hover:bg-green-100' : 
-                          'bg-white border-gray-200 hover:bg-gray-50'}
+                        ${isAvailable ? 'bg-green-50 border-green-200 hover:bg-green-100' : 'bg-white border-gray-200 hover:bg-gray-50'}
                       `}
                     >
-                      <span className="text-xs sm:text-sm font-medium">{time}</span>
-                      {isBooked ? (
-                        <span className="text-[10px] sm:text-xs text-red-500 flex items-center mt-1">
-                          <XCircle className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
-                          Booked
-                        </span>
-                      ) : isAvailable ? (
+                      <span className="text-xs sm:text-sm font-medium">{t}</span>
+                      {isAvailable ? (
                         <span className="text-[10px] sm:text-xs text-green-600 flex items-center mt-1">
                           <CheckCircle className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
                           Available
@@ -171,12 +244,39 @@ const PhotographerAvailability = () => {
                   );
                 })}
               </div>
-              <div className="mt-4 sm:mt-6">
-                <Button onClick={handleSaveAvailability} className="w-full text-sm sm:text-base">Save Availability</Button>
+              <div className="mt-4 sm:mt-6 flex gap-2">
+                <Button onClick={() => setIsAddOpen(true)} variant="outline" className="w-1/2 text-sm sm:text-base"><Plus className="mr-2 h-4 w-4"/>Add Interval</Button>
+                <Button onClick={handleSaveAvailability} className="w-1/2 text-sm sm:text-base">Save Availability</Button>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Add Interval Dialog */}
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Availability Interval</DialogTitle>
+              <DialogDescription>
+                {isSpecificDate ? 'Specific date' : 'Weekly template'} for {selectedDate?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+              <div className="space-y-2">
+                <Label>Start Time</Label>
+                <TimeSelect value={newStart} onChange={setNewStart} placeholder="Select start time" />
+              </div>
+              <div className="space-y-2">
+                <Label>End Time</Label>
+                <TimeSelect value={newEnd} onChange={setNewEnd} placeholder="Select end time" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
+              <Button onClick={handleAddInterval} disabled={!newStart || !newEnd}>Add</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Mobile View Legend - only show on mobile */}
         {isMobile && (

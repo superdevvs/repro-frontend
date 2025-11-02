@@ -29,7 +29,6 @@ import {
   Home,
   PlusCircle,
   Search,
-  User,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -62,6 +61,8 @@ const clientAccountPropertyFormSchema = z.object({
   propertyInfo: z.string().optional(),
   companyNotes: z.string().optional(),
   shootNotes: z.string().optional(),
+  photographerNotes: z.string().optional(),
+  editorNotes: z.string().optional(),
   selectedPackage: z.string().min(1, "Please select a package")
 });
 
@@ -78,6 +79,8 @@ const adminPropertyFormSchema = z.object({
   propertyInfo: z.string().optional(),
   companyNotes: z.string().optional(),
   shootNotes: z.string().optional(),
+  photographerNotes: z.string().optional(),
+  editorNotes: z.string().optional(),
   selectedPackage: z.string().min(1, "Please select a package")
 });
 
@@ -104,6 +107,8 @@ type ClientPropertyFormProps = {
     propertyInfo: string;
     companyNotes: string;
     shootNotes: string;
+    photographerNotes?: string;
+    editorNotes?: string;
     selectedPackage?: string;
   };
   isClientAccount?: boolean;
@@ -137,6 +142,10 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
         propertyType: initialData.propertyType || 'residential',
         propertyInfo: initialData.propertyInfo || '',
         selectedPackage: initialData.selectedPackage || '',
+        shootNotes: initialData.shootNotes || '',
+        companyNotes: initialData.companyNotes || '',
+        photographerNotes: initialData.photographerNotes || '',
+        editorNotes: initialData.editorNotes || '',
       }
       : {
         clientId: initialData.clientId || '',
@@ -150,6 +159,10 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
         propertyType: initialData.propertyType || 'residential',
         propertyInfo: initialData.propertyInfo || '',
         selectedPackage: initialData.selectedPackage || '',
+        shootNotes: initialData.shootNotes || '',
+        companyNotes: initialData.companyNotes || '',
+        photographerNotes: initialData.photographerNotes || '',
+        editorNotes: initialData.editorNotes || '',
       },
   });
 
@@ -314,7 +327,6 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                                   : "bg-muted text-muted-foreground"
                                   }`}
                               >
-                                <User className="h-4 w-4" />
                               </div>
                               <div>
                                 <div className="font-medium leading-none">
@@ -645,6 +657,42 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                 <FormControl>
                   <Textarea
                     placeholder="Provide any additional information to save for the selected client that will only be visible to company admins/photographer.."
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="photographerNotes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Photographer Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Notes for the photographer (visible to photographer and admins)."
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="editorNotes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Editor Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Notes for the editor (visible to editor and admins)."
                     className="resize-none"
                     {...field}
                   />

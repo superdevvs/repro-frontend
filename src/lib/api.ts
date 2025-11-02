@@ -1,14 +1,28 @@
 // src/api/api.ts
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || `${import.meta.env.VITE_API_URL}/api`;
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const API_ROUTES = {
   services: {
-    all: `${BASE_URL}/services`,
-    create: `${BASE_URL}/admin/services`,
-    show: (id: number | string) => `${BASE_URL}/services/${id}`,
-    update: (id: number | string) => `${BASE_URL}/services/${id}`,
-    delete: (id: number | string) => `${BASE_URL}/services/${id}`,
+    all: `${BASE_URL}/api/services`,
+    create: `${BASE_URL}/api/services`,
+    show: (id: number | string) => `${BASE_URL}/api/services/${id}`,
+    update: (id: number | string) => `${BASE_URL}/api/services/${id}`,
+    delete: (id: number | string) => `${BASE_URL}/api/services/${id}`,
+  },
+  people: {
+    photographers: `${BASE_URL}/api/photographers`,
+    adminPhotographers: `${BASE_URL}/api/admin/photographers`,
+  },
+  photographerAvailability: {
+    list: (photographerId: number | string) => `${BASE_URL}/api/photographer/availability/${photographerId}`,
+    create: `${BASE_URL}/api/photographer/availability`,
+    bulk: `${BASE_URL}/api/photographer/availability/bulk`,
+    update: (id: number | string) => `${BASE_URL}/api/photographer/availability/${id}`,
+    delete: (id: number | string) => `${BASE_URL}/api/photographer/availability/${id}`,
+    clear: (photographerId: number | string) => `${BASE_URL}/api/photographer/availability/clear/${photographerId}`,
+    check: `${BASE_URL}/api/photographer/availability/check`,
+    availablePhotographers: `${BASE_URL}/api/photographer/availability/available-photographers`,
   },
   
   // Add more groups as needed, for example:
