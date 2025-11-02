@@ -1,53 +1,8 @@
-  const [photographers, setPhotographersList] = useState<Array<{ id: string; name: string; avatar?: string }>>([]);
-import API_ROUTES from '@/lib/api';
-
-  // Client info toast when no available photographers
-  useEffect(() => {
-    const role = user?.role;
-    if (role === 'client' && date && time) {
-      if (availablePhotographerIds.length === 0) {
-        toast({ title: 'No photographers available', description: 'You can proceed without selecting a photographer. Our team will assign one soon.' });
-      }
-    }
-  }, [user?.role, date, time, availablePhotographerIds]);
-
-  // Fetch available photographers when date/time changes
-  useEffect(() => {
-    const fetchAvailable = async () => {
-      if (!date || !time) { setAvailablePhotographerIds([]); return; }
-      const parts = time.split(':');
-      if (parts.length < 2) { setAvailablePhotographerIds([]); return; }
-      const [hh, mm] = parts;
-      const start_time = ${hh.padStart(2,'0')}:;
-      const d = new Date(date);
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,'0');
-      const day = String(d.getDate()).padStart(2,'0');
-      const fmtDate = ${y}--;
-      const endHour = String(Number(hh) + 1).padStart(2,'0');
-      const end_time = ${endHour}:;
-      try {
-        const res = await fetch(API_ROUTES.photographerAvailability.availablePhotographers, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ date: fmtDate, start_time, end_time })
-        });
-        if (!res.ok) throw new Error('Failed to fetch availability');
-        const json = await res.json();
-        const ids = (json?.data || []).map((row: any) => String(row.photographer_id));
-        setAvailablePhotographerIds(ids);
-      } catch {
-        setAvailablePhotographerIds([]);
-      }
-    };
-    fetchAvailable();
-  }, [date, time]);
-  const [availablePhotographerIds, setAvailablePhotographerIds] = useState<string[]>([]);
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence } from 'framer-motion';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from '@/hooks/use-toast';
 import { BookingStepIndicator } from '@/components/booking/BookingStepIndicator';
 import { BookingComplete } from '@/components/booking/BookingComplete';
 import { useShoots } from '@/context/ShootsContext';
@@ -60,11 +15,11 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { format } from 'date-fns';
 import { BookingSummary } from '@/components/booking/BookingSummary';
 import { BookingContentArea } from '@/components/booking/BookingContentArea';
-// import { photographers } from '@/constants/bookingSteps';
 import { ShootData } from '@/types/shoots';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { BookingHeader } from '@/components/booking/BookingHeader';
 import axios from 'axios';
+import API_ROUTES from '@/lib/api';
 
 
 const BookShoot = () => {
@@ -107,7 +62,8 @@ const BookShoot = () => {
   const { toast } = useToast();
   const { addShoot } = useShoots();
   const navigate = useNavigate();
-  const [photographers, setPhotographersList] = useState([]);
+  const [photographers, setPhotographersList] = useState<Array<{ id: string; name: string; avatar?: string }>>([]);
+  const [availablePhotographerIds, setAvailablePhotographerIds] = useState<string[]>([]);
   const { fetchShoots } = useShoots();
 
 
@@ -132,7 +88,6 @@ const BookShoot = () => {
           id: client.id.toString()
         }));
         setClients(clientsData);
-        // setClients(response.data.data);
       } catch (error) {
         console.error("Error fetching clients:", error);
         toast({
@@ -187,7 +142,6 @@ const BookShoot = () => {
           id: pkg.id.toString()
         }));
         setPackages(packageData);
-        // setPackages(response.data.data);
       } catch (error) {
         console.error("Error fetching packages:", error);
         toast({
@@ -200,6 +154,46 @@ const BookShoot = () => {
 
     fetchPackages();
   }, [toast]);
+
+  useEffect(() => {
+    const fetchAvailable = async () => {
+      if (!date || !time) { setAvailablePhotographerIds([]); return; }
+      const parts = time.split(':');
+      if (parts.length < 2) { setAvailablePhotographerIds([]); return; }
+      const [hh, mm] = parts;
+      const start_time = `${hh.padStart(2,'0')}:${mm.padStart(2,'0')}`;
+      const d = new Date(date);
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      const fmtDate = `${y}-${m}-${day}`;
+      const endHour = String((Number(hh) + 1) % 24).padStart(2,'0');
+      const end_time = `${endHour}:${mm.padStart(2,'0')}`;
+      try {
+        const res = await fetch(API_ROUTES.photographerAvailability.availablePhotographers, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: fmtDate, start_time, end_time })
+        });
+        if (!res.ok) throw new Error('Failed to fetch availability');
+        const json = await res.json();
+        const ids = (json?.data || []).map((row: any) => String(row.photographer_id));
+        setAvailablePhotographerIds(ids);
+      } catch {
+        setAvailablePhotographerIds([]);
+      }
+    };
+    fetchAvailable();
+  }, [date, time]);
+
+  useEffect(() => {
+    const role = user?.role;
+    if (role === 'client' && date && time) {
+      if (availablePhotographerIds.length === 0) {
+        toast({ title: 'No photographers available', description: 'You can proceed without selecting a photographer. Our team will assign one soon.' });
+      }
+    }
+  }, [user?.role, date, time, availablePhotographerIds, toast]);
 
 
   useEffect(() => {
@@ -214,7 +208,6 @@ const BookShoot = () => {
     }
   }, [clientIdFromUrl, clientNameFromUrl, clientCompanyFromUrl, toast]);
 
-  // Ask for geolocation permission when the component mounts
   useEffect(() => {
     if (navigator.geolocation && !address) {
       navigator.permissions
@@ -232,20 +225,13 @@ const BookShoot = () => {
     }
   }, [address, toast]);
 
-  // const getPackagePrice = () => {
-  //   const pkg = packages.find(p => p.id === selectedPackage);
-  //   return pkg ? pkg.price : 0;
-  // };
 
   const getPackagePrice = () => {
     const pkg = packages.find(p => p.id === selectedPackage);
-    // Ensure we get a clean number and round to 2 decimal places
     return pkg ? Math.round(Number(pkg.price) * 100) / 100 : 0;
   };
 
   const getPhotographerRate = () => {
-    // const photog = photographers.find(p => p.id === photographer);
-    // return photog ? photog.rate : 0;
 
     return 0;
   };
@@ -260,7 +246,6 @@ const BookShoot = () => {
     const photographerRate = getPhotographerRate();
     const tax = getTax();
     
-    // Convert to cents, add, then convert back to dollars to avoid floating point issues
     const packageCents = Math.round(packagePrice * 100);
     const photographerCents = Math.round(photographerRate * 100);
     const taxCents = Math.round(tax * 100);
@@ -269,7 +254,13 @@ const BookShoot = () => {
     return totalCents / 100;
   };
   
-  const getAvailablePhotographers = () => {\n    const role = user?.role;\n    if (role === 'admin' || role === 'superadmin') return photographers;\n    if (!date || !time) return [];\n    if (availablePhotographerIds.length === 0) return [];\n    return photographers.filter(p => availablePhotographerIds.includes(p.id));\n  };
+  const getAvailablePhotographers = () => {
+    const role = user?.role;
+    if (role === 'admin' || role === 'superadmin') return photographers;
+    if (!date || !time) return [];
+    if (availablePhotographerIds.length === 0) return [];
+    return photographers.filter(p => availablePhotographerIds.includes(p.id));
+  };
 
   const validateCurrentStep = () => {
     if (step === 1) {
@@ -308,146 +299,21 @@ const BookShoot = () => {
     return true;
   };
 
-  // const handleSubmit = async () => {
-  //   setFormErrors({});
     
-  //   if (step === 3) {
-      // const availablePhotographers = getAvailablePhotographers();
       
-      // if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
-      //   toast({
-      //     title: "Missing information",
-      //     description: "Please fill in all required fields before confirming the booking.",
-      //     variant: "destructive",
-      //   });
-      //   return;
-      // }
       
-      // const selectedClientData = clients.find(c => c.id === client);
-      // const selectedPhotographerData = photographers.find(p => p.id === photographer);
-      // const selectedPackageData = packages.find(p => p.id === selectedPackage);
       
-      // const bookingStatus: ShootData['status'] = 'booked';
       
-      // // Make sure date is properly formatted to avoid timezone issues
-      // const shootDate = date ? new Date(
-      //   date.getFullYear(),
-      //   date.getMonth(),
-      //   date.getDate(),
-      //   12, // Set to noon to avoid timezone issues
-      //   0,
-      //   0
-      // ) : new Date();
       
-      // const newShoot: ShootData = {
-      //   id: uuidv4(),
-      //   scheduledDate: shootDate.toISOString().split('T')[0],
-      //   time: time,
-      //   client: {
-      //     name: selectedClientData?.name || 'Unknown Client',
-      //     email: selectedClientData?.email || `client${client}@example.com`,
-      //     company: selectedClientData?.company,
-      //     totalShoots: 1
-      //   },
-      //   location: {
-      //     address: address,
-      //     address2: '',
-      //     city: city,
-      //     state: state,
-      //     zip: zip,
-      //     fullAddress: `${address}, ${city}, ${state} ${zip}`
-      //   },
-      //   photographer: selectedPhotographerData ? {
-      //     id: selectedPhotographerData.id,
-      //     name: selectedPhotographerData.name,
-      //     avatar: selectedPhotographerData.avatar
-      //   } : {
-      //     name: "To Be Assigned",
-      //     avatar: ""
-      //   },
-      //   services: selectedPackageData ? [selectedPackageData.name] : [],
-      //   payment: {
-      //     baseQuote: getPackagePrice(),
-      //     taxRate: 6.0,
-      //     taxAmount: getTax(),
-      //     totalQuote: getTotal(),
-      //     totalPaid: bypassPayment ? 0 : getTotal(),
-      //     lastPaymentDate: bypassPayment ? undefined : new Date().toISOString().split('T')[0],
-      //     lastPaymentType: bypassPayment ? undefined : 'Credit Card'
-      //   },
-      //   status: bookingStatus,
-      //   notes: notes ? { shootNotes: notes } : undefined,
-      //   createdBy: user?.name || "Current User"
-      // };
 
-      // addShoot(newShoot);
-      // setIsComplete(true);
 
-      // console.log("New shoot created:", newShoot);
 
-  //       if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
-  //         toast({
-  //           title: "Missing information",
-  //           description: "Please fill in all required fields before confirming the booking.",
-  //           variant: "destructive",
-  //         });
-  //         return;
-  //       }
 
-  //       const shootDate = date ? new Date(
-  //         date.getFullYear(),
-  //         date.getMonth(),
-  //         date.getDate(),
-  //         12
-  //       ) : new Date();
 
-  //       const payload = {
-  //         client_id: client,
-  //         address,
-  //         city,
-  //         state,
-  //         zip,
-  //         scheduled_date: shootDate.toISOString().split('T')[0],
-  //         time,
-  //         photographer_id: photographer || null,
-  //         service_id: selectedPackage,
-  //         notes,
-  //         bypass_payment: bypassPayment,
-  //         send_notification: sendNotification
-  //       };
 
-  //       try {
-  //         const token = localStorage.getItem('authToken');
-  //         const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/shoots`, payload, {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`
-  //           }
-  //         });
 
-  //         toast({
-  //           title: "Shoot Booked!",
-  //           description: "The shoot has been successfully created.",
-  //           variant: "default"
-  //         });
 
-  //         setIsComplete(true);
-  //         console.log("Shoot created response:", response.data);
-  //       } catch (error) {
-  //         console.error("Error creating shoot:", error);
-  //         toast({
-  //           title: "Error",
-  //           description: "Failed to create shoot. Please try again.",
-  //           variant: "destructive"
-  //         });
-  //       }
-  //   } else {
-  //     if (!validateCurrentStep()) {
-  //       return;
-  //     }
       
-  //     setStep(step + 1);
-  //   }
-  // };
 
   const handleSubmit = async () => {
   setFormErrors({});
@@ -469,7 +335,6 @@ const BookShoot = () => {
     12
   ) : new Date();
 
-  // Calculate pricing information
   const baseQuote = getPackagePrice();
   const photographerRate = getPackagePrice();
   const taxAmount = getTax();
@@ -491,7 +356,6 @@ const BookShoot = () => {
     editor_notes: editorNotes || undefined,
     bypass_payment: bypassPayment,
     send_notification: sendNotification,
-    // Add the missing required fields based on API error
     base_quote: baseQuote,
     tax_amount: taxAmount,
     total_quote: totalQuote,
@@ -521,7 +385,6 @@ const BookShoot = () => {
   } catch (error) {
     console.error("Error creating shoot:", error);
     
-    // Better error handling to show specific validation errors
     if (error.response?.data?.errors) {
       const errorMessages = Object.values(error.response.data.errors).flat();
       toast({
@@ -611,10 +474,13 @@ const BookShoot = () => {
     const selectedPackageData = packages.find(p => p.id === selectedPackage);
     
     return {
-      client: selectedClientData?.name || (isClientAccount ? user?.name : ''),
+      client: selectedClientData?.name || (isClientAccount ? user?.name || '' : ''),
       package: selectedPackageData?.name || '',
       packagePrice: getPackagePrice(),
       address: address ? `${address}, ${city}, ${state} ${zip}` : '',
+      bedrooms: 0,
+      bathrooms: 0,
+      sqft: 0,
       date: date ? format(date, 'PPP') : '',
       time: time || '',
     };
@@ -729,4 +595,11 @@ const BookShoot = () => {
 };
 
 export default BookShoot;
+
+
+
+
+
+
+
 
