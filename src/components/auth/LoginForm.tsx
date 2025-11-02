@@ -366,8 +366,8 @@ const handleLogin = async (values: LoginFormValues) => {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="client">Client</SelectItem>
-                              <SelectItem value="photographer">Photographer</SelectItem>
-                              <SelectItem value="editor">Editor</SelectItem>
+                              {/* <SelectItem value="photographer">Photographer</SelectItem>
+                              <SelectItem value="editor">Editor</SelectItem> */}
                               {/* <SelectItem value="admin">Administrator</SelectItem> */}
                             </SelectContent>
                           </Select>

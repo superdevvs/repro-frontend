@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -47,9 +46,9 @@ export function BookingStepIndicator({ currentStep, totalSteps }: BookingStepInd
             ) : (
               <React.Fragment>
                 {stepIcons[index]}
-                <span className="sr-only md:not-sr-only md:text-[10px] md:mt-0.5 whitespace-nowrap">
+                {/* <span className="sr-only md:not-sr-only md:text-[10px] md:mt-0.5 whitespace-nowrap">
                   {stepLabels[index]}
-                </span>
+                </span> */}
               </React.Fragment>
             )}
             
