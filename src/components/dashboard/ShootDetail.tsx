@@ -103,18 +103,52 @@ export function ShootDetail({ shoot, isOpen, onClose, onPay, invoice }: ShootDet
     setIsEditDialogOpen(false);
   };
 
-  const handleMarkAsCompleted = () => {
-    if (shoot && shoot.status === 'scheduled') {
-      const now = new Date().toISOString().split('T')[0];
-      updateShoot(shoot.id, {
-        status: 'completed',
-        completedDate: now
+  const handleMarkAsCompleted = async () => {
+    if (!shoot || shoot.status !== 'scheduled') return;
+    try {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      if (!token) throw new Error('Not authenticated');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shoots/${shoot.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: 'completed', workflow_status: 'completed' })
       });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.message || 'Failed to update shoot');
+      toast({ title: 'Shoot marked as completed' });
+    } catch (e:any) {
+      toast({ title: 'Update failed', description: e?.message || 'Could not update shoot', variant: 'destructive' });
     }
   };
 
   const handleOpenDeleteDialog = () => {
     setIsDeleteDialogOpen(true);
+  };
+
+  const handlePayNow = async () => {
+    try {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      if (!token) throw new Error('Not authenticated');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shoots/${shoot.id}/create-checkout-link`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.message || 'Failed to create checkout');
+      const url = json?.url || json?.checkout_url || json?.data?.url;
+      if (!url) throw new Error('Checkout URL not returned');
+      window.open(url, '_blank');
+      toast({ title: 'Redirecting to payment', description: 'Secure checkout opened in a new tab.' });
+    } catch (e:any) {
+      toast({ title: 'Payment error', description: e?.message || 'Could not initialize payment', variant: 'destructive' });
+    }
   };
 
   const handleDeleteShoot = () => {
@@ -170,14 +204,22 @@ export function ShootDetail({ shoot, isOpen, onClose, onPay, invoice }: ShootDet
               </Button>
             )}
 
-            {isPhotographer && shoot.status === 'scheduled' && isAdmin && isClient &&(
+            {(isAdmin) && shoot.status === 'scheduled' && (
               <Button onClick={handleMarkAsCompleted}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Mark as Completed
               </Button>
             )}
 
-            {isAdmin && isClient &&(
+            {/* Pay Now for unpaid/partial (admin or client) */}
+            {(isAdmin || isClient) && (!shoot.payment.totalPaid || shoot.payment.totalPaid < shoot.payment.totalQuote) && (
+              <Button variant="accent" onClick={handlePayNow}>
+                <DollarSignIcon className="h-4 w-4 mr-2" />
+                Pay Now
+              </Button>
+            )}
+
+            {(isAdmin || isClient) && (
               <Button variant="destructive" onClick={handleOpenDeleteDialog}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete

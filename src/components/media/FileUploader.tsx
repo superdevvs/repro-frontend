@@ -369,7 +369,7 @@ useEffect(() => {
     setNotesChanged(true);
   };
 
-  // Save notes to the shoot independently of upload
+  // Save notes to the shoot independently of upload (persists to Laravel API)
   const handleSaveNotes = async () => {
     if (!shootId) {
       toast({
@@ -381,31 +381,38 @@ useEffect(() => {
     }
 
     try {
-      // Determine which note field to update based on user role
-      let notesUpdate: any = {};
-      
+      // Determine which note field to update based on user role and current tab
+      // Maps to backend fields: shoot_notes, company_notes, photographer_notes, editor_notes
+      let field: 'shoot_notes' | 'company_notes' | 'photographer_notes' | 'editor_notes' = 'shoot_notes';
       if (user?.role === 'photographer') {
-        notesUpdate = { notes: { photographerNotes: notes } };
+        field = 'photographer_notes';
       } else if (user?.role === 'editor') {
-        notesUpdate = { notes: { editingNotes: notes } };
+        field = 'editor_notes';
       } else if (user?.role === 'admin' || user?.role === 'superadmin') {
-        // For admin, determine based on the active tab
-        if (uploadType === 'raw') {
-          notesUpdate = { notes: { photographerNotes: notes } };
-        } else {
-          notesUpdate = { notes: { editingNotes: notes } };
-        }
+        field = uploadType === 'raw' ? 'photographer_notes' : 'editor_notes';
       } else {
-        notesUpdate = { notes: { shootNotes: notes } };
+        field = 'shoot_notes';
       }
-      
-      await updateShoot(shootId, notesUpdate);
-      
+
+      const payload: Record<string, string> = { [field]: notes || '' };
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shoots/${shootId}/notes`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || 'Failed to save notes');
+      }
+
       toast({
         title: "Notes saved",
         description: "Your upload notes have been saved successfully",
       });
-      
       setNotesChanged(false);
     } catch (error) {
       console.error("Error saving notes:", error);
@@ -516,9 +523,10 @@ useEffect(() => {
     
     setUploading(true);
     const formData = new FormData();
-    // Backend expects an array named `files[]`
-    files.forEach(file => {
-      formData.append('files[]', file);
+    // Backend expects an array named `files`
+    // Use indexed keys to ensure Laravel parses as files[0], files[1], ...
+    files.forEach((file, idx) => {
+      formData.append(`files[${idx}]`, file);
     });
     try {
       // Determine the correct endpoint based on upload type and shoot ID
@@ -536,13 +544,14 @@ useEffect(() => {
         return;
       }
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       const response = await axios.post(
         uploadEndpoint,
         formData,
         {
           headers: {
             // Let axios set multipart boundary automatically
+            Accept: 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           onUploadProgress: (progressEvent) => {
@@ -563,13 +572,10 @@ useEffect(() => {
       setProgress(0);
       setFiles([]);
       setNotesChanged(false);
-    } catch (error) {
-      toast({
-        title: 'Upload Failed',
-        description: 'Something went wrong while uploading to Dropbox.',
-        variant: 'destructive',
-      });
-      console.error(error);
+    } catch (error:any) {
+      // Keep error message generic per your request
+      toast({ title: 'Upload Failed', description: 'Something went wrong while uploading. Please try again.', variant: 'destructive' });
+      console.error('Upload error:', error?.response?.data || error);
       setUploading(false);
     }
 

@@ -38,6 +38,9 @@ import ClientPortal from "./components/clients/ClientPortal";
 import BookShootWithAddressLookup from './components/BookShootWithAddressLookup';
 import AddressLookupTest from './pages/AddressLookupTest';
 import TestClientPropertyForm from './pages/TestClientPropertyForm';
+import { BrandedPage } from '@/components/tourLinks/BrandedPage';
+import { MlsCompliant } from '@/components/tourLinks/MlsCompliant';
+import { GenericMLS } from '@/components/tourLinks/GenericMLS';
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -120,6 +123,10 @@ const AppRoutes = () => {
       <Route path="/test-client-form" element={<TestClientPropertyForm />} />
 
       <Route path="/dropbox-callback" element={<DropboxCallback />} />
+      {/* Public client-facing tour pages (accept ?shootId=) */}
+      <Route path="/tour/branded" element={<BrandedPage />} />
+      <Route path="/tour/mls" element={<MlsCompliant />} />
+      <Route path="/tour/generic-mls" element={<GenericMLS />} />
       <Route path="/client-portal" element={
         <ProtectedRoute>
           <ClientPortal />

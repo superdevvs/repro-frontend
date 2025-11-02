@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 /*
   GenericMls component
@@ -10,6 +10,34 @@ import React, { useEffect } from "react";
 */
 
 export function MlsCompliant() {
+  const [slides, setSlides] = useState<string[]>([]);
+  const [address, setAddress] = useState<string>("");
+  const [clientName, setClientName] = useState<string>("");
+
+  // Fetch public assets for this shoot
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const shootId = params.get('shootId');
+      if (shootId) {
+        const base = import.meta.env.VITE_API_URL;
+        fetch(`${base}/api/public/shoots/${shootId}/mls`)
+          .then(res => res.json())
+          .then(data => {
+            const imgs: string[] = Array.isArray(data?.photos) ? data.photos : [];
+            const vids: string[] = Array.isArray(data?.videos) ? data.videos : [];
+            setSlides([...imgs, ...vids]);
+          if (data?.shoot) {
+            const s = data.shoot;
+            setAddress([s.address, s.city, s.state, s.zip].filter(Boolean).join(', '));
+            setClientName(data?.shoot?.client_name || "");
+          }
+          })
+          .catch(() => {});
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     // Toggle mobile menu
     const btn = document.getElementById("menu-btn");
@@ -51,8 +79,9 @@ export function MlsCompliant() {
         const zoomOutBtn = document.getElementById(modalIdPrefix + "ZoomOut");
         const fsBtn = document.getElementById(modalIdPrefix + "Fullscreen");
 
-        const images =
-          thumbs.length > 0 ? thumbs.map((t) => t.getAttribute("src") || "") : initialSlides || [];
+        const images = (initialSlides && initialSlides.length)
+          ? initialSlides
+          : (thumbs.length > 0 ? thumbs.map((t) => t.getAttribute("src") || "") : []);
         let current = 0,
           autoplayId = null,
           isPlaying = false,
@@ -375,9 +404,9 @@ export function MlsCompliant() {
       }
 
       try {
-        createGalleryController({ thumbSelector: ".thumb", modalIdPrefix: "photo" });
-        createGalleryController({ thumbSelector: ".video-thumb", modalIdPrefix: "video" });
-        createGalleryController({ thumbSelector: ".gallery-img", modalIdPrefix: "floor" });
+        createGalleryController({ thumbSelector: ".thumb", modalIdPrefix: "photo", initialSlides: slides.length ? slides : null });
+        createGalleryController({ thumbSelector: ".video-thumb", modalIdPrefix: "video", initialSlides: slides.length ? slides : null });
+        createGalleryController({ thumbSelector: ".gallery-img", modalIdPrefix: "floor", initialSlides: slides.length ? slides : null });
       } catch (err) {
         console.error("Error creating gallery controllers", err);
       }
@@ -388,7 +417,7 @@ export function MlsCompliant() {
       btn?.removeEventListener("click", onMenuClick);
       // Full teardown of gallery listeners would require tracking each handler reference.
     };
-  }, []);
+  }, [slides]);
 
   return (
     <div>
@@ -397,9 +426,14 @@ export function MlsCompliant() {
         <div className="absolute top-0 left-0 w-full h-full bg-black/40 z-10" />
         <div className="absolute inset-0 flex items-center justify-center px-4 z-20">
           <div className="bg-white/20 backdrop-blur-md px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-6 rounded-xl shadow-lg text-center max-w-3xl">
-            <h2 className="text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold leading-snug">
-              1702 25th Street Southeast, Washington, DC 20020
-            </h2>
+            <div className="space-y-1">
+              <h2 className="text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold leading-snug">
+                {address || 'Property Address'}
+              </h2>
+              {clientName && (
+                <p className="text-white/90 text-sm sm:text-base">Client: {clientName}</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -409,8 +443,7 @@ export function MlsCompliant() {
           <div className="flex justify-between h-16">
             <div className="flex gap-4 items-center">
               <div className="flex flex-col text-sm sm:text-base font-semibold leading-tight">
-                <p>1702 25th Street Southeast,</p>
-                <p>Washington, DC 20020</p>
+                <p>{address || 'Property Address'}</p>
               </div>
             </div>
 
@@ -470,14 +503,9 @@ export function MlsCompliant() {
           <h2 className="text-3xl font-bold text-center text-black mb-8">PHOTOS</h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="photos-grid">
-            <img data-index="0" src="/images/1702 25th Street Southeast, Washington, DC 200202579.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 1" />
-            <img data-index="1" src="/images/1702 25th Street Southeast, Washington, DC 200202584.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 2" />
-            <img data-index="2" src="/images/1702 25th Street Southeast, Washington, DC 200202595.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 3" />
-            <img data-index="3" src="/images/1702 25th Street Southeast, Washington, DC 200202615.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 4" />
-            <img data-index="4" src="/images/1702 25th Street Southeast, Washington, DC 200202680.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 5" />
-            <img data-index="5" src="/images/1702 25th Street Southeast, Washington, DC 200202685.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 6" />
-            <img data-index="6" src="/images/1702 25th Street Southeast, Washington, DC 200202725.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 7" />
-            <img data-index="7" src="/images/1702 25th Street Southeast, Washington, DC 200202710.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 8" />
+            {(slides.length ? slides : []).map((src, idx) => (
+              <img key={idx} data-index={idx} src={src} className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt={`Photo ${idx+1}`} />
+            ))}
           </div>
         </div>
 

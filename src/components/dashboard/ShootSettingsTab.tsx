@@ -104,20 +104,48 @@ export function ShootSettingsTab({
   const toggleSetting = async (key: string, value: boolean) => {
     setSavingToggleKey(key);
     try {
-      // Replace with your real endpoint
-      const res = await fetch(`/api/shoots/${shoot.id}/settings/toggle`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key, value }),
-      });
-      if (!res.ok) throw new Error(`Server ${res.status}`);
+      const base = import.meta.env.VITE_API_URL;
+      const token = (typeof window !== 'undefined') ? (localStorage.getItem('authToken') || localStorage.getItem('token')) : null;
 
-      // optimistic update to parent
-      onUpdate?.({ meta: { ...((shoot as any).meta || {}), [key]: value } } as any);
-      sonnerToast.success("Updated");
+      if (key === 'finalized') {
+        if (value === true) {
+          // Finalize the shoot on backend
+          const res = await fetch(`${base}/api/shoots/${shoot.id}/finalize`, {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ final_status: 'admin_verified' })
+          });
+          if (!res.ok) throw new Error(`Finalize failed: ${res.status}`);
+          sonnerToast.success('Shoot finalized');
+          // Optimistic update
+          onUpdate?.({ meta: { ...((shoot as any).meta || {}), finalized: true } } as any);
+        } else {
+          // Disabling finalized toggle does not undo backend finalization
+          sonnerToast.success('Finalization disabled (UI only)');
+          onUpdate?.({ meta: { ...((shoot as any).meta || {}), finalized: false } } as any);
+        }
+      } else {
+        // Placeholder for other settings (if/when backend route exists)
+        const res = await fetch(`${base}/api/shoots/${shoot.id}/settings/toggle`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ key, value })
+        });
+        if (!res.ok) throw new Error(`Server ${res.status}`);
+        onUpdate?.({ meta: { ...((shoot as any).meta || {}), [key]: value } } as any);
+        sonnerToast.success('Updated');
+      }
     } catch (err) {
-      console.error("Toggle update failed", err);
-      sonnerToast.error("Failed to update");
+      console.error('Toggle update failed', err);
+      sonnerToast.error('Failed to update');
     } finally {
       setSavingToggleKey(null);
     }

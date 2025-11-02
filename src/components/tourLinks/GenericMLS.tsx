@@ -1,6 +1,30 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 export function GenericMLS() {
+  const [slides, setSlides] = useState<string[]>([]);
+  const [address, setAddress] = useState<string>("");
+  const [clientName, setClientName] = useState<string>("");
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const shootId = params.get('shootId');
+      if (shootId) {
+        const base = import.meta.env.VITE_API_URL;
+        fetch(`${base}/api/public/shoots/${shootId}/generic-mls`).then(res=>res.json()).then(data=>{
+          const imgs: string[] = Array.isArray(data?.photos) ? data.photos : [];
+          const vids: string[] = Array.isArray(data?.videos) ? data.videos : [];
+          setSlides([...imgs, ...vids]);
+          if (data?.shoot) {
+            const s = data.shoot;
+            setAddress([s.address, s.city, s.state, s.zip].filter(Boolean).join(', '));
+            setClientName(data?.shoot?.client_name || "");
+          }
+        }).catch(()=>{});
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     // Toggle mobile menu
     const btn = document.getElementById("menu-btn");
@@ -40,7 +64,9 @@ export function GenericMLS() {
         const zoomOutBtn = document.getElementById(modalIdPrefix + "ZoomOut");
         const fsBtn = document.getElementById(modalIdPrefix + "Fullscreen");
 
-        const images = thumbs.length ? thumbs.map((t) => t.getAttribute("src")) : initialSlides || [];
+        const images = (initialSlides && initialSlides.length)
+          ? initialSlides
+          : (thumbs.length ? thumbs.map((t) => t.getAttribute("src") || "") : []);
         let current = 0;
         let autoplayId = null;
         let isPlaying = false;
@@ -266,9 +292,9 @@ export function GenericMLS() {
       }
 
       try {
-        createGalleryController({ thumbSelector: ".thumb", modalIdPrefix: "photo" });
-        createGalleryController({ thumbSelector: ".video-thumb", modalIdPrefix: "video" });
-        createGalleryController({ thumbSelector: ".gallery-img", modalIdPrefix: "floor" });
+        createGalleryController({ thumbSelector: ".thumb", modalIdPrefix: "photo", initialSlides: slides.length ? slides : null });
+        createGalleryController({ thumbSelector: ".video-thumb", modalIdPrefix: "video", initialSlides: slides.length ? slides : null });
+        createGalleryController({ thumbSelector: ".gallery-img", modalIdPrefix: "floor", initialSlides: slides.length ? slides : null });
       } catch (err) {
         console.error("Error creating gallery controllers", err);
       }
@@ -279,7 +305,7 @@ export function GenericMLS() {
       btn?.removeEventListener("click", onMenuClick);
       // Full teardown of gallery event listeners would require tracking all handlers.
     };
-  }, []);
+  }, [slides]);
 
   return (
     <div>
@@ -347,14 +373,9 @@ export function GenericMLS() {
           <h2 className="text-3xl font-bold text-center text-black mb-8">PHOTOS</h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="photos-grid">
-            <img data-index="0" src="/images/1702 25th Street Southeast, Washington, DC 200202579.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 1" />
-            <img data-index="1" src="/images/1702 25th Street Southeast, Washington, DC 200202584.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 2" />
-            <img data-index="2" src="/images/1702 25th Street Southeast, Washington, DC 200202595.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 3" />
-            <img data-index="3" src="/images/1702 25th Street Southeast, Washington, DC 200202615.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 4" />
-            <img data-index="4" src="/images/1702 25th Street Southeast, Washington, DC 200202680.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 5" />
-            <img data-index="5" src="/images/1702 25th Street Southeast, Washington, DC 200202685.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 6" />
-            <img data-index="6" src="/images/1702 25th Street Southeast, Washington, DC 200202725.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 7" />
-            <img data-index="7" src="/images/1702 25th Street Southeast, Washington, DC 200202710.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 8" />
+            {(slides.length ? slides : []).map((src, idx) => (
+              <img key={idx} data-index={idx} src={src} className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt={`Photo ${idx+1}`} />
+            ))}
           </div>
         </div>
 

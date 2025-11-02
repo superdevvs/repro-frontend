@@ -64,6 +64,14 @@ const BookShoot = () => {
   const navigate = useNavigate();
   const [photographers, setPhotographersList] = useState<Array<{ id: string; name: string; avatar?: string }>>([]);
   const [availablePhotographerIds, setAvailablePhotographerIds] = useState<string[]>([]);
+  const [availabilityChecked, setAvailabilityChecked] = useState(false);
+
+  const to12Hour = (hhmm: string) => {
+    const [h, m] = hhmm.split(':').map((v) => parseInt(v, 10));
+    const mer = h >= 12 ? 'PM' : 'AM';
+    const dh = h % 12 === 0 ? 12 : h % 12;
+    return `${dh}:${String(m).padStart(2, '0')} ${mer}`;
+  };
   const { fetchShoots } = useShoots();
 
 
@@ -107,25 +115,25 @@ const BookShoot = () => {
   useEffect(() => {
     const fetchPhotographers = async () => {
       try {
-
         const token = localStorage.getItem('authToken');
-  
-        if (!token) {
-          throw new Error("No auth token found in localStorage");
-        }
-
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/photographers`,{
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        // Try secured list first (supports role filtering)
+        const response = await axios.get(API_ROUTES.people.adminPhotographers, { headers });
         const formatted = response.data.data.map((photographer: any) => ({
           ...photographer,
-          id: photographer.id.toString(), // Ensure id is string
+          id: photographer.id.toString(),
         }));
         setPhotographersList(formatted);
       } catch (error) {
-        console.error("Error fetching photographers:", error);
+        console.warn('Admin photographers endpoint failed, falling back to public list:', error);
+        try {
+          const res2 = await axios.get(API_ROUTES.people.photographers);
+          const formatted2 = res2.data.data.map((p: any) => ({ ...p, id: p.id.toString() }));
+          setPhotographersList(formatted2);
+        } catch (err2) {
+          console.error('Public photographers endpoint also failed:', err2);
+        }
       }
     };
 
@@ -157,43 +165,93 @@ const BookShoot = () => {
 
   useEffect(() => {
     const fetchAvailable = async () => {
-      if (!date || !time) { setAvailablePhotographerIds([]); return; }
-      const parts = time.split(':');
-      if (parts.length < 2) { setAvailablePhotographerIds([]); return; }
-      const [hh, mm] = parts;
-      const start_time = `${hh.padStart(2,'0')}:${mm.padStart(2,'0')}`;
+      setAvailabilityChecked(false);
+      if (!date || !time) { setAvailablePhotographerIds([]); setAvailabilityChecked(true); return; }
+      // Convert UI time like "12:30 PM" to 24h HH:MM
+      const match = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+      if (!match) { setAvailablePhotographerIds([]); setAvailabilityChecked(true); return; }
+      let hhNum = parseInt(match[1], 10);
+      const mmNum = parseInt(match[2], 10);
+      const mer = match[3].toUpperCase();
+      if (mer === 'PM' && hhNum !== 12) hhNum += 12;
+      if (mer === 'AM' && hhNum === 12) hhNum = 0;
+      const hh = String(hhNum).padStart(2, '0');
+      const mm = String(mmNum).padStart(2, '0');
+      const start_time = `${hh}:${mm}`;
       const d = new Date(date);
       const y = d.getFullYear();
       const m = String(d.getMonth()+1).padStart(2,'0');
       const day = String(d.getDate()).padStart(2,'0');
       const fmtDate = `${y}-${m}-${day}`;
-      const endHour = String((Number(hh) + 1) % 24).padStart(2,'0');
-      const end_time = `${endHour}:${mm.padStart(2,'0')}`;
+      console.debug('[Availability] Checking start-time only', { fmtDate, start_time, totalPhotographers: photographers?.length || 0 });
+      // Build a 30-minute window to increase match likelihood
+      const startDateTmp = new Date(2000, 0, 1, Number(hh), Number(mm), 0);
+      const endDateTmp = new Date(startDateTmp.getTime() + 30 * 60 * 1000);
+      const endH = String(endDateTmp.getHours()).padStart(2, '0');
+      const endM = String(endDateTmp.getMinutes()).padStart(2, '0');
+      const end_time = `${endH}:${endM}`;
       try {
-        const res = await fetch(API_ROUTES.photographerAvailability.availablePhotographers, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ date: fmtDate, start_time, end_time })
-        });
-        if (!res.ok) throw new Error('Failed to fetch availability');
-        const json = await res.json();
-        const ids = (json?.data || []).map((row: any) => String(row.photographer_id));
+        // Frontend-only rule: mark available if any row starts exactly at this start_time
+        if (!photographers || photographers.length === 0) { setAvailablePhotographerIds([]); return; }
+        const token = localStorage.getItem('authToken');
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const allTimesSet = new Set<string>();
+        const checks = await Promise.all(
+          photographers.map(async (p) => {
+            try {
+              const res = await fetch(API_ROUTES.photographerAvailability.check, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ photographer_id: p.id, date: fmtDate })
+              });
+              if (!res.ok) return false;
+              const json = await res.json();
+              const rows = (json?.data || []) as Array<any>;
+              // collect all available start times for suggestion list
+              rows.forEach(r => {
+                if ((r?.status ?? 'available') !== 'unavailable') {
+                  const raw = (r?.start_time ?? '').toString();
+                  const norm = raw.includes(':') ? raw.slice(0,5) : raw;
+                  if (norm) allTimesSet.add(norm);
+                }
+              });
+              const match = rows.some(r => {
+                const raw = (r?.start_time ?? '').toString();
+                const rowStart = raw.includes(':') ? raw.slice(0,5) : raw; // normalize HH:mm[:ss] -> HH:mm
+                return (r?.status ?? 'available') !== 'unavailable' && rowStart === start_time;
+              });
+              console.debug('[Availability] Photographer', p.id, 'rows:', rows, 'start_time:', start_time, 'match:', match);
+              return match;
+            } catch {
+              return false;
+            }
+          })
+        );
+
+        const ids = photographers.filter((_, idx) => checks[idx]).map(p => String(p.id));
         setAvailablePhotographerIds(ids);
+        console.debug('[Availability] Available photographer IDs:', ids);
+        // Show toast here to avoid race where a separate effect fires before IDs update
+        const role = user?.role;
+        if (role === 'client' && date && time && ids.length === 0) {
+          const alternatives = Array.from(allTimesSet).filter(t => t !== start_time).sort();
+          const top = alternatives.slice(0, 4).map(to12Hour).join(', ');
+          const desc = top
+            ? `No one at ${to12Hour(start_time)}. Other times today: ${top}`
+            : 'No photographers available at the selected time. You can proceed without selecting a photographer.';
+          toast({ title: 'No photographers available', description: desc });
+        }
       } catch {
         setAvailablePhotographerIds([]);
+      } finally {
+        setAvailabilityChecked(true);
       }
     };
     fetchAvailable();
-  }, [date, time]);
+  }, [date, time, photographers]);
 
-  useEffect(() => {
-    const role = user?.role;
-    if (role === 'client' && date && time) {
-      if (availablePhotographerIds.length === 0) {
-        toast({ title: 'No photographers available', description: 'You can proceed without selecting a photographer. Our team will assign one soon.' });
-      }
-    }
-  }, [user?.role, date, time, availablePhotographerIds, toast]);
 
 
   useEffect(() => {
@@ -526,7 +584,7 @@ const BookShoot = () => {
           {isComplete ? (
             <BookingComplete date={date} time={time} resetForm={resetForm} />
           ) : (
-            <>
+            <div>
               <BookingHeader 
                 title={currentStepContent.title}
                 description={currentStepContent.description}
@@ -586,7 +644,7 @@ const BookShoot = () => {
                   />
                 </div>
               </div>
-            </>
+            </div>
           )}
         </AnimatePresence>
       </div>

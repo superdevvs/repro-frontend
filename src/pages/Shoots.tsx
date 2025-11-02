@@ -40,16 +40,21 @@ const Shoots = () => {
   const { user, role } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchShoots = async () => {
-      const token = localStorage.getItem('authToken');
+  // Extracted so we can reuse after uploads
+  const refreshShoots = async () => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
 
       if (!token) {
         throw new Error("No auth token found in localStorage");
       }
 
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/photographer/shoots`, {
+        // Role-aware endpoint selection
+        const base = import.meta.env.VITE_API_URL;
+        const url = (role === 'photographer')
+          ? `${base}/api/photographer/shoots`
+          : `${base}/api/shoots`;
+        const res = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json',
@@ -113,14 +118,16 @@ const Shoots = () => {
                 id: String(file.id),
                 filename: file.filename,
                 storedFilename: file.stored_filename,
-                path: file.path,
-                url: file.url, // This comes from the accessor in your ShootFile model
+                path: file.path,                  // local storage path if present
+                dropboxPath: file.dropbox_path,   // dropbox path if present
+                url: file.url,                    // accessor should provide a usable URL when available
                 fileType: file.file_type,
                 fileSize: file.file_size,
-                formattedSize: file.formatted_size, // Also comes from accessor
+                formattedSize: file.formatted_size,
                 uploadedBy: file.uploaded_by,
-                isImage: file.file_type?.startsWith('image/'),
-                isVideo: file.file_type?.startsWith('video/'),
+                workflowStage: file.workflow_stage, // 'todo' or 'completed'
+                isImage: (file.file_type || '').startsWith('image/'),
+                isVideo: (file.file_type || '').startsWith('video/'),
               }))
             : [],
         }));
@@ -133,9 +140,11 @@ const Shoots = () => {
       } finally {
         setLoading(false);
       }
-    };
+  };
 
-    fetchShoots();
+  useEffect(() => {
+    refreshShoots();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -222,101 +231,18 @@ const Shoots = () => {
     }
   };
 
-  const handleUploadComplete = async (files: File[]) => {
-    console.log("handleUploadComplete called with files:", files);
-    
-    // if (!selectedShoot) {
-    //   console.error("No selectedShoot available");
-    //   return;
-    // }
-    
-    // console.log("Selected shoot:", selectedShoot);
-    
-    // const token = localStorage.getItem('authToken');
-    // if (!token) {
-    //   console.error("No auth token found");
-    //   toast({
-    //     title: "Error",
-    //     description: "Authentication token not found. Please log in again."
-    //   });
-    //   return;
-    // }
-
-    // console.log("Auth token found:", token.substring(0, 10) + "...");
-
-    // try {
-    //   // Create FormData to send files
-    //   const formData = new FormData();
-      
-    //   // Append each file to FormData
-    //   files.forEach((file, index) => {
-    //     console.log(`Appending file ${index}:`, file.name, file.size, file.type);
-    //     formData.append(`files[${index}]`, file);
-    //   });
-
-    //   // Log FormData contents (for debugging)
-    //   console.log("FormData entries:");
-    //   for (let [key, value] of formData.entries()) {
-    //     console.log(key, value);
-    //   }
-
-    //   const uploadUrl = `${import.meta.env.VITE_API_URL}/api/shoots/${selectedShoot.id}/upload`;
-    //   console.log("Upload URL:", uploadUrl);
-
-    //   // Make API call to upload files
-    //   console.log("Making API call to upload files...");
-    //   const response = await fetch(uploadUrl, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Authorization': `Bearer ${token}`,
-    //       'Accept': 'application/json',
-    //       // Don't set Content-Type header - let the browser set it for FormData
-    //     },
-    //     body: formData,
-    //   });
-
-    //   console.log("Response status:", response.status);
-    //   console.log("Response ok:", response.ok);
-
-    //   if (!response.ok) {
-    //     const errorData = await response.json();
-    //     console.error("Upload failed with error:", errorData);
-    //     throw new Error(errorData.message || 'Upload failed');
-    //   }
-
-    //   const result = await response.json();
-    //   console.log("Upload successful:", result);
-
-    //   // Update the shoot status to completed if needed
-    //   if (selectedShoot.status !== 'completed') {
-    //     console.log("Updating shoot status to completed...");
-    //     await updateShoot(parseInt(selectedShoot.id), {
-    //       status: 'completed'
-    //     });
-        
-    //     // Update local state
-    //     setShoots(prevShoots => 
-    //       prevShoots.map(shoot => 
-    //         shoot.id === selectedShoot.id 
-    //           ? { ...shoot, status: 'completed' }
-    //           : shoot
-    //       )
-    //     );
-    //   }
-
-    //   setIsUploadDialogOpen(false);
-    //   toast({
-    //     title: "Upload Complete",
-    //     description: `${files.length} files have been uploaded successfully.`
-    //   });
-
-    // } catch (error) {
-    //   console.error("Upload error:", error);
-    //   toast({
-    //     title: "Upload Failed",
-    //     description: error instanceof Error ? error.message : "Failed to upload files. Please try again."
-    //   });
-    // }
+    const handleUploadComplete = async (_files: File[]) => {
+    try {
+      setIsUploadDialogOpen(false);
+      await refreshShoots();
+      if (selectedShoot) {
+        // Re-select the updated shoot from the refreshed list
+        setSelectedShoot(prev => {
+          const found = (prev && shoots.find(s => s.id === prev.id)) || null;
+          return found;
+        });
+      }
+    } catch {}
   };
 
   const handlePageChange = (page: number) => {
@@ -361,8 +287,13 @@ const Shoots = () => {
             filteredShoots={paginatedShoots}
             viewMode={viewMode}
             onShootSelect={handleShootSelect}
-            onUploadMedia={isCompletedTab ? handleUploadMedia : undefined}
-            showMedia={isCompletedTab}
+            onUploadMedia={
+              // Photographers can upload during scheduled; everyone can upload during completed (editor/admin)
+              (role === 'photographer' && selectedTab === 'scheduled') || isCompletedTab
+                ? handleUploadMedia
+                : undefined
+            }
+            showMedia={true}
           />
 
           <ShootsPagination 
@@ -386,3 +317,4 @@ const Shoots = () => {
 };
 
 export default Shoots;
+

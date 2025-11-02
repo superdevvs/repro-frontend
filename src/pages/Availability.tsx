@@ -224,6 +224,58 @@ export default function Availability() {
 
   const { toast } = useToast();
 
+  const authHeaders = () => {
+    const token = localStorage.getItem("authToken") || localStorage.getItem("token");
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return headers;
+  };
+
+  const uiTimeToHhmm = (t?: string): string => {
+    if (!t) return "";
+    if (/^\d{1,2}:\d{2}$/.test(t)) {
+      const [h, m] = t.split(":");
+      return `${String(parseInt(h,10)).padStart(2,'0')}:${m}`;
+    }
+    const m = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!m) return t;
+    let hh = parseInt(m[1], 10);
+    const mm = m[2];
+    const mer = m[3].toUpperCase();
+    if (mer === 'PM' && hh !== 12) hh += 12;
+    if (mer === 'AM' && hh === 12) hh = 0;
+    return `${String(hh).padStart(2,'0')}:${mm}`;
+  };
+
+  const refreshPhotographerSlots = async () => {
+    try {
+      if (selectedPhotographer === 'all') {
+        if (!photographers || photographers.length === 0) { setAllBackendSlots([]); return; }
+        const results = await Promise.all(
+          photographers.map(async (p) => {
+            try {
+              const r = await fetch(API_ROUTES.photographerAvailability.list(p.id));
+              if (!r.ok) return [] as any[];
+              const j = await r.json();
+              return (j?.data || []).map((row:any) => ({ ...row, photographer_id: Number(p.id) }));
+            } catch { return [] as any[]; }
+          })
+        );
+        const merged:any[] = ([] as any[]).concat(...results);
+        setAllBackendSlots(merged);
+        setBackendSlots([]);
+        return;
+      }
+      const r = await fetch(API_ROUTES.photographerAvailability.list(selectedPhotographer));
+      if (!r.ok) { setBackendSlots([]); setAllBackendSlots([]); return; }
+      const j = await r.json();
+      setBackendSlots(j?.data || []);
+      setAllBackendSlots([]);
+    } catch {
+      setBackendSlots([]); setAllBackendSlots([]);
+    }
+  };
+
   const { user, role } = useAuth();
 
 
@@ -517,7 +569,7 @@ export default function Availability() {
 
 
 
-  const handleAddAvailability = () => {
+  const handleAddAvailability = async () => {
 
     if (!date || selectedPhotographer === "all") {
 
@@ -581,11 +633,30 @@ export default function Availability() {
 
     });
 
+    // Persist to backend
+    try {
+      const payload = {
+        photographer_id: Number(selectedPhotographer),
+        date: format(date, "yyyy-MM-dd"),
+        start_time: uiTimeToHhmm(newAvailability.startTime || "09:00"),
+        end_time: uiTimeToHhmm(newAvailability.endTime || "17:00"),
+        status: newAvailability.status === 'unavailable' ? 'unavailable' : 'available',
+      };
+      const res = await fetch(API_ROUTES.photographerAvailability.create, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        await refreshPhotographerSlots();
+      }
+    } catch {}
+
   };
 
 
 
-  const handleDeleteAvailability = () => {
+  const handleDeleteAvailability = async () => {
 
     if (!selectedAvailabilityId) return;
 
@@ -608,6 +679,15 @@ export default function Availability() {
       variant: "destructive",
 
     });
+
+    // Delete on backend
+    try {
+      await fetch(API_ROUTES.photographerAvailability.delete(selectedAvailabilityId!), {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      await refreshPhotographerSlots();
+    } catch {}
 
   };
 
@@ -667,7 +747,7 @@ export default function Availability() {
 
 
 
-  const saveEditedAvailability = () => {
+  const saveEditedAvailability = async () => {
 
     if (!editingAvailability || !editedAvailability) return;
 
@@ -719,11 +799,33 @@ export default function Availability() {
 
     });
 
+    // Update backend
+    try {
+      if (!editingAvailability) return;
+      const idNum = Number(editingAvailability);
+      const payload: any = {
+        start_time: uiTimeToHhmm(editedAvailability.startTime),
+        end_time: uiTimeToHhmm(editedAvailability.endTime),
+        status: (editedAvailability.status === 'unavailable') ? 'unavailable' : (editedAvailability.status ? 'available' : undefined),
+      };
+      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+      if (Object.keys(payload).length) {
+        const res = await fetch(API_ROUTES.photographerAvailability.update(idNum), {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          await refreshPhotographerSlots();
+        }
+      }
+    } catch {}
+
   };
 
 
 
-  const saveWeeklySchedule = () => {
+  const saveWeeklySchedule = async () => {
 
     if (selectedPhotographer === "all") {
 
@@ -766,6 +868,30 @@ export default function Availability() {
       description: `Weekly schedule for ${getPhotographerName(selectedPhotographer)} has been updated.`,
 
     });
+
+    // Persist weekly schedule on backend (appends entries)
+    try {
+      const mapDay = (d:string) => ({ 'Mon':'monday','Tue':'tuesday','Wed':'wednesday','Thu':'thursday','Fri':'friday','Sat':'saturday','Sun':'sunday' } as any)[d] || d.toLowerCase();
+      const payload = {
+        photographer_id: Number(selectedPhotographer),
+        availabilities: getCurrentWeeklySchedule()
+          .filter(day => day.active)
+          .map(day => ({
+            day_of_week: mapDay(day.day),
+            start_time: uiTimeToHhmm(day.startTime),
+            end_time: uiTimeToHhmm(day.endTime),
+            status: 'available',
+          }))
+      };
+      const res = await fetch(API_ROUTES.photographerAvailability.bulk, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        await refreshPhotographerSlots();
+      }
+    } catch {}
 
   };
 
