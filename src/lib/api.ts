@@ -5,10 +5,10 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 export const API_ROUTES = {
   services: {
     all: `${BASE_URL}/api/services`,
-    create: `${BASE_URL}/api/services`,
+    create: `${BASE_URL}/api/admin/services`,
     show: (id: number | string) => `${BASE_URL}/api/services/${id}`,
-    update: (id: number | string) => `${BASE_URL}/api/services/${id}`,
-    delete: (id: number | string) => `${BASE_URL}/api/services/${id}`,
+    update: (id: number | string) => `${BASE_URL}/api/admin/services/${id}`,
+    delete: (id: number | string) => `${BASE_URL}/api/admin/services/${id}`,
   },
   people: {
     photographers: `${BASE_URL}/api/photographers`,

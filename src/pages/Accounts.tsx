@@ -181,8 +181,18 @@ export default function Accounts() {
     setIsNewAccountOpen(true);
   };
 
-  const handleNewAccount = (data) => {
-    console.log('Creating new account', data);
+  const handleNewAccount = (created: any) => {
+    // AccountForm already created on server and passes created shape with id
+    const newUser: UserType = {
+      id: String(created.id),
+      name: created.name,
+      email: created.email,
+      role: created.role,
+      avatar: created.avatar || '/placeholder.svg',
+      phone: created.phone || created.phone_number || undefined,
+      company: created.company || created.company_name || undefined,
+    };
+    setUsers(prev => [newUser, ...prev]);
   };
 
   const handleExport = () => {
@@ -376,8 +386,11 @@ export default function Accounts() {
       <AccountForm
         open={isNewAccountOpen || editUserDialogOpen}
         onOpenChange={(open) => {
-          setIsNewAccountOpen(open);
-          setEditUserDialogOpen(open);
+          // Do not flip modes on open=true; only close both on open=false
+          if (!open) {
+            setIsNewAccountOpen(false);
+            setEditUserDialogOpen(false);
+          }
         }}
         onSubmit={editUserDialogOpen ? handleUpdateUser : handleNewAccount}
         initialData={editUserDialogOpen ? selectedUser : undefined}

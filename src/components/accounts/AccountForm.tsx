@@ -31,6 +31,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ImageUpload } from "@/components/profile/ImageUpload";
+import { useToast } from "@/hooks/use-toast";
 
 // Define allowed roles for the form
 type FormRole = 'admin' | 'photographer' | 'client' | 'editor';
@@ -65,6 +66,8 @@ export function AccountForm({
   initialData,
 }: AccountFormProps) {
   const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
   
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
@@ -119,12 +122,79 @@ export function AccountForm({
   }
   }, [initialData, form, open]);
 
-  const handleSubmit = (values: AccountFormValues) => {
+  const handleSubmit = async (values: AccountFormValues) => {
+    console.log("Form submitted with values:", values);
     if (avatarUrl) {
+      // Backend expects a file for avatar; we currently store URL only in UI.
+      // Skip sending avatar to API to avoid validation error.
       values.avatar = avatarUrl;
     }
-    onSubmit(values);
-    onOpenChange(false);
+
+    // If editing, delegate to parent and return
+    if (initialData) {
+      onSubmit(values);
+      onOpenChange(false);
+      return;
+    }
+
+    // Creating: call backend API here
+    try {
+      setSubmitting(true);
+      const token = (typeof window !== 'undefined') ? (localStorage.getItem('authToken') || localStorage.getItem('token')) : null;
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
+      const username = (values as any).username && (values as any).username!.trim().length > 0
+        ? (values as any).username!.trim()
+        : (values.email?.split('@')[0] || values.name.replace(/\s+/g, '').toLowerCase());
+
+      const formData = new FormData();
+      formData.append('name', values.name || '');
+      formData.append('email', values.email || '');
+      formData.append('username', username);
+      if (values.phone) formData.append('phone_number', values.phone);
+      if (values.company) formData.append('company_name', values.company);
+      formData.append('role', values.role || 'client');
+      if (values.bio) formData.append('bio', values.bio);
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/users`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errTxt = await res.text();
+        throw new Error(errTxt || 'Failed to create user');
+      }
+
+      const json = await res.json();
+      const created = json.user;
+
+      // Inform parent so it can update local list (include id)
+      onSubmit({
+        id: String(created.id),
+        name: created.name,
+        email: created.email,
+        role: created.role,
+        phone: created.phone_number,
+        company: created.company_name,
+        avatar: created.avatar,
+        bio: created.bio,
+      } as any);
+
+      toast({ title: 'User created', description: `${created.name} added successfully.` });
+      onOpenChange(false);
+    } catch (e: any) {
+      console.error('Create account failed', e);
+      toast({ title: 'Create failed', description: e?.message || 'Unable to create user', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -181,7 +251,7 @@ export function AccountForm({
                 )}
               />
 
-              {/* <FormField
+              <FormField
                 control={form.control}
                 name="username"
                 render={({ field }) => (
@@ -193,7 +263,7 @@ export function AccountForm({
                     <FormMessage />
                   </FormItem>
                 )}
-              /> */}
+              />
 
               <FormField
                 control={form.control}
@@ -293,9 +363,16 @@ export function AccountForm({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button
+                type="button"
+                onClick={() => {
+                  console.log("✅ Create Account button clicked");
+                  form.handleSubmit(handleSubmit)();
+                }}
+              >
                 {initialData ? "Update Account" : "Create Account"}
               </Button>
+
             </DialogFooter>
           </form>
         </Form>
