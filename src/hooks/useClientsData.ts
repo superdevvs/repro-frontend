@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Client } from '@/types/clients';
 import { initialClientsData } from '@/data/clientsData';
 import { useShoots } from '@/context/ShootsContext';
+import API_ROUTES from '@/lib/api';
 
 export const useClientsData = () => {
   const { shoots } = useShoots();
@@ -11,6 +12,39 @@ export const useClientsData = () => {
     const storedClients = localStorage.getItem('clientsData');
     return storedClients ? JSON.parse(storedClients) : initialClientsData;
   });
+
+  // Load clients from backend (admin list) on mount
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        if (!token) return;
+        const res = await fetch(API_ROUTES.clients.adminList, {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        const list = Array.isArray(json.data) ? json.data : (json.users || []);
+        const mapped: Client[] = list.map((u: any) => ({
+          id: String(u.id),
+          name: u.name,
+          company: u.company_name || '',
+          email: u.email,
+          phone: u.phonenumber || u.phone || '',
+          address: '',
+          status: 'active',
+          shootsCount: 0,
+          lastActivity: new Date().toISOString().split('T')[0],
+          avatar: u.avatar || undefined,
+        }));
+        setClientsData(mapped);
+      } catch (_) {}
+    };
+    load();
+  }, []);
   
   const totalClients = clientsData.length;
   const activeClients = clientsData.filter(client => client.status === 'active').length;

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Client } from '@/types/clients';
 import { useToast } from '@/hooks/use-toast';
+import API_ROUTES from '@/lib/api';
 import { ClientFormData } from '@/components/clients/ClientForm';
 
 interface UseClientActionsProps {
@@ -67,7 +68,7 @@ export const useClientActions = ({ clientsData, setClientsData }: UseClientActio
     setClientFormOpen(true);
   };
 
-  const handleClientFormSubmit = () => {
+  const handleClientFormSubmit = async () => {
     if (isEditing && selectedClient) {
       const updatedClients = clientsData.map(client => 
         client.id === selectedClient.id 
@@ -101,26 +102,47 @@ export const useClientActions = ({ clientsData, setClientsData }: UseClientActio
         description: `${clientFormData.name}'s information has been updated successfully.`,
       });
     } else {
-      const newClient: Client = {
-        id: `${Date.now()}`,
-        name: clientFormData.name,
-        company: clientFormData.company,
-        email: clientFormData.email,
-        phone: clientFormData.phone,
-        address: clientFormData.address,
-        status: clientFormData.status,
-        shootsCount: 0,
-        lastActivity: new Date().toISOString().split('T')[0],
-        avatar: clientFormData.avatar
-      };
-      
-      // Fix TypeScript error by directly setting the clients array
-      setClientsData([newClient, ...clientsData]);
-      
-      toast({
-        title: "Client Added",
-        description: `${clientFormData.name} has been added successfully.`,
-      });
+      try {
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        if (!token) throw new Error('Not authenticated');
+        const body = new FormData();
+        body.append('name', clientFormData.name || '');
+        body.append('email', clientFormData.email || '');
+        body.append('username', (clientFormData.email?.split('@')[0] || clientFormData.name.replace(/\s+/g,'').toLowerCase()));
+        if (clientFormData.phone) body.append('phone_number', clientFormData.phone);
+        if (clientFormData.company) body.append('company_name', clientFormData.company);
+        body.append('role', 'client');
+        // Optional bio/avatar not handled as file here
+
+        const res = await fetch(API_ROUTES.clients.create, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+          body,
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error(t || 'Create client failed');
+        }
+        const json = await res.json();
+        const u = json.user;
+        const newClient: Client = {
+          id: String(u.id),
+          name: u.name,
+          company: u.company_name || '',
+          email: u.email,
+          phone: u.phonenumber || '',
+          address: '',
+          status: 'active',
+          shootsCount: 0,
+          lastActivity: new Date().toISOString().split('T')[0],
+          avatar: u.avatar || undefined,
+        };
+        setClientsData([newClient, ...clientsData]);
+        toast({ title: 'Client Added', description: `${u.name} has been added successfully.` });
+      } catch (e:any) {
+        toast({ title: 'Create failed', description: e?.message || 'Could not add client', variant: 'destructive' });
+        return;
+      }
     }
     
     setClientFormOpen(false);

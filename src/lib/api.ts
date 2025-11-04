@@ -10,6 +10,10 @@ export const API_ROUTES = {
     update: (id: number | string) => `${BASE_URL}/api/admin/services/${id}`,
     delete: (id: number | string) => `${BASE_URL}/api/admin/services/${id}`,
   },
+  clients: {
+    adminList: `${BASE_URL}/api/admin/clients`,
+    create: `${BASE_URL}/api/admin/users`, // create user with role=client
+  },
   people: {
     photographers: `${BASE_URL}/api/photographers`,
     adminPhotographers: `${BASE_URL}/api/admin/photographers`,
