@@ -6,7 +6,8 @@ import { TimeRangeFilter } from '@/components/dashboard/TimeRangeFilter';
 import { TimeRange } from '@/utils/dateUtils';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { motion } from 'framer-motion';
-import { Camera, CalendarDays, Users, TrendingUp } from 'lucide-react';
+import { Camera, CalendarDays, Users, TrendingUp, HardDriveIcon } from 'lucide-react';
+import { StatsCard } from '@/components/dashboard/StatsCard';
 
 interface DashboardHeaderProps {
   isAdmin: boolean;
@@ -48,9 +49,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Badge className="mb-2 bg-primary/20 text-primary hover:bg-primary/30 border-primary/20 px-3 py-0.5">
+            {/* <Badge className="mb-2 bg-primary/20 text-primary hover:bg-primary/30 border-primary/20 px-3 py-0.5">
               Dashboard
-            </Badge>
+            </Badge> */}
             
             <h1 className="text-3xl md:text-4xl font-bold mb-1">
               <span className="text-primary/80">{timeOfDay}, </span>
@@ -72,10 +73,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <InfoBadge icon={<Camera className="h-4 w-4" />} label="Shoots" />
+              {/* <InfoBadge icon={<Camera className="h-4 w-4" />} label="Shoots" />
               <InfoBadge icon={<CalendarDays className="h-4 w-4" />} label="Schedule" />
               <InfoBadge icon={<Users className="h-4 w-4" />} label="Clients" />
-              <InfoBadge icon={<TrendingUp className="h-4 w-4" />} label="Analytics" />
+              <InfoBadge icon={<TrendingUp className="h-4 w-4" />} label="Analytics" /> */}
             </motion.div>
           )}
         </div>
@@ -90,6 +91,15 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             selectedRange={timeRange} 
             onChange={onTimeRangeChange} 
           />
+          <StatsCard
+        title="Storage"
+        value="12.4 GB"
+        description="Dropbox, AWS S3"
+        icon={<HardDriveIcon className="h-5 w-5" />}
+        trend="up"
+        trendValue="5%"
+        delay={5}
+      /> 
         </motion.div>
       </div>
     </div>

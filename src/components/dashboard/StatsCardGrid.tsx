@@ -59,7 +59,7 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         />
       )}
       
-      <StatsCard
+      {/* <StatsCard
         title="Active Shoots"
         value={activeShootsCount.toString()}
         description={`${scheduledTodayCount} scheduled today`}
@@ -109,7 +109,7 @@ export const StatsCardGrid: React.FC<StatsCardGridProps> = ({
         trend="up"
         trendValue="5%"
         delay={5}
-      />
+      /> */}
       
       {showPhotographerInterface && (
         <StatsCard

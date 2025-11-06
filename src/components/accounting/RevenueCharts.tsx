@@ -12,12 +12,14 @@ interface RevenueChartsProps {
   invoices: InvoiceData[];
   timeFilter: 'day' | 'week' | 'month' | 'quarter' | 'year';
   onTimeFilterChange: (filter: 'day' | 'week' | 'month' | 'quarter' | 'year') => void;
+  variant?: 'full' | 'compact'; 
 }
 
 export function RevenueCharts({ 
   invoices, 
   timeFilter, 
-  onTimeFilterChange 
+  onTimeFilterChange,
+  variant = 'full',
 }: RevenueChartsProps) {
   const [chartType, setChartType] = useState<'area' | 'bar' | 'line'>('area');
 
@@ -147,6 +149,7 @@ export function RevenueCharts({
         </CardContent>
       </Card>
       
+      {variant === 'full' && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="overflow-hidden border">
           <CardHeader className="pb-0">
@@ -216,6 +219,7 @@ export function RevenueCharts({
           </CardContent>
         </Card>
       </div>
+      )}
     </div>
   );
 }

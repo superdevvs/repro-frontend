@@ -41,9 +41,10 @@ const accountFormSchema = z.object({
   role: z.enum(['admin', 'photographer', 'client', 'editor'] as const),
   phone: z.string().optional(),
   company: z.string().optional(),
+  licenseNumber: z.string().optional(),
   avatar: z.string().optional(),
-  bio: z.string().optional(),
-  username: z.string().min(3, "Username must be at least 3 characters").optional(),
+  companyNotes: z.string().optional(),
+  // username: z.string().min(3, "Username must be at least 3 characters").optional(),
   isActive: z.boolean().default(true),
 });
 
@@ -74,9 +75,9 @@ export function AccountForm({
       role: "client" as FormRole,
       phone: "",
       company: "",
+      licenseNumber: "",
       avatar: "",
-      bio: "",
-      username: "",
+      companyNotes: "",
       isActive: true,
     },
   });
@@ -96,8 +97,8 @@ export function AccountForm({
         phone: initialData.phone || "",
         company: initialData.company || "",
         avatar: initialData.avatar || "",
-        bio: initialData.bio || "",
-        username: initialData.username || "",
+        companyNotes: initialData.companyNotes || "",
+        // username: initialData.username || "",
         // Use initialData.isActive if it exists, otherwise default to true
         isActive: (initialData).isActive !== undefined ? (initialData).isActive : true,
       });
@@ -110,8 +111,8 @@ export function AccountForm({
         phone: "",
         company: "",
         avatar: "",
-        bio: "",
-        username: "",
+        companyNotes: "",
+        // username: "",
         isActive: true,
       });
       setAvatarUrl("");
@@ -153,6 +154,34 @@ export function AccountForm({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="photographer">Photographer</SelectItem>
+                        <SelectItem value="client">Client</SelectItem>
+                        <SelectItem value="editor">Editor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+
               <FormField
                 control={form.control}
                 name="name"
@@ -225,6 +254,20 @@ export function AccountForm({
 
               <FormField
                 control={form.control}
+                name="licenseNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>License number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="LI0123456" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* <FormField
+                control={form.control}
                 name="role"
                 render={({ field }) => (
                   <FormItem>
@@ -248,18 +291,18 @@ export function AccountForm({
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
             </div>
 
             <FormField
               control={form.control}
-              name="bio"
+              name="companyNotes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bio</FormLabel>
+                  <FormLabel>Company Notes</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Brief description about the user"
+                      placeholder=""
                       {...field}
                     />
                   </FormControl>

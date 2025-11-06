@@ -14,7 +14,7 @@ export interface User {
   avatar?: string;
   phone?: string;
   company?: string;
-  bio?: string;
+  companyNotes?: string;
   username?: string;
   lastLogin?: string;
   createdAt?: string;
