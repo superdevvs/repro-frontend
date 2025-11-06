@@ -40,13 +40,30 @@ const accountFormSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   role: z.enum(['admin', 'photographer', 'client', 'editor'] as const),
   phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().trim().min(1,"City is required"),
+  state: z.string().trim().min(1,"State is required"),
+  zipcode: z.string().trim().min(1,"Zip Code is required"), 
   company: z.string().optional(),
   licenseNumber: z.string().optional(),
   avatar: z.string().optional(),
   companyNotes: z.string().optional(),
   // username: z.string().min(3, "Username must be at least 3 characters").optional(),
   isActive: z.boolean().default(true),
-});
+})
+.refine(
+    (data) => {
+      // Require licenseNumber only when role = 'client'
+      if (data.role === "client") {
+        return data.licenseNumber && data.licenseNumber.trim().length > 0;
+      }
+      return true;
+    },
+    {
+      message: "License number is required for clients",
+      path: ["licenseNumber"], 
+    }
+);
 
 // type AccountFormValues = z.infer<typeof accountFormSchema>;
 export type AccountFormValues = z.infer<typeof accountFormSchema>;
@@ -74,6 +91,10 @@ export function AccountForm({
       email: "",
       role: "client" as FormRole,
       phone: "",
+      address: "",
+      city: "",
+      state: "",
+      zipcode: "",
       company: "",
       licenseNumber: "",
       avatar: "",
@@ -95,6 +116,10 @@ export function AccountForm({
         email: initialData.email,
         role,
         phone: initialData.phone || "",
+        address: initialData.address || "",
+        city: initialData.city || "",
+        state: initialData.state || "",
+        zipcode: initialData.zipcode || "",
         company: initialData.company || "",
         avatar: initialData.avatar || "",
         companyNotes: initialData.companyNotes || "",
@@ -109,6 +134,10 @@ export function AccountForm({
         email: "",
         role: "client",
         phone: "",
+        address: "",
+        city: "",
+        state: "",
+        zipcode: "",
         company: "",
         avatar: "",
         companyNotes: "",
@@ -132,12 +161,12 @@ export function AccountForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Edit Account" : "Add New Account"}</DialogTitle>
-          <DialogDescription>
+          {/* <DialogTitle>{initialData ? "Edit Account" : "Add New Account"}</DialogTitle> */}
+          <DialogTitle>
             {initialData
               ? "Update user account details"
               : "Create a new user account"}
-          </DialogDescription>
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -238,6 +267,63 @@ export function AccountForm({
                 )}
               />
 
+
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>City</FormLabel>
+                    <FormControl>
+                      <Input placeholder="" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>State</FormLabel>
+                    <FormControl>
+                      <Input placeholder="" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="zipcode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Zip Code</FormLabel>
+                    <FormControl>
+                      <Input placeholder="" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="company"
@@ -311,7 +397,7 @@ export function AccountForm({
               )}
             />
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="isActive"
               render={({ field }) => (
@@ -330,7 +416,7 @@ export function AccountForm({
                   </FormControl>
                 </FormItem>
               )}
-            />
+            /> */}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

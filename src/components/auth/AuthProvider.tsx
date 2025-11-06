@@ -13,6 +13,10 @@ export interface User {
   role: Role;
   avatar?: string;
   phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipcode?: string;
   company?: string;
   companyNotes?: string;
   username?: string;
