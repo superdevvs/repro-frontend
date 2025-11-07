@@ -21,7 +21,7 @@ export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderPro
         )}
       >
         <img 
-          src="/REPRO-HQ Logo-324-200.png" 
+          src="/REPRO-HQ.png" 
           alt="R/E Pro Photos Logo"
           className={cn(
             "h-10 w-auto object-contain",
