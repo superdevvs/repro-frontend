@@ -37,11 +37,18 @@ export function ServicesTab() {
     category: '',
   });
   const { toast } = useToast();
-  const { data: categories, isLoading: categoriesLoading } = useServiceCategories();
+  // const { data: categories, isLoading: categoriesLoading } = useServiceCategories();
+  const { data: categories, isLoading: categoriesLoading, refetch: refetchCategories } = useServiceCategories();
+
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+
+  const ADD_CATEGORY_VALUE = '__ADD_NEW_CATEGORY__';
 
   useEffect(() => {
     fetchServices();
-    
+
     // Set default selected category when categories are loaded
     if (categories && categories.length > 0 && !selectedCategory) {
       setSelectedCategory(categories[0].id);
@@ -81,9 +88,17 @@ export function ServicesTab() {
   };
 
 
-  const handleCategoryChange = (categoryId: string) => {
-    console.log('Selected category:', categoryId);
-    setSelectedCategory(categoryId);
+  // const handleCategoryChange = (categoryId: string) => {
+  //   console.log('Selected category:', categoryId);
+  //   setSelectedCategory(categoryId);
+  // };
+
+  const handleCategoryChange = (value: string) => {
+    if (value === ADD_CATEGORY_VALUE) {
+      setIsAddCategoryOpen(true);
+      return;
+    }
+    setSelectedCategory(value);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,7 +122,7 @@ export function ServicesTab() {
       }
 
       const token = localStorage.getItem('authToken');
-  
+
       if (!token) {
         throw new Error("No auth token found in localStorage");
       }
@@ -160,7 +175,55 @@ export function ServicesTab() {
   };
 
 
-  const filteredServices = selectedCategory 
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast({ title: 'Name required', description: 'Please enter a category name.', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      setIsCreatingCategory(true);
+
+      const token = localStorage.getItem('authToken');
+      if (!token) throw new Error('No auth token found');
+
+      const res = await fetch(API_ROUTES.categories.create, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: newCategoryName.trim() }),
+      });
+
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.message || 'Failed to create category');
+      }
+
+      const data = await res.json(); // assume returns { data: { id, name, ... }, message? }
+
+      // refetch list so new category appears
+      await refetchCategories?.();
+
+      // Select the newly created category if id available
+      const newId = data?.data?.id;
+      if (newId) setSelectedCategory(newId);
+
+      toast({ title: 'Category created', description: data.message || 'New category has been added.' });
+      setNewCategoryName('');
+      setIsAddCategoryOpen(false);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Could not create category.', variant: 'destructive' });
+    } finally {
+      setIsCreatingCategory(false);
+    }
+  };
+
+
+
+  const filteredServices = selectedCategory
     ? services.filter(service => service.category === categories?.find(cat => cat.id === selectedCategory)?.name)
     : services;
 
@@ -172,7 +235,7 @@ export function ServicesTab() {
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
-          <Select 
+          <Select
             value={selectedCategory || ''}
             onValueChange={handleCategoryChange}
           >
@@ -185,6 +248,15 @@ export function ServicesTab() {
                   {category.name}
                 </SelectItem>
               ))}
+
+              {/* Divider-ish spacer */}
+              <div className="my-1 h-px bg-muted" />
+
+              {/* Add new option */}
+              <SelectItem value={ADD_CATEGORY_VALUE}>
+                Add new category
+              </SelectItem>
+
             </SelectContent>
           </Select>
         )}
@@ -197,13 +269,12 @@ export function ServicesTab() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredServices.map(service => (
-            <ServiceCard 
-              key={service.id} 
-              service={service} 
+            <ServiceCard
+              key={service.id}
+              service={service}
               onUpdate={fetchServices}
             />
           ))}
-          
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <Card className="border-2 border-dashed border-muted-foreground/20 h-full flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setIsAddDialogOpen(true)}>
               <CardContent className="flex flex-col items-center justify-center p-6 h-full">
@@ -264,7 +335,7 @@ export function ServicesTab() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <CategorySelect 
+                  <CategorySelect
                     value={newService.category}
                     onChange={(value) => {
                       setNewService(prev => ({ ...prev, category: value }));
@@ -286,6 +357,44 @@ export function ServicesTab() {
           </Dialog>
         </div>
       )}
+
+      {/* Add New Category Dialog (place outside the grid, before the final closing </div>) */}
+<Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+  <DialogContent className="sm:max-w-[420px]">
+    <DialogHeader>
+      <DialogTitle>Add New Category</DialogTitle>
+    </DialogHeader>
+
+    <div className="space-y-3 py-2">
+      <Label htmlFor="new-category-name">Category name</Label>
+      <Input
+        id="new-category-name"
+        placeholder="e.g., Floor Plans"
+        value={newCategoryName}
+        autoFocus
+        onChange={(e) => setNewCategoryName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleCreateCategory();
+        }}
+      />
+    </div>
+
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setIsAddCategoryOpen(false)}>
+        Cancel
+      </Button>
+      <Button onClick={handleCreateCategory} disabled={isCreatingCategory}>
+        {isCreatingCategory ? (
+          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+        ) : (
+          <Save className="w-4 h-4 mr-2" />
+        )}
+        Create
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
     </div>
   );
 }

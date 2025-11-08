@@ -116,12 +116,12 @@ export function AccountCard({
               }}>
                 <KeyRound className="mr-2 h-4 w-4" /> Reset Password
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => { 
+              {/* <DropdownMenuItem onClick={(e) => { 
                 e.stopPropagation();
                 onImpersonate(user);
               }}>
                 <LogIn className="mr-2 h-4 w-4" /> Impersonate User
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuItem onClick={(e) => { 
                 e.stopPropagation();
                 onManageNotifications(user);

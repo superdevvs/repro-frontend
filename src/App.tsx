@@ -33,6 +33,7 @@ import Coupons from "./pages/Coupons";
 import PermissionSettings from "./pages/PermissionSettings";
 import DropboxCallback from './components/DropboxCallback';
 import ClientPortal from "./components/clients/ClientPortal";
+import Revenue from './pages/Revenue';
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -190,6 +191,11 @@ const AppRoutes = () => {
       <Route path="/integrations" element={
         <ProtectedRoute>
           <Integrations />
+        </ProtectedRoute>
+      } />
+      <Route path="/revenue" element={
+        <ProtectedRoute>
+          <Revenue />
         </ProtectedRoute>
       } />
       <Route path="/photographer-history" element={

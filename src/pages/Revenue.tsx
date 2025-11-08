@@ -18,7 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { RevenueCharts } from "@/components/accounting/RevenueCharts";
 
 
-const Dashboard = () => {
+const Revenue = () => {
   const { role } = useAuth();
   const isMobile = useIsMobile();
   const { shoots } = useShoots();
@@ -202,4 +202,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Revenue;
