@@ -16,6 +16,7 @@ import {
   Settings2Icon,
   MapPinIcon,
   TestTubeIcon,
+  DollarSignIcon,
 } from 'lucide-react';
 
 interface SidebarLinksProps {
@@ -36,6 +37,7 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
   const availabilityPermission = permission.forResource('availability');
   const integrationsPermission = permission.forResource('integrations');
   const settingsPermission = permission.forResource('settings');
+  const revenuePermission = permission.forResource('revenue'); 
 
   return (
     <div className="flex flex-1 flex-col gap-2 p-2">
@@ -150,6 +152,17 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
           label="Integrations"
           isCollapsed={isCollapsed}
           isActive={pathname === '/integrations'}
+        />
+      )}
+
+       {/* ✅ Revenue (separate, not nested inside Integrations) */}
+      {revenuePermission.canView() && (
+        <NavLink
+          to="/revenue"
+          icon={<DollarSignIcon className="h-5 w-5" />}
+          label="Revenue"
+          isCollapsed={isCollapsed}
+          isActive={pathname === '/revenue'}
         />
       )}
       

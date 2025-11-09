@@ -171,6 +171,9 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
     (client.company && client.company.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const isSearching = searchQuery.trim().length > 0;
+  const visibleClients = isSearching ? filteredClients : filteredClients.slice(0, 2);
+
   const selectedClientId = !isClientAccount ? (form.getValues() as AdminFormValues).clientId : '';
   const selectedClient = selectedClientId ? clients.find(client => client.id === selectedClientId) : null;
 
@@ -310,8 +313,8 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                 render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 max-h-[200px] overflow-y-auto">
-                      {filteredClients.length > 0 ? (
-                        filteredClients.map((client) => (
+                      {visibleClients.length > 0 ? (
+                        visibleClients.map((client) => (
                           <div
                             key={client.id}
                             className={`p-3 border rounded-md cursor-pointer transition-colors ${field.value === client.id
@@ -346,10 +349,18 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                         ))
                       ) : (
                         <div className="col-span-2 p-6 text-center text-muted-foreground">
-                          No clients found. Try a different search or create a new client.
+                          {isSearching
+                            ? "No clients found for this search."
+                            : "No clients available."}
                         </div>
                       )}
                     </div>
+
+                    {/* {!isSearching && filteredClients.length > 2 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Showing 2 clients. Type in the search box to see more.
+                      </p>
+                    )} */}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -411,11 +422,12 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                         onChange={field.onChange}
                         onAddressSelect={(address) => {
                           // Auto-fill city, state, and zip when address is selected
-                          form.setValue('propertyCity', address.city);
-                          form.setValue('propertyState', address.state);
-                          form.setValue('propertyZip', address.zip);
-                          // Update the address field with just the street address
-                          form.setValue('propertyAddress', address.address);
+                          form.setValue('propertyCity', address.city || '', { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                          form.setValue('propertyState', address.state || '', { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                          form.setValue('propertyZip', address.zip || '', { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                          // Prefer full formatted address; fallback to street address
+                          const street = address.formatted_address || address.address || '';
+                          form.setValue('propertyAddress', street, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
                         }}
                         placeholder="Start typing the property address..."
                       />

@@ -19,6 +19,7 @@ export const useClientsData = () => {
       try {
         const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         if (!token) return;
+        // Fetch clients list
         const res = await fetch(API_ROUTES.clients.adminList, {
           headers: {
             Accept: 'application/json',
@@ -28,18 +29,50 @@ export const useClientsData = () => {
         if (!res.ok) return;
         const json = await res.json();
         const list = Array.isArray(json.data) ? json.data : (json.users || []);
-        const mapped: Client[] = list.map((u: any) => ({
-          id: String(u.id),
-          name: u.name,
-          company: u.company_name || '',
-          email: u.email,
-          phone: u.phonenumber || u.phone || '',
-          address: '',
-          status: 'active',
-          shootsCount: 0,
-          lastActivity: new Date().toISOString().split('T')[0],
-          avatar: u.avatar || undefined,
-        }));
+
+        // Fetch shoots to compute per-client counts and last activity
+        let counts: Record<string, number> = {};
+        let last: Record<string, string> = {};
+        try {
+          const shootsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/shoots`, {
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (shootsRes.ok) {
+            const shootsJson = await shootsRes.json();
+            const shootsArr = Array.isArray(shootsJson.data) ? shootsJson.data : [];
+            for (const s of shootsArr) {
+              const cid = String(s.client?.id ?? s.client_id ?? '');
+              if (!cid) continue;
+              counts[cid] = (counts[cid] || 0) + 1;
+              const d = s.scheduled_date || s.scheduledDate || s.created_at || s.updated_at || '';
+              if (d) {
+                const prev = last[cid];
+                if (!prev || new Date(d) > new Date(prev)) {
+                  last[cid] = d;
+                }
+              }
+            }
+          }
+        } catch (_) {}
+
+        const mapped: Client[] = list.map((u: any) => {
+          const id = String(u.id);
+          return {
+            id,
+            name: u.name,
+            company: u.company_name || '',
+            email: u.email,
+            phone: u.phonenumber || u.phone || '',
+            address: '',
+            status: 'active',
+            shootsCount: counts[id] || 0,
+            lastActivity: (last[id] ? new Date(last[id]).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
+            avatar: u.avatar || undefined,
+          };
+        });
         setClientsData(mapped);
       } catch (_) {}
     };
@@ -48,9 +81,11 @@ export const useClientsData = () => {
   
   const totalClients = clientsData.length;
   const activeClients = clientsData.filter(client => client.status === 'active').length;
-  const totalShoots = shoots.length;
-  const averageShootsPerClient = totalClients > 0 
-    ? Math.round((totalShoots / totalClients) * 10) / 10 
+  // Sum the shootsCount across the visible clients list so it reflects
+  // shoots associated with the clients we are showing
+  const totalShoots = clientsData.reduce((sum, c) => sum + (c.shootsCount || 0), 0);
+  const averageShootsPerClient = totalClients > 0
+    ? Math.round((totalShoots / totalClients) * 10) / 10
     : 0;
   
   // Update shoots count for each client

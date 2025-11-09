@@ -36,6 +36,7 @@ import DropboxCallback from './components/DropboxCallback';
 import AddressLookupDemo from './components/AddressLookupDemo';
 import ClientPortal from "./components/clients/ClientPortal";
 import BookShootWithAddressLookup from './components/BookShootWithAddressLookup';
+import Revenue from './pages/Revenue';
 import AddressLookupTest from './pages/AddressLookupTest';
 import TestClientPropertyForm from './pages/TestClientPropertyForm';
 import { BrandedPage } from '@/components/tourLinks/BrandedPage';
@@ -127,11 +128,8 @@ const AppRoutes = () => {
       <Route path="/tour/branded" element={<BrandedPage />} />
       <Route path="/tour/mls" element={<MlsCompliant />} />
       <Route path="/tour/generic-mls" element={<GenericMLS />} />
-      <Route path="/client-portal" element={
-        <ProtectedRoute>
-          <ClientPortal />
-        </ProtectedRoute>
-      } />
+      {/* Public client portal so clients can share their link */}
+      <Route path="/client-portal" element={<ClientPortal />} />
 
       <Route path="/dashboard" element={
         <ProtectedRoute>
@@ -211,6 +209,11 @@ const AppRoutes = () => {
       <Route path="/integrations" element={
         <ProtectedRoute>
           <Integrations />
+        </ProtectedRoute>
+      } />
+      <Route path="/revenue" element={
+        <ProtectedRoute>
+          <Revenue />
         </ProtectedRoute>
       } />
       <Route path="/photographer-history" element={

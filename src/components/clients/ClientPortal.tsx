@@ -1,5 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+type ShootApi = {
+  id: number|string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  client?: { id: number|string; name?: string };
+  files?: Array<{
+    id: number|string;
+    filename?: string;
+    stored_filename?: string;
+    path?: string;
+    dropbox_path?: string;
+    file_type?: string;
+    workflow_stage?: string;
+  }>;
+  scheduled_date?: string;
+};
+
 type PortfolioItem = {
   id: string;
   title: string;
@@ -126,12 +145,54 @@ const PORTFOLIO: PortfolioItem[] = [
   },
 ];
 
+function buildFileUrl(u?: string | null): string | null {
+  if (!u) return null;
+  if (/^https?:\/\//i.test(u)) return u;
+  const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+  const clean = u.replace(/^\/+/, '');
+  const rel = clean.startsWith('storage/') ? clean : `storage/${clean}`;
+  return `${base}/${rel}`;
+}
+
 const yearNow = new Date().getFullYear();
 
 export function ClientPortal() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [filter, setFilter] = useState<"all" | PortfolioItem["category"]>("all");
+  const [clientName, setClientName] = useState<string>("");
+  const [clientInfo, setClientInfo] = useState<{ email?: string; company_name?: string; avatar?: string } | null>(null);
+  const [dynamicPortfolio, setDynamicPortfolio] = useState<PortfolioItem[] | null>(null);
+
+  // Load client shoots as dynamic portfolio (public shareable link)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const clientId = params.get('clientId');
+    if (!clientId) return;
+
+    (async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/public/clients/${clientId}/profile`, {
+          headers: { Accept: 'application/json' },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const c = data.client || {};
+        if (c.name) setClientName(c.name);
+        setClientInfo({ email: c.email, company_name: c.company_name, avatar: c.avatar });
+        const items: PortfolioItem[] = (data.shoots || []).map((s: any, i: number) => ({
+          id: String(s.id),
+          title: s.address || 'Property',
+          subtitle: [s.city, s.state].filter(Boolean).join(', '),
+          image: s.preview_image || PORTFOLIO[i % PORTFOLIO.length].image,
+          category: 'residential',
+          photos: s.files_count || undefined,
+          badge: 'Project',
+        }));
+        if (items.length) setDynamicPortfolio(items);
+      } catch {}
+    })();
+  }, []);
 
   // Refs for sections (for smooth scroll)
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -156,9 +217,10 @@ export function ClientPortal() {
   }, []);
 
   const filteredPortfolio = useMemo(() => {
-    if (filter === "all") return PORTFOLIO;
-    return PORTFOLIO.filter((it) => it.category === filter);
-  }, [filter]);
+    const base = dynamicPortfolio || PORTFOLIO;
+    if (filter === "all") return base;
+    return base.filter((it) => it.category === filter);
+  }, [filter, dynamicPortfolio]);
 
   return (
     <>
@@ -189,7 +251,7 @@ export function ClientPortal() {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mr-3">
                 <i className="fas fa-camera text-white text-sm" />
               </div>
-              <span className="text-xl font-bold text-gray-900">Alex Carter</span>
+              <span className="text-xl font-bold text-gray-900">{clientName || 'Client'}</span>
             </div>
             <div className="hidden md:flex space-x-1">
               {NAV_LINKS.map((l) => (
@@ -239,9 +301,19 @@ export function ClientPortal() {
               <i className="fas fa-camera mr-2" />
               Professional Real Estate Photography
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              <span className="text-primary">Alex Carter</span>
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-2">
+              <span className="text-primary">{clientName || 'Client'}</span>
             </h1>
+            {clientInfo && (
+              <div className="text-gray-600 mb-6">
+                {clientInfo.company_name && (
+                  <div className="text-base">{clientInfo.company_name}</div>
+                )}
+                {clientInfo.email && (
+                  <div className="text-sm">{clientInfo.email}</div>
+                )}
+              </div>
+            )}
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
               Capturing architectural beauty and creating stunning visual narratives that sell properties faster
             </p>

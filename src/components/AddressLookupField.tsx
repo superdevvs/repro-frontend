@@ -162,19 +162,15 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const response = await fetch(
-        `/api/address/search?query=${encodeURIComponent(searchQuery)}`,
-        { headers }
-      );
+      const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const url = `${base}/api/address/search?query=${encodeURIComponent(searchQuery)}`;
+      const response = await fetch(url, { headers });
 
       if (!response.ok) {
         // If API fails, use mock data for testing
@@ -222,25 +218,22 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
 
   // Handle suggestion selection
   const handleSuggestionSelect = async (suggestion: AddressSuggestion) => {
-    onChange(suggestion.description);
+    // Stop pending debounce to avoid race conditions updating suggestions after selection
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     setShowSuggestions(false);
     setIsLoading(true);
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const response = await fetch(
-        `/api/address/details?place_id=${suggestion.place_id}`,
-        { headers }
-      );
+      const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const url = `${base}/api/address/details?place_id=${encodeURIComponent(suggestion.place_id)}`;
+      const response = await fetch(url, { headers });
 
       if (!response.ok) {
         // Use mock data if API fails
@@ -253,15 +246,18 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
 
       const data = await response.json();
       const addressDetails = data.data;
-      
+
       setSelectedAddress(addressDetails);
       onAddressSelect(addressDetails);
+      // Ensure the input reflects the final chosen address
+      onChange(addressDetails.formatted_address || addressDetails.address || suggestion.description);
     } catch (err) {
       // Fallback to mock data
       console.warn('API error, using mock address details:', err);
       const mockDetails = getMockAddressDetails(suggestion.place_id);
       setSelectedAddress(mockDetails);
       onAddressSelect(mockDetails);
+      onChange(mockDetails.formatted_address || mockDetails.address || suggestion.description);
     } finally {
       setIsLoading(false);
     }

@@ -188,10 +188,9 @@ export const useClientActions = ({ clientsData, setClientsData }: UseClientActio
 
   const handleClientPortal = (client: Client, e: React.MouseEvent) => {
     e.stopPropagation();
-    toast({
-      title: "Client Portal",
-      description: `Opening client portal for ${client.name}...`,
-    });
+    const url = `${window.location.origin}/client-portal?clientId=${client.id}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    toast({ title: 'Client Portal', description: `Opening portal for ${client.name} in a new tab...` });
   };
 
   return {
@@ -215,3 +214,4 @@ export const useClientActions = ({ clientsData, setClientsData }: UseClientActio
     handleClientPortal
   };
 };
+

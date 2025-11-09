@@ -4,7 +4,7 @@ import { TaskManager } from "@/components/dashboard/TaskManager";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { StatsCardGrid } from "@/components/dashboard/StatsCardGrid";
-// import { RevenueOverview } from '@/components/dashboard/RevenueOverview';
+import { RevenueOverview } from '@/components/dashboard/RevenueOverview';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useShoots } from "@/context/ShootsContext";
 import { TimeRange, filterShootsByDateRange } from "@/utils/dateUtils";
@@ -15,12 +15,10 @@ import { ArrowRightIcon, CameraIcon } from "lucide-react";
 import { compareAsc, parseISO } from "date-fns";
 import { Pagination } from "@/components/ui/pagination";
 import { useNavigate } from "react-router-dom";
-import { UpcomingShoots } from "@/components/dashboard/UpcomingShoots";
-import { Calendar } from "@/components/dashboard/Calendar";
 import { RevenueCharts } from "@/components/accounting/RevenueCharts";
-import { InvoiceData } from '@/utils/invoiceUtils';
 
-const Dashboard = () => {
+
+const Revenue = () => {
   const { role } = useAuth();
   const isMobile = useIsMobile();
   const { shoots } = useShoots();
@@ -72,7 +70,7 @@ const Dashboard = () => {
   >("month");
 
   // TODO: Replace this stub with your real invoices source
-  const invoices: InvoiceData[] = [];
+//   const invoices: InvoiceData[] = [];
 
   return (
     <DashboardLayout>
@@ -85,10 +83,10 @@ const Dashboard = () => {
 
 
 
-        {/* {showRevenue && <RevenueOverview shoots={filteredShoots} timeRange={timeRange} />} */}
+        {showRevenue && <RevenueOverview shoots={filteredShoots} timeRange={timeRange} />}
 
         {/* Improved layout for Calendar, Upcoming Shoots, and Task Manager */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full h-full">
+        {/* <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full h-full"> */}
           {/* Left side (Calendar) */}
           {/* {!showClientInterface && (
     <div className="lg:col-span-7">
@@ -97,10 +95,10 @@ const Dashboard = () => {
   )} */}
 
           {/* Upcoming Shoots + Task Manager (full width) */}
-          <div className="col-span-12">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
+          {/* <div className="col-span-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full"> */}
               {/* Upcoming Shoots */}
-              <motion.div
+              {/* <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
@@ -169,10 +167,10 @@ const Dashboard = () => {
                     )}
                   </div>
                 </Card>
-              </motion.div>
+              </motion.div> */}
 
               {/* Task Manager */}
-              {!showClientInterface && (
+              {/* {!showClientInterface && (
                 <div className="h-full">
                   <Card className="glass-card h-full p-4">
                     <TaskManager />
@@ -181,21 +179,21 @@ const Dashboard = () => {
               )}
             </div>
           </div>
-        </div>
+        </div> */}
         <div className="w-full">
-          {/* <StatsCardGrid
+          <StatsCardGrid
             showRevenue={showRevenue}
             showClientStats={showClientStats}
             showPhotographerInterface={showPhotographerInterface}
             shoots={filteredShoots}
             timeRange={timeRange}
-          /> */}
+          />
           {showRevenue && (
             <RevenueCharts
               invoices={invoices}
               timeFilter={invoiceTimeFilter}
               onTimeFilterChange={setInvoiceTimeFilter}
-              variant="compact"
+              variant="full"
             />
           )}
         </div>
@@ -204,4 +202,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Revenue;

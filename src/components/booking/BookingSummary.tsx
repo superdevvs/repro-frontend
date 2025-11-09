@@ -101,17 +101,17 @@ export function BookingSummary({
           )}
         </div>
         
-        {(summaryInfo.date && summaryInfo.address) && (
+        {/* {(summaryInfo.date && summaryInfo.address) && (
           <div className="pt-2">
             <div className="flex items-center gap-2 text-white">
               <CloudSun className="h-4 w-4 text-yellow-400" />
               <span className="text-sm">Weather forecast available</span>
-              <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/30 ml-1">
+               <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/30 ml-1">
                 Premium
-              </Badge>
+              </Badge> 
             </div>
           </div>
-        )}
+        )} */}
         
         {selectedPackage && (
           <div className="pt-4 border-t border-[#1e2d4a]">

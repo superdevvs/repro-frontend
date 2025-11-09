@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { BellIcon, SearchIcon, SunIcon, MoonIcon, PlusCircleIcon, CloudIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -19,9 +18,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/hooks/useTheme';
 
 interface WeatherData {
-  temp: number;
+  tempF: number;
   condition: string;
-  icon: string;
 }
 
 export function Navbar() {
@@ -33,42 +31,55 @@ export function Navbar() {
   // Allow client users to create new shoots
   const canBookShoot = ['admin', 'superadmin', 'client'].includes(role);
 
-  // Fetch current weather data for demo purposes
+  // Fetch current weather using device location via Open-Meteo (no API key)
   useEffect(() => {
-    // Safe check to prevent error if component unmounts
-    let isMounted = true;
+    let cancelled = false;
 
-    const fetchWeather = async () => {
+    const codeToText = (code: number) => {
+      const map: Record<number, string> = {
+        0: 'Clear', 1: 'Mainly Clear', 2: 'Partly Cloudy', 3: 'Overcast',
+        45: 'Fog', 48: 'Rime Fog', 51: 'Drizzle', 53: 'Drizzle', 55: 'Drizzle',
+        56: 'Freezing Drizzle', 57: 'Freezing Drizzle', 61: 'Rain', 63: 'Rain', 65: 'Heavy Rain',
+        66: 'Freezing Rain', 67: 'Freezing Rain', 71: 'Snow', 73: 'Snow', 75: 'Heavy Snow',
+        77: 'Snow Grains', 80: 'Rain Showers', 81: 'Rain Showers', 82: 'Violent Showers',
+        85: 'Snow Showers', 86: 'Snow Showers', 95: 'Thunderstorm', 96: 'Thunderstorm', 99: 'Hailstorm'
+      };
+      return map[code] || 'Weather';
+    };
+
+    const loadWeather = async (lat: number, lon: number) => {
       try {
-        // In a real app, this would use the user's location or a default location
-        // This is a mock response for demo purposes
-        if (isMounted) {
-          setWeather({
-            temp: 22, // Using Celsius
-            condition: 'Partly Cloudy',
-            icon: '⛅️'
-          });
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const cw = data.current_weather;
+        if (cw && typeof cw.temperature === 'number') {
+          setWeather({ tempF: cw.temperature, condition: codeToText(cw.weathercode) });
         }
-        
-        // Actual API call would look like:
-        // const res = await fetch(`https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=auto:ip`);
-        // const data = await res.json();
-        // setWeather({
-        //   temp: data.current.temp_c,
-        //   condition: data.current.condition.text,
-        //   icon: data.current.condition.icon
-        // });
-      } catch (error) {
-        console.error('Failed to fetch weather:', error);
+      } catch {
+        // Keep weather hidden on errors
       }
     };
 
-    fetchWeather();
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          loadWeather(latitude, longitude);
+        },
+        () => {
+          // Fallback: NYC
+          loadWeather(40.7128, -74.0060);
+        },
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 }
+      );
+    } else {
+      loadWeather(40.7128, -74.0060);
+    }
 
-    // Cleanup function
-    return () => {
-      isMounted = false;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const toggleTheme = () => {
@@ -110,7 +121,7 @@ export function Navbar() {
         {weather && (
           <div className="hidden md:flex items-center gap-1 text-sm text-muted-foreground">
             <CloudIcon className="h-4 w-4" />
-            <span>{weather.icon} {weather.temp}°C</span>
+            <span>{weather.tempF}°F · {weather.condition}</span>
           </div>
         )}
         
@@ -182,3 +193,4 @@ export function Navbar() {
     </motion.div>
   );
 }
+

@@ -125,9 +125,9 @@ export function AccountList({
                     <DropdownMenuItem onClick={() => onResetPassword(user)}>
                       Reset Password
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onImpersonate(user)}>
+                    {/* <DropdownMenuItem onClick={() => onImpersonate(user)}>
                       Impersonate User
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                     <DropdownMenuItem onClick={() => onManageNotifications(user)}>
                       Notification Settings
                     </DropdownMenuItem>

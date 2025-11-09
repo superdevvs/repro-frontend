@@ -239,17 +239,35 @@ export default function Accounts() {
     setUserProfileDialogOpen(true);
   };
 
-  const handleUpdateRoles = (userId: string, roles: Role[]) => {
-    setUsers(
-      users.map((u) =>
-        u.id === userId ? { ...u, role: roles[0] } : u
-      )
-    );
-
-    toast({
-      title: "Role updated",
-      description: `User role has been updated to ${roles.join(", ")}.`,
-    });
+  const handleUpdateRoles = async (userId: string, roles: Role[]) => {
+    const newRole = roles[0];
+    try {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      if (!token) throw new Error('Not authenticated');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/users/${userId}/role`, {
+        method: 'PATCH',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ role: newRole })
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || 'Failed to change role');
+      }
+      const data = await res.json();
+      if (!data.changed) {
+        toast({ title: 'No change', description: 'Role was not changed. Try again.', variant: 'destructive' });
+        return;
+      }
+      setUsers(users.map(u => (u.id === userId ? { ...u, role: newRole } : u)));
+      toast({ title: 'Role updated', description: `User role updated to ${newRole}.` });
+    } catch (e: any) {
+      console.error('Role change failed', e);
+      toast({ title: 'Failed to change role', description: e?.message || 'Try again.', variant: 'destructive' });
+    }
   };
 
   const handleUpdateNotifications = (userId: string, settings: Record<string, boolean>) => {

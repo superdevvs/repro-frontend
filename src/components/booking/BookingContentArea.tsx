@@ -103,6 +103,12 @@ export function BookingContentArea({
           packages={packages}
           isClientAccount={clientPropertyFormData.isClientAccount}
           clients={clients}
+          onAddressFieldsChange={(a) => {
+            if (setAddress) setAddress(a.address);
+            if (setCity) setCity(a.city);
+            if (setState) setState(a.state);
+            if (setZip) setZip(a.zip);
+          }}
         />
       )}
       

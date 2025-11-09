@@ -83,6 +83,7 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
   const [timeDialogOpen, setTimeDialogOpen] = useState(false);
   const [photographerDialogOpen, setPhotographerDialogOpen] = useState(false);
 
+
   const onDateChange = (newDate: Date | undefined) => {
     // Make sure we're working with the correct date without timezone issues
     if (newDate) {
@@ -92,12 +93,12 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
       const month = newDate.getMonth();
       const day = newDate.getDate();
       const adjustedDate = new Date(year, month, day, 12, 0, 0); // Set to noon to avoid timezone issues
-      
+
       setDate(adjustedDate);
     } else {
       setDate(undefined);
     }
-    
+
     if (newDate && formErrors['date']) {
       const { date, ...rest } = formErrors;
       setFormErrors(rest);
@@ -143,18 +144,18 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
           const response = await fetch(
             `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
           );
-          
+
           if (!response.ok) {
             throw new Error('Failed to fetch address');
           }
-          
+
           const data = await response.json();
-          
+
           setAddress(data.principalSubdivision ? `${data.street || ''} ${data.housenumber || ''}`.trim() : 'Address not found');
           setCity(data.city || data.locality || '');
           setState(data.principalSubdivision || '');
           setZip(data.postcode || '');
-          
+
           toast({
             title: "Location detected",
             description: "Your current location has been filled in the form.",
@@ -174,7 +175,7 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
       (error) => {
         console.error('Geolocation error:', error);
         let errorMessage = "Could not detect your location.";
-        
+
         if (error.code === 1) {
           errorMessage = "Location permission denied. Please enable location access.";
         } else if (error.code === 2) {
@@ -182,7 +183,7 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
         } else if (error.code === 3) {
           errorMessage = "Location request timed out. Please try again.";
         }
-        
+
         toast({
           title: "Location error",
           description: errorMessage,
@@ -209,10 +210,10 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
   const fullAddress = address && city && state ? `${address}, ${city}, ${state}${zip ? ' ' + zip : ''}` : '';
 
   // Get selected package name
-  const packageName = selectedPackage === 'standard' ? 'Standard' 
-                    : selectedPackage === 'premium' ? 'Premium' 
-                    : selectedPackage === 'deluxe' ? 'Deluxe' 
-                    : selectedPackage;
+  const packageName = selectedPackage === 'standard' ? 'Standard'
+    : selectedPackage === 'premium' ? 'Premium'
+      : selectedPackage === 'deluxe' ? 'Deluxe'
+        : selectedPackage;
 
   return (
     <div className="space-y-6">
@@ -221,9 +222,9 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
         <div className="bg-[#0e1525] rounded-lg p-6 space-y-2">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-white">Location</h2>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="flex items-center gap-2 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border-blue-600/30"
               onClick={handleGetCurrentLocation}
               disabled={isLocationLoading}
@@ -236,7 +237,7 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
               <span>Current Location</span>
             </Button>
           </div>
-          <div 
+          <div
             className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center cursor-pointer hover:bg-[#1a2842] transition-colors"
             onClick={() => {
               // This should open a dialog or modal for address entry
@@ -275,8 +276,8 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
                     {date ? format(date, "MMMM d, yyyy") : "Select a date"}
                   </p>
                 </div>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="rounded-lg p-2 text-blue-500 hover:bg-blue-500/20"
                 >
                   <CalendarIcon size={32} />
@@ -296,32 +297,46 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
               />
             </DialogContent>
           </Dialog>
-          
+
           {formErrors['date'] && (
             <p className="text-sm font-medium text-destructive mt-1">{formErrors['date']}</p>
           )}
         </div>
-        
+
         {/* Time Selection Section */}
         <div className="bg-[#0e1525] rounded-lg p-6 space-y-2">
           <h2 className="text-xl font-semibold text-white mb-4">Time</h2>
           <Dialog open={timeDialogOpen} onOpenChange={setTimeDialogOpen}>
             <DialogTrigger asChild>
-              <div className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center cursor-pointer hover:bg-[#1a2842] transition-colors">
+              <div className={cn(
+                "bg-[#131f35] rounded-lg p-4 flex justify-between items-center transition-colors",
+                date ? "cursor-pointer hover:bg-[#1a2842]" : "opacity-60 cursor-not-allowed"
+              )} onClick={() => {
+                if (!date) {
+                  toast({
+                    title: "Select date first",
+                    description: "Please choose a date before selecting time.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                setTimeDialogOpen(true);
+              }}
+              >
                 <p className="text-xl font-semibold text-white">{time || "Select a time"}</p>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="rounded-lg p-2 text-blue-500 hover:bg-blue-500/20"
                 >
                   <Clock size={32} />
                 </Button>
               </div>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md w-full">
               <DialogHeader>
                 <DialogTitle>Select Time</DialogTitle>
               </DialogHeader>
-              <div className="grid grid-cols-3 gap-2 mt-2">
+              {/* <div className="grid grid-cols-3 gap-2 mt-2">
                 {["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"].map((t) => (
                   <Button
                     key={t}
@@ -333,33 +348,50 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
                     {t}
                   </Button>
                 ))}
-              </div>
-              <div className="mt-4">
-                <h3 className="text-sm font-medium mb-2">Or Select Custom Time</h3>
+              </div> */}
+              <div className="mt-4 w-full">
+                {/* <h3 className="text-sm font-medium mb-2">Or Select Custom Time</h3> */}
                 <TimeSelect
                   value={time}
                   onChange={onTimeChange}
                   startHour={8}
                   endHour={18}
-                  interval={30}
+                  interval={10}
                   placeholder="Select a time"
                   className="w-full"
                 />
               </div>
             </DialogContent>
           </Dialog>
-          
+
           {formErrors['time'] && (
             <p className="text-sm font-medium text-destructive mt-1">{formErrors['time']}</p>
           )}
         </div>
-        
+
         {/* Photographer Section */}
         <div className="bg-[#0e1525] rounded-lg p-6 space-y-2">
           <h2 className="text-xl font-semibold text-white mb-4">Photographer</h2>
           <Dialog open={photographerDialogOpen} onOpenChange={setPhotographerDialogOpen}>
             <DialogTrigger asChild>
-              <div className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center cursor-pointer hover:bg-[#1a2842] transition-colors">
+              <div
+                className={cn(
+                  "bg-[#131f35] rounded-lg p-4 flex justify-between items-center transition-colors",
+                  time ? "cursor-pointer hover:bg-[#1a2842]" : "opacity-60 cursor-not-allowed"
+                )}
+                onClick={() => {
+                  if (!time) {
+                    toast({
+                      title: "Select time first",
+                      description: "Please choose a time before selecting a photographer.",
+                      variant: "destructive",
+                    });
+                    return; // stop here if time not selected
+                  }
+                  setPhotographerDialogOpen(true);
+                }}
+              >
+
                 <div className="flex items-center">
                   {selectedPhotographer ? (
                     <>
@@ -413,9 +445,9 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
             </DialogContent>
           </Dialog>
         </div>
-        
+
         {/* Package Section */}
-        <div className="bg-[#0e1525] rounded-lg p-6 space-y-2">
+        {/* <div className="bg-[#0e1525] rounded-lg p-6 space-y-2">
           <h2 className="text-xl font-semibold text-white mb-4">Package</h2>
           <div className="bg-[#131f35] rounded-lg p-4 flex justify-between items-center">
             <div className="flex items-center">
@@ -428,7 +460,7 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
               <Package size={20} className="text-white" />
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Weather Information */}
         {date && (city || zip) && (
@@ -439,30 +471,30 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
                   {condition === 'Sunny' ? (
                     <div className="text-yellow-300">
                       <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="5"/>
-                        <line x1="12" y1="1" x2="12" y2="3"/>
-                        <line x1="12" y1="21" x2="12" y2="23"/>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                        <line x1="1" y1="12" x2="3" y2="12"/>
-                        <line x1="21" y1="12" x2="23" y2="12"/>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
                       </svg>
                     </div>
                   ) : condition === 'Cloudy' || condition === 'Partly Cloudy' ? (
                     <div className="text-gray-300">
                       <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
                       </svg>
                     </div>
                   ) : (
                     <div className="text-blue-300">
                       <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"/>
-                        <path d="M16 14v6"/>
-                        <path d="M8 14v6"/>
-                        <path d="M12 16v6"/>
+                        <path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9" />
+                        <path d="M16 14v6" />
+                        <path d="M8 14v6" />
+                        <path d="M12 16v6" />
                       </svg>
                     </div>
                   )}
@@ -470,7 +502,7 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-[#131f35] rounded-lg p-4 flex items-center">
               <div className="flex-1">
                 <div className="flex items-center space-x-2">
@@ -478,7 +510,7 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
                     <MapPin size={24} />
                   </div>
                   <div>
-                    <span className="text-2xl font-bold text-white">{distance} km</span>
+                    <span className="text-2xl font-bold text-white">{distance} miles</span>
                     <p className="text-gray-400">away</p>
                   </div>
                 </div>
@@ -487,25 +519,27 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Submit Button */}
-      <Button 
-        type="button" 
-        onClick={handleSubmit} 
+      <Button
+        type="button"
+        onClick={handleSubmit}
         className="w-full h-14 text-xl font-bold bg-blue-600 hover:bg-blue-700 transition-colors"
       >
         CONFIRM
       </Button>
-      
+
       {/* Back Button */}
-      <Button 
-        type="button" 
-        variant="ghost" 
-        onClick={goBack} 
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={goBack}
         className="w-full text-gray-400 hover:text-white"
       >
         Back
       </Button>
+
+      
     </div>
   );
 };

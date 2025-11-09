@@ -36,20 +36,31 @@ import { useToast } from "@/hooks/use-toast";
 // Define allowed roles for the form
 type FormRole = 'admin' | 'photographer' | 'client' | 'editor';
 
+// + add username and bio into the schema
 const accountFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   role: z.enum(['admin', 'photographer', 'client', 'editor'] as const),
   phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().trim().min(1,"City is required"),
+  state: z.string().trim().min(1,"State is required"),
+  zipcode: z.string().trim().min(1,"Zip Code is required"),
   company: z.string().optional(),
+  licenseNumber: z.string().optional(),
   avatar: z.string().optional(),
-  bio: z.string().optional(),
-  username: z.string().min(3, "Username must be at least 3 characters").optional(),
+  companyNotes: z.string().optional(),
+  username: z.string().min(3, "Username must be at least 3 characters").optional(), // <-- ADDED
+  bio: z.string().optional(), // <-- ADDED
   isActive: z.boolean().default(true),
-});
+})
+.refine(
+  (data) => (data.role === "client" ? !!data.licenseNumber?.trim() : true),
+  { message: "License number is required for clients", path: ["licenseNumber"] }
+);
 
-// type AccountFormValues = z.infer<typeof accountFormSchema>;
 export type AccountFormValues = z.infer<typeof accountFormSchema>;
+
 
 
 interface AccountFormProps {
@@ -76,10 +87,14 @@ export function AccountForm({
       email: "",
       role: "client" as FormRole,
       phone: "",
+      address: "",
+      city: "",
+      state: "",
+      zipcode: "",
       company: "",
+      licenseNumber: "",
       avatar: "",
-      bio: "",
-      username: "",
+      companyNotes: "",
       isActive: true,
     },
   });
@@ -97,10 +112,14 @@ export function AccountForm({
         email: initialData.email,
         role,
         phone: initialData.phone || "",
+        address: initialData.address || "",
+        city: initialData.city || "",
+        state: initialData.state || "",
+        zipcode: initialData.zipcode || "",
         company: initialData.company || "",
         avatar: initialData.avatar || "",
-        bio: initialData.bio || "",
-        username: initialData.username || "",
+        companyNotes: initialData.companyNotes || "",
+        // username: initialData.username || "",
         // Use initialData.isActive if it exists, otherwise default to true
         isActive: (initialData).isActive !== undefined ? (initialData).isActive : true,
       });
@@ -111,10 +130,14 @@ export function AccountForm({
         email: "",
         role: "client",
         phone: "",
+        address: "",
+        city: "",
+        state: "",
+        zipcode: "",
         company: "",
         avatar: "",
-        bio: "",
-        username: "",
+        companyNotes: "",
+        // username: "",
         isActive: true,
       });
       setAvatarUrl("");
@@ -201,12 +224,12 @@ export function AccountForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Edit Account" : "Add New Account"}</DialogTitle>
-          <DialogDescription>
+          {/* <DialogTitle>{initialData ? "Edit Account" : "Add New Account"}</DialogTitle> */}
+          <DialogTitle>
             {initialData
               ? "Update user account details"
               : "Create a new user account"}
-          </DialogDescription>
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -223,6 +246,34 @@ export function AccountForm({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="photographer">Photographer</SelectItem>
+                        <SelectItem value="client">Client</SelectItem>
+                        <SelectItem value="editor">Editor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+
               <FormField
                 control={form.control}
                 name="name"
@@ -279,6 +330,63 @@ export function AccountForm({
                 )}
               />
 
+
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>City</FormLabel>
+                    <FormControl>
+                      <Input placeholder="" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>State</FormLabel>
+                    <FormControl>
+                      <Input placeholder="" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="zipcode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Zip Code</FormLabel>
+                    <FormControl>
+                      <Input placeholder="" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="company"
@@ -294,6 +402,20 @@ export function AccountForm({
               />
 
               <FormField
+                control={form.control}
+                name="licenseNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>License number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="LI0123456" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* <FormField
                 control={form.control}
                 name="role"
                 render={({ field }) => (
@@ -318,18 +440,18 @@ export function AccountForm({
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
             </div>
 
             <FormField
               control={form.control}
-              name="bio"
+              name="companyNotes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bio</FormLabel>
+                  <FormLabel>Company Notes</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Brief description about the user"
+                      placeholder=""
                       {...field}
                     />
                   </FormControl>
@@ -338,7 +460,7 @@ export function AccountForm({
               )}
             />
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="isActive"
               render={({ field }) => (
@@ -357,7 +479,7 @@ export function AccountForm({
                   </FormControl>
                 </FormItem>
               )}
-            />
+            /> */}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

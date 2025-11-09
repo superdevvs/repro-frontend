@@ -141,10 +141,10 @@ export function UserProfileDialog({
                   )}
                 </div>
                 
-                {user.bio && (
+                {user.companyNotes && (
                   <div className="mt-4">
-                    <p className="text-sm text-muted-foreground">Bio</p>
-                    <p className="mt-1">{user.bio}</p>
+                    <p className="text-sm text-muted-foreground">Company Notes</p>
+                    <p className="mt-1">{user.companyNotes}</p>
                   </div>
                 )}
               </TabsContent>
@@ -182,15 +182,15 @@ export function UserProfileDialog({
                       <p className="text-2xl font-bold">18</p>
                     </div>
                     
-                    <div className="border rounded-lg p-4">
+                    {/* <div className="border rounded-lg p-4">
                       <p className="text-sm text-muted-foreground">Average Rating</p>
                       <p className="text-2xl font-bold">4.8</p>
-                    </div>
+                    </div> */}
                     
-                    <div className="border rounded-lg p-4">
+                    {/* <div className="border rounded-lg p-4">
                       <p className="text-sm text-muted-foreground">Response Time</p>
                       <p className="text-2xl font-bold">1.2h</p>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </TabsContent>
