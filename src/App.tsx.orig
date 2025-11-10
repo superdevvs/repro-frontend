@@ -35,16 +35,19 @@ import PermissionSettings from "./pages/PermissionSettings";
 import DropboxCallback from './components/DropboxCallback';
 import AddressLookupDemo from './components/AddressLookupDemo';
 import ClientPortal from "./components/clients/ClientPortal";
-<<<<<<< HEAD
 import BookShootWithAddressLookup from './components/BookShootWithAddressLookup';
+import Revenue from './pages/Revenue';
+<<<<<<< HEAD
 import AddressLookupTest from './pages/AddressLookupTest';
 import TestClientPropertyForm from './pages/TestClientPropertyForm';
 import { BrandedPage } from '@/components/tourLinks/BrandedPage';
 import { MlsCompliant } from '@/components/tourLinks/MlsCompliant';
 import { GenericMLS } from '@/components/tourLinks/GenericMLS';
 =======
-import Revenue from './pages/Revenue';
->>>>>>> 379a5a4114974669ff362b696dcfa5d2d16644ad
+import { BrandedPage } from './components/tourLinks/BrandedPage';
+import { MlsCompliant } from './components/tourLinks/MlsCompliant';
+import { GenericMLS } from './components/tourLinks/GenericMLS';
+>>>>>>> b7d99328d1a8676d4c8a5b11798485c33c035302
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -131,10 +134,25 @@ const AppRoutes = () => {
       <Route path="/tour/branded" element={<BrandedPage />} />
       <Route path="/tour/mls" element={<MlsCompliant />} />
       <Route path="/tour/generic-mls" element={<GenericMLS />} />
-      <Route path="/client-portal" element={
-        <ProtectedRoute>
-          <ClientPortal />
-        </ProtectedRoute>
+      {/* Public client portal so clients can share their link */}
+      <Route path="/client-portal" element={<ClientPortal />} />
+
+       <Route path="/tours/branded" element={
+        // <ProtectedRoute>
+          <BrandedPage />
+        // </ProtectedRoute>
+      } />
+
+       <Route path="/tours/mls" element={
+        // <ProtectedRoute>
+          <MlsCompliant />
+        // </ProtectedRoute>
+      } />
+
+       <Route path="/tours/generic-mls" element={
+        // <ProtectedRoute>
+          <GenericMLS />
+        // </ProtectedRoute>
       } />
 
       <Route path="/dashboard" element={

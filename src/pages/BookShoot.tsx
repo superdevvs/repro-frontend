@@ -494,7 +494,7 @@ const BookShoot = () => {
     navigate('/shoots');
   };
 
-  const clientPropertyFormData = {
+  const clientPropertyFormData = React.useMemo(() => ({
     initialData: {
       clientId: client,
       clientName: isClientAccount ? user?.name || '' : clients.find(c => c.id === client)?.name || '',
@@ -525,7 +525,8 @@ const BookShoot = () => {
       setStep(2);
     },
     isClientAccount: isClientAccount
-  };
+  }), [client, clients, address, city, state, zip, notes, selectedPackage, isClientAccount, user]);
+
 
   const getSummaryInfo = () => {
     const selectedClientData = clients.find(c => c.id === client);

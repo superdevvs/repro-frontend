@@ -85,30 +85,11 @@ export function BookingContentArea({
     <Card className="p-4 md:p-6 border-[#1e2d4a] bg-gradient-to-b from-background to-background/90">
       {step === 1 && clientPropertyFormData && (
         <ClientPropertyForm
-          initialData={clientPropertyFormData.initialData || {
-            clientId: '',
-            clientName: '',
-            clientEmail: '',
-            clientPhone: '',
-            clientCompany: '',
-            propertyType: 'residential',
-            propertyAddress: '',
-            propertyCity: '',
-            propertyState: '',
-            propertyZip: '',
-            propertyInfo: '',
-            selectedPackage: ''
-          }}
+          initialData={clientPropertyFormData.initialData}
           onComplete={clientPropertyFormData.onComplete}
           packages={packages}
           isClientAccount={clientPropertyFormData.isClientAccount}
           clients={clients}
-          onAddressFieldsChange={(a) => {
-            if (setAddress) setAddress(a.address);
-            if (setCity) setCity(a.city);
-            if (setState) setState(a.state);
-            if (setZip) setZip(a.zip);
-          }}
         />
       )}
       
@@ -163,6 +144,10 @@ export function BookingContentArea({
           onConfirm={handleSubmit}
           onBack={goBack}
           packages={packages}
+          bedrooms={clientPropertyFormData.initialData?.bedRooms || 0}
+          bathrooms={clientPropertyFormData.initialData?.bathRooms || 0}
+          sqft={clientPropertyFormData.initialData?.sqft || 0}
+          area={Number(clientPropertyFormData.initialData?.sqft) || 0}
         />
       )}
     </Card>

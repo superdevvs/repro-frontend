@@ -35,7 +35,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info, Star } from 'lucide-react';
-import AddressLookupField from '../AddressLookupField';
+import AddressLookupField from '@/components/AddressLookupField';
 // add near other imports at top
 import { AccountForm } from '@/components/accounts/AccountForm';
 import type { AccountFormValues } from '@/components/accounts/AccountForm';
@@ -101,22 +101,25 @@ type ClientPropertyFormProps = {
     propertyCity: string;
     propertyState: string;
     propertyZip: string;
-    bedRooms: number;
-    bathRooms: number;
-    sqft: number;
-    propertyInfo: string;
-    companyNotes: string;
-    shootNotes: string;
+    bedRooms?: number;
+    bathRooms?: number;
+    sqft?: number;
+    propertyInfo?: string;
+    companyNotes?: string;
+    shootNotes?: string;
     photographerNotes?: string;
     editorNotes?: string;
     selectedPackage?: string;
   };
   isClientAccount?: boolean;
-  packages: PackageOption[]; // Added packages prop
-  clients: Client[]; // Added clients prop
+  packages: PackageOption[];
+  clients: Client[];
+  /** ✅ Add this line **/
+  onAddressFieldsChange?: (fields: { address: string; city: string; state: string; zip: string }) => void;
 };
 
-export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = false, packages, clients }: ClientPropertyFormProps) => {
+
+export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = false, packages, clients, onAddressFieldsChange }: ClientPropertyFormProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingClient, setIsAddingClient] = useState(false);
 
@@ -130,8 +133,8 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: isClientAccount
-      ? {
+    defaultValues: React.useMemo(() => (
+      isClientAccount ? {
         propertyAddress: initialData.propertyAddress || '',
         propertyCity: initialData.propertyCity || '',
         propertyState: initialData.propertyState || '',
@@ -146,8 +149,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
         companyNotes: initialData.companyNotes || '',
         photographerNotes: initialData.photographerNotes || '',
         editorNotes: initialData.editorNotes || '',
-      }
-      : {
+      } : {
         clientId: initialData.clientId || '',
         propertyAddress: initialData.propertyAddress || '',
         propertyCity: initialData.propertyCity || '',
@@ -163,8 +165,10 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
         companyNotes: initialData.companyNotes || '',
         photographerNotes: initialData.photographerNotes || '',
         editorNotes: initialData.editorNotes || '',
-      },
+      }
+    ), [isClientAccount]), // ✅ only recompute when role type changes
   });
+
 
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

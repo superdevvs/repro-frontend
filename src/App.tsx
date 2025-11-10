@@ -146,6 +146,7 @@ const AppRoutes = () => {
         // <ProtectedRoute>
           <GenericMLS />
         // </ProtectedRoute>
+       } />
 
       <Route path="/dashboard" element={
         <ProtectedRoute>
