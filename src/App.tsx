@@ -130,6 +130,22 @@ const AppRoutes = () => {
       <Route path="/tour/generic-mls" element={<GenericMLS />} />
       {/* Public client portal so clients can share their link */}
       <Route path="/client-portal" element={<ClientPortal />} />
+       <Route path="/tours/branded" element={
+        // <ProtectedRoute>
+          <BrandedPage />
+        // </ProtectedRoute>
+      } />
+
+       <Route path="/tours/mls" element={
+        // <ProtectedRoute>
+          <MlsCompliant />
+        // </ProtectedRoute>
+      } />
+
+       <Route path="/tours/generic-mls" element={
+        // <ProtectedRoute>
+          <GenericMLS />
+        // </ProtectedRoute>
 
       <Route path="/dashboard" element={
         <ProtectedRoute>

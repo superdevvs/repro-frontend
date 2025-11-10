@@ -335,7 +335,7 @@ export function BrandedPage() {
     <div>
       <div className="top-0 mb-4 relative">
         <img src="/images/bg.jpg" alt="Banner" className="w-full h-full object-cover" />
-        <div className="absolute top-0 left-0 w-full h-full bg-black/40 z-10" />
+        <div className="absolute top-0 left-0 w-full h-full z-10" />
         <div className="absolute inset-0 flex items-center justify-center px-4 z-20">
           <div className="bg-white/20 backdrop-blur-md px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-6 rounded-xl shadow-lg text-center max-w-3xl">
             <div className="space-y-1">
@@ -401,13 +401,13 @@ export function BrandedPage() {
                 <p className="text-gray-700 text-xs sm:text-sm mt-0.5 text-center sm:text-left">✉️ johndoe@example.com</p>
               </div>
               <div className="sm:hidden flex-shrink-0 mt-2">
-                <a href="https://example.com" target="_blank" rel="noopener noreferrer" className="block px-4 py-2 bg-transparent text-black font-semibold rounded-full shadow-md hover:text-blue-500 transition w-full text-center">Visit Site</a>
+                <a href="/client-portal" target="_blank" rel="noopener noreferrer" className="block px-4 py-2 bg-transparent text-black font-semibold rounded-full shadow-md hover:text-blue-500 transition w-full text-center">Visit Site</a>
               </div>
             </div>
           </div>
 
           <div className="hidden sm:block flex-shrink-0">
-            <a href="https://example.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-transparent text-black font-semibold rounded-full shadow-md hover:text-blue-500 transition">Visit Site</a>
+            <a href="/client-portal" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-transparent text-black font-semibold rounded-full shadow-md hover:text-blue-500 transition">Visit Site</a>
           </div>
         </div>
       </div>
@@ -473,7 +473,82 @@ export function BrandedPage() {
         </div>
       </section>
 
-      {/* Video, 3D, Floorplan, Map, Contact sections follow similarly (omitted here for brevity) */}
+       {/* Video, 3D Tour, Floorplans, Map, Contact sections follow same structure */}
+      <section id="video" className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center text-black mb-8">VIDEO</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <img src="/images/1702 25th Street Southeast, Washington, DC 200202579.jpg-FULL.JPG" className="w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer" alt="Video 1" />
+            <img src="/images/1702 25th Street Southeast, Washington, DC 200202584.jpg-FULL.JPG" className="w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer" alt="Video 2" />
+            <img src="/images/1702 25th Street Southeast, Washington, DC 200202595.jpg-FULL.JPG" className="w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer" alt="Video 3" />
+            <img src="/images/1702 25th Street Southeast, Washington, DC 200202615.jpg-FULL.JPG" className="w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer" alt="Video 4" />
+          </div>
+        </div>
+
+        <div id="videopopup" className="fixed inset-0 z-[9999] hidden grid place-items-center bg-black/80 p-4">
+          <button id="videoclosePopup" className="absolute top-4 right-4 text-white text-3xl leading-none">×</button>
+          <div className="w-full max-w-6xl pointer-events-auto relative">
+            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-6 z-20 flex items-center gap-2 bg-gray-800/70 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg">
+              <button id="videoPrev" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">‹</button>
+              <button id="videoPlayPause" className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 focus:outline-none"><span id="videoPpIcon"></span><span id="videoPpLabel" className="text-sm">Play</span></button>
+              <button id="videoZoomIn" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">＋</button>
+              <button id="videoZoomOut" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">－</button>
+              <button id="videoFullscreen" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">⛶</button>
+              <button id="videoNext" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">›</button>
+            </div>
+
+            <div id="video-slides" className="bg-transparent rounded-lg overflow-hidden"></div>
+            <div className="mt-4 flex items-center justify-between text-sm text-white/90">
+              <div id="video-caption" className="truncate max-w-[70%]"></div>
+              <div id="video-counter" className="opacity-90"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="3dtour" className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center text-black mb-8">3D TOUR</h2>
+          <div className="flex justify-center">
+            <img src="/images/1702 25th Street Southeast, Washington, DC 200202579.jpg-FULL.JPG" className="w-full max-w-4xl rounded-lg shadow-md hover:opacity-90 cursor-pointer" alt="3D Tour" />
+          </div>
+        </div>
+      </section>
+
+      <section id="floorplan" className="py-16 bg-gray-50">
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="w-full max-w-6xl p-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10 text-black">FLOOR PLANS</h2>
+            <div id="gallery" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <img src="/images/floor1.JPG" alt="Floor 1" className="gallery-img w-full h-auto rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover" />
+              <img src="/images/floor1 (2).JPG" alt="Floor 2" className="gallery-img w-full h-auto rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover" />
+              <img src="/images/floor1 (3).JPG" alt="Floor 3" className="gallery-img w-full h-auto rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover" />
+              <img src="/images/floor1 (4).JPG" alt="Floor 4" className="gallery-img w-full h-auto rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover" />
+              <img src="/images/floor1 (5).JPG" alt="Floor 5" className="gallery-img w-full h-auto rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover" />
+            </div>
+          </div>
+        </div>
+
+        <div id="floorpopup" className="fixed inset-0 z-[9999] hidden grid place-items-center bg-black/80 p-4">
+          <button id="floorclosePopup" className="absolute top-4 right-4 text-white text-3xl leading-none">×</button>
+          <div className="w-full max-w-6xl pointer-events-auto relative">
+            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-6 z-20 flex items-center gap-2 bg-gray-800/70 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg">
+              <button id="Prev" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">‹</button>
+              <button id="PlayPause" className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 focus:outline-none"><span id="PpIcon"></span><span id="photoPpLabel" className="text-sm">Play</span></button>
+              <button id="ZoomIn" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">＋</button>
+              <button id="ZoomOut" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">－</button>
+              <button id="Fullscreen" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">⛶</button>
+              <button id="Next" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">›</button>
+            </div>
+
+            <div id="floor-slides" className="bg-transparent rounded-lg overflow-hidden"></div>
+            <div className="mt-4 flex items-center justify-between text-sm text-white/90">
+              <div id="floor-caption" className="truncate max-w-[70%]"></div>
+              <div id="floor-counter" className="opacity-90"></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="flex justify-center items-center py-16 px-4" id="contact">
         <form className="bg-white p-8 rounded-lg shadow-md w-full max-w-md flex flex-col gap-6">
