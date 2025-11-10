@@ -203,6 +203,7 @@ export function AccountForm({
                         <SelectItem value="photographer">Photographer</SelectItem>
                         <SelectItem value="client">Client</SelectItem>
                         <SelectItem value="editor">Editor</SelectItem>
+                        <SelectItem value="editor">Sales/Rep</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
