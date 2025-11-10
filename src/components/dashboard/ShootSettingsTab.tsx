@@ -390,7 +390,16 @@ export function ShootSettingsTab({
                   key={key}
                   variant="secondary"
                   className="flex-1 justify-center"
-                  onClick={() => setActivePage(key)}
+                  onClick={() => {
+    const path =
+      key === "branded"
+        ? `/tours/branded`
+        : key === "mls"
+        ? `/tours/mls`
+        : `/tours/generic-mls`;
+
+    window.open(path, "_blank", "noopener,noreferrer");
+  }}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
                   {label}

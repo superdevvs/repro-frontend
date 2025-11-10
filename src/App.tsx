@@ -34,6 +34,9 @@ import PermissionSettings from "./pages/PermissionSettings";
 import DropboxCallback from './components/DropboxCallback';
 import ClientPortal from "./components/clients/ClientPortal";
 import Revenue from './pages/Revenue';
+import { BrandedPage } from './components/tourLinks/BrandedPage';
+import { MlsCompliant } from './components/tourLinks/MlsCompliant';
+import { GenericMLS } from './components/tourLinks/GenericMLS';
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -116,6 +119,24 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <ClientPortal />
         </ProtectedRoute>
+      } />
+
+       <Route path="/tours/branded" element={
+        // <ProtectedRoute>
+          <BrandedPage />
+        // </ProtectedRoute>
+      } />
+
+       <Route path="/tours/mls" element={
+        // <ProtectedRoute>
+          <MlsCompliant />
+        // </ProtectedRoute>
+      } />
+
+       <Route path="/tours/generic-mls" element={
+        // <ProtectedRoute>
+          <GenericMLS />
+        // </ProtectedRoute>
       } />
 
       <Route path="/dashboard" element={

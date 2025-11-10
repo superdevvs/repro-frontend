@@ -359,41 +359,41 @@ export function ServicesTab() {
       )}
 
       {/* Add New Category Dialog (place outside the grid, before the final closing </div>) */}
-<Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
-  <DialogContent className="sm:max-w-[420px]">
-    <DialogHeader>
-      <DialogTitle>Add New Category</DialogTitle>
-    </DialogHeader>
+      <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Add New Category</DialogTitle>
+          </DialogHeader>
 
-    <div className="space-y-3 py-2">
-      <Label htmlFor="new-category-name">Category name</Label>
-      <Input
-        id="new-category-name"
-        placeholder="e.g., Floor Plans"
-        value={newCategoryName}
-        autoFocus
-        onChange={(e) => setNewCategoryName(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') handleCreateCategory();
-        }}
-      />
-    </div>
+          <div className="space-y-3 py-2">
+            <Label htmlFor="new-category-name">Category name</Label>
+            <Input
+              id="new-category-name"
+              placeholder="e.g., Floor Plans"
+              value={newCategoryName}
+              autoFocus
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleCreateCategory();
+              }}
+            />
+          </div>
 
-    <DialogFooter>
-      <Button variant="outline" onClick={() => setIsAddCategoryOpen(false)}>
-        Cancel
-      </Button>
-      <Button onClick={handleCreateCategory} disabled={isCreatingCategory}>
-        {isCreatingCategory ? (
-          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-        ) : (
-          <Save className="w-4 h-4 mr-2" />
-        )}
-        Create
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddCategoryOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateCategory} disabled={isCreatingCategory}>
+              {isCreatingCategory ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
