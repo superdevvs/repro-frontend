@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { AccountingHeader } from '@/components/accounting/AccountingHeader';
@@ -17,15 +17,20 @@ import { useToast } from '@/hooks/use-toast';
 import { EditInvoiceDialog } from '@/components/invoices/EditInvoiceDialog';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { usePermission } from '@/hooks/usePermission';
-
-// We're reusing the existing initial invoices data for now
-import { initialInvoices } from '@/components/accounting/data';
+import { useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import {
+  fetchInvoices,
+  InvoicePaginator,
+  InvoicePaginationLinks,
+  InvoicePaginationMeta,
+} from '@/services/invoiceService';
 
 const AccountingPage = () => {
   const { toast } = useToast();
   const { role } = useAuth(); // Use the correct AuthProvider
   const { can } = usePermission();
-  const [invoices, setInvoices] = useState<InvoiceData[]>(initialInvoices);
+  const [invoices, setInvoices] = useState<InvoiceData[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -33,12 +38,50 @@ const AccountingPage = () => {
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
   const [timeFilter, setTimeFilter] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  
+  const [paginationMeta, setPaginationMeta] = useState<InvoicePaginationMeta | undefined>();
+  const [paginationLinks, setPaginationLinks] = useState<InvoicePaginationLinks | undefined>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 10;
+
   // Use permission system to check if user has admin capabilities
   const canCreateInvoice = can('invoices', 'create');
   const canEditInvoice = can('invoices', 'update');
   const canMarkAsPaid = can('invoices', 'approve');
   const isAdmin = ['admin', 'superadmin'].includes(role || '');
+
+  const invoiceQuery = useQuery<InvoicePaginator<InvoiceData>, AxiosError>({
+    queryKey: ['admin-invoices', currentPage, perPage, role ?? ''],
+    queryFn: () =>
+      fetchInvoices<InvoiceData>({
+        page: currentPage,
+        per_page: perPage,
+        with_items: true,
+        ...(role ? { role } : {}),
+      }),
+    keepPreviousData: true,
+    staleTime: 1000 * 30,
+  });
+
+  useEffect(() => {
+    if (invoiceQuery.data) {
+      setInvoices(invoiceQuery.data.data ?? []);
+      setPaginationMeta(invoiceQuery.data.meta);
+      setPaginationLinks(invoiceQuery.data.links);
+    }
+  }, [invoiceQuery.data]);
+
+  const invoiceErrorMessage = useMemo(() => {
+    if (!invoiceQuery.error) return undefined;
+    const responseData = invoiceQuery.error.response?.data as { message?: string; error?: string } | undefined;
+    return responseData?.message || responseData?.error || invoiceQuery.error.message;
+  }, [invoiceQuery.error]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1) return;
+    const lastPage = paginationMeta?.last_page;
+    if (lastPage && page > lastPage) return;
+    setCurrentPage(page);
+  };
 
   const handleDownloadInvoice = (invoice: InvoiceData) => {
     toast({
@@ -74,18 +117,18 @@ const AccountingPage = () => {
   };
 
   const handlePaymentComplete = (invoiceId: string, paymentMethod: string) => {
-    setInvoices(currentInvoices => 
-      currentInvoices.map(invoice => 
-        invoice.id === invoiceId 
-          ? { 
-              ...invoice, 
-              status: 'paid', 
-              paymentMethod: paymentMethod 
-            } 
+    setInvoices(currentInvoices =>
+      currentInvoices.map(invoice =>
+        invoice.id === invoiceId
+          ? {
+              ...invoice,
+              status: 'paid',
+              paymentMethod: paymentMethod
+            }
           : invoice
       )
     );
-    
+
     toast({
       title: "Payment Successful",
       description: `Invoice ${invoiceId} has been marked as paid.`,
@@ -96,15 +139,29 @@ const AccountingPage = () => {
 
   const handleCreateInvoice = (newInvoice: InvoiceData) => {
     setInvoices(prevInvoices => [newInvoice, ...prevInvoices]);
+    setPaginationMeta(prev =>
+      prev ? { ...prev, total: typeof prev.total === 'number' ? prev.total + 1 : prev.total } : prev
+    );
     toast({
       title: "Invoice Created",
       description: `Invoice ${newInvoice.id} has been created successfully.`,
       variant: "default",
     });
   };
-  
+
   const handleCreateBatchInvoices = (newInvoices: InvoiceData[]) => {
     setInvoices(prevInvoices => [...newInvoices, ...prevInvoices]);
+    setPaginationMeta(prev =>
+      prev
+        ? {
+            ...prev,
+            total:
+              typeof prev.total === 'number'
+                ? prev.total + newInvoices.length
+                : prev.total,
+          }
+        : prev
+    );
     toast({
       title: "Batch Invoices Created",
       description: `${newInvoices.length} invoices have been created successfully.`,
@@ -153,16 +210,23 @@ const AccountingPage = () => {
             </div>
           </div>
           
-          <InvoiceList 
-            data={{ invoices }}
+          <InvoiceList
+            invoices={invoices}
             onView={handleViewInvoice}
             onEdit={handleEditInvoice}
             onDownload={handleDownloadInvoice}
             onPay={handlePayInvoice}
             onSendReminder={handleSendReminder}
             isAdmin={isAdmin} // Pass down admin status
+            isLoading={invoiceQuery.isLoading}
+            isFetching={invoiceQuery.isFetching}
+            isError={invoiceQuery.isError}
+            errorMessage={invoiceErrorMessage}
+            onRetry={invoiceQuery.refetch}
+            pagination={{ meta: paginationMeta, links: paginationLinks }}
+            onPageChange={handlePageChange}
           />
-          
+
           <UpcomingPayments invoices={invoices} />
         </div>
       </PageTransition>
