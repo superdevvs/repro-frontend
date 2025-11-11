@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { 
+import React, { useMemo, useState } from 'react';
+import {
   Calendar as CalendarIcon,
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -20,27 +19,43 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { InvoiceViewDialog } from '@/components/invoices/InvoiceViewDialog';
 import { InvoiceData } from '@/utils/invoiceUtils';
+import { InvoicePaginationMeta } from '@/services/invoiceService';
 
 interface InvoiceListProps {
-  data: {
-    invoices: InvoiceData[];
-  };
+  invoices: InvoiceData[];
   onView: (invoice: InvoiceData) => void;
   onEdit: (invoice: InvoiceData) => void;
   onDownload: (invoice: InvoiceData) => void;
   onPay: (invoice: InvoiceData) => void;
   onSendReminder: (invoice: InvoiceData) => void;
   isAdmin?: boolean; // Prop to determine if user is admin
+  isLoading?: boolean;
+  isFetching?: boolean;
+  isError?: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
+  pagination?: {
+    meta?: InvoicePaginationMeta;
+    links?: Record<string, unknown>;
+  };
+  onPageChange?: (page: number) => void;
 }
 
-export function InvoiceList({ 
-  data, 
-  onView, 
-  onEdit, 
-  onDownload, 
-  onPay, 
+export function InvoiceList({
+  invoices,
+  onView,
+  onEdit,
+  onDownload,
+  onPay,
   onSendReminder,
-  isAdmin = false // Default to false for safety
+  isAdmin = false, // Default to false for safety
+  isLoading = false,
+  isFetching = false,
+  isError = false,
+  errorMessage,
+  onRetry,
+  pagination,
+  onPageChange,
 }: InvoiceListProps) {
   const { toast } = useToast();
   const [viewInvoiceDialogOpen, setViewInvoiceDialogOpen] = useState(false);
@@ -48,9 +63,16 @@ export function InvoiceList({
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'paid' | 'overdue'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
-  const filteredInvoices = activeTab === 'all' 
-    ? data.invoices 
-    : data.invoices.filter(invoice => invoice.status === activeTab);
+  const filteredInvoices = useMemo(
+    () =>
+      activeTab === 'all'
+        ? invoices
+        : invoices.filter(invoice => invoice.status === activeTab),
+    [activeTab, invoices]
+  );
+
+  const paginationMeta = pagination?.meta;
+  const showGlobalLoading = isLoading && invoices.length === 0;
 
   const handleViewInvoice = (invoice: InvoiceData) => {
     setSelectedInvoice(invoice);
@@ -72,6 +94,7 @@ export function InvoiceList({
       title: "Invoice sent",
       description: `Invoice #${invoice.number} has been sent to ${invoice.client}.`
     });
+    onSendReminder(invoice);
   };
 
   const handlePrintInvoice = (invoice: InvoiceData) => {
@@ -114,6 +137,21 @@ export function InvoiceList({
     }
   };
 
+  const canGoPrevious = Boolean(
+    onPageChange &&
+      paginationMeta &&
+      typeof paginationMeta.current_page === 'number' &&
+      paginationMeta.current_page > 1
+  );
+
+  const canGoNext = Boolean(
+    onPageChange &&
+      paginationMeta &&
+      typeof paginationMeta.current_page === 'number' &&
+      typeof paginationMeta.last_page === 'number' &&
+      paginationMeta.current_page < paginationMeta.last_page
+  );
+
   return (
     <div className="w-full">
       <Card className="mb-6">
@@ -137,7 +175,29 @@ export function InvoiceList({
         </div>
 
         <div>
-          {viewMode === 'list' ? (
+          {isError ? (
+            <div className="p-6 text-center text-sm text-destructive">
+              <p>{errorMessage || 'Unable to load invoices at this time.'}</p>
+              {onRetry && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={onRetry}
+                >
+                  Try again
+                </Button>
+              )}
+            </div>
+          ) : showGlobalLoading ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              Loading invoices...
+            </div>
+          ) : filteredInvoices.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              No invoices found
+            </div>
+          ) : viewMode === 'list' ? (
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
@@ -162,20 +222,20 @@ export function InvoiceList({
                       <td className="py-1 px-2 text-xs">{format(new Date(invoice.date), 'MMM d, yyyy')}</td>
                       <td className="py-1 px-2">
                         <div className="flex flex-wrap gap-1">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleViewInvoice(invoice)} 
-                            aria-label="View" 
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewInvoice(invoice)}
+                            aria-label="View"
                             className="px-3 py-1 text-xs"
                           >
                             View
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleDownloadInvoice(invoice)} 
-                            aria-label="Download" 
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadInvoice(invoice)}
+                            aria-label="Download"
                             className="px-3 py-1 text-xs"
                           >
                             Download
@@ -194,11 +254,11 @@ export function InvoiceList({
                           )}
                           {/* Only show edit button for admins */}
                           {isAdmin && (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleEditInvoice(invoice)} 
-                              aria-label="Edit" 
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditInvoice(invoice)}
+                              aria-label="Edit"
                               className="px-3 py-1 text-xs"
                             >
                               Edit
@@ -208,13 +268,6 @@ export function InvoiceList({
                       </td>
                     </tr>
                   ))}
-                  {filteredInvoices.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="py-4 text-center text-muted-foreground text-sm">
-                        No invoices found
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
@@ -224,8 +277,8 @@ export function InvoiceList({
                 <ScrollArea className="h-[calc(100vh-320px)] sm:h-[calc(100vh-280px)]">
                   <div className="space-y-3 p-3">
                     {filteredInvoices.map((invoice) => (
-                      <InvoiceItem 
-                        key={invoice.id} 
+                      <InvoiceItem
+                        key={invoice.id}
                         invoice={invoice}
                         onView={handleViewInvoice}
                         onDownload={handleDownloadInvoice}
@@ -238,19 +291,54 @@ export function InvoiceList({
                         isAdmin={isAdmin}
                       />
                     ))}
-                    {filteredInvoices.length === 0 && (
-                      <div className="py-8 text-center">
-                        <p className="text-muted-foreground text-sm">No invoices found</p>
-                      </div>
-                    )}
                   </div>
                 </ScrollArea>
               </TabsContent>
             </Tabs>
           )}
         </div>
+
+        {paginationMeta && (
+          <div className="flex flex-col gap-2 border-t border-border px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-muted-foreground">
+              {typeof paginationMeta.from === 'number' && typeof paginationMeta.to === 'number' ? (
+                <span>
+                  Showing {paginationMeta.from} to {paginationMeta.to} of {paginationMeta.total} results
+                </span>
+              ) : (
+                <span>Total invoices: {paginationMeta.total}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!canGoPrevious || isFetching}
+                onClick={() =>
+                  paginationMeta && onPageChange && onPageChange(paginationMeta.current_page - 1)
+                }
+              >
+                Previous
+              </Button>
+              <span>
+                Page {paginationMeta.current_page} of {paginationMeta.last_page}
+                {isFetching && <span className="ml-2 text-muted-foreground">Loading...</span>}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!canGoNext || isFetching}
+                onClick={() =>
+                  paginationMeta && onPageChange && onPageChange(paginationMeta.current_page + 1)
+                }
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
-      
+
       {selectedInvoice && (
         <InvoiceViewDialog
           isOpen={viewInvoiceDialogOpen}
@@ -275,20 +363,20 @@ interface InvoiceItemProps {
   isAdmin?: boolean; // Admin role prop
 }
 
-function InvoiceItem({ 
-  invoice, 
-  onView, 
-  onDownload, 
-  onSend, 
-  onPrint, 
-  onEdit, 
-  onDelete, 
-  getStatusColor, 
+function InvoiceItem({
+  invoice,
+  onView,
+  onDownload,
+  onSend,
+  onPrint,
+  onEdit,
+  onDelete,
+  getStatusColor,
   onPay,
   isAdmin = false, // Default to false for safety
 }: InvoiceItemProps) {
   const showMarkAsPaid = isAdmin && (invoice.status === 'pending' || invoice.status === 'overdue');
-  
+
   return (
     <div className="flex flex-col bg-card rounded-lg shadow-sm">
       <div className="p-3 flex-row justify-between items-center border-b border-border hidden sm:flex">
@@ -323,17 +411,17 @@ function InvoiceItem({
 
       <div className="p-3 flex justify-between items-center">
         <div className="flex flex-wrap gap-2 text-xs">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => onView(invoice)}
             className="px-3 py-1"
           >
             View
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => onDownload(invoice)}
             className="px-3 py-1 hidden sm:inline-block"
           >
@@ -354,9 +442,9 @@ function InvoiceItem({
         <div className="flex flex-wrap gap-2 text-xs">
           {/* Only show edit button for admins */}
           {isAdmin && (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => onEdit(invoice)}
               className="px-3 py-1"
             >
