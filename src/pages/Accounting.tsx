@@ -17,6 +17,8 @@ import { useToast } from '@/hooks/use-toast';
 import { EditInvoiceDialog } from '@/components/invoices/EditInvoiceDialog';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { usePermission } from '@/hooks/usePermission';
+import { fetchInvoiceCsvBlob } from '@/services/invoiceService';
+import { triggerFileDownload } from '@/utils/download';
 
 // We're reusing the existing initial invoices data for now
 import { initialInvoices } from '@/components/accounting/data';
@@ -40,12 +42,27 @@ const AccountingPage = () => {
   const canMarkAsPaid = can('invoices', 'approve');
   const isAdmin = ['admin', 'superadmin'].includes(role || '');
 
-  const handleDownloadInvoice = (invoice: InvoiceData) => {
-    toast({
-      title: "Invoice Generated",
-      description: `Invoice ${invoice.id} has been downloaded successfully.`,
-      variant: "default",
-    });
+  const handleDownloadInvoice = async (invoice: InvoiceData) => {
+    try {
+      const blob = await fetchInvoiceCsvBlob(invoice.id);
+      const fileName = `invoice-${invoice.number || invoice.id}.csv`;
+
+      triggerFileDownload(blob, fileName);
+
+      toast({
+        title: 'Invoice download started',
+        description: `Invoice ${invoice.number || invoice.id} is downloading.`,
+        variant: 'default',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred while downloading the invoice.';
+
+      toast({
+        title: 'Download failed',
+        description: message,
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleViewInvoice = (invoice: InvoiceData) => {

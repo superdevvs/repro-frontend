@@ -28,6 +28,10 @@ export const API_ROUTES = {
     check: `${BASE_URL}/api/photographer/availability/check`,
     availablePhotographers: `${BASE_URL}/api/photographer/availability/available-photographers`,
   },
+
+  invoices: {
+    adminDownload: (id: number | string) => `${BASE_URL}/api/admin/invoices/${id}/download`,
+  },
   
   // Add more groups as needed, for example:
   // users: {
