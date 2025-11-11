@@ -11,9 +11,15 @@ export interface InvoiceData {
   date: string;
   dueDate: string;
   amount: number;
-  status: 'paid' | 'pending' | 'overdue';
+  status: string;
   services: string[];
   paymentMethod: string;
+  paymentMethodCode?: string | null;
+  sent_at?: string | null;
+  paid_at?: string | null;
+  balance_due?: number | null;
+  total?: number | null;
+  currency?: string | null;
 }
 
 export const generateInvoicePDF = (invoice: InvoiceData): void => {

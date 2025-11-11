@@ -10,18 +10,27 @@ interface PaymentsSummaryProps {
 }
 
 export function PaymentsSummary({ invoices }: PaymentsSummaryProps) {
-  const totalInvoiced = invoices.reduce((sum, i) => sum + i.amount, 0);
-  const totalPaid = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0);
+  const resolveAmount = (invoice: InvoiceData) =>
+    typeof invoice.total === 'number' ? invoice.total : invoice.amount;
+
+  const totalInvoiced = invoices.reduce((sum, invoice) => sum + resolveAmount(invoice), 0);
+  const totalPaid = invoices
+    .filter(invoice => invoice.status?.toLowerCase?.() === 'paid')
+    .reduce((sum, invoice) => sum + resolveAmount(invoice), 0);
   const paymentPercentage = totalInvoiced > 0 ? Math.round((totalPaid / totalInvoiced) * 100) : 0;
 
-  const totalPending = invoices.filter(i => i.status === 'pending').reduce((sum, i) => sum + i.amount, 0);
-  const totalOverdue = invoices.filter(i => i.status === 'overdue').reduce((sum, i) => sum + i.amount, 0);
+  const totalPending = invoices
+    .filter(invoice => invoice.status?.toLowerCase?.() === 'pending')
+    .reduce((sum, invoice) => sum + resolveAmount(invoice), 0);
+  const totalOverdue = invoices
+    .filter(invoice => invoice.status?.toLowerCase?.() === 'overdue')
+    .reduce((sum, invoice) => sum + resolveAmount(invoice), 0);
 
   const paymentMethods = invoices
-    .filter(i => i.status === 'paid' && i.paymentMethod)
-    .reduce((acc, i) => {
-      const method = i.paymentMethod || 'Unknown';
-      acc[method] = (acc[method] || 0) + i.amount;
+    .filter(invoice => invoice.status?.toLowerCase?.() === 'paid' && invoice.paymentMethod)
+    .reduce((acc, invoice) => {
+      const method = invoice.paymentMethod || 'Unknown';
+      acc[method] = (acc[method] || 0) + resolveAmount(invoice);
       return acc;
     }, {} as Record<string, number>);
 
@@ -37,7 +46,7 @@ export function PaymentsSummary({ invoices }: PaymentsSummaryProps) {
   };
 
   const latestTransactions = invoices
-    .filter(i => i.status === 'paid')
+    .filter(invoice => invoice.status?.toLowerCase?.() === 'paid')
     .slice(0, 3);
 
   return (
@@ -141,7 +150,7 @@ export function PaymentsSummary({ invoices }: PaymentsSummaryProps) {
                 <p className="text-xs text-muted-foreground">{invoice.date}</p>
               </div>
               <p className="text-sm font-medium">
-                ${invoice.amount.toLocaleString()}
+                ${resolveAmount(invoice).toLocaleString()}
               </p>
             </div>
           ))}

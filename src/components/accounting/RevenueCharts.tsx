@@ -193,7 +193,7 @@ export function RevenueCharts({
           <CardContent>
             <div className="space-y-3">
               {invoices
-                .filter(inv => inv.status === 'pending')
+                .filter(inv => inv.status?.toLowerCase?.() === 'pending')
                 .slice(0, 3)
                 .map((invoice, i) => (
                   <div key={invoice.id} className="flex justify-between items-center pb-2 border-b border-border/60">

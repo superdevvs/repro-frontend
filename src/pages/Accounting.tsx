@@ -10,7 +10,7 @@ import { PaymentsSummary } from '@/components/accounting/PaymentsSummary';
 import { UpcomingPayments } from '@/components/accounting/UpcomingPayments';
 import { CreateInvoiceDialog } from '@/components/invoices/CreateInvoiceDialog';
 import { InvoiceViewDialog } from '@/components/invoices/InvoiceViewDialog';
-import { PaymentDialog } from '@/components/invoices/PaymentDialog';
+import { PaymentDialog, PaymentResult } from '@/components/invoices/PaymentDialog';
 import { BatchInvoiceDialog } from '@/components/accounting/BatchInvoiceDialog';
 import { InvoiceData } from '@/utils/invoiceUtils';
 import { useToast } from '@/hooks/use-toast';
@@ -73,25 +73,61 @@ const AccountingPage = () => {
     setPaymentDialogOpen(false);
   };
 
-  const handlePaymentComplete = (invoiceId: string, paymentMethod: string) => {
-    setInvoices(currentInvoices => 
-      currentInvoices.map(invoice => 
-        invoice.id === invoiceId 
-          ? { 
-              ...invoice, 
-              status: 'paid', 
-              paymentMethod: paymentMethod 
-            } 
-          : invoice
-      )
-    );
-    
+  const handlePaymentComplete = ({ invoice, error, validationErrors }: PaymentResult) => {
+    if (invoice) {
+      const invoiceId = String(invoice.id);
+
+      const statusLabel = invoice.status ? String(invoice.status) : 'paid';
+
+      setInvoices(currentInvoices => {
+        const updatedInvoices = currentInvoices.map(existing => {
+          if (String(existing.id) === invoiceId) {
+            return {
+              ...existing,
+              ...invoice,
+              status: invoice.status ?? existing.status,
+              paymentMethod: invoice.paymentMethod || existing.paymentMethod,
+              paymentMethodCode: invoice.paymentMethodCode ?? existing.paymentMethodCode,
+            };
+          }
+          return existing;
+        });
+
+        if (!updatedInvoices.some(existing => String(existing.id) === invoiceId)) {
+          return [invoice, ...currentInvoices];
+        }
+
+        return updatedInvoices;
+      });
+
+      setSelectedInvoice(prev => {
+        if (prev && String(prev.id) === invoiceId) {
+          return {
+            ...prev,
+            ...invoice,
+          };
+        }
+        return prev;
+      });
+
+      toast({
+        title: "Payment Successful",
+        description: `Invoice ${invoice.number || invoiceId} has been marked as ${statusLabel}.`,
+        variant: "default",
+      });
+      setPaymentDialogOpen(false);
+      return;
+    }
+
+    const details = validationErrors && validationErrors.length > 0
+      ? validationErrors.join('; ')
+      : null;
+
     toast({
-      title: "Payment Successful",
-      description: `Invoice ${invoiceId} has been marked as paid.`,
-      variant: "default",
+      title: "Payment Failed",
+      description: details ? `${error ?? 'Unable to mark invoice as paid.'} (${details})` : (error ?? 'Unable to mark invoice as paid.'),
+      variant: "destructive",
     });
-    setPaymentDialogOpen(false);
   };
 
   const handleCreateInvoice = (newInvoice: InvoiceData) => {
