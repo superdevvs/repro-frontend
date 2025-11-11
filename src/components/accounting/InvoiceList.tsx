@@ -20,6 +20,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { InvoiceViewDialog } from '@/components/invoices/InvoiceViewDialog';
 import { InvoiceData } from '@/utils/invoiceUtils';
+import { fetchInvoiceCsvBlob } from '@/services/invoiceService';
+import { triggerFileDownload } from '@/utils/download';
 
 interface InvoiceListProps {
   data: {
@@ -58,12 +60,28 @@ export function InvoiceList({
     onView(invoice);
   };
 
-  const handleDownloadInvoice = (invoice: InvoiceData) => {
-    toast({
-      title: "Invoice downloaded",
-      description: `Invoice #${invoice.number} has been downloaded.`
-    });
-    onDownload(invoice);
+  const handleDownloadInvoice = async (invoice: InvoiceData) => {
+    try {
+      const blob = await fetchInvoiceCsvBlob(invoice.id);
+      const fileName = `invoice-${invoice.number || invoice.id}.csv`;
+
+      triggerFileDownload(blob, fileName);
+
+      toast({
+        title: 'Invoice download started',
+        description: `Invoice #${invoice.number || invoice.id} is downloading.`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred while downloading the invoice.';
+
+      console.error('Failed to download invoice', error);
+
+      toast({
+        title: 'Download failed',
+        description: message,
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleSendInvoice = (invoice: InvoiceData) => {
