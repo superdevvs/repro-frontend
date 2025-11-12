@@ -291,6 +291,15 @@ export function ServicesTab() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
+                  <CategorySelect
+                    value={newService.category}
+                    onChange={(value) => {
+                      setNewService(prev => ({ ...prev, category: value }));
+                    }}
+
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="name">Service Name</Label>
                   <Input
                     id="name"
@@ -334,7 +343,7 @@ export function ServicesTab() {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <CategorySelect
                     value={newService.category}
                     onChange={(value) => {
@@ -342,7 +351,7 @@ export function ServicesTab() {
                     }}
 
                   />
-                </div>
+                </div> */}
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>

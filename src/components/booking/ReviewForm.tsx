@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -87,7 +86,7 @@ export function ReviewForm({
       className="space-y-6"
     >
       <div>
-        <Label>Select Photographer</Label>
+        {/* <Label>Select Photographer</Label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
           {photographers.length > 0 ? (
             photographers.map((p) => (
@@ -120,7 +119,7 @@ export function ReviewForm({
                     {/* <p className="text-xs text-muted-foreground">${p.rate}/shoot</p>
                     {!p.availability && (
                       <span className="text-[10px] text-muted-foreground">Unavailable</span>
-                    )} */}
+                    )} 
                   </div>
                 </div>
               </Card>
@@ -137,52 +136,48 @@ export function ReviewForm({
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          )} 
+        </div> */}
       </div>
       
-      <div className="p-4 bg-muted/30 rounded-lg space-y-4">
-        <h3 className="font-medium">Booking Summary</h3>
+      {/* Booking Summary */}
+      <div className="p-4 bg-white dark:bg-slate-900 rounded-lg space-y-4 border border-gray-100 dark:border-slate-800">
+        <h3 className="font-medium text-slate-900 dark:text-slate-100">Booking Summary</h3>
         
         <div className="space-y-2">
           <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground">Client:</span>
-            <span className="text-sm font-medium">{client ? `${client}` : "No client selected"}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">Client:</span>
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{client ? `${client}` : "No client selected"}</span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground">Property:</span>
-            <span className="text-sm font-medium">{address ? `${address}, ${city}, ${state} ${zip}` : "No address provided"}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">Property:</span>
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{address ? `${address}, ${city}, ${state} ${zip}` : "No address provided"}</span>
           </div>
-
-          {/* <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground">Area:</span>
-            <span className="text-sm font-medium">{area ? `${bedrooms}, ${bathrooms}, ${sqft}` : "No data provided"}</span>
-          </div> */}
           
           <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground">Date & Time:</span>
-            <span className="text-sm font-medium">
+            <span className="text-sm text-slate-500 dark:text-slate-400">Date & Time:</span>
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
               {date ? `${format(date, 'PPP')} at ${time || "No time selected"}` : "No date selected"}
             </span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground">Package:</span>
-            <span className="text-sm font-medium">{selectedPackageDetails?.name || "No package selected"}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">Package:</span>
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{selectedPackageDetails?.name || "No package selected"}</span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-sm text-muted-foreground">Photographer:</span>
-            <span className="text-sm font-medium">
+            <span className="text-sm text-slate-500 dark:text-slate-400">Photographer:</span>
+            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
               {photographers.find(p => p.id === photographer)?.name || (photographers.length === 0 ? "To be assigned" : "No photographer selected")}
             </span>
           </div>
           
           {additionalNotes && (
             <div className="pt-2">
-              <span className="text-sm text-muted-foreground">Notes:</span>
-              <p className="text-sm mt-1 bg-background p-2 rounded">{additionalNotes}</p>
+              <span className="text-sm text-slate-500 dark:text-slate-400">Notes:</span>
+              <p className="text-sm mt-1 bg-gray-50 dark:bg-slate-800 p-2 rounded text-slate-900 dark:text-slate-100">{additionalNotes}</p>
             </div>
           )}
         </div>
@@ -191,34 +186,35 @@ export function ReviewForm({
         
         <div className="space-y-1">
           <div className="flex justify-between">
-            <span className="text-sm">Package:</span>
-            <span className="text-sm">${packagePrice}</span>
+            <span className="text-sm text-slate-700 dark:text-slate-200">Package:</span>
+            <span className="text-sm text-slate-900 dark:text-slate-100">${packagePrice}</span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-sm">Photographer Fee:</span>
-            <span className="text-sm">${photographerRate}</span>
+            <span className="text-sm text-slate-700 dark:text-slate-200">Photographer Fee:</span>
+            <span className="text-sm text-slate-900 dark:text-slate-100">${photographerRate}</span>
           </div>
           
           <div className="flex justify-between">
-            <span className="text-sm">Tax (6%):</span>
-            <span className="text-sm">${tax}</span>
+            <span className="text-sm text-slate-700 dark:text-slate-200">Tax (6%):</span>
+            <span className="text-sm text-slate-900 dark:text-slate-100">${tax}</span>
           </div>
           
           <Separator className="my-2" />
           
-          <div className="flex justify-between font-bold">
+          <div className="flex justify-between font-bold text-slate-900 dark:text-slate-100">
             <span>Total:</span>
             <span>${total}</span>
           </div>
         </div>
       </div>
       
+      {/* Toggles */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label htmlFor="bypass-payment">Bypass Payment</Label>
-            <div className="text-sm text-muted-foreground">
+            <Label htmlFor="bypass-payment" className="text-slate-900 dark:text-slate-100">Bypass Payment</Label>
+            <div className="text-sm text-slate-500 dark:text-slate-400">
               Client will be invoiced later
             </div>
           </div>
@@ -231,8 +227,8 @@ export function ReviewForm({
         
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label htmlFor="send-notification">Send Notification</Label>
-            <div className="text-sm text-muted-foreground">
+            <Label htmlFor="send-notification" className="text-slate-900 dark:text-slate-100">Send Notification</Label>
+            <div className="text-sm text-slate-500 dark:text-slate-400">
               Notify client and photographer
             </div>
           </div>
@@ -244,14 +240,17 @@ export function ReviewForm({
         </div>
       </div>
 
-      {/* <div className="pt-4 mt-4 border-t border-[#1e2d4a]">
-                <Button 
-                  onClick={onSubmit} 
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition-colors"
-                >
-                  <Check className="mr-2 h-4 w-4" /> Book Shoot
-                </Button>
-      </div> */}
+      {/* Actions (optional; keep for context) */}
+      {/* 
+      <div className="pt-4 mt-4 border-t border-gray-100 dark:border-slate-800">
+        <Button 
+          onClick={onSubmit} 
+          className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition-colors"
+        >
+          <Check className="mr-2 h-4 w-4" /> Book Shoot
+        </Button>
+      </div> 
+      */}
     </motion.div>
   );
 }

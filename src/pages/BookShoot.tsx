@@ -34,7 +34,7 @@ const BookShoot = () => {
 
   const [clients, setClients] = useState<Client[]>([]);
 
-  
+
   const [client, setClient] = useState(() => {
     if (user && user.role === 'client' && user.metadata) {
       return user.metadata.clientId ?? '';
@@ -81,7 +81,7 @@ const BookShoot = () => {
     const fetchClients = async () => {
       try {
         const token = localStorage.getItem('authToken');
-  
+
         if (!token) {
           throw new Error("No auth token found in localStorage");
         }
@@ -257,7 +257,7 @@ const BookShoot = () => {
   useEffect(() => {
     if (clientIdFromUrl && clientNameFromUrl) {
       setClient(clientIdFromUrl);
-      
+
       toast({
         title: "Client Selected",
         description: `${decodeURIComponent(clientNameFromUrl)}${clientCompanyFromUrl ? ` (${decodeURIComponent(clientCompanyFromUrl)})` : ''} has been selected for this shoot.`,
@@ -299,19 +299,19 @@ const BookShoot = () => {
     return Math.round(subtotal * 0.06);
   };
 
-   const getTotal = () => {
+  const getTotal = () => {
     const packagePrice = getPackagePrice();
     const photographerRate = getPhotographerRate();
     const tax = getTax();
-    
+
     const packageCents = Math.round(packagePrice * 100);
     const photographerCents = Math.round(photographerRate * 100);
     const taxCents = Math.round(tax * 100);
-    
+
     const totalCents = packageCents + photographerCents + taxCents;
     return totalCents / 100;
   };
-  
+
   const getAvailablePhotographers = () => {
     const role = user?.role;
     if (role === 'admin' || role === 'superadmin') return photographers;
@@ -330,7 +330,7 @@ const BookShoot = () => {
         });
         return false;
       }
-      
+
       if (!address || !city || !state || !zip || !selectedPackage) {
         toast({
           title: "Missing information",
@@ -341,130 +341,255 @@ const BookShoot = () => {
       }
       return true;
     }
-    
+
     if (step === 2) {
       const errors = {};
       if (!date) errors['date'] = "Please select a date";
       if (!time) errors['time'] = "Please select a time";
-      
+
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
         return false;
       }
       return true;
     }
-    
+
     return true;
   };
 
-    
-      
-      
-      
-      
-      
 
+  // const availablePhotographers = getAvailablePhotographers();
 
+  // if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
+  //   toast({
+  //     title: "Missing information",
+  //     description: "Please fill in all required fields before confirming the booking.",
+  //     variant: "destructive",
+  //   });
+  //   return;
+  // }
 
+  // const selectedClientData = clients.find(c => c.id === client);
+  // const selectedPhotographerData = photographers.find(p => p.id === photographer);
+  // const selectedPackageData = packages.find(p => p.id === selectedPackage);
 
+  // const bookingStatus: ShootData['status'] = 'booked';
 
+  // // Make sure date is properly formatted to avoid timezone issues
+  // const shootDate = date ? new Date(
+  //   date.getFullYear(),
+  //   date.getMonth(),
+  //   date.getDate(),
+  //   12, // Set to noon to avoid timezone issues
+  //   0,
+  //   0
+  // ) : new Date();
 
+  // const newShoot: ShootData = {
+  //   id: uuidv4(),
+  //   scheduledDate: shootDate.toISOString().split('T')[0],
+  //   time: time,
+  //   client: {
+  //     name: selectedClientData?.name || 'Unknown Client',
+  //     email: selectedClientData?.email || `client${client}@example.com`,
+  //     company: selectedClientData?.company,
+  //     totalShoots: 1
+  //   },
+  //   location: {
+  //     address: address,
+  //     address2: '',
+  //     city: city,
+  //     state: state,
+  //     zip: zip,
+  //     fullAddress: `${address}, ${city}, ${state} ${zip}`
+  //   },
+  //   photographer: selectedPhotographerData ? {
+  //     id: selectedPhotographerData.id,
+  //     name: selectedPhotographerData.name,
+  //     avatar: selectedPhotographerData.avatar
+  //   } : {
+  //     name: "To Be Assigned",
+  //     avatar: ""
+  //   },
+  //   services: selectedPackageData ? [selectedPackageData.name] : [],
+  //   payment: {
+  //     baseQuote: getPackagePrice(),
+  //     taxRate: 6.0,
+  //     taxAmount: getTax(),
+  //     totalQuote: getTotal(),
+  //     totalPaid: bypassPayment ? 0 : getTotal(),
+  //     lastPaymentDate: bypassPayment ? undefined : new Date().toISOString().split('T')[0],
+  //     lastPaymentType: bypassPayment ? undefined : 'Credit Card'
+  //   },
+  //   status: bookingStatus,
+  //   notes: notes ? { shootNotes: notes } : undefined,
+  //   createdBy: user?.name || "Current User"
+  // };
 
+  // addShoot(newShoot);
+  // setIsComplete(true);
 
-      
+  // console.log("New shoot created:", newShoot);
+
+  //       if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
+  //         toast({
+  //           title: "Missing information",
+  //           description: "Please fill in all required fields before confirming the booking.",
+  //           variant: "destructive",
+  //         });
+  //         return;
+  //       }
+
+  //       const shootDate = date ? new Date(
+  //         date.getFullYear(),
+  //         date.getMonth(),
+  //         date.getDate(),
+  //         12
+  //       ) : new Date();
+
+  //       const payload = {
+  //         client_id: client,
+  //         address,
+  //         city,
+  //         state,
+  //         zip,
+  //         scheduled_date: shootDate.toISOString().split('T')[0],
+  //         time,
+  //         photographer_id: photographer || null,
+  //         service_id: selectedPackage,
+  //         notes,
+  //         bypass_payment: bypassPayment,
+  //         send_notification: sendNotification
+  //       };
+
+  //       try {
+  //         const token = localStorage.getItem('authToken');
+  //         const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/shoots`, payload, {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`
+  //           }
+  //         });
+
+  //         toast({
+  //           title: "Shoot Booked!",
+  //           description: "The shoot has been successfully created.",
+  //           variant: "default"
+  //         });
+
+  //         setIsComplete(true);
+  //         console.log("Shoot created response:", response.data);
+  //       } catch (error) {
+  //         console.error("Error creating shoot:", error);
+  //         toast({
+  //           title: "Error",
+  //           description: "Failed to create shoot. Please try again.",
+  //           variant: "destructive"
+  //         });
+  //       }
+  //   } else {
+  //     if (!validateCurrentStep()) {
+  //       return;
+  //     }
+
+  //     setStep(step + 1);
+  //   }
+  // };
 
   const handleSubmit = async () => {
-  setFormErrors({});
+    setFormErrors({});
 
-  if (step === 3) {
-  if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
-    toast({
-      title: "Missing information",
-      description: "Please fill in all required fields before confirming the booking.",
-      variant: "destructive",
-    });
-    return;
-  }
+    if (step === 3) {
+      if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
+        toast({
+          title: "Missing information",
+          description: "Please fill in all required fields before confirming the booking.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-  const shootDate = date ? new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    12
-  ) : new Date();
+      const shootDate = date ? new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        12
+      ) : new Date();
 
-  const baseQuote = getPackagePrice();
-  const photographerRate = getPackagePrice();
-  const taxAmount = getTax();
-  const totalQuote = getTotal();
+      // Calculate pricing information
+      const baseQuote = getPackagePrice();
+      const photographerRate = getPackagePrice();
+      const taxAmount = getTax();
+      const totalQuote = getTotal();
 
-  const payload = {
-    client_id: client,
-    address,
-    city,
-    state,
-    zip,
-    scheduled_date: shootDate.toISOString().split('T')[0], // YYYY-MM-DD format
-    time,
-    photographer_id: photographer || null,
-    service_id: selectedPackage,
+      const payload = {
+        client_id: client,
+        address,
+        city,
+        state,
+        zip,
+        scheduled_date: shootDate.toISOString().split('T')[0], // YYYY-MM-DD format
+        time,
+        photographer_id: photographer || null,
+        service_id: selectedPackage,
     shoot_notes: notes || undefined,
     company_notes: companyNotes || undefined,
     photographer_notes: photographerNotes || undefined,
     editor_notes: editorNotes || undefined,
-    bypass_payment: bypassPayment,
-    send_notification: sendNotification,
-    base_quote: baseQuote,
-    tax_amount: taxAmount,
-    total_quote: totalQuote,
-    payment_status: bypassPayment ? 'pending' : 'paid', // or whatever statuses your API expects
-    status: 'scheduled', // or 'scheduled', 'confirmed' - check your API documentation
-    created_by: user?.name || user?.email || 'System' // Use available user info
-  };
+        bypass_payment: bypassPayment,
+        send_notification: sendNotification,
+        // Add the missing required fields based on API error
+        base_quote: baseQuote,
+        tax_amount: taxAmount,
+        total_quote: totalQuote,
+        payment_status: bypassPayment ? 'pending' : 'paid', // or whatever statuses your API expects
+        status: 'scheduled', // or 'scheduled', 'confirmed' - check your API documentation
+        created_by: user?.name || user?.email || 'System' // Use available user info
+      };
 
-  try {
-    const token = localStorage.getItem('authToken');
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/shoots`, payload, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/shoots`, payload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        toast({
+          title: "Shoot Booked!",
+          description: "The shoot has been successfully created.",
+          variant: "default"
+        });
+
+        setIsComplete(true);
+        await fetchShoots();
+        console.log("Shoot created response:", response.data);
+      } catch (error) {
+        console.error("Error creating shoot:", error);
+
+        // Better error handling to show specific validation errors
+        if (error.response?.data?.errors) {
+          const errorMessages = Object.values(error.response.data.errors).flat();
+          toast({
+            title: "Validation Error",
+            description: errorMessages.join('. '),
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: error.response?.data?.message || "Failed to create shoot. Please try again.",
+            variant: "destructive"
+          });
+        }
       }
-    });
-
-    toast({
-      title: "Shoot Booked!",
-      description: "The shoot has been successfully created.",
-      variant: "default"
-    });
-
-    setIsComplete(true);
-    await fetchShoots();
-    console.log("Shoot created response:", response.data);
-  } catch (error) {
-    console.error("Error creating shoot:", error);
-    
-    if (error.response?.data?.errors) {
-      const errorMessages = Object.values(error.response.data.errors).flat();
-      toast({
-        title: "Validation Error",
-        description: errorMessages.join('. '),
-        variant: "destructive"
-      });
     } else {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to create shoot. Please try again.",
-        variant: "destructive"
-      });
-    }
-  }
-  } else {
-  if (!validateCurrentStep()) {
-    return;
-  }
+      if (!validateCurrentStep()) {
+        return;
+      }
 
-  setStep(step + 1);
-  }
+      setStep(step + 1);
+    }
   };
 
   const goBack = () => {
@@ -531,7 +656,7 @@ const BookShoot = () => {
   const getSummaryInfo = () => {
     const selectedClientData = clients.find(c => c.id === client);
     const selectedPackageData = packages.find(p => p.id === selectedPackage);
-    
+
     return {
       client: selectedClientData?.name || (isClientAccount ? user?.name || '' : ''),
       package: selectedPackageData?.name || '',
@@ -546,7 +671,7 @@ const BookShoot = () => {
   };
 
   const summaryInfo = getSummaryInfo();
-  
+
   const getCurrentStepContent = () => {
     const stepContent = {
       1: {
@@ -562,50 +687,50 @@ const BookShoot = () => {
         description: "Verify all the details before confirming the booking"
       }
     };
-    
+
     return stepContent[step as keyof typeof stepContent] || { title: '', description: '' };
   };
-  
+
   const currentStepContent = getCurrentStepContent();
 
   return (
     <DashboardLayout>
       <div className="container px-4 sm:px-6 max-w-5xl py-6">
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
           onClick={() => navigate('/shoots')}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Shoots
         </Button>
-        
+
         <AnimatePresence mode="wait">
           {isComplete ? (
             <BookingComplete date={date} time={time} resetForm={resetForm} />
           ) : (
             <div>
-              <BookingHeader 
+              <BookingHeader
                 title={currentStepContent.title}
                 description={currentStepContent.description}
               />
-              
+
               <BookingStepIndicator currentStep={step} totalSteps={3} />
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+
+              <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1.6fr] gap-6 mt-12">
                 {/* Summary always appears on top on mobile, side on desktop */}
-                <div className={`${isMobile ? "order-1 mb-4" : "order-1 md:order-1 row-span-2"} md:col-span-1`}>
-                  <BookingSummary 
-                    summaryInfo={summaryInfo} 
+                <div className={`${isMobile ? "order-1 mb-4" : "order-1 md:order-1"} md:col-span-1`}>
+                  <BookingSummary
+                    summaryInfo={summaryInfo}
                     selectedPackage={selectedPackage}
                     packages={packages}
                     onSubmit={step === 3 ? handleSubmit : undefined}
                     isLastStep={step === 3}
                   />
                 </div>
-                
-                <div className="order-2 md:col-span-2">
+
+                <div className="order-2 md:col-span-1">
                   <BookingContentArea
                     step={step}
                     formErrors={formErrors}
