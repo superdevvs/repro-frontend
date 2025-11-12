@@ -218,7 +218,6 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
 
   // Handle suggestion selection
   const handleSuggestionSelect = async (suggestion: AddressSuggestion) => {
-    // Stop pending debounce to avoid race conditions updating suggestions after selection
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setShowSuggestions(false);
     setIsLoading(true);
@@ -226,9 +225,7 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
 
     try {
       const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const headers: Record<string, string> = {
-        'Accept': 'application/json',
-      };
+      const headers: Record<string, string> = { 'Accept': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
@@ -236,32 +233,57 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
       const response = await fetch(url, { headers });
 
       if (!response.ok) {
-        // Use mock data if API fails
-        console.warn('API not available, using mock address details');
-        const mockDetails = getMockAddressDetails(suggestion.place_id);
-        setSelectedAddress(mockDetails);
-        onAddressSelect(mockDetails);
+        console.warn('Address details API failed — using suggestion fallback');
+        const fallbackDetails: AddressDetails = {
+          formatted_address: suggestion.description,
+          address: suggestion.main_text,
+          city: (suggestion as any).city || (suggestion as any).raw?.address?.city || '',
+          state: (suggestion as any).state || (suggestion as any).raw?.address?.state || '',
+          zip: (suggestion as any).zip || (suggestion as any).raw?.address?.postcode || '',
+          country:
+            (suggestion as any).country ||
+            (suggestion as any).raw?.address?.country ||
+            (suggestion as any).raw?.address?.country_code ||
+            '',
+          latitude: (suggestion as any).latitude,
+          longitude: (suggestion as any).longitude,
+        };
+
+
+        setSelectedAddress(fallbackDetails);
+        onAddressSelect(fallbackDetails);
+        onChange(suggestion.description);
         return;
       }
 
-      const data = await response.json();
-      const addressDetails = data.data;
 
+      // ✅ success path
+      const data = await response.json();
+      const addressDetails = data.data || data;
       setSelectedAddress(addressDetails);
       onAddressSelect(addressDetails);
-      // Ensure the input reflects the final chosen address
       onChange(addressDetails.formatted_address || addressDetails.address || suggestion.description);
     } catch (err) {
-      // Fallback to mock data
-      console.warn('API error, using mock address details:', err);
-      const mockDetails = getMockAddressDetails(suggestion.place_id);
-      setSelectedAddress(mockDetails);
-      onAddressSelect(mockDetails);
-      onChange(mockDetails.formatted_address || mockDetails.address || suggestion.description);
+      console.warn('Address details fetch error:', err);
+      const fallbackDetails: AddressDetails = {
+        formatted_address: suggestion.description,
+        address: suggestion.main_text,
+        city: (suggestion as any).city || '',
+        state: (suggestion as any).state || '',
+        zip: (suggestion as any).zip || '',
+        country: (suggestion as any).country || '',
+        latitude: (suggestion as any).latitude,
+        longitude: (suggestion as any).longitude,
+      };
+      setSelectedAddress(fallbackDetails);
+      onAddressSelect(fallbackDetails);
+      onChange(suggestion.description);
     } finally {
       setIsLoading(false);
     }
   };
+
+
 
   // Handle click outside to close suggestions
   useEffect(() => {
