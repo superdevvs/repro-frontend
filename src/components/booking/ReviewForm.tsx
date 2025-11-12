@@ -87,7 +87,7 @@ export function ReviewForm({
       className="space-y-6"
     >
       <div>
-        <Label>Select Photographer</Label>
+        {/* <Label>Select Photographer</Label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
           {photographers.length > 0 ? (
             photographers.map((p) => (
@@ -120,7 +120,7 @@ export function ReviewForm({
                     {/* <p className="text-xs text-muted-foreground">${p.rate}/shoot</p>
                     {!p.availability && (
                       <span className="text-[10px] text-muted-foreground">Unavailable</span>
-                    )} */}
+                    )} 
                   </div>
                 </div>
               </Card>
@@ -137,8 +137,8 @@ export function ReviewForm({
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          )} 
+        </div> */}
       </div>
       
       <div className="p-4 bg-muted/30 rounded-lg space-y-4">

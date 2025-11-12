@@ -354,9 +354,9 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
                 <TimeSelect
                   value={time}
                   onChange={onTimeChange}
-                  startHour={8}
-                  endHour={18}
-                  interval={10}
+                  startHour={1}
+                  endHour={12}
+                  interval={5}
                   placeholder="Select a time"
                   className="w-full"
                 />
