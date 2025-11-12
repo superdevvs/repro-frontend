@@ -43,7 +43,7 @@ function normalizeForCompare(t: string, hour24 = false) {
   }
 }
 
-/* ---------- Small accessible custom Dropdown (dark-mode styled) ---------- */
+/* ---------- Small accessible custom Dropdown (theme-aware) ---------- */
 function Dropdown<T extends string | number>(props: {
   value: T | "";
   onChange: (v: T) => void;
@@ -122,9 +122,11 @@ function Dropdown<T extends string | number>(props: {
         aria-label={ariaLabel}
         onClick={() => setOpen((v) => !v)}
         onKeyDown={onKey}
-        className="w-full h-12 rounded-lg bg-slate-800/30 border border-slate-700 px-4 flex items-center justify-between text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-slate-700"
+        className="w-full h-12 rounded-lg bg-white border border-gray-200 px-4 flex items-center justify-between text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:focus:ring-slate-700"
       >
-        <span>{selectedLabel || placeholder}</span>
+        <span className={selectedLabel ? "text-slate-900 dark:text-slate-100" : "text-slate-400 dark:text-slate-400"}>
+          {selectedLabel || placeholder}
+        </span>
         <ChevronDown className="h-4 w-4 text-slate-400" />
       </button>
 
@@ -133,7 +135,7 @@ function Dropdown<T extends string | number>(props: {
           ref={listRef}
           role="listbox"
           tabIndex={-1}
-          className="absolute z-50 mt-2 w-full max-h-44 overflow-auto rounded-lg bg-slate-900/95 border border-slate-800 shadow-lg py-1"
+          className="absolute z-50 mt-2 w-full max-h-44 overflow-auto rounded-lg bg-white border border-gray-200 shadow-lg py-1 dark:bg-slate-900 dark:border-slate-800"
         >
           {options.map((opt, i) => {
             const isHighlighted = i === highlight;
@@ -142,7 +144,7 @@ function Dropdown<T extends string | number>(props: {
                 key={`${opt.value}-${i}`}
                 data-option
                 role="option"
-                aria-selected={value === opt.value}
+                aria-selected={String(value) === String(opt.value)}
                 onMouseEnter={() => setHighlight(i)}
                 onMouseLeave={() => setHighlight(null)}
                 onClick={() => {
@@ -152,8 +154,12 @@ function Dropdown<T extends string | number>(props: {
                 }}
                 className={cn(
                   "px-3 py-2 text-sm cursor-pointer flex items-center justify-between",
-                  opt.disabled ? "opacity-40 cursor-not-allowed text-slate-400" : "text-slate-100",
-                  isHighlighted && !opt.disabled ? "bg-slate-800/60" : "hover:bg-slate-800/30"
+                  opt.disabled
+                    ? "opacity-40 cursor-not-allowed text-slate-400 dark:text-slate-500"
+                    : "text-slate-900 dark:text-slate-100",
+                  isHighlighted && !opt.disabled
+                    ? "bg-gray-100 dark:bg-slate-800"
+                    : "hover:bg-gray-50 dark:hover:bg-slate-800/60"
                 )}
               >
                 <span>{opt.label}</span>
@@ -367,27 +373,28 @@ export function TimeSelect({
           disabled={disabled}
           className={cn(
             "w-full flex items-center justify-between px-4 py-2 rounded-lg",
-            "bg-slate-900/70 border border-slate-800 text-slate-100",
-            "hover:bg-slate-900/80 transition-colors duration-150",
+            "bg-white border border-gray-200 text-slate-900",
+            "hover:bg-gray-50 transition-colors duration-150",
+            "dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700",
             className
           )}
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-slate-800/50">
-              <Clock className="h-4 w-4 text-slate-300" />
+            <div className="p-2 rounded-md bg-gray-100 dark:bg-slate-700">
+              <Clock className="h-4 w-4 text-slate-700 dark:text-slate-300" />
             </div>
             <div className="text-left">
-              <div className="text-sm font-medium text-slate-100">
+              <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
                 {confirmed || placeholder}
               </div>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-slate-500 dark:text-slate-400">
                 {confirmed ? "Selected" : "Tap to choose"}
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            {confirmed ? <span className="text-xs text-slate-300">{confirmed}</span> : null}
+            {confirmed ? <span className="text-xs text-slate-600 dark:text-slate-300">{confirmed}</span> : null}
             <ChevronDown className="h-4 w-4 text-slate-400" />
           </div>
         </Button>
@@ -395,21 +402,21 @@ export function TimeSelect({
 
       <PopoverContent
         side="bottom"
-        className="p-4 w-[420px] bg-slate-900/96 border border-slate-800 rounded-2xl shadow-xl backdrop-blur-sm"
+        className="p-4 w-[420px] bg-white border border-gray-200 rounded-2xl shadow-lg backdrop-blur-sm dark:bg-slate-900 dark:border-slate-800"
       >
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="rounded-full bg-slate-800/60 p-2">
-              <Clock className="h-4 w-4 text-slate-300" />
+            <div className="rounded-full bg-gray-100 dark:bg-slate-800 p-2">
+              <Clock className="h-4 w-4 text-slate-700 dark:text-slate-300" />
             </div>
             <div>
-              <div className="text-sm text-slate-200 font-medium">Select time</div>
-              <div className="text-xs text-slate-500">{hour24 ? "24-hour" : "12-hour"} • {interval} min steps</div>
+              <div className="text-sm text-slate-900 dark:text-slate-200 font-medium">Select time</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{hour24 ? "24-hour" : "12-hour"} • {interval} min steps</div>
             </div>
           </div>
 
           <button
-            className="p-2 rounded-md hover:bg-slate-800 text-slate-400"
+            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
             onClick={() => setOpen(false)}
             aria-label="Close"
           >
@@ -453,16 +460,16 @@ export function TimeSelect({
 
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="rounded-full bg-slate-800/40 px-3 py-1 text-sm text-slate-100">
-              {preview || <span className="text-slate-500">No time selected</span>}
+            <div className="rounded-full bg-gray-100 dark:bg-slate-800 px-3 py-1 text-sm text-slate-900 dark:text-slate-100">
+              {preview || <span className="text-slate-500 dark:text-slate-400">No time selected</span>}
             </div>
-            <div className="text-xs text-slate-500">Preview</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">Preview</div>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="px-3 py-2 rounded-md text-sm text-slate-300 hover:bg-slate-800 transition"
+              className="px-3 py-2 rounded-md text-sm text-slate-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
               onClick={() => {
                 setHour("");
                 setMinute("");
@@ -479,7 +486,7 @@ export function TimeSelect({
               type="button"
               className={cn(
                 "px-4 py-2 rounded-md text-sm shadow-sm transition",
-                preview ? "bg-blue-500 text-white hover:bg-blue-520" : "bg-slate-700 text-slate-300 opacity-60 cursor-not-allowed"
+                preview ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-200 text-slate-500 opacity-60 cursor-not-allowed dark:bg-slate-700 dark:text-slate-300"
               )}
               onClick={() => {
                 if (!preview) return;
