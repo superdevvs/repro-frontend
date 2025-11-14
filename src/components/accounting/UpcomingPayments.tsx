@@ -31,7 +31,7 @@ export function UpcomingPayments({ invoices }: UpcomingPaymentsProps) {
   // Find upcoming payments (due within next 14 days)
   const upcomingPayments = invoices
     .filter(invoice => 
-      invoice.status !== 'paid' && 
+      invoice.status?.toLowerCase?.() !== 'paid' && 
       isWithinNextDays(invoice.dueDate, 14)
     )
     .sort((a, b) => {
@@ -141,6 +141,9 @@ interface PaymentItemProps {
 }
 
 function PaymentItem({ invoice, formatDueDate, urgent = false }: PaymentItemProps) {
+  const amountDisplay = typeof invoice.total === 'number' ? invoice.total : invoice.amount;
+  const balanceDue = typeof invoice.balance_due === 'number' ? invoice.balance_due : amountDisplay;
+
   return (
     <div className={cn(
       "p-3 rounded-md border flex items-center justify-between",
@@ -165,7 +168,12 @@ function PaymentItem({ invoice, formatDueDate, urgent = false }: PaymentItemProp
       </div>
       
       <div className="flex items-center gap-3">
-        <p className="text-sm font-bold">${invoice.amount.toLocaleString()}</p>
+        <div className="text-right leading-tight">
+          <p className="text-[10px] text-muted-foreground">Total ${amountDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <p className={`text-sm font-bold ${balanceDue > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+            ${balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+        </div>
         <Button size="sm" variant={urgent ? "default" : "outline"} className="h-8">
           Pay Now
         </Button>

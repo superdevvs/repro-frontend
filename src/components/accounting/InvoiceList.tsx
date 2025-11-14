@@ -48,9 +48,9 @@ export function InvoiceList({
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'paid' | 'overdue'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
-  const filteredInvoices = activeTab === 'all' 
-    ? data.invoices 
-    : data.invoices.filter(invoice => invoice.status === activeTab);
+  const filteredInvoices = activeTab === 'all'
+    ? data.invoices
+    : data.invoices.filter(invoice => invoice.status?.toLowerCase?.() === activeTab);
 
   const handleViewInvoice = (invoice: InvoiceData) => {
     setSelectedInvoice(invoice);
@@ -146,71 +146,94 @@ export function InvoiceList({
                     <th className="py-1 px-2 text-left">Client</th>
                     <th className="py-1 px-2 text-left">Status</th>
                     <th className="py-1 px-2 text-left">Amount</th>
+                    <th className="py-1 px-2 text-left">Balance Due</th>
                     <th className="py-1 px-2 text-left">Date</th>
                     <th className="py-1 px-2 text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredInvoices.map((invoice) => (
-                    <tr key={invoice.id} className="border-b hover:bg-muted/30 transition">
-                      <td className="py-1 px-2 font-medium text-xs">#{invoice.number}</td>
-                      <td className="py-1 px-2 text-xs">{invoice.client}</td>
-                      <td className="py-1 px-2">
-                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${getStatusColor(invoice.status)}`}>{invoice.status}</span>
-                      </td>
-                      <td className="py-1 px-2 text-xs">${invoice.amount}</td>
-                      <td className="py-1 px-2 text-xs">{format(new Date(invoice.date), 'MMM d, yyyy')}</td>
-                      <td className="py-1 px-2">
-                        <div className="flex flex-wrap gap-1">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleViewInvoice(invoice)} 
-                            aria-label="View" 
-                            className="px-3 py-1 text-xs"
-                          >
-                            View
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleDownloadInvoice(invoice)} 
-                            aria-label="Download" 
-                            className="px-3 py-1 text-xs"
-                          >
-                            Download
-                          </Button>
-                          {/* Only show mark as paid button for admins */}
-                          {isAdmin && (invoice.status === "pending" || invoice.status === "overdue") && (
+
+                  {filteredInvoices.map((invoice) => {
+                    const statusKey = invoice.status?.toLowerCase?.() ?? '';
+                    const amountDisplay = typeof invoice.total === 'number' ? invoice.total : invoice.amount;
+                    const balanceDue = typeof invoice.balance_due === 'number'
+                      ? invoice.balance_due
+                      : statusKey === 'paid'
+                        ? 0
+                        : amountDisplay;
+                    const formattedAmount = `$${amountDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    const formattedBalance = `$${balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                    return (
+                      <tr key={invoice.id} className="border-b hover:bg-muted/30 transition">
+                        <td className="py-1 px-2 font-medium text-xs">#{invoice.number}</td>
+                        <td className="py-1 px-2 text-xs">{invoice.client}</td>
+                        <td className="py-1 px-2">
+                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${getStatusColor(invoice.status)}`}>{invoice.status}</span>
+                        </td>
+                        <td className="py-1 px-2 text-xs">{formattedAmount}</td>
+                        <td className={`py-1 px-2 text-xs font-medium ${balanceDue > 0 ? 'text-red-500' : 'text-emerald-600'}`}>{formattedBalance}</td>
+                        <td className="py-1 px-2 text-xs">
+                          <div className="flex flex-col gap-0.5">
+                            <span>{format(new Date(invoice.date), 'MMM d, yyyy')}</span>
+                            {invoice.sent_at && (
+                              <span className="text-[10px] text-muted-foreground">Sent {format(new Date(invoice.sent_at), 'MMM d, yyyy')}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-1 px-2">
+                          <div className="flex flex-wrap gap-1">
                             <Button
-                              variant="accent"
+                              variant="outline"
                               size="sm"
-                              onClick={() => onPay(invoice)}
-                              className="!px-3 py-1 text-xs"
-                              aria-label="Mark as Paid"
-                            >
-                              Mark Paid
-                            </Button>
-                          )}
-                          {/* Only show edit button for admins */}
-                          {isAdmin && (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleEditInvoice(invoice)} 
-                              aria-label="Edit" 
+                              onClick={() => handleViewInvoice(invoice)}
+                              aria-label="View"
                               className="px-3 py-1 text-xs"
                             >
-                              Edit
+                              View
                             </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadInvoice(invoice)}
+                              aria-label="Download"
+                              className="px-3 py-1 text-xs"
+                            >
+                              Download
+                            </Button>
+                            {/* Only show mark as paid button for admins */}
+                            {isAdmin && (statusKey === 'pending' || statusKey === 'overdue') && (
+                              <Button
+                                variant="accent"
+                                size="sm"
+                                onClick={() => onPay(invoice)}
+                                className="!px-3 py-1 text-xs"
+                                aria-label="Mark as Paid"
+                              >
+                                Mark Paid
+                              </Button>
+                            )}
+                            {/* Only show edit button for admins */}
+                            {isAdmin && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditInvoice(invoice)}
+                                aria-label="Edit"
+                                className="px-3 py-1 text-xs"
+                              >
+                                Edit
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+
                   {filteredInvoices.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-4 text-center text-muted-foreground text-sm">
+                      <td colSpan={7} className="py-4 text-center text-muted-foreground text-sm">
                         No invoices found
                       </td>
                     </tr>
@@ -275,20 +298,30 @@ interface InvoiceItemProps {
   isAdmin?: boolean; // Admin role prop
 }
 
-function InvoiceItem({ 
-  invoice, 
-  onView, 
-  onDownload, 
-  onSend, 
-  onPrint, 
-  onEdit, 
-  onDelete, 
-  getStatusColor, 
+function InvoiceItem({
+  invoice,
+  onView,
+  onDownload,
+  onSend,
+  onPrint,
+  onEdit,
+  onDelete,
+  getStatusColor,
   onPay,
   isAdmin = false, // Default to false for safety
 }: InvoiceItemProps) {
-  const showMarkAsPaid = isAdmin && (invoice.status === 'pending' || invoice.status === 'overdue');
-  
+  const statusKey = invoice.status?.toLowerCase?.() ?? '';
+  const amountDisplay = typeof invoice.total === 'number' ? invoice.total : invoice.amount;
+  const balanceDue = typeof invoice.balance_due === 'number'
+    ? invoice.balance_due
+    : statusKey === 'paid'
+      ? 0
+      : amountDisplay;
+  const formattedAmount = `$${amountDisplay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formattedBalance = `$${balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const sentLabel = invoice.sent_at ? format(new Date(invoice.sent_at), 'MMM d, yyyy') : null;
+  const showMarkAsPaid = isAdmin && (statusKey === 'pending' || statusKey === 'overdue');
+
   return (
     <div className="flex flex-col bg-card rounded-lg shadow-sm">
       <div className="p-3 flex-row justify-between items-center border-b border-border hidden sm:flex">
@@ -300,12 +333,18 @@ function InvoiceItem({
         </div>
         <div className="flex items-center gap-3 text-xs">
           <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
-          <div className="text-right">
-            <div className="font-medium">${invoice.amount}</div>
+          <div className="text-right space-y-1">
+            <div className="font-medium">{formattedAmount}</div>
+            <div className={`text-xs font-semibold ${balanceDue > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+              Balance {formattedBalance}
+            </div>
             <div className="text-muted-foreground flex items-center gap-1">
               <CalendarIcon className="h-3 w-3" />
               <span>{format(new Date(invoice.date), 'MMM d, yyyy')}</span>
             </div>
+            {sentLabel && (
+              <div className="text-[10px] text-muted-foreground">Sent {sentLabel}</div>
+            )}
           </div>
         </div>
       </div>
@@ -316,8 +355,14 @@ function InvoiceItem({
           <div className="text-xs text-muted-foreground truncate max-w-xs">{invoice.client}</div>
           <div className="flex items-center gap-2 mt-1">
             <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
-            <div className="text-xs">${invoice.amount}</div>
+            <div className="text-xs font-medium">{formattedAmount}</div>
           </div>
+          <div className={`text-[11px] font-semibold ${balanceDue > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+            Balance {formattedBalance}
+          </div>
+          {sentLabel && (
+            <div className="text-[10px] text-muted-foreground">Sent {sentLabel}</div>
+          )}
         </div>
       </div>
 

@@ -14,6 +14,9 @@ export const API_ROUTES = {
     adminList: `${BASE_URL}/api/admin/clients`,
     create: `${BASE_URL}/api/admin/users`, // create user with role=client
   },
+  invoices: {
+    markPaid: (id: number | string) => `${BASE_URL}/api/admin/invoices/${id}/mark-paid`,
+  },
   people: {
     photographers: `${BASE_URL}/api/photographers`,
     adminPhotographers: `${BASE_URL}/api/admin/photographers`,

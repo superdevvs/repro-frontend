@@ -13,16 +13,16 @@ interface OverviewCardsProps {
 export function OverviewCards({ invoices, timeFilter }: OverviewCardsProps) {
   // Calculate totals based on invoice status
   const totalRevenue = invoices
-    .filter(invoice => invoice.status === 'paid')
+    .filter(invoice => invoice.status?.toLowerCase?.() === 'paid')
     .reduce((sum, invoice) => sum + invoice.amount, 0);
   
-  const pendingInvoices = invoices.filter(invoice => invoice.status === 'pending');
+  const pendingInvoices = invoices.filter(invoice => invoice.status?.toLowerCase?.() === 'pending');
   const pendingTotal = pendingInvoices.reduce((sum, invoice) => sum + invoice.amount, 0);
   
-  const overdueInvoices = invoices.filter(invoice => invoice.status === 'overdue');
+  const overdueInvoices = invoices.filter(invoice => invoice.status?.toLowerCase?.() === 'overdue');
   const overdueTotal = overdueInvoices.reduce((sum, invoice) => sum + invoice.amount, 0);
   
-  const paidInvoices = invoices.filter(invoice => invoice.status === 'paid');
+  const paidInvoices = invoices.filter(invoice => invoice.status?.toLowerCase?.() === 'paid');
   const paidTotal = paidInvoices.reduce((sum, invoice) => sum + invoice.amount, 0);
 
   // Fake trend data for demonstration
