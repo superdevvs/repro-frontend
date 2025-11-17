@@ -1,4 +1,4 @@
-// timeselect.tsx
+// timeselect.tsx (responsive layout improvements)
 import * as React from "react";
 import { Clock, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,7 @@ export interface TimeSelectProps {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+/* ---------- helpers (unchanged) ---------- */
 function normalizeForCompare(t: string, hour24 = false) {
   if (!t) return "";
   const m = t.match(/^\s*(\d{1,2}):(\d{2})\s*(AM|PM)?\s*$/i);
@@ -247,7 +248,6 @@ export function TimeSelect({
     [hour24]
   );
 
-  // confirmed (what parent sees) + local working preview
   const [confirmed, setConfirmed] = React.useState<string | "">(value ?? "");
   const initial = React.useMemo(() => parseIncoming(value), [value, parseIncoming]);
   const [hour, setHour] = React.useState<string>(initial.hour || "");
@@ -262,7 +262,6 @@ export function TimeSelect({
     setConfirmed(value ?? "");
   }, [value, parseIncoming, hour24]);
 
-  // auto open when external value changes (optional)
   const prevValueRef = React.useRef<string | undefined>(value);
   React.useEffect(() => {
     if (!autoOpenOnValue) {
@@ -273,7 +272,6 @@ export function TimeSelect({
     prevValueRef.current = value;
   }, [value, autoOpenOnValue]);
 
-  // autofill minute/hour on open
   React.useEffect(() => {
     if (!open) return;
     if (!minute) {
@@ -310,7 +308,6 @@ export function TimeSelect({
     return hour24 ? `${pad(Number(hour))}:${minute}` : `${pad(Number(hour))}:${minute} ${ampm}`;
   }, [hour, minute, ampm, hour24]);
 
-  // helpers to create dropdown option arrays (with disabled flags)
   const hourOptions = React.useMemo(
     () =>
       hours.map((h) => {
@@ -363,145 +360,89 @@ export function TimeSelect({
     []
   );
 
+  /* ---------------------- layout: responsive grid + stacked actions --------------------- */
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          role="combobox"
-          aria-expanded={open}
-          disabled={disabled}
-          className={cn(
-            "w-full flex items-center justify-between px-4 py-2 rounded-lg",
-            "bg-white border border-gray-200 text-slate-900",
-            "hover:bg-gray-50 transition-colors duration-150",
-            "dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700",
-            className
-          )}
+    <div
+      className={cn(
+        // responsive container: full width, but restrict width on md+
+        "bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 shadow-md w-full",
+        // allow user to pass extra className
+        className
+      )}
+      style={{ maxWidth: undefined }}
+    >
+      {/* grid: on small screens stack vertically; on sm+ display 3 columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start mb-3">
+        <div className="w-full">
+          <Dropdown
+            value={hour || ""}
+            onChange={(v) => setHour(String(v))}
+            options={hourOptions.map((o) => ({ value: o.value, label: o.label, disabled: o.disabled }))}
+            placeholder="Hour"
+            ariaLabel="Select hour"
+            className="w-full"
+          />
+        </div>
+
+        <div className="w-full">
+          <Dropdown
+            value={minute || ""}
+            onChange={(v) => setMinute(String(v))}
+            options={minuteOptions.map((o) => ({ value: o.value, label: o.label, disabled: o.disabled }))}
+            placeholder="MM"
+            ariaLabel="Select minute"
+            className="w-full"
+          />
+        </div>
+
+        <div className="w-full">
+          <Dropdown
+            value={ampm || "AM"}
+            onChange={(v) => setAmpm(String(v))}
+            options={ampmOptions.map((o) => ({ value: o.value, label: o.label, disabled: o.disabled }))}
+            placeholder="AM/PM"
+            ariaLabel="Select AM/PM"
+            className="w-full"
+          />
+        </div>
+      </div>
+
+      {/* actions: stack on small screens; row on sm+ */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <button
+          type="button"
+          className="px-3 py-2 rounded-md text-sm text-slate-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800 transition flex-1"
+          onClick={() => {
+            setHour("");
+            setMinute("");
+            setAmpm("AM");
+            setConfirmed("");
+            onChange?.("");
+          }}
         >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-gray-100 dark:bg-slate-700">
-              <Clock className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-            </div>
-            <div className="text-left">
-              <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                {confirmed || placeholder}
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">
-                {confirmed ? "Selected" : "Tap to choose"}
-              </div>
-            </div>
-          </div>
+          Clear
+        </button>
 
-          <div className="flex items-center gap-3">
-            {confirmed ? <span className="text-xs text-slate-600 dark:text-slate-300">{confirmed}</span> : null}
-            <ChevronDown className="h-4 w-4 text-slate-400" />
-          </div>
-        </Button>
-      </PopoverTrigger>
-
-      <PopoverContent
-        side="bottom"
-        className="p-4 w-[420px] bg-white border border-gray-200 rounded-2xl shadow-lg backdrop-blur-sm dark:bg-slate-900 dark:border-slate-800"
-      >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-gray-100 dark:bg-slate-800 p-2">
-              <Clock className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-            </div>
-            <div>
-              <div className="text-sm text-slate-900 dark:text-slate-200 font-medium">Select time</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">{hour24 ? "24-hour" : "12-hour"} • {interval} min steps</div>
-            </div>
-          </div>
-
-          <button
-            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
-            onClick={() => setOpen(false)}
-            aria-label="Close"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="flex gap-3 items-center mb-4">
-          <div className="flex-1">
-            <Dropdown
-              value={hour || ""}
-              onChange={(v) => setHour(String(v))}
-              options={hourOptions.map((o) => ({ value: o.value, label: o.label, disabled: o.disabled }))}
-              placeholder={hour24 ? "HH" : "Hour"}
-              ariaLabel="Select hour"
-            />
-          </div>
-
-          <div style={{ width: 112 }}>
-            <Dropdown
-              value={minute || ""}
-              onChange={(v) => setMinute(String(v))}
-              options={minuteOptions.map((o) => ({ value: o.value, label: o.label, disabled: o.disabled }))}
-              placeholder="MM"
-              ariaLabel="Select minute"
-            />
-          </div>
-
-          {!hour24 && (
-            <div style={{ width: 112 }}>
-              <Dropdown
-                value={ampm || "AM"}
-                onChange={(v) => setAmpm(String(v))}
-                options={ampmOptions.map((o) => ({ value: o.value, label: o.label, disabled: o.disabled }))}
-                placeholder="AM/PM"
-                ariaLabel="Select AM or PM"
-              />
-            </div>
+        <button
+          type="button"
+          className={cn(
+            "px-4 py-2 rounded-md text-sm shadow-sm transition w-full sm:w-auto",
+            preview
+              ? "bg-blue-600 text-white hover:bg-blue-700"
+              : "bg-gray-200 text-slate-500 opacity-60 cursor-not-allowed dark:bg-slate-700 dark:text-slate-300"
           )}
-        </div>
-
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-gray-100 dark:bg-slate-800 px-3 py-1 text-sm text-slate-900 dark:text-slate-100">
-              {preview || <span className="text-slate-500 dark:text-slate-400">No time selected</span>}
-            </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Preview</div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="px-3 py-2 rounded-md text-sm text-slate-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-              onClick={() => {
-                setHour("");
-                setMinute("");
-                setAmpm(hour24 ? "" : "AM");
-                setConfirmed("");
-                onChange?.("");
-                setOpen(false);
-              }}
-            >
-              Clear
-            </button>
-
-            <button
-              type="button"
-              className={cn(
-                "px-4 py-2 rounded-md text-sm shadow-sm transition",
-                preview ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-200 text-slate-500 opacity-60 cursor-not-allowed dark:bg-slate-700 dark:text-slate-300"
-              )}
-              onClick={() => {
-                if (!preview) return;
-                setConfirmed(preview);
-                onChange?.(preview);
-                setOpen(false);
-              }}
-              aria-disabled={!preview}
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+          onClick={() => {
+            if (!preview) return;
+            setConfirmed(preview);
+            onChange?.(preview);
+            setOpen(false);
+          }}
+          aria-disabled={!preview}
+        >
+          Done
+        </button>
+      </div>
+    </div>
   );
 }
 

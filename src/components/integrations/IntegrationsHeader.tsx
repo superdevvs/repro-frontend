@@ -18,7 +18,7 @@ export function IntegrationsHeader() {
           </p>
         </div>
 
-        <ToggleGroup type="single" variant="outline" defaultValue="all">
+        {/* <ToggleGroup type="single" variant="outline" defaultValue="all">
           <ToggleGroupItem value="all" aria-label="All integrations">
             All
           </ToggleGroupItem>
@@ -28,7 +28,7 @@ export function IntegrationsHeader() {
           <ToggleGroupItem value="available" aria-label="Available integrations">
             Available
           </ToggleGroupItem>
-        </ToggleGroup>
+        </ToggleGroup> */}
       </div>
       
       <div className="flex items-center gap-2 text-sm text-muted-foreground">

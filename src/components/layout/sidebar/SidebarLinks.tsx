@@ -75,13 +75,13 @@ export function SidebarLinks({ isCollapsed, role }: SidebarLinksProps) {
       )}
       
       {/* Messages - all users can access */}
-      <NavLink
+      {/* <NavLink
         to="/messages"
         icon={<MessageSquareIcon className="h-5 w-5" />}
         label="Messages"
         isCollapsed={isCollapsed}
         isActive={pathname === '/messages'}
-      />
+      /> */}
       
       {/* Clients link */}
       {clientsPermission.canView() && role !== 'photographer' && role !== 'editor' && (

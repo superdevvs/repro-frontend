@@ -1,6 +1,17 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { Sun, Moon, Monitor } from "lucide-react";
+
+type Theme = "light" | "dark" | "system";
 
 export function GenericMLS() {
+  const [theme, setTheme] = useState<Theme>(() => {
+      try {
+        const saved = localStorage.getItem("site-theme");
+        return (saved as Theme) || "system";
+      } catch {
+        return "system";
+      }
+    });
   useEffect(() => {
     // Toggle mobile menu
     const btn = document.getElementById("menu-btn");
@@ -284,7 +295,7 @@ export function GenericMLS() {
   return (
     <div>
       <div className="top-0 mb-4 relative">
-        <img src="/images/bg.jpg" alt="Banner Image" className="w-full h-full object-cover" />
+        <img src="https://images.unsplash.com/photo-1605146769289-440113cc3d00?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070" alt="Banner Image" className="w-full h-full object-cover" />
         <div className="absolute top-0 left-0 w-full h-full bg-black/40 z-10" />
       </div>
 
@@ -296,16 +307,53 @@ export function GenericMLS() {
               <a href="#video" className="text-gray-700 hover:text-white">Video</a>
               <a href="#3dtour" className="text-gray-700 hover:text-white">3D Tour</a>
               <a href="#floorplan" className="text-gray-700 hover:text-white">Floor Plan</a>
-              <a href="#contact" className="block text-gray-700 hover:text-white">Contact</a>
+              {/* <a href="#contact" className="block text-gray-700 hover:text-white">Contact</a> */}
             </div>
 
-            <div className="md:hidden flex items-center">
-              <button id="menu-btn" className="text-gray-700 focus:outline-none" aria-label="menu">
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
+            <div className="flex items-center gap-3">
+                          {/* Compact theme icon that cycles through system -> light -> dark */}
+                          <div className="flex items-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // cycle system -> light -> dark -> system
+                                setTheme(prev => (prev === "system" ? "light" : prev === "light" ? "dark" : "system"));
+                              }}
+                              title={`Theme: ${theme}`}
+                              aria-label={`Theme: ${theme}. Click to change.`}
+                              className="p-2 rounded-md bg-transparent hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
+                            >
+                              {/* show an icon depending on current theme */}
+                              {theme === "light" && <Sun className="h-5 w-5 text-yellow-400" />}
+                              {theme === "dark" && <Moon className="h-5 w-5 text-indigo-300" />}
+                              {theme === "system" && <Monitor className="h-5 w-5 text-gray-200" />}
+                            </button>
+                          </div>
+            
+                          {/* keep mobile select fallback (optional) */}
+                          <div className="sm:hidden">
+                            <label htmlFor="theme-select" className="sr-only">Theme</label>
+                            <select
+                              id="theme-select"
+                              value={theme}
+                              onChange={(e) => setTheme(e.target.value as Theme)}
+                              className="text-sm rounded-md bg-white/90 px-2 py-1"
+                              aria-label="Select theme"
+                            >
+                              <option value="system">System</option>
+                              <option value="light">Light</option>
+                              <option value="dark">Dark</option>
+                            </select>
+                          </div>
+            
+                          <div className="md:hidden flex items-center">
+                            <button id="menu-btn" className="text-gray-700 focus:outline-none" aria-label="menu">
+                              <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
           </div>
         </div>
 
@@ -314,7 +362,7 @@ export function GenericMLS() {
           <a href="#video" className="block text-gray-700 hover:text-white">Video</a>
           <a href="#3dtour" className="block text-gray-700 hover:text-white">3D Tour</a>
           <a href="#floorplan" className="block text-gray-700 hover:text-white">Floor Plan</a>
-          <a href="#contact" className="block text-gray-700 hover:text-white">Contact</a>
+          {/* <a href="#contact" className="block text-gray-700 hover:text-white">Contact</a> */}
         </div>
       </nav>
 
@@ -345,53 +393,131 @@ export function GenericMLS() {
       <section id="photo" className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-black mb-8">PHOTOS</h2>
-
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="photos-grid">
-            <img data-index="0" src="/images/1702 25th Street Southeast, Washington, DC 200202579.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 1" />
-            <img data-index="1" src="/images/1702 25th Street Southeast, Washington, DC 200202584.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 2" />
-            <img data-index="2" src="/images/1702 25th Street Southeast, Washington, DC 200202595.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 3" />
-            <img data-index="3" src="/images/1702 25th Street Southeast, Washington, DC 200202615.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 4" />
-            <img data-index="4" src="/images/1702 25th Street Southeast, Washington, DC 200202680.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 5" />
-            <img data-index="5" src="/images/1702 25th Street Southeast, Washington, DC 200202685.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 6" />
-            <img data-index="6" src="/images/1702 25th Street Southeast, Washington, DC 200202725.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 7" />
-            <img data-index="7" src="/images/1702 25th Street Southeast, Washington, DC 200202710.jpg-FULL.JPG" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 8" />
+            <img data-index={0} src="https://plus.unsplash.com/premium_photo-1689609950112-d66095626efb?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cmVhbCUyMGVzdGF0ZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 1" />
+            <img data-index={1} src="https://images.unsplash.com/photo-1605146769289-440113cc3d00?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 2" />
+            <img data-index={2} src="https://plus.unsplash.com/premium_photo-1689609950112-d66095626efb?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cmVhbCUyMGVzdGF0ZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 3" />
+            <img data-index={3} src="https://images.unsplash.com/photo-1605146769289-440113cc3d00?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 4" />
+            <img data-index={4} src="https://plus.unsplash.com/premium_photo-1689609950112-d66095626efb?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cmVhbCUyMGVzdGF0ZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 5" />
+            <img data-index={5} src="https://images.unsplash.com/photo-1605146769289-440113cc3d00?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 6" />
+            <img data-index={6} src="https://plus.unsplash.com/premium_photo-1689609950112-d66095626efb?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cmVhbCUyMGVzdGF0ZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 7" />
+            <img data-index={7} src="https://images.unsplash.com/photo-1605146769289-440113cc3d00?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Photo 8" />
           </div>
         </div>
 
         <div id="photopopup" className="fixed inset-0 z-[9999] hidden grid place-items-center bg-black/80 p-4">
           <button id="photoclosePopup" className="absolute top-4 right-4 text-white text-3xl leading-none focus:outline-none" aria-label="Close">×</button>
-
           <div className="w-full max-w-6xl pointer-events-auto relative">
-            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-6 z-20 flex items-center gap-2 bg-gray-800/70 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg">
-              <button id="photoPrev" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none" aria-label="Previous">‹</button>
-              <button id="photoPlayPause" className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 focus:outline-none"><span id="photoPpIcon" /></button>
-              <button id="photoZoomIn" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none" aria-label="Zoom In">＋</button>
-              <button id="photoZoomOut" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none" aria-label="Zoom Out">－</button>
-              <button id="photoFullscreen" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none" aria-label="Fullscreen">⛶</button>
-              <button id="photoNext" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none" aria-label="Next">›</button>
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20">
+              <button id="photoPrev" className="w-12 h-12 rounded-full bg-white/20 text-white flex items-center justify-center">‹</button>
+            </div>
+            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20">
+              <button id="photoNext" className="w-12 h-12 rounded-full bg-white/20 text-white flex items-center justify-center">›</button>
+            </div>
+
+            <div className="absolute left-1/2 transform -translate-x-1/2 top-6 z-20 flex gap-3 items-center">
+              <button id="photoPlayPause" className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 text-white"><span id="photoPpIcon">▶</span><span id="photoPpLabel" className="text-sm">Play</span></button>
+              <button id="photoZoomIn" className="w-9 h-9 rounded-full bg-white/10 text-white">＋</button>
+              <button id="photoZoomOut" className="w-9 h-9 rounded-full bg-white/10 text-white">－</button>
+              <button id="photoFullscreen" className="w-9 h-9 rounded-full bg-white/10 text-white">⛶</button>
             </div>
 
             <div id="photo-slides" className="bg-transparent rounded-lg overflow-hidden" />
 
-            <div className="mt-4 flex items-center justify-between text-sm text-white/90">
-              <div id="photo-caption" className="truncate max-w-[70%]" />
+            <div className="mt-4 flex items-center justify-end text-sm text-white/90">
+              {/* <div id="photo-caption" className="truncate max-w-[70%]" /> */}
               <div id="photo-counter" className="opacity-90" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Video, 3D Tour, Floorplan, Map, Contact follow same pattern as original (omitted here for brevity) */}
+       {/* Video, 3D Tour, Floorplans, Map, Contact sections follow same structure */}
+      <section id="video" className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center text-black mb-8">VIDEO</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <img data-index={0} src="https://plus.unsplash.com/premium_photo-1689609950112-d66095626efb?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cmVhbCUyMGVzdGF0ZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Video 1" />
+            <img data-index={1} src="https://images.unsplash.com/photo-1605146769289-440113cc3d00?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Video 2" />
+            <img data-index={2} src="https://plus.unsplash.com/premium_photo-1689609950112-d66095626efb?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cmVhbCUyMGVzdGF0ZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Video 3" />
+            <img data-index={3} src="https://images.unsplash.com/photo-1605146769289-440113cc3d00?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="Video 4" />
+          </div>
+        </div>
 
-      <div className="flex justify-center items-center py-16 px-4" id="contact">
+        <div id="videopopup" className="fixed inset-0 z-[9999] hidden grid place-items-center bg-black/80 p-4">
+          <button id="videoclosePopup" className="absolute top-4 right-4 text-white text-3xl leading-none">×</button>
+          <div className="w-full max-w-6xl pointer-events-auto relative">
+            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-6 z-20 flex items-center gap-2 bg-gray-800/70 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg">
+              <button id="videoPrev" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">‹</button>
+              <button id="videoPlayPause" className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 focus:outline-none"><span id="videoPpIcon"></span><span id="videoPpLabel" className="text-sm">Play</span></button>
+              <button id="videoZoomIn" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">＋</button>
+              <button id="videoZoomOut" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">－</button>
+              <button id="videoFullscreen" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">⛶</button>
+              <button id="videoNext" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">›</button>
+            </div>
+
+            <div id="video-slides" className="bg-transparent rounded-lg overflow-hidden"></div>
+            <div className="mt-4 flex items-center justify-between text-sm text-white/90">
+              <div id="video-caption" className="truncate max-w-[70%]"></div>
+              <div id="video-counter" className="opacity-90"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="3dtour" className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center text-black mb-8">3D TOUR</h2>
+          <div className="flex justify-center">
+            <img data-index={0} src="https://images.unsplash.com/photo-1605146769289-440113cc3d00?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070" className="thumb w-full rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover h-48" alt="3D Tour" />
+          </div>
+        </div>
+      </section>
+
+      <section id="floorplan" className="py-16 bg-gray-50">
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="w-full max-w-6xl p-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10 text-black">FLOOR PLANS</h2>
+            <div id="gallery" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <img src="/images/floor1.JPG" alt="Floor 1" className="gallery-img w-full h-auto rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover" />
+              <img src="/images/floor1 (2).JPG" alt="Floor 2" className="gallery-img w-full h-auto rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover" />
+              <img src="/images/floor1 (3).JPG" alt="Floor 3" className="gallery-img w-full h-auto rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover" />
+              <img src="/images/floor1 (4).JPG" alt="Floor 4" className="gallery-img w-full h-auto rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover" />
+              <img src="/images/floor1 (5).JPG" alt="Floor 5" className="gallery-img w-full h-auto rounded-lg shadow-md hover:opacity-90 cursor-pointer object-cover" />
+            </div>
+          </div>
+        </div>
+
+        <div id="floorpopup" className="fixed inset-0 z-[9999] hidden grid place-items-center bg-black/80 p-4">
+          <button id="floorclosePopup" className="absolute top-4 right-4 text-white text-3xl leading-none">×</button>
+          <div className="w-full max-w-6xl pointer-events-auto relative">
+            <div className="absolute left-1/2 transform -translate-x-1/2 bottom-6 z-20 flex items-center gap-2 bg-gray-800/70 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg">
+              <button id="Prev" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">‹</button>
+              <button id="PlayPause" className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 focus:outline-none"><span id="PpIcon"></span><span id="photoPpLabel" className="text-sm">Play</span></button>
+              <button id="ZoomIn" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">＋</button>
+              <button id="ZoomOut" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">－</button>
+              <button id="Fullscreen" className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">⛶</button>
+              <button id="Next" className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 focus:outline-none">›</button>
+            </div>
+
+            <div id="floor-slides" className="bg-transparent rounded-lg overflow-hidden"></div>
+            <div className="mt-4 flex items-center justify-between text-sm text-white/90">
+              <div id="floor-caption" className="truncate max-w-[70%]"></div>
+              <div id="floor-counter" className="opacity-90"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* <div className="flex justify-center items-center py-16 px-4" id="contact">
         <form className="bg-white p-8 rounded-lg shadow-md w-full max-w-md flex flex-col gap-6">
           <h2 className="text-2xl font-bold text-center text-black">CONTACT</h2>
           <input type="text" placeholder="Name" className="border border-blue-900 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           <input type="email" placeholder="Email Address" className="border border-blue-900 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <textarea placeholder="Message" rows="4" className="border border-blue-900 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <textarea placeholder="Message" rows={4} className="border border-blue-900 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           <button type="submit" className="bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition font-semibold">SEND</button>
         </form>
-      </div>
+      </div> */}
 
       <p className="w-full py-3 text-center text-xs text-black dark:text-black border-t">© <span id="year"></span> R/E Pro Photos — All rights reserved.</p>
     </div>

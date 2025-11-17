@@ -722,7 +722,7 @@ useEffect(() => {
             Dropbox
           </Button>
           
-          <Button 
+          {/* <Button 
             variant={uploadMethod === 'google' ? 'default' : 'outline'} 
             size="sm"
             onClick={connectGoogleDrive}
@@ -730,7 +730,7 @@ useEffect(() => {
           >
             <CloudIcon className="h-4 w-4 mr-2" />
             Google Drive
-          </Button>
+          </Button> */}
         </div>
         
         {uploadMethod === 'local' && (

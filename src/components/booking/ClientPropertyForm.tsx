@@ -299,62 +299,57 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                 render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 max-h-[200px] overflow-y-auto">
-                      {visibleClients.length > 0 ? (
-                        visibleClients.map((client) => (
-                          <div
-                            key={client.id}
-                            className={`p-3 border rounded-md cursor-pointer transition-colors ${field.value === client.id
-                              ? "bg-primary/10 border-primary"
-                              : "bg-card hover:bg-accent/50"
-                              }`}
-                            onClick={() => form.setValue("clientId" as any, client.id)}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div
-                                className={`h-8 w-8 rounded-full flex items-center justify-center ${field.value === client.id
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted text-muted-foreground"
-                                  }`}
-                              >
-                                <User className="h-4 w-4" />
-                              </div>
-                              <div>
-                                <div className="font-medium leading-none">
-                                  {client.name}
+                      {isSearching && (
+                        visibleClients.length > 0 ? (
+                          visibleClients.map((client) => (
+                            <div
+                              key={client.id}
+                              className={`p-3 border rounded-md cursor-pointer transition-colors ${field.value === client.id
+                                  ? "bg-primary/10 border-primary"
+                                  : "bg-card hover:bg-accent/50"
+                                }`}
+                              onClick={() => form.setValue("clientId" as any, client.id)}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div
+                                  className={`h-8 w-8 rounded-full flex items-center justify-center ${field.value === client.id
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted text-muted-foreground"
+                                    }`}
+                                >
+                                  <User className="h-4 w-4" />
                                 </div>
-                                {client.company && (
-                                  <div className="text-sm text-muted-foreground mt-1">
-                                    {client.company}
+
+                                <div>
+                                  <div className="font-medium leading-none">{client.name}</div>
+                                  {client.company && (
+                                    <div className="text-sm text-muted-foreground mt-1">
+                                      {client.company}
+                                    </div>
+                                  )}
+                                  <div className="text-xs text-muted-foreground mt-1.5">
+                                    {client.email}
                                   </div>
-                                )}
-                                <div className="text-xs text-muted-foreground mt-1.5">
-                                  {client.email}
                                 </div>
                               </div>
                             </div>
+                          ))
+                        ) : (
+                          <div className="col-span-2 p-6 text-center text-muted-foreground">
+                            No clients found.
                           </div>
-                        ))
-                      ) : (
-                        <div className="col-span-2 p-6 text-center text-muted-foreground">
-                          {isSearching
-                            ? "No clients found for this search."
-                            : "No clients available."}
-                        </div>
+                        )
                       )}
                     </div>
 
-                    {/* {!isSearching && filteredClients.length > 2 && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Showing 2 clients. Type in the search box to see more.
-                      </p>
-                    )} */}
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
             </div>
 
-            <Separator className="my-6" />
+            {/* <Separator className="my-6" /> */}
           </div>
         )}
 

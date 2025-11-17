@@ -14,7 +14,7 @@ export function PaymentsSummary({ invoices }: PaymentsSummaryProps) {
   const totalPaid = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0);
   const paymentPercentage = totalInvoiced > 0 ? Math.round((totalPaid / totalInvoiced) * 100) : 0;
 
-  const totalPending = invoices.filter(i => i.status === 'pending').reduce((sum, i) => sum + i.amount, 0);
+  // const totalPaidd = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0);
   const totalOverdue = invoices.filter(i => i.status === 'overdue').reduce((sum, i) => sum + i.amount, 0);
 
   const paymentMethods = invoices
@@ -75,14 +75,14 @@ export function PaymentsSummary({ invoices }: PaymentsSummaryProps) {
           <Progress value={paymentPercentage} className="h-2" />
         </div>
 
-        {/* Pending & Overdue */}
+        {/* Paid & Overdue */}
         <div className="grid grid-cols-2 gap-4">
           <div className="p-3 rounded-md bg-amber-500/10 border border-amber-500/20">
             <h4 className="text-xs font-medium text-muted-foreground mb-1">
-              Pending
+              Paid
             </h4>
             <p className="text-xl font-semibold">
-              ${totalPending.toLocaleString()}
+              ${totalPaid.toLocaleString()}
             </p>
           </div>
 
@@ -97,7 +97,7 @@ export function PaymentsSummary({ invoices }: PaymentsSummaryProps) {
         </div>
 
         {/* Payment Methods */}
-        {/* <div>
+        <div>
           <h4 className="text-sm font-medium mb-3">Payment Methods</h4>
           <div className="space-y-3">
             {paymentMethodsArray.length > 0 ? (
@@ -118,7 +118,7 @@ export function PaymentsSummary({ invoices }: PaymentsSummaryProps) {
               </p>
             )}
           </div>
-        </div> */}
+        </div>
       </div>
     </CardContent>
   </Card>

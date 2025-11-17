@@ -621,19 +621,9 @@ const BookShoot = () => {
 
               <BookingStepIndicator currentStep={step} totalSteps={3} />
 
-              <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1.6fr] gap-6 mt-12">
-                {/* Summary always appears on top on mobile, side on desktop */}
-                <div className={`${isMobile ? "order-1 mb-4" : "order-1 md:order-1"} md:col-span-1`}>
-                  <BookingSummary
-                    summaryInfo={summaryInfo}
-                    selectedPackage={selectedPackage}
-                    packages={packages}
-                    onSubmit={step === 3 ? handleSubmit : undefined}
-                    isLastStep={step === 3}
-                  />
-                </div>
-
-                <div className="order-2 md:col-span-1">
+              <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1.4fr] gap-6 mt-12">
+                {/* LEFT (content) - appears first on mobile */}
+                <div className="order-1 md:order-1 md:col-span-1">
                   <BookingContentArea
                     step={step}
                     formErrors={formErrors}
@@ -672,7 +662,19 @@ const BookShoot = () => {
                     goBack={goBack}
                   />
                 </div>
+
+                {/* RIGHT (summary) - appears last on mobile */}
+                <div className="order-2 md:order-2 md:col-span-1">
+                  <BookingSummary
+                    summaryInfo={summaryInfo}
+                    selectedPackage={selectedPackage}
+                    packages={packages}
+                    onSubmit={step === 3 ? handleSubmit : undefined}
+                    isLastStep={step === 3}
+                  />
+                </div>
               </div>
+
             </>
           )}
         </AnimatePresence>
