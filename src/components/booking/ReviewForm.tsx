@@ -36,7 +36,7 @@ interface ReviewFormProps {
   photographers: Array<{ id: string; name: string; avatar: string; rate: number; availability: boolean }>;
   packages: Array<{ id: string; name: string; description: string; price: number }>;
   onConfirm: () => void; // Renamed from handleSubmit
-  onBack: () => void; // Renamed from goBack
+  onBack: () => void;
   onSubmit?: () => void;
   isLastStep?: boolean;
 }
@@ -71,11 +71,11 @@ export function ReviewForm({
   onSubmit,
   onConfirm,
   onBack,
-  isLastStep = false 
+  isLastStep = false
 }: ReviewFormProps) {
   // Find the selected client, photographer, and package
   const selectedPackageDetails = packages.find(p => p.id === selectedPackage);
-  
+
   return (
     <motion.div
       key="step3"
@@ -139,41 +139,41 @@ export function ReviewForm({
           )} 
         </div> */}
       </div>
-      
+
       {/* Booking Summary */}
       <div className="p-4 bg-white dark:bg-slate-900 rounded-lg space-y-4 border border-gray-100 dark:border-slate-800">
         <h3 className="font-medium text-slate-900 dark:text-slate-100">Booking Summary</h3>
-        
+
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-sm text-slate-500 dark:text-slate-400">Client:</span>
             <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{client ? `${client}` : "No client selected"}</span>
           </div>
-          
+
           <div className="flex justify-between">
             <span className="text-sm text-slate-500 dark:text-slate-400">Property:</span>
             <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{address ? `${address}, ${city}, ${state} ${zip}` : "No address provided"}</span>
           </div>
-          
+
           <div className="flex justify-between">
             <span className="text-sm text-slate-500 dark:text-slate-400">Date & Time:</span>
             <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
               {date ? `${format(date, 'PPP')} at ${time || "No time selected"}` : "No date selected"}
             </span>
           </div>
-          
+
           <div className="flex justify-between">
             <span className="text-sm text-slate-500 dark:text-slate-400">Package:</span>
             <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{selectedPackageDetails?.name || "No package selected"}</span>
           </div>
-          
+
           <div className="flex justify-between">
             <span className="text-sm text-slate-500 dark:text-slate-400">Photographer:</span>
             <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
               {photographers.find(p => p.id === photographer)?.name || (photographers.length === 0 ? "To be assigned" : "No photographer selected")}
             </span>
           </div>
-          
+
           {additionalNotes && (
             <div className="pt-2">
               <span className="text-sm text-slate-500 dark:text-slate-400">Notes:</span>
@@ -181,34 +181,34 @@ export function ReviewForm({
             </div>
           )}
         </div>
-        
+
         <Separator />
-        
+
         <div className="space-y-1">
           <div className="flex justify-between">
             <span className="text-sm text-slate-700 dark:text-slate-200">Package:</span>
             <span className="text-sm text-slate-900 dark:text-slate-100">${packagePrice}</span>
           </div>
-          
+
           <div className="flex justify-between">
             <span className="text-sm text-slate-700 dark:text-slate-200">Photographer Fee:</span>
             <span className="text-sm text-slate-900 dark:text-slate-100">${photographerRate}</span>
           </div>
-          
+
           <div className="flex justify-between">
             <span className="text-sm text-slate-700 dark:text-slate-200">Tax (6%):</span>
             <span className="text-sm text-slate-900 dark:text-slate-100">${tax}</span>
           </div>
-          
+
           <Separator className="my-2" />
-          
+
           <div className="flex justify-between font-bold text-slate-900 dark:text-slate-100">
             <span>Total:</span>
             <span>${total}</span>
           </div>
         </div>
       </div>
-      
+
       {/* Toggles */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -224,7 +224,7 @@ export function ReviewForm({
             onCheckedChange={setBypassPayment}
           />
         </div>
-        
+
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label htmlFor="send-notification" className="text-slate-900 dark:text-slate-100">Send Notification</Label>
@@ -239,6 +239,15 @@ export function ReviewForm({
           />
         </div>
       </div>
+
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={onBack}
+        className="w-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+      >
+        Back
+      </Button>
 
       {/* Actions (optional; keep for context) */}
       {/* 

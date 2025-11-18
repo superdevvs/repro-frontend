@@ -163,7 +163,7 @@ const AccountingPage = () => {
             isAdmin={isAdmin} // Pass down admin status
           />
           
-          <UpcomingPayments invoices={invoices} />
+          {/* <UpcomingPayments invoices={invoices} /> */}
         </div>
       </PageTransition>
 

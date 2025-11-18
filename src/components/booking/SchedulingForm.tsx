@@ -321,7 +321,7 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
                 <DialogTitle>Select Time</DialogTitle>
               </DialogHeader>
 
-              <div className="mt-4 w-full">
+              <div className="mt-4 w-full flex justify-center">
                 <TimeSelect
                   value={time}
                   onChange={onTimeChange}
@@ -380,42 +380,174 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
               </div>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Select Photographer</DialogTitle>
-              </DialogHeader>
+            <DialogContent className="sm:max-w-md w-full">
+              <div className="p-4 bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-100 dark:border-slate-800">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <DialogHeader>
+                      <DialogTitle className="text-lg text-slate-900 dark:text-slate-100">Select Photographer</DialogTitle>
+                      {/* <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Pick a photographer for this shoot — choose a nearby pro or browse the full list.</p> */}
+                    </DialogHeader>
+                  </div>
 
-              <div className="grid gap-4 py-4">
-                {photographers.length > 0 ? (
-                  photographers.map((photographerItem) => (
-                    <Button
-                      key={photographerItem.id}
-                      variant="outline"
-                      className={cn(
-                        "flex items-center justify-start gap-4 h-auto p-4",
-                        photographer === photographerItem.id && "border-blue-500 bg-blue-500/10"
-                      )}
-                      onClick={() => {
-                        if (setPhotographer) {
-                          setPhotographer(photographerItem.id);
+                  <button
+                    onClick={() => setPhotographerDialogOpen(false)}
+                    className="ml-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+                    aria-label="Close"
+                  >
+                    {/* <X className="h-4 w-4" /> */}
+                  </button>
+                </div>
+
+                <div className="divide-y divide-gray-100 dark:divide-slate-800">
+                  {/* Scrollable content area */}
+                  <div className="pt-3 max-h-[48vh] overflow-y-auto pr-2 space-y-6">
+                    {/* 1) Photographers near your location */}
+                    <section>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-medium text-slate-800 dark:text-slate-100">Photographers near your location</h4>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">Closest first</span>
+                      </div>
+
+                      <div className="grid gap-3">
+                        {(() => {
+                          // compute nearest: photographer.distance expected in miles (number)
+                          const nearest = photographers
+                            .filter((p: any) => typeof p.distance === "number")
+                            .sort((a: any, b: any) => a.distance - b.distance)
+                            .slice(0, 5); // show top 5 nearest
+
+                          if (nearest.length === 0) {
+                            return (
+                              <div className="text-sm text-slate-500 dark:text-slate-400">No nearby photographers found.</div>
+                            );
+                          }
+
+                          return nearest.map((photographerItem: any) => (
+                            <div key={photographerItem.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10">
+                                  <AvatarImage src={photographerItem.avatar} alt={photographerItem.name} />
+                                  <AvatarFallback>{photographerItem.name?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+
+                                <div>
+                                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{photographerItem.name}</div>
+                                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                                    {photographerItem.rate ? `₹${photographerItem.rate}/shoot` : 'Rate not set'}
+                                    {photographerItem.distance !== undefined ? ` • ${photographerItem.distance} mi` : ''}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (setPhotographer) {
+                                      setPhotographer(photographerItem.id);
+                                      setPhotographerDialogOpen(false);
+                                    }
+                                  }}
+                                  className={cn(
+                                    "px-3 py-1.5 rounded-md text-sm font-medium shadow-sm",
+                                    photographer === photographerItem.id
+                                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                                      : "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600"
+                                  )}
+                                >
+                                  {photographer === photographerItem.id ? 'Selected' : 'Select'}
+                                </button>
+                              </div>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </section>
+
+                    {/* 2) All Photographers */}
+                    <section>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-medium text-slate-800 dark:text-slate-100">All Photographers</h4>
+                        {/* <span className="text-xs text-slate-500 dark:text-slate-400">{photographers.length} total</span> */}
+                      </div>
+
+                      <div className="grid gap-3">
+                        {photographers.length > 0 ? (
+                          photographers.map((photographerItem: any) => (
+                            <div key={photographerItem.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10">
+                                  <AvatarImage src={photographerItem.avatar} alt={photographerItem.name} />
+                                  <AvatarFallback>{photographerItem.name?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+
+                                <div>
+                                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{photographerItem.name}</div>
+                                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                                    {/* {photographerItem.rate ? `₹${photographerItem.rate}/shoot` : 'Rate not set'} */}
+                                    {photographerItem.distance !== undefined ? ` • ${photographerItem.distance} mi` : ''}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (setPhotographer) {
+                                      setPhotographer(photographerItem.id);
+                                      setPhotographerDialogOpen(false);
+                                    }
+                                  }}
+                                  className={cn(
+                                    "px-3 py-1.5 rounded-md text-sm font-medium shadow-sm",
+                                    photographer === photographerItem.id
+                                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                                      : "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600"
+                                  )}
+                                >
+                                  {photographer === photographerItem.id ? 'Selected' : 'Select'}
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-slate-500 dark:text-slate-400">No photographers available for the selected date and time.</div>
+                        )}
+                      </div>
+                    </section>
+                  </div>
+
+                  {/* footer actions */}
+                  <div className="pt-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <Button variant="ghost" onClick={() => setPhotographerDialogOpen(false)} className="w-full">
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          // if photographer selected, close; else toast
+                          if (!photographer) {
+                            toast({
+                              title: "No photographer selected",
+                              description: "Please select a photographer before continuing.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
                           setPhotographerDialogOpen(false);
-                        }
-                      }}
-                    >
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={photographerItem.avatar} alt={photographerItem.name} />
-                        <AvatarFallback>{photographerItem.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <span className="text-slate-900 dark:text-white">{photographerItem.name}</span>
-                    </Button>
-                  ))
-                ) : (
-                  <p className="text-center py-4 text-slate-500 dark:text-slate-400">
-                    No photographers available for the selected date and time.
-                  </p>
-                )}
+                        }}
+                        className="w-full"
+                      >
+                        Continue
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </DialogContent>
+
           </Dialog>
         </div>
 

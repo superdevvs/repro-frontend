@@ -17,7 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { AlertCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import axios from 'axios';
-import { Eye } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 
 const loginSchema = z.object({
@@ -57,6 +57,7 @@ export function LoginForm() {
   const isMobile = useIsMobile();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [loginShowPassword, setLoginShowPassword] = useState(false);
 
 
   const loginForm = useForm<LoginFormValues>({
@@ -521,31 +522,43 @@ export function LoginForm() {
 
                   {/* Password Field */}
                   <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem className="relative">
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="Password"
-                            {...field}
-                            className="
-                  border-0 
-                  border-b 
-                  border-border 
-                  rounded-none 
-                  focus-visible:ring-0 
-                  focus:border-primary 
-                  text-base 
-                  placeholder:text-muted-foreground
-                "
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+  control={loginForm.control}
+  name="password"
+  render={({ field }) => (
+    <FormItem className="relative">
+      <FormControl>
+        <Input
+          type={loginShowPassword ? "text" : "password"}          // <-- use state here
+          placeholder="Password"
+          {...field}
+          className="
+            border-0 
+            border-b 
+            border-border 
+            rounded-none 
+            focus-visible:ring-0 
+            focus:border-primary 
+            text-base 
+            placeholder:text-muted-foreground
+            pr-10             /* space for the eye button */
+          "
+        />
+      </FormControl>
+
+      <button
+        type="button"
+        onClick={() => setLoginShowPassword((s) => !s)}
+        aria-label={loginShowPassword ? "Hide password" : "Show password"}
+        className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center p-2 rounded-md text-muted-foreground hover:text-primary hover:bg-gray-50 dark:hover:bg-slate-800 transition"
+      >
+        {loginShowPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+      </button>
+
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
 
                   {/* Submit Button */}
                   <Button
