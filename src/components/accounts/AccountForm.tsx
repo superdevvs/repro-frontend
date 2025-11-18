@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"; 
 import { User, Role } from "@/components/auth/AuthProvider";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -53,6 +54,7 @@ const accountFormSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters").optional(), // <-- ADDED
   bio: z.string().optional(), // <-- ADDED
   isActive: z.boolean().default(true),
+  specialties: z.array(z.string()).optional(),
 })
 .refine(
   (data) => (data.role === "client" ? !!data.licenseNumber?.trim() : true),
@@ -96,6 +98,7 @@ export function AccountForm({
       avatar: "",
       companyNotes: "",
       isActive: true,
+      specialties: [],
     },
   });
 
@@ -122,6 +125,7 @@ export function AccountForm({
         // username: initialData.username || "",
         // Use initialData.isActive if it exists, otherwise default to true
         isActive: (initialData).isActive !== undefined ? (initialData).isActive : true,
+        specialties: (initialData as any).specialties ?? [],
       });
       setAvatarUrl(initialData.avatar || "");
     } else {
@@ -139,6 +143,7 @@ export function AccountForm({
         companyNotes: "",
         // username: "",
         isActive: true,
+        specialties: [],
       });
       setAvatarUrl("");
     }
@@ -220,6 +225,35 @@ export function AccountForm({
     }
   };
 
+  // specialties options
+  const specialtyOptions = [
+    "Residential",
+    "Commercial",
+    "Aerial",
+    "Virtual Tours",
+    "Twilight",
+    "HDR",
+    "Drone",
+    "3D Tours",
+    "Flash Photos",
+    "Walkthrough Video",
+    "Vertical/Social media Video",
+    "Matterport",
+    "iGuide",
+    "Elevated Photos",
+    "Agent on Camera",
+    "Floor plans",
+    "HDR Photos + Video",
+    "HDR Photos + Video + 3D Matterport",
+    "HDR Photos + Video + iGuide",
+    "Video + iGuide",
+    "Video + Matterport",
+    "Photos + Floor plans",
+  ];
+
+  // watch role to toggle specialties UI
+  const currentRole = form.watch("role");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -266,7 +300,7 @@ export function AccountForm({
                         <SelectItem value="photographer">Photographer</SelectItem>
                         <SelectItem value="client">Client</SelectItem>
                         <SelectItem value="editor">Editor</SelectItem>
-                        <SelectItem value="editor">Sales/Rep</SelectItem>
+                        <SelectItem value="salesRep">Sales/Rep</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -443,6 +477,50 @@ export function AccountForm({
                 )}
               /> */}
             </div>
+
+
+            {/* Specialties: visible only when role === 'photographer' */}
+            {currentRole === "photographer" && (
+              <FormField
+                control={form.control}
+                name="specialties"
+                render={({ field }) => {
+                  const valueArray: string[] = Array.isArray(field.value) ? field.value : [];
+                  const toggle = (opt: string) => {
+                    if (valueArray.includes(opt)) field.onChange(valueArray.filter((v) => v !== opt));
+                    else field.onChange([...valueArray, opt]);
+                  };
+
+                  return (
+                    <FormItem>
+                      <FormLabel>Specialties</FormLabel>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {specialtyOptions.map((opt) => {
+                          const active = valueArray.includes(opt);
+                          return (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => toggle(opt)}
+                              className={cn(
+                                "px-3 py-1.5 rounded-full text-sm border transition",
+                                active
+                                  ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                                  : "bg-transparent text-slate-200 dark:text-slate-300 border-slate-700 hover:bg-slate-800/40"
+                              )}
+                            >
+                              {opt}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+            )}
+
 
             <FormField
               control={form.control}

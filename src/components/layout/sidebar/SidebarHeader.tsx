@@ -16,19 +16,20 @@ export function SidebarHeader({ isCollapsed, toggleCollapsed }: SidebarHeaderPro
       <Link
         to="/"
         className={cn(
-          'flex items-center justify-center',
-          isCollapsed ? 'w-full px-0' : 'w-full'
+          "flex items-center justify-center",
+          isCollapsed ? "w-full px-0" : "w-full"
         )}
       >
-        <img 
-          src="/REPRO-HQ.png" 
+        <img
+          src="/REPRO-HQ.png"
           alt="R/E Pro Photos Logo"
           className={cn(
-            "h-10 w-auto object-contain",
+            "h-8 w-auto object-contain",   // was h-10 → now h-8
             isCollapsed ? "scale-90" : ""
           )}
         />
       </Link>
+
       <Button
         variant="ghost"
         size="icon"
