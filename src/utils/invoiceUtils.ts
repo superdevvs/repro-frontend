@@ -3,6 +3,30 @@ import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 
 // Invoice data type
+export type InvoiceStatus =
+  | 'paid'
+  | 'pending'
+  | 'overdue'
+  | (string & {});
+
+export type InvoiceTotals = {
+  subtotal?: number;
+  tax?: number;
+  total?: number;
+  [key: string]: number | undefined;
+};
+
+export type InvoiceItem = {
+  id?: string;
+  name?: string;
+  description?: string;
+  quantity?: number;
+  unit_price?: number;
+  amount?: number;
+  total?: number;
+  [key: string]: unknown;
+};
+
 export interface InvoiceData {
   id: string;
   number: string; // Adding the number property that's being used in InvoiceList.tsx
@@ -11,9 +35,13 @@ export interface InvoiceData {
   date: string;
   dueDate: string;
   amount: number;
-  status: 'paid' | 'pending' | 'overdue';
+  status: InvoiceStatus;
   services: string[];
   paymentMethod: string;
+  items?: InvoiceItem[];
+  totals?: InvoiceTotals;
+  raw?: unknown;
+  [key: string]: unknown;
 }
 
 export const generateInvoicePDF = (invoice: InvoiceData): void => {
