@@ -18,6 +18,9 @@ export const API_ROUTES = {
     photographers: `${BASE_URL}/api/photographers`,
     adminPhotographers: `${BASE_URL}/api/admin/photographers`,
   },
+  invoices: {
+    send: (id: number | string) => `${BASE_URL}/api/admin/invoices/${id}/send`,
+  },
   photographerAvailability: {
     list: (photographerId: number | string) => `${BASE_URL}/api/photographer/availability/${photographerId}`,
     create: `${BASE_URL}/api/photographer/availability`,

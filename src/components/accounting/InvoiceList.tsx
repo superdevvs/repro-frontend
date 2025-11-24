@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { 
   Calendar as CalendarIcon,
 } from 'lucide-react';
@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { InvoiceViewDialog } from '@/components/invoices/InvoiceViewDialog';
 import { InvoiceData } from '@/utils/invoiceUtils';
+import { sendInvoice as sendInvoiceRequest } from '@/services/invoiceService';
 
 interface InvoiceListProps {
   data: {
@@ -30,6 +31,7 @@ interface InvoiceListProps {
   onDownload: (invoice: InvoiceData) => void;
   onPay: (invoice: InvoiceData) => void;
   onSendReminder: (invoice: InvoiceData) => void;
+  onInvoiceUpdate?: (invoice: InvoiceData) => void;
   isAdmin?: boolean; // Prop to determine if user is admin
 }
 
@@ -40,6 +42,7 @@ export function InvoiceList({
   onDownload, 
   onPay, 
   onSendReminder,
+  onInvoiceUpdate,
   isAdmin = false // Default to false for safety
 }: InvoiceListProps) {
   const { toast } = useToast();
@@ -47,10 +50,18 @@ export function InvoiceList({
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'paid' | 'overdue'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [invoicesState, setInvoicesState] = useState<InvoiceData[]>(data.invoices);
+  const [sendingInvoices, setSendingInvoices] = useState<Record<string, boolean>>({});
 
-  const filteredInvoices = activeTab === 'all' 
-    ? data.invoices 
-    : data.invoices.filter(invoice => invoice.status === activeTab);
+  useEffect(() => {
+    setInvoicesState(data.invoices);
+  }, [data.invoices]);
+
+  const filteredInvoices = useMemo(() => (
+    activeTab === 'all'
+      ? invoicesState
+      : invoicesState.filter(invoice => invoice.status === activeTab)
+  ), [activeTab, invoicesState]);
 
   const handleViewInvoice = (invoice: InvoiceData) => {
     setSelectedInvoice(invoice);
@@ -66,12 +77,37 @@ export function InvoiceList({
     onDownload(invoice);
   };
 
-  const handleSendInvoice = (invoice: InvoiceData) => {
+  const handleSendInvoice = async (invoice: InvoiceData) => {
     if (!isAdmin) return;
-    toast({
-      title: "Invoice sent",
-      description: `Invoice #${invoice.number} has been sent to ${invoice.client}.`
-    });
+    setSendingInvoices(prev => ({ ...prev, [invoice.id]: true }));
+    try {
+      const updated = await sendInvoiceRequest(invoice.id, invoice);
+      const mergedInvoice = { ...invoice, ...updated };
+      setInvoicesState(prev => prev.map(inv => inv.id === invoice.id ? mergedInvoice : inv));
+      if (selectedInvoice?.id === invoice.id) {
+        setSelectedInvoice(mergedInvoice);
+      }
+      onInvoiceUpdate?.(mergedInvoice);
+      toast({
+        title: "Invoice sent",
+        description: `Invoice #${mergedInvoice.number} has been sent to ${mergedInvoice.client}.`
+      });
+    } catch (error) {
+      const description = error instanceof Error
+        ? error.message
+        : 'Unable to send invoice. Please try again.';
+      toast({
+        title: "Failed to send invoice",
+        description,
+        variant: "destructive"
+      });
+    } finally {
+      setSendingInvoices(prev => {
+        const next = { ...prev };
+        delete next[invoice.id];
+        return next;
+      });
+    }
   };
 
   const handlePrintInvoice = (invoice: InvoiceData) => {
@@ -236,6 +272,7 @@ export function InvoiceList({
                         getStatusColor={getStatusColor}
                         onPay={onPay}
                         isAdmin={isAdmin}
+                        isSending={Boolean(sendingInvoices[invoice.id])}
                       />
                     ))}
                     {filteredInvoices.length === 0 && (
@@ -273,6 +310,7 @@ interface InvoiceItemProps {
   getStatusColor: (status: string) => string;
   onPay: (invoice: InvoiceData) => void;
   isAdmin?: boolean; // Admin role prop
+  isSending?: boolean;
 }
 
 function InvoiceItem({ 
@@ -286,6 +324,7 @@ function InvoiceItem({
   getStatusColor, 
   onPay,
   isAdmin = false, // Default to false for safety
+  isSending = false,
 }: InvoiceItemProps) {
   const showMarkAsPaid = isAdmin && (invoice.status === 'pending' || invoice.status === 'overdue');
   
@@ -377,7 +416,9 @@ function InvoiceItem({
               <DropdownMenuItem onClick={() => onPrint(invoice)}>Print</DropdownMenuItem>
               {isAdmin && (
                 <>
-                  <DropdownMenuItem onClick={() => onSend(invoice)}>Send</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onSend(invoice)} disabled={isSending}>
+                    {isSending ? 'Sending…' : 'Send'}
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => onEdit(invoice)}>Edit</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onDelete(invoice)} className="text-red-500">Delete</DropdownMenuItem>

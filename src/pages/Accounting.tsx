@@ -153,13 +153,18 @@ const AccountingPage = () => {
             </div>
           </div>
           
-          <InvoiceList 
+          <InvoiceList
             data={{ invoices }}
             onView={handleViewInvoice}
             onEdit={handleEditInvoice}
             onDownload={handleDownloadInvoice}
             onPay={handlePayInvoice}
             onSendReminder={handleSendReminder}
+            onInvoiceUpdate={(updatedInvoice) =>
+              setInvoices(prev =>
+                prev.map(inv => (inv.id === updatedInvoice.id ? { ...inv, ...updatedInvoice } : inv))
+              )
+            }
             isAdmin={isAdmin} // Pass down admin status
           />
           
