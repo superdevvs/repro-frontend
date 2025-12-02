@@ -25,39 +25,144 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Client } from '@/types/clients';
 import { initialClientsData } from '@/data/clientsData';
 import {
+  Aperture,
   Building2,
+  Camera,
+  Cuboid as Cube,
+  Grid3x3,
   Home,
+  Layers,
+  Map as MapIcon,
+  Palette,
+  PenTool,
   PlusCircle,
   Search,
+  Sparkles,
+  Video,
+  Info,
+  Star,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info, Star } from 'lucide-react';
 import AddressLookupField from '@/components/AddressLookupField';
+import { normalizeState } from '@/utils/stateUtils';
 // add near other imports at top
 import { AccountForm } from '@/components/accounts/AccountForm';
 import type { AccountFormValues } from '@/components/accounts/AccountForm';
 import type { User } from '@/components/auth/AuthProvider';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { apiClient } from '@/services/api';
+import API_ROUTES from '@/lib/api';
+import { Loader2 } from 'lucide-react';
 
+
+interface PackageCategory {
+  id: string;
+  name: string;
+}
 
 interface PackageOption {
   id: string;
   name: string;
   description: string;
   price: number;
+  category?: PackageCategory | null;
 }
+
+type CategoryDisplay = {
+  id: string;
+  name: string;
+  count: number;
+  icon: LucideIcon;
+  gradientClass: string;
+  shadowClass: string;
+  isPrimary?: boolean;
+};
+
+type PresenceOption = 'self' | 'other' | 'lockbox';
+
+const CATEGORY_STYLE_PRESETS = [
+  { gradientClass: 'from-sky-400 via-blue-500 to-indigo-600', shadowClass: 'shadow-lg shadow-blue-500/40' },
+  { gradientClass: 'from-fuchsia-500 via-pink-500 to-rose-500', shadowClass: 'shadow-lg shadow-rose-500/40' },
+  { gradientClass: 'from-amber-400 via-orange-500 to-red-500', shadowClass: 'shadow-lg shadow-orange-500/40' },
+  { gradientClass: 'from-emerald-400 via-green-500 to-teal-500', shadowClass: 'shadow-lg shadow-emerald-500/40' },
+  { gradientClass: 'from-indigo-400 via-violet-500 to-purple-600', shadowClass: 'shadow-lg shadow-indigo-500/40' },
+  { gradientClass: 'from-cyan-400 via-sky-500 to-blue-500', shadowClass: 'shadow-lg shadow-cyan-500/40' },
+] as const;
+
+const ALL_CATEGORY_STYLE = { gradientClass: 'from-slate-600 via-slate-700 to-slate-900', shadowClass: 'shadow-lg shadow-slate-900/30' };
+const FALLBACK_CATEGORY_NAME = 'More services';
+
+const PRIMARY_CATEGORY_ORDER: Record<string, number> = {
+  photos: 1,
+  video: 2,
+  drone: 3,
+  '360': 4,
+  '3d': 4,
+  floor: 5,
+  plan: 5,
+  virtual: 6,
+  staging: 6,
+};
+
+const PRIMARY_CATEGORY_ICONS: Array<{ keyword: string; icon: LucideIcon }> = [
+  { keyword: 'photo', icon: Camera },
+  { keyword: 'video', icon: Video },
+  { keyword: 'drone', icon: Aperture },
+  { keyword: '360', icon: Cube },
+  { keyword: '3d', icon: Cube },
+  { keyword: 'floor', icon: Layers },
+  { keyword: 'plan', icon: Layers },
+  { keyword: 'virtual', icon: Sparkles },
+  { keyword: 'staging', icon: Sparkles },
+];
+
+const FALLBACK_ICONS: LucideIcon[] = [Camera, Video, Aperture, Cube, Layers, Sparkles, Palette, PenTool];
+
+const getCategoryIcon = (name: string, index: number): LucideIcon => {
+  const normalized = name?.toLowerCase?.() ?? '';
+  const match = PRIMARY_CATEGORY_ICONS.find(({ keyword }) => normalized.includes(keyword));
+  if (match) return match.icon;
+  return FALLBACK_ICONS[index % FALLBACK_ICONS.length];
+};
+
+const getCategoryStyle = (index: number) => CATEGORY_STYLE_PRESETS[index % CATEGORY_STYLE_PRESETS.length];
+
+const getPackageCategoryId = (pkg?: PackageOption | null) =>
+  pkg?.category?.id ? pkg.category.id.toString() : 'uncategorized';
+
+const getPackageCategoryName = (pkg?: PackageOption | null) =>
+  pkg?.category?.name ?? FALLBACK_CATEGORY_NAME;
 
 const clientAccountPropertyFormSchema = z.object({
   propertyAddress: z.string().min(1, "Address is required"),
   propertyCity: z.string().min(1, "City is required"),
-  propertyState: z.string().min(1, "State is required"),
+  propertyState: z.string()
+    .min(1, "State is required")
+    .max(2, "State must be a 2-letter abbreviation (e.g., CA, NY, DC)")
+    .refine((val) => val.length === 2, "State must be exactly 2 characters"),
   propertyZip: z.string().min(1, "ZIP code is required"),
   bedRooms: z.number().min(0, "Bedrooms must be 0 or more").optional(),
   bathRooms: z.number().min(0, "Bathrooms must be 0 or more").optional(),
   sqft: z.number().min(0, "SQFT must be 0 or more").optional(),
   propertyType: z.enum(["residential", "commercial"]),
+  mlsId: z.string().optional(),
   propertyInfo: z.string().optional(),
   companyNotes: z.string().optional(),
   shootNotes: z.string().optional(),
@@ -70,12 +175,16 @@ const adminPropertyFormSchema = z.object({
   clientId: z.string().min(1, "Please select a client"),
   propertyAddress: z.string().min(1, "Address is required"),
   propertyCity: z.string().min(1, "City is required"),
-  propertyState: z.string().min(1, "State is required"),
+  propertyState: z.string()
+    .min(1, "State is required")
+    .max(2, "State must be a 2-letter abbreviation (e.g., CA, NY, DC)")
+    .refine((val) => val.length === 2, "State must be exactly 2 characters"),
   propertyZip: z.string().min(1, "ZIP code is required"),
   bedRooms: z.number().min(0, "Bedrooms must be 0 or more").optional(),
   bathRooms: z.number().min(0, "Bathrooms must be 0 or more").optional(),
   sqft: z.number().min(0, "SQFT must be 0 or more").optional(),
   propertyType: z.enum(["residential", "commercial"]),
+  mlsId: z.string().optional(),
   propertyInfo: z.string().optional(),
   companyNotes: z.string().optional(),
   shootNotes: z.string().optional(),
@@ -104,6 +213,7 @@ type ClientPropertyFormProps = {
     bedRooms?: number;
     bathRooms?: number;
     sqft?: number;
+    mlsId?: string;
     propertyInfo?: string;
     companyNotes?: string;
     shootNotes?: string;
@@ -116,16 +226,35 @@ type ClientPropertyFormProps = {
   clients: Client[];
   /** ✅ Add this line **/
   onAddressFieldsChange?: (fields: { address: string; city: string; state: string; zip: string }) => void;
+  selectedServices: PackageOption[];
+  onSelectedServicesChange: (services: PackageOption[]) => void;
+  packagesLoading?: boolean;
 };
 
 
-export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = false, packages, clients, onAddressFieldsChange }: ClientPropertyFormProps) => {
+export const ClientPropertyForm = ({
+  onComplete,
+  initialData,
+  isClientAccount = false,
+  packages,
+  clients,
+  onAddressFieldsChange,
+  selectedServices,
+  onSelectedServicesChange,
+  packagesLoading = false,
+}: ClientPropertyFormProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingClient, setIsAddingClient] = useState(false);
 
   // AccountForm control state
   const [isAccountFormOpen, setIsAccountFormOpen] = useState<boolean>(false);
   const [accountInitialData, setAccountInitialData] = useState<User | undefined>(undefined);
+  const [serviceDialogOpen, setServiceDialogOpen] = useState(false);
+  const [panelCategory, setPanelCategory] = useState<string>('all');
+  const [presenceOption, setPresenceOption] = useState<PresenceOption>('self');
+  const [fetchingProperty, setFetchingProperty] = useState(false);
+  const [propertyDetailsData, setPropertyDetailsData] = useState<any>(null);
+  const { toast } = useToast();
 
   const navigate = useNavigate();
 
@@ -144,6 +273,10 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
         sqft: initialData.sqft || 0,
         propertyType: initialData.propertyType || 'residential',
         propertyInfo: initialData.propertyInfo || '',
+        accessContactName: initialData.accessContactName || '',
+        accessContactPhone: initialData.accessContactPhone || '',
+        lockboxCode: initialData.lockboxCode || '',
+        lockboxLocation: initialData.lockboxLocation || '',
         selectedPackage: initialData.selectedPackage || '',
         shootNotes: initialData.shootNotes || '',
         companyNotes: initialData.companyNotes || '',
@@ -160,6 +293,10 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
         sqft: initialData.sqft || 0,
         propertyType: initialData.propertyType || 'residential',
         propertyInfo: initialData.propertyInfo || '',
+        accessContactName: initialData.accessContactName || '',
+        accessContactPhone: initialData.accessContactPhone || '',
+        lockboxCode: initialData.lockboxCode || '',
+        lockboxLocation: initialData.lockboxLocation || '',
         selectedPackage: initialData.selectedPackage || '',
         shootNotes: initialData.shootNotes || '',
         companyNotes: initialData.companyNotes || '',
@@ -169,22 +306,103 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
     ), [isClientAccount]), // ✅ only recompute when role type changes
   });
 
+  React.useEffect(() => {
+    const firstServiceId = selectedServices[0]?.id || '';
+    form.setValue('selectedPackage' as any, firstServiceId, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [selectedServices, form]);
 
-  const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (client.company && client.company.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+const derivedCategories = React.useMemo<CategoryDisplay[]>(() => {
+    if (!packages?.length) return [];
+    const map = new Map<string, CategoryDisplay>();
+    packages.forEach((pkg) => {
+      const id = getPackageCategoryId(pkg);
+      const name = getPackageCategoryName(pkg);
+      const existing = map.get(id);
+      if (existing) {
+        existing.count += 1;
+        return;
+      }
+      const normalizedName = name.toLowerCase();
+      const isPrimary = Object.keys(PRIMARY_CATEGORY_ORDER).some(key => normalizedName.includes(key));
+      const palette = getCategoryStyle(map.size);
+      map.set(id, {
+        id,
+        name,
+        count: 1,
+        icon: getCategoryIcon(name, map.size),
+        gradientClass: palette.gradientClass,
+        shadowClass: palette.shadowClass,
+        isPrimary,
+      });
+    });
+    return Array.from(map.values());
+  }, [packages]);
+
+  const categoryOptions = React.useMemo<CategoryDisplay[]>(() => {
+    if (!packages?.length) return [];
+    const allOption: CategoryDisplay = {
+      id: 'all',
+      name: 'All services',
+      count: packages.length,
+      icon: Grid3x3,
+      gradientClass: ALL_CATEGORY_STYLE.gradientClass,
+      shadowClass: ALL_CATEGORY_STYLE.shadowClass,
+      isPrimary: true,
+    };
+
+    const sortedCategories = [...derivedCategories].sort((a, b) => {
+      const aKey = Object.keys(PRIMARY_CATEGORY_ORDER).find(key => a.name.toLowerCase().includes(key));
+      const bKey = Object.keys(PRIMARY_CATEGORY_ORDER).find(key => b.name.toLowerCase().includes(key));
+      const aScore = aKey ? PRIMARY_CATEGORY_ORDER[aKey] : Number.MAX_SAFE_INTEGER;
+      const bScore = bKey ? PRIMARY_CATEGORY_ORDER[bKey] : Number.MAX_SAFE_INTEGER;
+      if (aScore === bScore) return a.name.localeCompare(b.name);
+      return aScore - bScore;
+    });
+
+    return [allOption, ...sortedCategories];
+  }, [derivedCategories, packages]);
+
+  React.useEffect(() => {
+    if (categoryOptions.length === 0) return;
+    const exists = categoryOptions.some(category => category.id === panelCategory);
+    if (!exists) {
+      setPanelCategory(categoryOptions[0].id);
+    }
+  }, [categoryOptions, panelCategory]);
+
+  const panelServices = React.useMemo(() => {
+    if (!packages?.length) return [];
+    if (panelCategory === 'all') return packages;
+    return packages.filter(pkg => getPackageCategoryId(pkg) === panelCategory);
+  }, [panelCategory, packages]);
+
 
   const isSearching = searchQuery.trim().length > 0;
-  const visibleClients = isSearching ? filteredClients : filteredClients.slice(0, 2);
+  const filteredClients = React.useMemo(() => {
+    if (!isSearching) return clients;
+    return clients.filter(client =>
+      client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (client.company && client.company.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  }, [clients, searchQuery, isSearching]);
+
+  const visibleClients = isSearching ? filteredClients : [];
 
   const selectedClientId = !isClientAccount ? (form.getValues() as AdminFormValues).clientId : '';
   const selectedClient = selectedClientId ? clients.find(client => client.id === selectedClientId) : null;
 
   const handleSubmit = (data: FormValues) => {
+    const baseData = {
+      ...data,
+      property_details: propertyDetailsData || undefined,
+    };
+
     if (isClientAccount) {
       onComplete({
-        ...data,
+        ...baseData,
         clientId: initialData.clientId,
         clientName: initialData.clientName,
         clientEmail: initialData.clientEmail,
@@ -193,7 +411,7 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
       });
     } else {
       onComplete({
-        ...data,
+        ...baseData,
         clientName: selectedClient?.name || '',
         clientEmail: selectedClient?.email || '',
         clientPhone: selectedClient?.phone || '',
@@ -216,70 +434,28 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
     setIsAccountFormOpen(true);
   };
 
+  const isServiceSelected = (serviceId: string) =>
+    selectedServices.some(service => service.id === serviceId);
+
+  const toggleServiceSelection = (service: PackageOption) => {
+    const exists = isServiceSelected(service.id);
+    const updated = exists
+      ? selectedServices.filter(selected => selected.id !== service.id)
+      : [...selectedServices, service];
+    onSelectedServicesChange(updated);
+  };
+
+  const handleRemoveService = (serviceId: string) => {
+    const updated = selectedServices.filter(service => service.id !== serviceId);
+    onSelectedServicesChange(updated);
+  };
+
 
   const getPackageHighlight = (pkg: { id: string; name: string }) => {
     if (pkg.name === 'Premium') return { icon: <Star className="h-4 w-4 text-amber-500" />, label: 'Most Popular' };
     if (pkg.name === 'Standard') return { icon: <Star className="h-4 w-4 text-blue-500" />, label: 'Best Value' };
     return null;
   };
-
-  const renderPackageSelection = () => (
-    <div className="pt-2">
-      <Separator className="my-6" />
-      <div className="flex items-center gap-2 mb-4">
-        <h3 className="text-lg font-medium">Package Selection</h3>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-sm">
-              <p>Choose the package that best fits your needs. Each package includes different services and deliverables.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-
-      <FormField
-        control={form.control}
-        name="selectedPackage"
-        render={({ field }) => (
-          <FormItem>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {packages.map((pkg) => {
-                const highlight = getPackageHighlight(pkg);
-                return (
-                  <div
-                    key={pkg.id}
-                    className={`p-4 border rounded-md cursor-pointer transition-all hover:shadow-md ${field.value === pkg.id
-                      ? "bg-primary/10 border-primary transform scale-[1.02]"
-                      : "bg-card hover:bg-accent/50 hover:border-primary/30"
-                      }`}
-                    onClick={() => form.setValue("selectedPackage", pkg.id)}
-                  >
-                    {highlight && (
-                      <div className="flex items-center gap-1 text-xs font-medium text-primary mb-1.5">
-                        {highlight.icon}
-                        <span>{highlight.label}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <div className="font-medium">{pkg.name}</div>
-                      <div className="font-bold">${pkg.price}</div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {pkg.description}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </div>
-  );
 
   return (
     <Form {...form}>
@@ -347,17 +523,20 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                                 <div className="text-xs text-muted-foreground mt-1.5">
                                   {client.email}
                                 </div>
+                                {client.rep && (
+                                  <div className="text-xs text-primary mt-1 font-medium">
+                                    Rep: {client.rep.name}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
                         ))
-                      ) : (
+                      ) : isSearching ? (
                         <div className="col-span-2 p-6 text-center text-muted-foreground">
-                          {isSearching
-                            ? "No clients found for this search."
-                            : "No clients available."}
+                          No clients found for this search.
                         </div>
-                      )}
+                      ) : null}
                     </div>
 
                     {/* {!isSearching && filteredClients.length > 2 && (
@@ -427,10 +606,12 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                         onAddressSelect={(address) => {
                           // Auto-fill city, state, and zip when address is selected
                           form.setValue('propertyCity', address.city || '', { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                          form.setValue('propertyState', address.state || '', { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                          // Normalize state to 2-letter abbreviation
+                          const normalizedState = normalizeState(address.state) || address.state || '';
+                          form.setValue('propertyState', normalizedState, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
                           form.setValue('propertyZip', address.zip || '', { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                          // Prefer full formatted address; fallback to street address
-                          const street = address.formatted_address || address.address || '';
+                          // Use street address (not formatted_address) for the address field
+                          const street = address.address || address.formatted_address || '';
                           form.setValue('propertyAddress', street, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
                         }}
                         placeholder="Start typing the property address..."
@@ -544,6 +725,109 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
                 />
               </div>
 
+              {/* Property Lookup and MLS Fields */}
+              <div className="space-y-4 pt-2 border-t">
+                <div className="flex items-end gap-2">
+                  <FormField
+                    control={form.control}
+                    name="mlsId"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>MLS ID (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="MLS-123456" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={async () => {
+                      const address = form.getValues('propertyAddress');
+                      const city = form.getValues('propertyCity');
+                      const state = form.getValues('propertyState');
+                      const zip = form.getValues('propertyZip');
+                      const mlsId = form.getValues('mlsId' as any);
+
+                      if (!address || !city || !state || !zip) {
+                        toast({
+                          title: "Missing address",
+                          description: "Please enter the full address before fetching property details.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+
+                      const fullAddress = `${address}, ${city}, ${state} ${zip}`;
+                      setFetchingProperty(true);
+
+                      try {
+                        const response = await apiClient.post(API_ROUTES.integrations.property.lookup, {
+                          address: fullAddress,
+                          mls_id: mlsId || undefined,
+                        });
+
+                        if (response.data.success && response.data.data) {
+                          const propertyData = response.data.data;
+                          
+                          // Auto-fill property details
+                          if (propertyData.beds) {
+                            form.setValue('bedRooms' as any, propertyData.beds);
+                          }
+                          if (propertyData.baths) {
+                            form.setValue('bathRooms' as any, propertyData.baths);
+                          }
+                          if (propertyData.sqft) {
+                            form.setValue('sqft' as any, propertyData.sqft);
+                          }
+                          if (propertyData.mls_id) {
+                            form.setValue('mlsId' as any, propertyData.mls_id);
+                          }
+
+                          // Store full property details for later use
+                          setPropertyDetailsData(propertyData);
+
+                          toast({
+                            title: "Property details fetched",
+                            description: `Found: ${propertyData.beds || 'N/A'} bd · ${propertyData.baths || 'N/A'} ba · ${propertyData.sqft?.toLocaleString() || 'N/A'} sqft`,
+                            variant: "default",
+                          });
+                        } else {
+                          toast({
+                            title: "Property not found",
+                            description: "No property details found for this address.",
+                            variant: "default",
+                          });
+                        }
+                      } catch (error: any) {
+                        toast({
+                          title: "Error fetching property",
+                          description: error.response?.data?.message || "Failed to fetch property details.",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setFetchingProperty(false);
+                      }
+                    }}
+                    disabled={fetchingProperty}
+                  >
+                    {fetchingProperty ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Fetching...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="mr-2 h-4 w-4" />
+                        Fetch Property Details
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
               {/* <FormField
                 control={form.control}
                 name="propertyInfo"
@@ -587,60 +871,259 @@ export const ClientPropertyForm = ({ onComplete, initialData, isClientAccount = 
 
         <div className="pt-2">
           <Separator className="my-6" />
-          <div className="flex items-center gap-2 mb-4">
-            <h3 className="text-lg font-medium">Package Selection</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-lg font-medium">Service Selection</h3>
+              <p className="text-sm text-muted-foreground">
+                Add the deliverables this booking includes, then review totals below.
+              </p>
+            </div>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-sm">
-                  <p>Choose the package that best fits your needs. Each package includes different services and deliverables.</p>
+                  <p>Select multiple services inside the panel. You can revisit and adjust them anytime.</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+          </div>
+
+          <div className="rounded-xl border border-muted/40 bg-card/40 p-4 space-y-3 min-h-[140px]">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Selected services</p>
+                <p className="text-base font-semibold">
+                  {selectedServices.length ? `${selectedServices.length} item${selectedServices.length > 1 ? 's' : ''}` : 'None yet'}
+                </p>
+              </div>
+              <Dialog open={serviceDialogOpen} onOpenChange={setServiceDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    {selectedServices.length ? 'Edit services' : 'Select services'}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-5xl w-[96vw] max-h-[90vh] p-0 overflow-hidden">
+                  <DialogHeader className="px-4 sm:px-6 py-4 border-b border-border/80">
+                    <DialogTitle>Select services</DialogTitle>
+                    <DialogDescription>
+                      Pick every service needed for this shoot. Categories appear on the left; services are listed on the right.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex flex-col sm:flex-row h-full sm:h-[70vh]">
+                    <aside className="border-b sm:border-b-0 sm:border-r border-border/60 p-3 sm:p-4 space-y-2 sm:w-64">
+                      <div className="flex gap-2 overflow-x-auto pb-2 sm:flex-col sm:overflow-visible sm:pb-0">
+                        {categoryOptions.map(category => {
+                          const isActive = category.id === panelCategory;
+                          return (
+                            <button
+                              key={category.id}
+                              type="button"
+                              onClick={() => setPanelCategory(category.id)}
+                              className={`rounded-full sm:rounded-lg border px-4 py-2 text-left transition-colors flex items-center gap-2 sm:gap-3 flex-shrink-0 ${
+                                isActive
+                                  ? 'border-primary/60 bg-primary/5 text-primary'
+                                  : 'border-transparent hover:bg-muted/40 text-muted-foreground'
+                              } ${category.id === 'all' ? 'min-w-[200px] sm:w-full' : 'min-w-[160px] sm:w-full'}`}
+                            >
+                              <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                <category.icon className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">{category.name}</p>
+                                <p className="text-xs text-muted-foreground">{category.count} items</p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </aside>
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 max-h-[60vh] sm:max-h-none">
+                      {packagesLoading ? (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {Array.from({ length: 4 }).map((_, idx) => (
+                            <Skeleton key={idx} className="h-28 rounded-2xl" />
+                          ))}
+                        </div>
+                      ) : panelServices.length ? (
+                        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+                          {panelServices.map(service => {
+                            const isSelected = isServiceSelected(service.id);
+                            return (
+                              <div
+                                key={service.id}
+                                className={`rounded-2xl border p-4 cursor-pointer transition-all ${
+                                  isSelected
+                                    ? 'border-primary/60 bg-primary/5 shadow-sm'
+                                    : 'border-border/70 bg-background hover:border-primary/40'
+                                }`}
+                                onClick={() => toggleServiceSelection(service)}
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <p className="font-medium text-base">{service.name}</p>
+                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                      {service.description}
+                                    </p>
+                                  </div>
+                                  <Checkbox checked={isSelected} onCheckedChange={() => toggleServiceSelection(service)} />
+                                </div>
+                                <div className="mt-4 flex items-center justify-between text-sm font-semibold">
+                                  <span>${Number(service.price ?? 0).toFixed(2)}</span>
+                                  {service.category?.name && (
+                                    <Badge variant="outline" className="uppercase text-[10px] tracking-wide">
+                                      {service.category.name}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-dashed border-muted-foreground/40 bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+                          No services exist in this category yet. Pick a different category to continue.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <DialogFooter className="px-4 sm:px-6 py-4 border-t border-border/80 gap-2 sm:gap-0">
+                    <DialogClose asChild>
+                      <Button className="w-full sm:w-auto">Done</Button>
+                    </DialogClose>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {selectedServices.length === 0 ? (
+              packagesLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-10 rounded-lg" />
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No services selected yet. Use the button to choose services.
+                </p>
+              )
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {selectedServices.map(service => (
+                  <Badge key={service.id} variant="secondary" className="flex items-center gap-2 py-1 px-3 text-sm">
+                    {service.name}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveService(service.id)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
 
           <FormField
             control={form.control}
             name="selectedPackage"
             render={({ field }) => (
-              <FormItem>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {packages.map((pkg) => {
-                    const highlight = getPackageHighlight(pkg);
-                    return (
-                      <div
-                        key={pkg.id}
-                        className={`p-4 border rounded-md cursor-pointer transition-all hover:shadow-md ${field.value === pkg.id
-                          ? "bg-primary/10 border-primary transform scale-[1.02]"
-                          : "bg-card hover:bg-accent/50 hover:border-primary/30"
-                          }`}
-                        onClick={() => form.setValue("selectedPackage", pkg.id)}
-                      >
-                        {highlight && (
-                          <div className="flex items-center gap-1 text-xs font-medium text-primary mb-1.5">
-                            {highlight.icon}
-                            <span>{highlight.label}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between">
-                          <div className="font-medium">{pkg.name}</div>
-                          <div className="font-bold">${pkg.price}</div>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {pkg.description}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-                <FormMessage />
-              </FormItem>
+              <input type="hidden" value={field.value} onChange={field.onChange} />
             )}
           />
         </div>
 
+
+        <div className="pt-2">
+          <Separator className="my-6" />
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <FormLabel>Who will be at the property?</FormLabel>
+              <RadioGroup
+                className="flex flex-wrap gap-4"
+                value={presenceOption}
+                onValueChange={(value) => setPresenceOption(value as PresenceOption)}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem id="presence-self" value="self" />
+                  <Label htmlFor="presence-self">Self / client</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem id="presence-other" value="other" />
+                  <Label htmlFor="presence-other">Another contact</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem id="presence-lockbox" value="lockbox" />
+                  <Label htmlFor="presence-lockbox">Lockbox</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {presenceOption === 'other' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="accessContactName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>On-site contact name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="accessContactPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>On-site contact phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="(555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {presenceOption === 'lockbox' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="lockboxCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lockbox code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="####" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lockboxLocation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lockbox location / instructions</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., on the front gate" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="pt-2">
           <Separator className="my-6" />

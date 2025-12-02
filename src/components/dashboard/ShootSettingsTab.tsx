@@ -3,6 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InvoiceData } from '@/utils/invoiceUtils';
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -12,6 +13,7 @@ import { ShootData } from "@/types/shoots";
 import { format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { DollarSignIcon } from "lucide-react";
+import { API_BASE_URL } from '@/config/env';
 
 import { PaymentDialog } from "@/components/invoices/PaymentDialog";
 import { BrandedPage } from "@/components/tourLinks/BrandedPage";
@@ -101,10 +103,10 @@ export function ShootSettingsTab({
   const computedTotalQuote = () => (shoot as any)?.payment?.baseQuote ?? 0 + computedTaxAmount();
 
   // ---------- generic toggle persistence ----------
-  const toggleSetting = async (key: string, value: boolean) => {
+  const toggleSetting = async (key: string, value: boolean | string | number) => {
     setSavingToggleKey(key);
     try {
-      const base = import.meta.env.VITE_API_URL;
+      const base = API_BASE_URL;
       const token = (typeof window !== 'undefined') ? (localStorage.getItem('authToken') || localStorage.getItem('token')) : null;
 
       if (key === 'finalized') {
@@ -129,19 +131,19 @@ export function ShootSettingsTab({
           onUpdate?.({ meta: { ...((shoot as any).meta || {}), finalized: false } } as any);
         }
       } else {
-        // Placeholder for other settings (if/when backend route exists)
-        const res = await fetch(`${base}/api/shoots/${shoot.id}/settings/toggle`, {
-          method: 'POST',
+        // Update shoot settings via PATCH endpoint
+        const res = await fetch(`${base}/api/shoots/${shoot.id}`, {
+          method: 'PATCH',
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify({ key, value })
+          body: JSON.stringify({ [key]: value })
         });
         if (!res.ok) throw new Error(`Server ${res.status}`);
         onUpdate?.({ meta: { ...((shoot as any).meta || {}), [key]: value } } as any);
-        sonnerToast.success('Updated');
+        sonnerToast.success('Setting updated');
       }
     } catch (err) {
       console.error('Toggle update failed', err);
@@ -232,7 +234,7 @@ export function ShootSettingsTab({
   const fetchInvoiceForShoot = async (): Promise<InvoiceData | null> => {
     try {
       // Try a shoot-scoped endpoint first
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shoots/${shoot.id}/invoice`, {
+      const res = await fetch(`${API_BASE_URL}/api/shoots/${shoot.id}/invoice`, {
         headers: getAuthHeaders(),
       });
       if (res.ok) {
@@ -243,7 +245,7 @@ export function ShootSettingsTab({
       }
 
       // fallback to search invoices by shootId
-      const res2 = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices?shootId=${shoot.id}`, {
+      const res2 = await fetch(`${API_BASE_URL}/api/invoices?shootId=${shoot.id}`, {
         headers: getAuthHeaders(),
       });
       if (res2.ok) {
@@ -271,7 +273,7 @@ export function ShootSettingsTab({
         description: `Invoice for shoot ${shoot.id}`,
       };
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices`, {
+      const res = await fetch(`${API_BASE_URL}/api/invoices`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(getAuthHeaders() as any) },
         body: JSON.stringify(payload),
@@ -306,7 +308,7 @@ export function ShootSettingsTab({
       return;
     }
 
-    sonnerToast("Searching for invoice...", { type: "info" });
+    sonnerToast.info("Searching for invoice...");
     // try fetch
     const fetched = await fetchInvoiceForShoot();
     if (fetched) {
@@ -361,16 +363,16 @@ export function ShootSettingsTab({
 
   // ---------- render ----------
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 space-y-0">
       {/* Left column: Tour Links (2D) + 3D section */}
-      <div className="space-y-4">
+      <div className="space-y-5 min-w-0">
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Tour Links</h3>
+          <h3 className="text-sm font-semibold">Tour Links</h3>
         </div>
 
         {/* Buttons OR Active Page */}
         {/* Buttons OR Active Page */}
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2">
           {activePage ? (
             <div className="w-full">
               <div className="mb-3">
@@ -392,7 +394,7 @@ export function ShootSettingsTab({
 
                 // Use Button asChild so the Button renders the <a> element instead of nesting a <button> inside <a>
                 return (
-                  <div key={key} className="flex-1">
+                  <div key={key} className="flex-1 min-w-[120px]">
                     <Button asChild variant="outline" className="w-full justify-center">
                       <a
                         key={key}
@@ -401,9 +403,9 @@ export function ShootSettingsTab({
                         rel="noopener noreferrer"
                         className="flex-1 block"
                       >
-                        <div className="w-full px-4 py-2 border rounded-lg text-center flex items-center justify-center">
+                        <div className="w-full px-3 py-2 border rounded-lg text-center flex items-center justify-center">
                           <ExternalLink className="h-4 w-4 mr-2" />
-                          {label}
+                          <span className="text-xs sm:text-sm">{label}</span>
                         </div>
                       </a>
 
@@ -417,7 +419,7 @@ export function ShootSettingsTab({
                 <Button
                   key={key}
                   variant="secondary"
-                  className="flex-1 justify-center"
+                  className="flex-1 min-w-[120px] justify-center"
                   onClick={() => {
     const path =
       key === "branded"
@@ -430,7 +432,7 @@ export function ShootSettingsTab({
   }}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  {label}
+                  <span className="text-xs sm:text-sm">{label}</span>
                 </Button>
               );
             })
@@ -440,10 +442,10 @@ export function ShootSettingsTab({
 
 
         {/* -------------- 3D Tours Section -------------- */}
-        <div className="mt-6">
+        <div className="mt-5">
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">3D Tours</h3>
-            <p className="text-sm text-muted-foreground">Manage Matterport, iGuide and Cubicasa links.</p>
+            <h3 className="text-sm font-semibold">3D Tours</h3>
+            <p className="text-xs text-muted-foreground">Manage Matterport, iGuide and Cubicasa links.</p>
           </div>
 
           <div className="space-y-3 mt-3">
@@ -523,54 +525,170 @@ export function ShootSettingsTab({
         </div>
       </div>
 
-      {/* Right column: small list-style toggles + process payment */}
-      <div>
-        <div className="space-y-1 border rounded-lg divide-y">
-          {/* Finalize */}
-          {isAdmin && (
-            <div className="flex items-center justify-between px-4 py-2 text-sm">
-              <span>Finalize</span>
-              <Switch
-                checked={isFinalized}
-                onCheckedChange={(checked: boolean) => {
-                  setIsFinalized(checked);
-                  toggleSetting("finalized", checked);
-                }}
-                disabled={savingToggleKey === "finalized"}
-              />
+      {/* Right column: Settings */}
+      {isAdmin && (
+        <div className="min-w-0 space-y-4">
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold">Settings</h3>
+            
+            {/* Downloadable Toggle */}
+            <div className="border rounded-lg p-3.5">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium">Downloadable</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Allow clients to download media files
+                  </div>
+                </div>
+                <Switch
+                  checked={isDownloadable}
+                  onCheckedChange={(checked: boolean) => {
+                    setIsDownloadable(checked);
+                    toggleSetting("downloadable", checked);
+                  }}
+                  disabled={savingToggleKey === "downloadable"}
+                  className="flex-shrink-0"
+                />
+              </div>
             </div>
-          )}
 
-          {/* Downloadable */}
-          {isAdmin && (
-            <div className="flex items-center justify-between px-4 py-2 text-sm">
-              <span>Downloadable</span>
-              <Switch
-                checked={isDownloadable}
-                onCheckedChange={(checked: boolean) => {
-                  setIsDownloadable(checked);
-                  toggleSetting("downloadable", checked);
-                }}
-                disabled={savingToggleKey === "downloadable"}
-              />
+            {/* Property Details */}
+            <div className="border rounded-lg p-3.5 space-y-3">
+              <div className="text-sm font-medium">Property Details</div>
+              <div className="space-y-2">
+                <Label htmlFor="mls_image_width" className="text-xs">MLS Image Width (px)</Label>
+                <Input
+                  id="mls_image_width"
+                  type="number"
+                  placeholder="1920"
+                  defaultValue={(shoot as any)?.mls_image_width || ''}
+                  className="h-8 text-xs"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value) {
+                      toggleSetting("mls_image_width", parseInt(value));
+                    }
+                  }}
+                />
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Process Payment button for admins OR clients */}
-        {(isAdmin || isClient) && (
-          <div className="mt-3">
-            <Button
-              variant="default"
-              className="w-full flex items-center justify-center gap-2"
-              onClick={openPaymentDialog}
-            >
-              <DollarSignIcon className="h-4 w-4 mr-2" />
-              Process Payment
-            </Button>
+            {/* Google Calendar */}
+            <div className="border rounded-lg p-3.5 space-y-3">
+              <div className="text-sm font-medium">Google Calendar</div>
+              <div className="space-y-2">
+                <Label htmlFor="google_calendar_id" className="text-xs">Calendar ID</Label>
+                <Input
+                  id="google_calendar_id"
+                  type="text"
+                  placeholder="Enter Google Calendar ID"
+                  defaultValue={(shoot as any)?.google_calendar_id || ''}
+                  className="h-8 text-xs"
+                  onChange={(e) => {
+                    toggleSetting("google_calendar_id", e.target.value);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Timezone */}
+            <div className="border rounded-lg p-3.5 space-y-3">
+              <div className="text-sm font-medium">Timezone</div>
+              <div className="space-y-2">
+                <Label htmlFor="timezone" className="text-xs">Timezone</Label>
+                <Select
+                  defaultValue={(shoot as any)?.timezone || 'America/New_York'}
+                  onValueChange={(value) => toggleSetting("timezone", value)}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
+                    <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
+                    <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
+                    <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* VS Naming */}
+            <div className="border rounded-lg p-3.5 space-y-3">
+              <div className="text-sm font-medium">VS Naming</div>
+              <div className="space-y-2">
+                <Label htmlFor="vs_naming" className="text-xs">Naming Convention</Label>
+                <Input
+                  id="vs_naming"
+                  type="text"
+                  placeholder="e.g., {address}_{date}_{sequence}"
+                  defaultValue={(shoot as any)?.vs_naming || ''}
+                  className="h-8 text-xs"
+                  onChange={(e) => {
+                    toggleSetting("vs_naming", e.target.value);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Custom Filename */}
+            <div className="border rounded-lg p-3.5 space-y-3">
+              <div className="text-sm font-medium">Custom Filename</div>
+              <div className="space-y-2">
+                <Label htmlFor="custom_filename" className="text-xs">Filename Pattern</Label>
+                <Input
+                  id="custom_filename"
+                  type="text"
+                  placeholder="e.g., {property}_{type}_{number}"
+                  defaultValue={(shoot as any)?.custom_filename || ''}
+                  className="h-8 text-xs"
+                  onChange={(e) => {
+                    toggleSetting("custom_filename", e.target.value);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Ghost User */}
+            <div className="border rounded-lg p-3.5">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium">Ghost User</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Hide user from public listings
+                  </div>
+                </div>
+                <Switch
+                  checked={(shoot as any)?.ghost_user || false}
+                  onCheckedChange={(checked: boolean) => {
+                    toggleSetting("ghost_user", checked);
+                  }}
+                  className="flex-shrink-0"
+                />
+              </div>
+            </div>
+
+            {/* Hide Proof */}
+            <div className="border rounded-lg p-3.5">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium">Hide Proof</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Hide proof images from client view
+                  </div>
+                </div>
+                <Switch
+                  checked={(shoot as any)?.hide_proof || false}
+                  onCheckedChange={(checked: boolean) => {
+                    toggleSetting("hide_proof", checked);
+                  }}
+                  className="flex-shrink-0"
+                />
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* PaymentDialog (reused shared component). */}
       <PaymentDialog

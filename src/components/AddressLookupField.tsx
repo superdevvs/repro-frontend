@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { API_BASE_URL } from '@/config/env';
 
 interface AddressSuggestion {
   place_id: string;
@@ -168,11 +169,18 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
       };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const base = API_BASE_URL;
       const url = `${base}/api/address/search?query=${encodeURIComponent(searchQuery)}`;
       const response = await fetch(url, { headers });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Address API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        
         // If API fails, use mock data for testing
         console.warn('API not available, using mock data');
         const mockData = getMockSuggestions(searchQuery);
@@ -182,11 +190,21 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
       }
 
       const data = await response.json();
-      setSuggestions(data.data || []);
+      const suggestions = data.data || [];
+      
+      // Log for debugging
+      if (suggestions.length === 0) {
+        console.warn('No address suggestions returned', {
+          query: searchQuery,
+          response: data
+        });
+      }
+      
+      setSuggestions(suggestions);
       setShowSuggestions(true);
     } catch (err) {
       // Fallback to mock data if API is not available
-      console.warn('API error, using mock data:', err);
+      console.error('API error:', err);
       const mockData = getMockSuggestions(searchQuery);
       setSuggestions(mockData);
       setShowSuggestions(true);
@@ -228,7 +246,7 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
       const headers: Record<string, string> = { 'Accept': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+      const base = API_BASE_URL;
       const url = `${base}/api/address/details?place_id=${encodeURIComponent(suggestion.place_id)}`;
       const response = await fetch(url, { headers });
 
@@ -252,7 +270,8 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
 
         setSelectedAddress(fallbackDetails);
         onAddressSelect(fallbackDetails);
-        onChange(suggestion.description);
+        // Use street address for the input field
+        onChange(fallbackDetails.address || suggestion.main_text || suggestion.description);
         return;
       }
 
@@ -262,7 +281,8 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
       const addressDetails = data.data || data;
       setSelectedAddress(addressDetails);
       onAddressSelect(addressDetails);
-      onChange(addressDetails.formatted_address || addressDetails.address || suggestion.description);
+      // Use street address (not formatted_address) for the input field
+      onChange(addressDetails.address || addressDetails.formatted_address || suggestion.description);
     } catch (err) {
       console.warn('Address details fetch error:', err);
       const fallbackDetails: AddressDetails = {
@@ -277,7 +297,8 @@ const AddressLookupField: React.FC<AddressLookupFieldProps> = ({
       };
       setSelectedAddress(fallbackDetails);
       onAddressSelect(fallbackDetails);
-      onChange(suggestion.description);
+      // Use street address for the input field
+      onChange(fallbackDetails.address || suggestion.main_text || suggestion.description);
     } finally {
       setIsLoading(false);
     }

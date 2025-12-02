@@ -294,6 +294,18 @@ export function TimeSelect({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // Auto-confirm when all fields are selected
+  React.useEffect(() => {
+    if (hour && minute && (hour24 || ampm)) {
+      const timeStr = hour24 ? `${pad(Number(hour))}:${minute}` : `${pad(Number(hour))}:${minute} ${ampm}`;
+      if (timeStr !== confirmed && timeStr !== value) {
+        setConfirmed(timeStr);
+        onChange?.(timeStr);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hour, minute, ampm, hour24, confirmed]);
+
   const isComboAvailable = React.useCallback(
     (h: string, m: string, ap?: string) => {
       if (!availableSet) return true;
@@ -407,11 +419,11 @@ export function TimeSelect({
         </div>
       </div>
 
-      {/* actions: stack on small screens; row on sm+ */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      {/* Clear button */}
+      <div className="flex items-center">
         <button
           type="button"
-          className="px-3 py-2 rounded-md text-sm text-slate-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800 transition flex-1"
+          className="px-3 py-2 rounded-md text-sm text-slate-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
           onClick={() => {
             setHour("");
             setMinute("");
@@ -421,25 +433,6 @@ export function TimeSelect({
           }}
         >
           Clear
-        </button>
-
-        <button
-          type="button"
-          className={cn(
-            "px-4 py-2 rounded-md text-sm shadow-sm transition w-full sm:w-auto",
-            preview
-              ? "bg-blue-600 text-white hover:bg-blue-700"
-              : "bg-gray-200 text-slate-500 opacity-60 cursor-not-allowed dark:bg-slate-700 dark:text-slate-300"
-          )}
-          onClick={() => {
-            if (!preview) return;
-            setConfirmed(preview);
-            onChange?.(preview);
-            setOpen(false);
-          }}
-          aria-disabled={!preview}
-        >
-          Done
         </button>
       </div>
     </div>

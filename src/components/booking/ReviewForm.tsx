@@ -5,7 +5,6 @@ import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircleIcon, AlertTriangle, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ReviewFormProps {
@@ -22,7 +21,7 @@ interface ReviewFormProps {
   time: string;
   photographer: string;
   setPhotographer: (id: string) => void;
-  selectedPackage: string;
+  selectedServices: Array<{ id: string; name: string; description?: string; price: number }>;
   additionalNotes: string; // Renamed from notes to additionalNotes
   setAdditionalNotes: (value: string) => void; // Renamed from setNotes
   bypassPayment: boolean;
@@ -34,7 +33,6 @@ interface ReviewFormProps {
   tax: number;
   total: number;
   photographers: Array<{ id: string; name: string; avatar: string; rate: number; availability: boolean }>;
-  packages: Array<{ id: string; name: string; description: string; price: number }>;
   onConfirm: () => void; // Renamed from handleSubmit
   onBack: () => void;
   onSubmit?: () => void;
@@ -55,7 +53,7 @@ export function ReviewForm({
   time,
   photographer,
   setPhotographer,
-  selectedPackage,
+  selectedServices,
   additionalNotes,
   setAdditionalNotes,
   bypassPayment,
@@ -67,15 +65,11 @@ export function ReviewForm({
   tax,
   total,
   photographers,
-  packages,
   onSubmit,
   onConfirm,
   onBack,
   isLastStep = false
 }: ReviewFormProps) {
-  // Find the selected client, photographer, and package
-  const selectedPackageDetails = packages.find(p => p.id === selectedPackage);
-
   return (
     <motion.div
       key="step3"
@@ -162,9 +156,20 @@ export function ReviewForm({
             </span>
           </div>
 
-          <div className="flex justify-between">
-            <span className="text-sm text-slate-500 dark:text-slate-400">Package:</span>
-            <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{selectedPackageDetails?.name || "No package selected"}</span>
+          <div>
+            <span className="text-sm text-slate-500 dark:text-slate-400">Services:</span>
+            {selectedServices.length ? (
+              <ul className="mt-2 space-y-1 text-sm text-slate-900 dark:text-slate-100">
+                {selectedServices.map(service => (
+                  <li key={service.id} className="flex items-center justify-between">
+                    <span>{service.name}</span>
+                    <span className="font-medium">${Number(service.price ?? 0).toFixed(2)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">No services selected</p>
+            )}
           </div>
 
           <div className="flex justify-between">

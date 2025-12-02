@@ -28,6 +28,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useShoots } from '@/context/ShootsContext';
 import axios from 'axios';
 import { Dropbox } from 'dropbox';
+import { API_BASE_URL } from '@/config/env';
 
 
 // Add these interfaces at the top of your component file
@@ -396,7 +397,7 @@ useEffect(() => {
 
       const payload: Record<string, string> = { [field]: notes || '' };
       const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shoots/${shootId}/notes`, {
+      const res = await fetch(`${API_BASE_URL}/api/shoots/${shootId}/notes`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -533,7 +534,7 @@ useEffect(() => {
       let uploadEndpoint;
       if (shootId) {
         // For shoot-specific uploads, use the workflow system
-        uploadEndpoint = `${import.meta.env.VITE_API_URL}/api/shoots/${shootId}/upload-from-pc`;
+        uploadEndpoint = `${API_BASE_URL}/api/shoots/${shootId}/upload-from-pc`;
         // Add service category and upload type
         formData.append('service_category', 'P'); // Default to Photos
         formData.append('upload_type', uploadType); // raw or edited

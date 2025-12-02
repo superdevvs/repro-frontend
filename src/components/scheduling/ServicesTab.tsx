@@ -5,11 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Plus, Save } from 'lucide-react';
 import { ServiceCard } from './ServiceCard';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CategorySelect } from '@/components/settings/CategorySelect';
+import { IconPicker, getIconComponent } from './IconPicker';
 import { useServiceCategories } from '@/hooks/useServiceCategories';
 import API_ROUTES from '@/lib/api';
 
@@ -35,6 +34,7 @@ export function ServicesTab() {
     price: '',
     delivery_time: '',
     category: '',
+    icon: '',
   });
   const { toast } = useToast();
   // const { data: categories, isLoading: categoriesLoading } = useServiceCategories();
@@ -42,9 +42,8 @@ export function ServicesTab() {
 
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
-
-  const ADD_CATEGORY_VALUE = '__ADD_NEW_CATEGORY__';
 
   useEffect(() => {
     fetchServices();
@@ -94,10 +93,6 @@ export function ServicesTab() {
   // };
 
   const handleCategoryChange = (value: string) => {
-    if (value === ADD_CATEGORY_VALUE) {
-      setIsAddCategoryOpen(true);
-      return;
-    }
     setSelectedCategory(value);
   };
 
@@ -140,6 +135,7 @@ export function ServicesTab() {
           price: parseFloat(newService.price),
           delivery_time: parseInt(newService.delivery_time),
           category_id: newService.category, // Ensure this matches your API's expected field
+          icon: newService.icon,
         })
       });
 
@@ -162,6 +158,7 @@ export function ServicesTab() {
         price: '',
         delivery_time: '',
         category: '',
+        icon: '',
       });
       fetchServices(); // Make sure fetchServices is also updated to use your custom API
     } catch (error) {
@@ -194,7 +191,10 @@ export function ServicesTab() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: newCategoryName.trim() }),
+        body: JSON.stringify({ 
+          name: newCategoryName.trim(),
+          icon: newCategoryIcon 
+        }),
       });
 
       if (!res.ok) {
@@ -213,6 +213,7 @@ export function ServicesTab() {
 
       toast({ title: 'Category created', description: data.message || 'New category has been added.' });
       setNewCategoryName('');
+      setNewCategoryIcon('');
       setIsAddCategoryOpen(false);
     } catch (err: any) {
       toast({ title: 'Error', description: err.message || 'Could not create category.', variant: 'destructive' });
@@ -229,36 +230,37 @@ export function ServicesTab() {
 
   return (
     <div className="space-y-6">
-      <div className="max-w-md mx-auto">
+      <div className="space-y-4">
         {categoriesLoading ? (
           <div className="flex justify-center py-4">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
-          <Select
-            value={selectedCategory || ''}
-            onValueChange={handleCategoryChange}
-          >
-            <SelectTrigger className="w-full bg-background">
-              <SelectValue placeholder="Select a category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories && categories.map(category => (
-                <SelectItem key={category.id} value={category.id}>
+          <div className="flex flex-wrap gap-2">
+            {categories?.map(category => {
+              const Icon = category.icon ? getIconComponent(category.icon) : null;
+              return (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  onClick={() => handleCategoryChange(category.id)}
+                  className="rounded-full transition-all gap-2"
+                >
+                  {Icon && <Icon className="h-4 w-4" />}
                   {category.name}
-                </SelectItem>
-              ))}
-
-              {/* Divider-ish spacer */}
-              <div className="my-1 h-px bg-muted" />
-
-              {/* Add new option */}
-              <SelectItem value={ADD_CATEGORY_VALUE}>
-                Add new category
-              </SelectItem>
-
-            </SelectContent>
-          </Select>
+                </Button>
+              );
+            })}
+            
+            <Button
+              variant="outline"
+              className="rounded-full border-dashed border-muted-foreground/50 hover:border-primary hover:text-primary gap-2"
+              onClick={() => setIsAddCategoryOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Add Category
+            </Button>
+          </div>
         )}
       </div>
 
@@ -319,6 +321,13 @@ export function ServicesTab() {
                     placeholder="Service description"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Icon</Label>
+                  <IconPicker
+                    value={newService.icon}
+                    onChange={(value) => setNewService(prev => ({ ...prev, icon: value }))}
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price">Price ($)</Label>
@@ -374,19 +383,27 @@ export function ServicesTab() {
             <DialogTitle>Add New Category</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3 py-2">
-            <Label htmlFor="new-category-name">Category name</Label>
-            <Input
-              id="new-category-name"
-              placeholder="e.g., Floor Plans"
-              value={newCategoryName}
-              autoFocus
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleCreateCategory();
-              }}
-            />
-          </div>
+            <div className="space-y-3 py-2">
+              <Label htmlFor="new-category-name">Category name</Label>
+              <Input
+                id="new-category-name"
+                placeholder="e.g., Floor Plans"
+                value={newCategoryName}
+                autoFocus
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleCreateCategory();
+                }}
+              />
+              
+              <div className="space-y-2">
+                <Label>Icon (optional)</Label>
+                <IconPicker
+                  value={newCategoryIcon}
+                  onChange={setNewCategoryIcon}
+                />
+              </div>
+            </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddCategoryOpen(false)}>

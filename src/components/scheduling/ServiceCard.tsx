@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Edit, Trash2, CheckCircle2, XCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import axios from 'axios';
+import { API_BASE_URL } from '@/config/env';
+import { IconPicker, getIconComponent } from './IconPicker';
 
 type ServiceProps = {
   service: {
@@ -21,7 +22,8 @@ type ServiceProps = {
     delivery_time?: string;
     photographer_required?: boolean;
     active: boolean;
-    category?: string; // Added category property
+    category?: string;
+    icon?: string;
   };
   onUpdate: () => void;
 };
@@ -70,6 +72,7 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
       description: editedService.description?.trim(),
       price: parseFloat(editedService.price),
       delivery_time: parseInt(editedService.delivery_time),
+      icon: editedService.icon,
     };
   
     console.log('Payload being sent:', payload);
@@ -83,7 +86,7 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
   
     try {
       const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/admin/services/${service.id}`,
+        `${API_BASE_URL}/api/admin/services/${service.id}`,
         payload,
         {
           headers: {
@@ -135,7 +138,7 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
       }
   
       const response = await axios.delete(
-        `${import.meta.env.VITE_API_URL}/api/admin/services/${service.id}`,
+        `${API_BASE_URL}/api/admin/services/${service.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -169,12 +172,19 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
     currency: 'USD',
   }).format(Number(service.price));
 
+  const IconComponent = getIconComponent(service.icon || 'Camera');
+
   return (
     <>
       <Card className="h-full flex flex-col">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">
-            <CardTitle className="text-lg">{service.name}</CardTitle>
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <IconComponent className="h-5 w-5" />
+              </div>
+              <CardTitle className="text-lg">{service.name}</CardTitle>
+            </div>
             {/* <Badge variant={service.active ? "default" : "secondary"}>
               {service.active ? "Active" : "Inactive"}
             </Badge> */}
@@ -258,6 +268,14 @@ export function ServiceCard({ service, onUpdate }: ServiceProps) {
                 name="description"
                 value={editedService.description || ''}
                 onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Icon</Label>
+              <IconPicker
+                value={editedService.icon || ''}
+                onChange={(value) => setEditedService({ ...editedService, icon: value })}
               />
             </div>
             

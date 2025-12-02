@@ -1,10 +1,10 @@
 // SchedulingForm.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { TimeSelect } from "@/components/ui/time-select";
 import { format } from "date-fns";
-import { MapPin, Calendar as CalendarIcon, Clock, User, Package, ChevronRight, Loader2 } from "lucide-react";
+import { MapPin, Calendar as CalendarIcon, User, Package, ChevronRight, Loader2, Search, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +22,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { calculateDistance, getCoordinatesFromAddress } from '@/utils/distanceUtils';
+import { getPhotographersAvailability } from '@/utils/availabilityUtils';
+import { CheckCircle2, XCircle, Clock } from "lucide-react";
 
 interface SchedulingFormProps {
   date: Date | undefined;
@@ -30,7 +35,6 @@ interface SchedulingFormProps {
   setTime: React.Dispatch<React.SetStateAction<string>>;
   formErrors: Record<string, string>;
   setFormErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  selectedPackage: string;
   handleSubmit: () => void;
   goBack: () => void;
   address?: string;
@@ -56,7 +60,6 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
   setTime,
   formErrors,
   setFormErrors,
-  selectedPackage,
   handleSubmit,
   goBack,
   address = '',
@@ -82,6 +85,24 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
   const [dateDialogOpen, setDateDialogOpen] = useState(false);
   const [timeDialogOpen, setTimeDialogOpen] = useState(false);
   const [photographerDialogOpen, setPhotographerDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'distance' | 'name'>('distance');
+  const [photographersWithDistance, setPhotographersWithDistance] = useState<Array<{
+    id: string;
+    name: string;
+    avatar?: string;
+    distance?: number;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+  }>>([]);
+  const [isCalculatingDistances, setIsCalculatingDistances] = useState(false);
+  const [photographerAvailability, setPhotographerAvailability] = useState<Map<string, {
+    isAvailable: boolean;
+    nextAvailableTimes: string[];
+  }>>(new Map());
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
 
   const onDateChange = (newDate: Date | undefined) => {
     if (newDate) {
@@ -193,8 +214,168 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
   const selectedPhotographer = photographers.find(p => p.id === photographer);
   const { temperature, condition, distance } = useWeatherData({ date, city, state, zip, });
   const fullAddress = address && city && state ? `${address}, ${city}, ${state}${zip ? ' ' + zip : ''}` : '';
-  const packageName = selectedPackage === 'standard' ? 'Standard' : selectedPackage === 'premium' ? 'Premium' : selectedPackage === 'deluxe' ? 'Deluxe' : selectedPackage;
 
+  // Calculate distances when booking location or photographers change
+  useEffect(() => {
+    const calculateDistances = async () => {
+      if (!address || !city || !state || !zip || photographers.length === 0) {
+        setPhotographersWithDistance(photographers.map(p => ({ ...p })));
+        return;
+      }
+
+      setIsCalculatingDistances(true);
+      try {
+        // Get coordinates for booking location
+        const bookingCoords = await getCoordinatesFromAddress(address, city, state, zip);
+        
+        if (!bookingCoords) {
+          // If geocoding fails, just use photographers without distance
+          setPhotographersWithDistance(photographers.map(p => ({ ...p })));
+          setIsCalculatingDistances(false);
+          return;
+        }
+
+        // Calculate distance for each photographer
+        const photographersWithDist = await Promise.all(
+          photographers.map(async (photographer: any) => {
+            // Try to get photographer address from their data (check multiple possible locations)
+            const photographerAddress = 
+              photographer.address || 
+              photographer.metadata?.address || 
+              photographer.metadata?.homeAddress ||
+              '';
+            const photographerCity = 
+              photographer.city || 
+              photographer.metadata?.city || 
+              '';
+            const photographerState = 
+              photographer.state || 
+              photographer.metadata?.state || 
+              '';
+            const photographerZip = 
+              photographer.zip || 
+              photographer.zipcode ||
+              photographer.metadata?.zip || 
+              photographer.metadata?.zipcode ||
+              '';
+
+            if (!photographerAddress || !photographerCity || !photographerState) {
+              return { ...photographer, distance: undefined };
+            }
+
+            // Get coordinates for photographer location
+            const photographerCoords = await getCoordinatesFromAddress(
+              photographerAddress,
+              photographerCity,
+              photographerState,
+              photographerZip
+            );
+
+            if (!photographerCoords) {
+              return { ...photographer, distance: undefined };
+            }
+
+            // Calculate distance
+            const dist = calculateDistance(
+              bookingCoords.lat,
+              bookingCoords.lon,
+              photographerCoords.lat,
+              photographerCoords.lon
+            );
+
+            return {
+              ...photographer,
+              distance: dist,
+              address: photographerAddress,
+              city: photographerCity,
+              state: photographerState,
+              zip: photographerZip,
+            };
+          })
+        );
+
+        setPhotographersWithDistance(photographersWithDist);
+      } catch (error) {
+        console.error('Error calculating distances:', error);
+        setPhotographersWithDistance(photographers.map(p => ({ ...p })));
+      } finally {
+        setIsCalculatingDistances(false);
+      }
+    };
+
+    calculateDistances();
+  }, [address, city, state, zip, photographers]);
+
+  // Fetch availability when dialog opens and date/time are available
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!photographerDialogOpen || !date || !time || photographersWithDistance.length === 0) {
+        return;
+      }
+
+      setIsLoadingAvailability(true);
+      try {
+        const photographerIds = photographersWithDistance.map(p => p.id);
+        const photographersMap = new Map(
+          photographersWithDistance.map(p => [p.id, { name: p.name }])
+        );
+        console.log('🔍 [SchedulingForm] Checking availability for photographers', {
+          photographerIds,
+          photographers: photographersWithDistance.map(p => ({
+            id: p.id,
+            name: p.name,
+            idType: typeof p.id,
+          })),
+          date: date?.toISOString().split('T')[0],
+          time,
+        });
+        const availability = await getPhotographersAvailability(
+          photographerIds,
+          date,
+          time,
+          photographersMap
+        );
+        setPhotographerAvailability(availability);
+      } catch (error) {
+        console.error('Error fetching availability:', error);
+      } finally {
+        setIsLoadingAvailability(false);
+      }
+    };
+
+    fetchAvailability();
+  }, [photographerDialogOpen, date, time, photographersWithDistance]);
+
+  // Filter and sort photographers
+  const filteredAndSortedPhotographers = useMemo(() => {
+    let filtered = photographersWithDistance;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.name.toLowerCase().includes(query) ||
+        p.city?.toLowerCase().includes(query) ||
+        p.state?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortBy === 'distance') {
+        // Sort by distance (undefined distances go to the end)
+        if (a.distance === undefined && b.distance === undefined) return 0;
+        if (a.distance === undefined) return 1;
+        if (b.distance === undefined) return -1;
+        return a.distance - b.distance;
+      } else {
+        // Sort by name
+        return a.name.localeCompare(b.name);
+      }
+    });
+
+    return sorted;
+  }, [photographersWithDistance, searchQuery, sortBy]);
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6">
@@ -382,141 +563,204 @@ export const SchedulingForm: React.FC<SchedulingFormProps> = ({
 
             <DialogContent className="sm:max-w-md w-full">
               <div className="p-4 bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-gray-100 dark:border-slate-800">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
                     <DialogHeader>
                       <DialogTitle className="text-lg text-slate-900 dark:text-slate-100">Select Photographer</DialogTitle>
-                      {/* <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Pick a photographer for this shoot — choose a nearby pro or browse the full list.</p> */}
                     </DialogHeader>
                   </div>
+                </div>
 
-                  <button
-                    onClick={() => setPhotographerDialogOpen(false)}
-                    className="ml-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
-                    aria-label="Close"
-                  >
-                    {/* <X className="h-4 w-4" /> */}
-                  </button>
+                {/* Search and Sort Controls */}
+                <div className="space-y-3 mb-4">
+                  {/* Search Field */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search photographers..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+
+                  {/* Sort Selector */}
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                    <Select value={sortBy} onValueChange={(value: 'distance' | 'name') => setSortBy(value)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="distance">Sort by Distance</SelectItem>
+                        <SelectItem value="name">Sort by Name</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="divide-y divide-gray-100 dark:divide-slate-800">
                   {/* Scrollable content area */}
-                  <div className="pt-3 max-h-[48vh] overflow-y-auto pr-2 space-y-6">
-                    {/* 1) Photographers near your location */}
-                    <section>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium text-slate-800 dark:text-slate-100">Photographers near your location</h4>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">Closest first</span>
+                  <div className="pt-3 max-h-[48vh] overflow-y-auto pr-2">
+                    {isCalculatingDistances ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-sm text-muted-foreground">Calculating distances...</span>
                       </div>
-
+                    ) : isLoadingAvailability && date && time ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-sm text-muted-foreground">Checking availability...</span>
+                      </div>
+                    ) : filteredAndSortedPhotographers.length > 0 ? (
                       <div className="grid gap-3">
-                        {(() => {
-                          // compute nearest: photographer.distance expected in miles (number)
-                          const nearest = photographers
-                            .filter((p: any) => typeof p.distance === "number")
-                            .sort((a: any, b: any) => a.distance - b.distance)
-                            .slice(0, 5); // show top 5 nearest
-
-                          if (nearest.length === 0) {
-                            return (
-                              <div className="text-sm text-slate-500 dark:text-slate-400">No nearby photographers found.</div>
-                            );
+                        {filteredAndSortedPhotographers.map((photographerItem) => {
+                          // Try multiple key formats to ensure we find the availability
+                          const availability = 
+                            photographerAvailability.get(photographerItem.id) ||
+                            photographerAvailability.get(String(photographerItem.id)) ||
+                            photographerAvailability.get(Number(photographerItem.id));
+                          const isAvailable = availability?.isAvailable ?? false;
+                          const nextTimes = availability?.nextAvailableTimes ?? [];
+                          const showAvailability = date && time && !isLoadingAvailability;
+                          
+                          // Debug log for UI
+                          if (showAvailability) {
+                            console.debug('[UI Availability Display]', {
+                              photographerId: photographerItem.id,
+                              photographerIdType: typeof photographerItem.id,
+                              photographerName: photographerItem.name,
+                              selectedTime: time,
+                              isAvailable,
+                              nextTimes,
+                              availabilityData: availability,
+                              mapKeys: Array.from(photographerAvailability.keys()),
+                              foundByDirectKey: photographerAvailability.has(photographerItem.id),
+                              foundByStringKey: photographerAvailability.has(String(photographerItem.id)),
+                              foundByNumberKey: photographerAvailability.has(Number(photographerItem.id))
+                            });
                           }
 
-                          return nearest.map((photographerItem: any) => (
-                            <div key={photographerItem.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl">
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage src={photographerItem.avatar} alt={photographerItem.name} />
-                                  <AvatarFallback>{photographerItem.name?.charAt(0)}</AvatarFallback>
-                                </Avatar>
+                          return (
+                            <div
+                              key={photographerItem.id}
+                              className={cn(
+                                "p-3 bg-gray-50 dark:bg-slate-800 border rounded-xl transition-colors",
+                                isAvailable
+                                  ? "border-green-200 dark:border-green-800"
+                                  : showAvailability && !isAvailable
+                                  ? "border-orange-200 dark:border-orange-800"
+                                  : "border-gray-100 dark:border-slate-700",
+                                "hover:bg-gray-100 dark:hover:bg-slate-700"
+                              )}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3 flex-1 min-w-0">
+                                  <Avatar className="h-10 w-10 flex-shrink-0">
+                                    <AvatarImage src={photographerItem.avatar} alt={photographerItem.name} />
+                                    <AvatarFallback>{photographerItem.name?.charAt(0)}</AvatarFallback>
+                                  </Avatar>
 
-                                <div>
-                                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{photographerItem.name}</div>
-                                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                                    {photographerItem.rate ? `₹${photographerItem.rate}/shoot` : 'Rate not set'}
-                                    {photographerItem.distance !== undefined ? ` • ${photographerItem.distance} mi` : ''}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <div className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                                        {photographerItem.name}
+                                      </div>
+                                      {showAvailability && (
+                                        <div className="flex items-center gap-1 flex-shrink-0">
+                                          {isAvailable ? (
+                                            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                          ) : (
+                                            <XCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap">
+                                        {photographerItem.distance !== undefined ? (
+                                          <span className="flex items-center gap-1">
+                                            <MapPin className="h-3 w-3" />
+                                            {photographerItem.distance} mi away
+                                          </span>
+                                        ) : (
+                                          <span className="text-muted-foreground">Distance unavailable</span>
+                                        )}
+                                        {photographerItem.city && photographerItem.state && (
+                                          <span className="text-muted-foreground">
+                                            • {photographerItem.city}, {photographerItem.state}
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {/* Availability Status */}
+                                      {showAvailability && (
+                                        <div className="text-xs">
+                                          {isAvailable ? (
+                                            <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                              <CheckCircle2 className="h-3 w-3" />
+                                              <span>Available at {time}</span>
+                                            </div>
+                                          ) : nextTimes.length > 0 ? (
+                                            <div className="space-y-1">
+                                              <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+                                                <XCircle className="h-3 w-3" />
+                                                <span>Not available at {time}</span>
+                                              </div>
+                                              <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400 ml-4">
+                                                <Clock className="h-3 w-3" />
+                                                <span>Next available: {nextTimes.join(', ')}</span>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <div className="space-y-1">
+                                              <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                                <XCircle className="h-3 w-3" />
+                                                <span>Not available at {time}</span>
+                                              </div>
+                                              <div className="text-slate-400 dark:text-slate-500 ml-4 text-[10px]">
+                                                No availability set for this date
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
 
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (setPhotographer) {
-                                      setPhotographer(photographerItem.id);
-                                      setPhotographerDialogOpen(false);
-                                    }
-                                  }}
-                                  className={cn(
-                                    "px-3 py-1.5 rounded-md text-sm font-medium shadow-sm",
-                                    photographer === photographerItem.id
-                                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                                      : "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600"
-                                  )}
-                                >
-                                  {photographer === photographerItem.id ? 'Selected' : 'Select'}
-                                </button>
-                              </div>
-                            </div>
-                          ));
-                        })()}
-                      </div>
-                    </section>
-
-                    {/* 2) All Photographers */}
-                    <section>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium text-slate-800 dark:text-slate-100">All Photographers</h4>
-                        {/* <span className="text-xs text-slate-500 dark:text-slate-400">{photographers.length} total</span> */}
-                      </div>
-
-                      <div className="grid gap-3">
-                        {photographers.length > 0 ? (
-                          photographers.map((photographerItem: any) => (
-                            <div key={photographerItem.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl">
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage src={photographerItem.avatar} alt={photographerItem.name} />
-                                  <AvatarFallback>{photographerItem.name?.charAt(0)}</AvatarFallback>
-                                </Avatar>
-
-                                <div>
-                                  <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{photographerItem.name}</div>
-                                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                                    {/* {photographerItem.rate ? `₹${photographerItem.rate}/shoot` : 'Rate not set'} */}
-                                    {photographerItem.distance !== undefined ? ` • ${photographerItem.distance} mi` : ''}
-                                  </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (setPhotographer) {
+                                        setPhotographer(photographerItem.id);
+                                        setPhotographerDialogOpen(false);
+                                      }
+                                    }}
+                                    className={cn(
+                                      "px-3 py-1.5 rounded-md text-sm font-medium shadow-sm transition-colors",
+                                      photographer === photographerItem.id
+                                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                                        : showAvailability && !isAvailable
+                                        ? "bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/30"
+                                        : "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600"
+                                    )}
+                                  >
+                                    {photographer === photographerItem.id ? 'Selected' : 'Select'}
+                                  </button>
                                 </div>
                               </div>
-
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (setPhotographer) {
-                                      setPhotographer(photographerItem.id);
-                                      setPhotographerDialogOpen(false);
-                                    }
-                                  }}
-                                  className={cn(
-                                    "px-3 py-1.5 rounded-md text-sm font-medium shadow-sm",
-                                    photographer === photographerItem.id
-                                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                                      : "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600"
-                                  )}
-                                >
-                                  {photographer === photographerItem.id ? 'Selected' : 'Select'}
-                                </button>
-                              </div>
                             </div>
-                          ))
-                        ) : (
-                          <div className="text-sm text-slate-500 dark:text-slate-400">No photographers available for the selected date and time.</div>
-                        )}
+                          );
+                        })}
                       </div>
-                    </section>
+                    ) : (
+                      <div className="text-sm text-slate-500 dark:text-slate-400 text-center py-8">
+                        {searchQuery ? 'No photographers found matching your search.' : 'No photographers available for the selected date and time.'}
+                      </div>
+                    )}
                   </div>
 
                   {/* footer actions */}

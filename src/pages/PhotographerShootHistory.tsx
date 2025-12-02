@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { AutoExpandingTabsList, type AutoExpandingTab } from '@/components/ui/auto-expanding-tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +67,28 @@ const PhotographerShootHistory = () => {
     return !filterAddress || 
       shoot.location.fullAddress.toLowerCase().includes(filterAddress.toLowerCase());
   });
+
+  // Auto-expanding tabs configuration with badges
+  const tabsConfig: AutoExpandingTab[] = useMemo(() => [
+    {
+      value: 'upcoming',
+      icon: Clock,
+      label: 'Upcoming',
+      badge: upcomingShoots.length > 0 ? upcomingShoots.length : undefined,
+    },
+    {
+      value: 'scheduled',
+      icon: Calendar,
+      label: 'Scheduled',
+      badge: scheduledShoots.length > 0 ? scheduledShoots.length : undefined,
+    },
+    {
+      value: 'completed',
+      icon: Eye,
+      label: 'Completed',
+      badge: completedShoots.length > 0 ? completedShoots.length : undefined,
+    },
+  ], [upcomingShoots.length, scheduledShoots.length, completedShoots.length]);
 
   // Format date for display
   const formatShootDate = (dateString: string) => {
@@ -235,20 +258,11 @@ const PhotographerShootHistory = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="upcoming" className="flex gap-2 items-center">
-              <Calendar className="h-4 w-4" />
-              <span>Upcoming ({upcomingShoots.length})</span>
-            </TabsTrigger>
-            <TabsTrigger value="scheduled" className="flex gap-2 items-center">
-              <Calendar className="h-4 w-4" />
-              <span>Scheduled ({scheduledShoots.length})</span>
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="flex gap-2 items-center">
-              <Eye className="h-4 w-4" />
-              <span>Completed ({completedShoots.length})</span>
-            </TabsTrigger>
-          </TabsList>
+          <AutoExpandingTabsList 
+            tabs={tabsConfig} 
+            value={activeTab}
+            className="mb-6"
+          />
 
           {isLoading ? (
             renderLoadingState()

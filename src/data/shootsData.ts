@@ -1,5 +1,24 @@
 import { ShootData } from "@/types/shoots";
 
+const POTOMAC_IMAGE_COUNT = 50;
+const POTOMAC_MEDIA_IMAGES = Array.from({ length: POTOMAC_IMAGE_COUNT }, (_, index) => {
+  const idNumber = (index + 1).toString().padStart(2, '0');
+  const url = `/shoots/1300-potomac/potomac-${idNumber}.jpg`;
+  return {
+    id: `potomac-${idNumber}`,
+    url,
+    thumbnail: url,
+    type: "image/jpeg"
+  };
+});
+
+const getPotomacMediaGroup = (groupIndex: number, groupSize = 5) => {
+  const start = groupIndex * groupSize;
+  return {
+    images: POTOMAC_MEDIA_IMAGES.slice(start, start + groupSize)
+  };
+};
+
 export const shootsData: ShootData[] = [
   {
     id: "1",
@@ -30,6 +49,7 @@ export const shootsData: ShootData[] = [
       lastPaymentDate: "2025-02-03",
       lastPaymentType: "Square Online"
     },
+    media: getPotomacMediaGroup(0),
     status: "scheduled",
     createdBy: "KC Real Estate Group"
   },
@@ -61,6 +81,7 @@ export const shootsData: ShootData[] = [
       totalQuote: 265.00,
       totalPaid: 0
     },
+    media: getPotomacMediaGroup(1),
     status: "scheduled",
     createdBy: "Michael Bereson"
   },
@@ -93,6 +114,7 @@ export const shootsData: ShootData[] = [
       totalQuote: 700.00,
       totalPaid: 0
     },
+    media: getPotomacMediaGroup(2),
     status: "scheduled",
     createdBy: "Bill Hang"
   },
@@ -126,6 +148,7 @@ export const shootsData: ShootData[] = [
       totalQuote: 153.70,
       totalPaid: 0
     },
+    media: getPotomacMediaGroup(3),
     status: "completed",
     createdBy: "Michael Bereson"
   },
@@ -158,6 +181,7 @@ export const shootsData: ShootData[] = [
       totalQuote: 159.00,
       totalPaid: 0
     },
+    media: getPotomacMediaGroup(4),
     status: "completed",
     createdBy: "Michael Bereson"
   },
@@ -192,6 +216,7 @@ export const shootsData: ShootData[] = [
       lastPaymentDate: "2025-01-28",
       lastPaymentType: "Square Online"
     },
+    media: getPotomacMediaGroup(5),
     status: "completed",
     createdBy: "Michael Bereson"
   },
@@ -224,6 +249,7 @@ export const shootsData: ShootData[] = [
       totalQuote: 0,
       totalPaid: 0
     },
+    media: getPotomacMediaGroup(6),
     status: "pending",
     createdBy: "Super Admin"
   },
@@ -259,21 +285,85 @@ export const shootsData: ShootData[] = [
       lastPaymentType: "Square Online"
     },
     status: "completed",
-    media: {
-      images: [
-        { id: "1", url: "/placeholder.svg", type: "image/svg+xml" },
-        { id: "2", url: "/placeholder.svg", type: "image/svg+xml" },
-        { id: "3", url: "/placeholder.svg", type: "image/svg+xml" },
-        { id: "4", url: "/placeholder.svg", type: "image/svg+xml" },
-        { id: "5", url: "/placeholder.svg", type: "image/svg+xml" }
-      ]
-    },
+    media: getPotomacMediaGroup(7),
     tourLinks: {
       matterport: "https://example.com/tour/branded/8",
       iGuide: "https://example.com/tour/mls/8",
       cubicasa: "https://example.com/tour/generic/8"
     },
     createdBy: "Michael Bereson"
+  },
+  {
+    id: "9",
+    scheduledDate: "2025-01-30",
+    time: "10:15 AM",
+    completedDate: "2025-01-31",
+    client: {
+      name: "Shelly Tatum",
+      email: "shelly.tatum@example.com",
+      phone: "(202) 555-1825",
+      company: "Potomac Vista Realty",
+      totalShoots: 6
+    },
+    location: {
+      address: "1300 Potomac View Parkway",
+      city: "Brunswick",
+      state: "MD",
+      zip: "21716",
+      fullAddress: "1300 Potomac View Parkway, Brunswick, MD 21716"
+    },
+    photographer: {
+      name: "Jay Snap",
+    },
+    services: ["HDR Photos", "Single-Property Website"],
+    payment: {
+      baseQuote: 320.00,
+      taxRate: 6.00,
+      taxAmount: 19.20,
+      totalQuote: 339.20,
+      totalPaid: 339.20,
+      lastPaymentDate: "2025-01-28",
+      lastPaymentType: "Square Online"
+    },
+    media: getPotomacMediaGroup(8),
+    status: "completed",
+    createdBy: "Potomac Vista Realty"
+  },
+  {
+    id: "10",
+    scheduledDate: "2025-01-28",
+    time: "1:00 PM",
+    completedDate: "2025-01-29",
+    client: {
+      name: "Marcus Leonard",
+      email: "marcus@leonardluxury.com",
+      phone: "(571) 555-2043",
+      company: "Leonard Luxury Homes",
+      totalShoots: 11
+    },
+    location: {
+      address: "1300 Potomac View Parkway",
+      city: "Brunswick",
+      state: "MD",
+      zip: "21716",
+      fullAddress: "1300 Potomac View Parkway, Brunswick, MD 21716"
+    },
+    photographer: {
+      name: "Harrison Hart",
+    },
+    services: ["HDR Photos", "Drone Package", "Twilight Upgrade"],
+    payment: {
+      baseQuote: 425.00,
+      taxRate: 6.00,
+      taxAmount: 25.50,
+      totalQuote: 450.50,
+      totalPaid: 450.50,
+      lastPaymentDate: "2025-01-27",
+      lastPaymentType: "Square Online"
+    },
+    media: getPotomacMediaGroup(9),
+    status: "completed",
+    createdBy: "Leonard Luxury Homes"
   }
 ];
 

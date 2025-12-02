@@ -20,7 +20,19 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { BookingHeader } from '@/components/booking/BookingHeader';
 import axios from 'axios';
 import API_ROUTES from '@/lib/api';
+import { API_BASE_URL } from '@/config/env';
+import { normalizeState, isValidState } from '@/utils/stateUtils';
 
+type ServicePackage = {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  category?: {
+    id: string;
+    name: string;
+  };
+};
 
 const BookShoot = () => {
   const isMobile = useIsMobile();
@@ -30,7 +42,8 @@ const BookShoot = () => {
   const clientNameFromUrl = queryParams.get('clientName');
   const clientCompanyFromUrl = queryParams.get('clientCompany');
   const { user } = useAuth();
-  const [packages, setPackages] = useState<{ id: string, name: string, price: number, description: string }[]>([]);
+  const [packages, setPackages] = useState<ServicePackage[]>([]);
+  const [packagesLoading, setPackagesLoading] = useState(true);
 
   const [clients, setClients] = useState<Client[]>([]);
 
@@ -49,7 +62,13 @@ const BookShoot = () => {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState('');
   const [photographer, setPhotographer] = useState('');
-  const [selectedPackage, setSelectedPackage] = useState('');
+  const [selectedServices, setSelectedServices] = useState<ServicePackage[]>([]);
+  const [mlsId, setMlsId] = useState('');
+  const [propertyDetails, setPropertyDetails] = useState<any>(null);
+
+  const handleSelectedServicesChange = (services: ServicePackage[]) => {
+    setSelectedServices(services);
+  };
   const [notes, setNotes] = useState('');
   const [companyNotes, setCompanyNotes] = useState('');
   const [photographerNotes, setPhotographerNotes] = useState('');
@@ -86,7 +105,7 @@ const BookShoot = () => {
           throw new Error("No auth token found in localStorage");
         }
 
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/clients`, {
+        const response = await axios.get(`${API_BASE_URL}/api/admin/clients`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -144,10 +163,19 @@ const BookShoot = () => {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/services`);
-        const packageData = response.data.data.map((pkg: any) => ({
-          ...pkg,
-          id: pkg.id.toString()
+        setPackagesLoading(true);
+        const response = await axios.get(`${API_BASE_URL}/api/services`);
+        const packageData: ServicePackage[] = response.data.data.map((pkg: any) => ({
+          id: pkg.id?.toString?.() ?? String(pkg.id),
+          name: pkg.name,
+          description: pkg.description ?? '',
+          price: Number(pkg.price ?? 0),
+          category: pkg.category
+            ? {
+                id: pkg.category.id?.toString?.() ?? String(pkg.category.id),
+                name: pkg.category.name ?? 'Other',
+              }
+            : undefined,
         }));
         setPackages(packageData);
       } catch (error) {
@@ -157,6 +185,8 @@ const BookShoot = () => {
           description: "There was an error loading available services.",
           variant: "destructive"
         });
+      } finally {
+        setPackagesLoading(false);
       }
     };
 
@@ -285,8 +315,14 @@ const BookShoot = () => {
 
 
   const getPackagePrice = () => {
-    const pkg = packages.find(p => p.id === selectedPackage);
-    return pkg ? Math.round(Number(pkg.price) * 100) / 100 : 0;
+    if (!selectedServices.length) {
+      return 0;
+    }
+    const total = selectedServices.reduce((sum, service) => {
+      const price = Number(service.price ?? 0);
+      return sum + price;
+    }, 0);
+    return Math.round(total * 100) / 100;
   };
 
   const getPhotographerRate = () => {
@@ -331,7 +367,7 @@ const BookShoot = () => {
         return false;
       }
 
-      if (!address || !city || !state || !zip || !selectedPackage) {
+      if (!address || !city || !state || !zip || selectedServices.length === 0) {
         toast({
           title: "Missing information",
           description: "Please fill in all property details and select a package before proceeding.",
@@ -499,10 +535,21 @@ const BookShoot = () => {
     setFormErrors({});
 
     if (step === 3) {
-      if (!client || !address || !city || !state || !zip || !date || !time || !selectedPackage) {
+      if (!client || !address || !city || !state || !zip || !date || !time || selectedServices.length === 0) {
         toast({
           title: "Missing information",
           description: "Please fill in all required fields before confirming the booking.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Normalize state to 2-letter abbreviation
+      const normalizedState = normalizeState(state);
+      if (!normalizedState || !isValidState(normalizedState)) {
+        toast({
+          title: "Invalid State",
+          description: "State must be a valid 2-letter abbreviation (e.g., CA, NY, DC). Please enter a valid state code.",
           variant: "destructive",
         });
         return;
@@ -521,22 +568,34 @@ const BookShoot = () => {
       const taxAmount = getTax();
       const totalQuote = getTotal();
 
+      const servicesPayload = selectedServices.map(service => ({
+        id: service.id,
+        price: Number(service.price ?? 0),
+        quantity: 1,
+      }));
+
+      const primaryServiceId = servicesPayload[0]?.id ?? null;
       const payload = {
         client_id: client,
         address,
         city,
-        state,
+        state: normalizedState, // Use normalized state
         zip,
         scheduled_date: shootDate.toISOString().split('T')[0], // YYYY-MM-DD format
         time,
         photographer_id: photographer || null,
-        service_id: selectedPackage,
-    shoot_notes: notes || undefined,
-    company_notes: companyNotes || undefined,
-    photographer_notes: photographerNotes || undefined,
-    editor_notes: editorNotes || undefined,
+        service_id: primaryServiceId,
+        services: servicesPayload,
+        service_category: selectedServices[0]?.category?.name || undefined,
+        shoot_notes: notes || undefined,
+        company_notes: companyNotes || undefined,
+        photographer_notes: photographerNotes || undefined,
+        editor_notes: editorNotes || undefined,
         bypass_payment: bypassPayment,
         send_notification: sendNotification,
+        // Integration fields
+        mls_id: mlsId || undefined,
+        property_details: propertyDetails || undefined,
         // Add the missing required fields based on API error
         base_quote: baseQuote,
         tax_amount: taxAmount,
@@ -548,7 +607,7 @@ const BookShoot = () => {
 
       try {
         const token = localStorage.getItem('authToken');
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/shoots`, payload, {
+        const response = await axios.post(`${API_BASE_URL}/api/shoots`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -610,7 +669,7 @@ const BookShoot = () => {
     setDate(undefined);
     setTime('');
     setPhotographer('');
-    setSelectedPackage('');
+    setSelectedServices([]);
     setNotes('');
     setBypassPayment(false);
     setSendNotification(true);
@@ -632,7 +691,8 @@ const BookShoot = () => {
       propertyState: state,
       propertyZip: zip,
       propertyInfo: notes,
-      selectedPackage: selectedPackage
+      mlsId: '',
+      selectedPackage: selectedServices[0]?.id || ''
     },
     onComplete: (data: any) => {
       if (!isClientAccount && data.clientId) {
@@ -640,26 +700,33 @@ const BookShoot = () => {
       }
       setAddress(data.propertyAddress);
       setCity(data.propertyCity);
-      setState(data.propertyState);
+      // Normalize state when setting from address lookup
+      const normalizedState = normalizeState(data.propertyState);
+      setState(normalizedState || data.propertyState);
       setZip(data.propertyZip);
       setNotes(data.shootNotes || data.propertyInfo || '');
       setCompanyNotes(data.companyNotes || '');
       setPhotographerNotes(data.photographerNotes || '');
       setEditorNotes(data.editorNotes || '');
-      setSelectedPackage(data.selectedPackage || '');
+      setMlsId(data.mlsId || '');
+      setPropertyDetails(data.property_details || null);
       setStep(2);
     },
-    isClientAccount: isClientAccount
-  }), [client, clients, address, city, state, zip, notes, selectedPackage, isClientAccount, user]);
+    isClientAccount: isClientAccount,
+    selectedServices,
+    onSelectedServicesChange: handleSelectedServicesChange,
+    packagesLoading,
+  }), [client, clients, address, city, state, zip, notes, selectedServices, isClientAccount, user, packagesLoading]);
 
 
   const getSummaryInfo = () => {
     const selectedClientData = clients.find(c => c.id === client);
-    const selectedPackageData = packages.find(p => p.id === selectedPackage);
+    const serviceNames = selectedServices.map(service => service.name).join(', ');
 
     return {
       client: selectedClientData?.name || (isClientAccount ? user?.name || '' : ''),
-      package: selectedPackageData?.name || '',
+      services: selectedServices,
+      packageLabel: serviceNames,
       packagePrice: getPackagePrice(),
       address: address ? `${address}, ${city}, ${state} ${zip}` : '',
       bedrooms: 0,
@@ -695,16 +762,8 @@ const BookShoot = () => {
 
   return (
     <DashboardLayout>
-      <div className="container px-4 sm:px-6 max-w-5xl py-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
-          onClick={() => navigate('/shoots')}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Shoots
-        </Button>
+      <div className="space-y-6 p-6">
+        
 
         <AnimatePresence mode="wait">
           {isComplete ? (
@@ -718,19 +777,8 @@ const BookShoot = () => {
 
               <BookingStepIndicator currentStep={step} totalSteps={3} />
 
-              <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1.6fr] gap-6 mt-12">
-                {/* Summary always appears on top on mobile, side on desktop */}
-                <div className={`${isMobile ? "order-1 mb-4" : "order-1 md:order-1"} md:col-span-1`}>
-                  <BookingSummary
-                    summaryInfo={summaryInfo}
-                    selectedPackage={selectedPackage}
-                    packages={packages}
-                    onSubmit={step === 3 ? handleSubmit : undefined}
-                    isLastStep={step === 3}
-                  />
-                </div>
-
-                <div className="order-2 md:col-span-1">
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.85fr)_minmax(320px,0.95fr)] gap-10 mt-10 items-start">
+                <div className="order-2 lg:order-1 w-full">
                   <BookingContentArea
                     step={step}
                     formErrors={formErrors}
@@ -740,10 +788,12 @@ const BookShoot = () => {
                     setDate={setDate}
                     time={time}
                     setTime={setTime}
-                    selectedPackage={selectedPackage}
+                    selectedServices={selectedServices}
+                    onSelectedServicesChange={handleSelectedServicesChange}
                     notes={notes}
                     setNotes={setNotes}
                     packages={packages}
+                    packagesLoading={packagesLoading}
                     client={client}
                     address={address}
                     city={city}
@@ -767,6 +817,15 @@ const BookShoot = () => {
                     photographers={getAvailablePhotographers()}
                     handleSubmit={handleSubmit}
                     goBack={goBack}
+                  />
+                </div>
+
+                <div className="order-1 lg:order-2 lg:sticky lg:top-24 lg:max-w-sm w-full">
+                  <BookingSummary
+                    summaryInfo={summaryInfo}
+                    selectedServices={selectedServices}
+                    onSubmit={step === 3 ? handleSubmit : undefined}
+                    isLastStep={step === 3}
                   />
                 </div>
               </div>
